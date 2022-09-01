@@ -414,6 +414,14 @@ class Reference(object):
                     .filter(Version.full_path.endswith(filename))
                     .first()
                 )
+                if not v:
+                    # try to look in to all projects
+                    v = (
+                        Version.query
+                        .filter(Version.full_path.endswith(filename))
+                        .first()
+                    )
+
                 if v:
                     ref.replaceWith(
                         Repository.to_os_independent_path(v.absolute_full_path)

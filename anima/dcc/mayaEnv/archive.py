@@ -341,6 +341,14 @@ sourceimages/3dPaintTextures"""
                     .filter(Task.project == project)
                     .all()
                 )
+                print("versions: {}".format(versions))
+                if not versions:
+                    print("no version found in the same project, "
+                          "looking in to other projects")
+                    # try to look all the projects
+                    versions = Version.query.filter(
+                        Version.full_path.endswith(ref_file_name)
+                    ).all()
             else:
                 # search on all projects
                 versions = Version.query.filter(
