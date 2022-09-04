@@ -9,6 +9,7 @@ from anima.ui.utils import get_cached_icon, choose_thumbnail
 from anima.utils import (create_structure, duplicate_task_hierarchy, file_browser_name,
                          fix_task_statuses, fix_task_computed_time,
                          open_browser_in_location, task_hierarchy_io, upload_thumbnail)
+from anima.utils.progress import ProgressManager
 
 from sqlalchemy import alias, func
 
@@ -678,7 +679,14 @@ class TaskTreeView(QtWidgets.QTreeView):
                         decoder = task_hierarchy_io.StalkerEntityDecoder(
                             project=project
                         )
+                        from anima.ui.dialogs.progress_dialog import ProgressDialog
+                        pdm = ProgressManager(dialog_class=ProgressDialog)
+                        progress_caller = pdm.register(
+                            max_iteration=len(selected_files),
+                            title="Importing JSON files..."
+                        )
                         for file_path in selected_files:
+                            imported_json_file_name = os.path.basename(file_path)
                             with open(file_path) as f:
                                 data = json.load(f)
                             loaded_entity = decoder.loads(data, parent=parent)
@@ -693,7 +701,10 @@ class TaskTreeView(QtWidgets.QTreeView):
                                 )
                             else:
                                 items_to_reload.add(item)
-                                imported_json_file_names.append(os.path.basename(file_path))
+                                imported_json_file_names.append(imported_json_file_name)
+                            progress_caller.step(message=imported_json_file_name)
+                        progress_caller.end_progress()
+
                         for item in items_to_reload:
                             item.reload()
                         QtWidgets.QMessageBox.information(
