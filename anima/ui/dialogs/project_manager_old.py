@@ -10,6 +10,7 @@ from anima.ui import project_manager
 project_manager.ui_caller(None, None, project_manager.MainWindow)
 """
 
+from anima import logger
 from anima.ui.base import ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.utils import load_font, set_widget_style
@@ -78,7 +79,7 @@ class MainWindow(QtWidgets.QMainWindow):
         from anima import ui
         import os
 
-        print("ui.__path__: %s" % ui.__path__[0])
+        logger.debug("ui.__path__: %s" % ui.__path__[0])
 
         app_icon_path = os.path.join(ui.__path__[0], "images", "app_icon.png")
         self.setWindowIcon(QtGui.QIcon(app_icon_path))

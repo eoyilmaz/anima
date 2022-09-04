@@ -487,9 +487,9 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             project_item.setColumnCount(4)
 
             # Set Font
-            my_font = project_item.font()
-            my_font.setBold(True)
-            project_item.setFont(my_font)
+            # my_font = project_item.font()
+            # my_font.setBold(True)
+            # project_item.setFont(my_font)
 
             # color with task status
             project_item.setData(
