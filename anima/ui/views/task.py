@@ -1,9 +1,21 @@
 # -*- coding: utf-8 -*-
-import anima.utils
-from anima import logger
+import json
+import os
+
+from anima import defaults, logger
 from anima.ui.lib import QtCore, QtWidgets
 from anima.ui.models.task import TaskTreeModel
-from anima.ui.utils import get_cached_icon
+from anima.ui.utils import get_cached_icon, choose_thumbnail
+from anima.utils import (create_structure, duplicate_task_hierarchy, file_browser_name,
+                         fix_task_statuses, fix_task_computed_time,
+                         open_browser_in_location, task_hierarchy_io, upload_thumbnail)
+
+from sqlalchemy import alias, func
+
+from stalker import LocalSession, Project, SimpleEntity, Status, Task
+from stalker.db.session import DBSession
+
+import webbrowser
 
 if False:
     from PySide2 import QtCore, QtWidgets
@@ -86,10 +98,6 @@ class TaskTreeView(QtWidgets.QTreeView):
         logger.debug("start filling tasks_treeView")
         logger.debug("creating a new model")
         if not self.project:
-            from sqlalchemy import alias
-            from stalker import Task, Project
-            from stalker.db.session import DBSession
-
             # projects = Project.query.order_by(Project.name).all()
             inner_tasks = alias(Task.__table__)
             subquery = DBSession.query(inner_tasks.c.id).filter(
@@ -103,8 +111,6 @@ class TaskTreeView(QtWidgets.QTreeView):
                 subquery.exists().label("has_children"),
             )
             if not self.show_completed_projects:
-                from stalker import Status
-
                 status_cmpl = Status.query.filter(Status.code == "CMPL").first()
                 query = query.filter(Project.status != status_cmpl)
 
@@ -161,10 +167,6 @@ class TaskTreeView(QtWidgets.QTreeView):
         # if not task_id:
         #     return
 
-        from anima import utils
-
-        file_browser_name = utils.file_browser_name()
-
         # create the menu
         menu = QtWidgets.QMenu()  # Open in browser
 
@@ -190,13 +192,8 @@ class TaskTreeView(QtWidgets.QTreeView):
         fix_task_status_action = None
         change_status_menu_actions = []
 
-        from anima import defaults
-        from stalker import LocalSession
-
         local_session = LocalSession()
         logged_in_user = local_session.logged_in_user
-
-        from stalker import SimpleEntity, Task, Project
 
         # TODO: Update this to use only task_id
         if task_id:
@@ -261,7 +258,6 @@ class TaskTreeView(QtWidgets.QTreeView):
                 )
 
                 task = entity
-                from stalker import Status
 
                 status_wfd = Status.query.filter(Status.code == "WFD").first()
                 status_prev = Status.query.filter(Status.code == "PREV").first()
@@ -352,8 +348,6 @@ class TaskTreeView(QtWidgets.QTreeView):
                 status_menu.addSeparator()
 
                 # get all task statuses
-                from anima import defaults
-
                 menu_style_sheet = ""
                 defaults_status_colors = defaults.status_colors
 
@@ -418,8 +412,6 @@ class TaskTreeView(QtWidgets.QTreeView):
                 project_main_dialog.deleteLater()
 
             if entity:
-                from anima import defaults
-
                 url = "http://%s/%ss/%s/view" % (
                     defaults.stalker_server_internal_address,
                     entity.entity_type.lower(),
@@ -427,14 +419,10 @@ class TaskTreeView(QtWidgets.QTreeView):
                 )
 
                 if selected_action is open_in_web_browser_action:
-                    import webbrowser
-
                     webbrowser.open(url)
                 elif selected_action is open_in_file_browser_action:
-                    from anima import utils
-
                     try:
-                        utils.open_browser_in_location(entity.absolute_path)
+                        open_browser_in_location(entity.absolute_path)
                     except IOError as e:
                         QtWidgets.QMessageBox.critical(
                             self, "Error", "%s" % e, QtWidgets.QMessageBox.Ok
@@ -510,9 +498,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                         self.find_and_select_entity_item(entity)
 
                 elif selected_action is upload_thumbnail_action:
-                    from anima.ui import utils as ui_utils
-
-                    thumbnail_full_path = ui_utils.choose_thumbnail(
+                    thumbnail_full_path = choose_thumbnail(
                         self,
                         start_path=entity.absolute_path,
                         dialog_title="Choose Thumbnail For: %s" % entity.name,
@@ -523,7 +509,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                         return
 
                     # get the current task
-                    anima.utils.upload_thumbnail(entity, thumbnail_full_path)
+                    upload_thumbnail(entity, thumbnail_full_path)
 
                 elif selected_action is create_child_task_action:
                     from anima.ui.dialogs import task_dialog
@@ -562,14 +548,11 @@ class TaskTreeView(QtWidgets.QTreeView):
                         )
                         number_of_copies = dth_dialog.number_of_copies_spin_box.value()
 
-                        from anima import utils
-                        from stalker import Task
-
                         new_tasks = []
                         parents_to_reload = set()
                         for item in self.get_selected_task_items():
                             task = Task.query.get(item.task.id)
-                            new_tasks += utils.duplicate_task_hierarchy(
+                            new_tasks += duplicate_task_hierarchy(
                                 task,
                                 None,
                                 new_task_name if rename_new_tasks else None,
@@ -597,9 +580,6 @@ class TaskTreeView(QtWidgets.QTreeView):
                         QtWidgets.QMessageBox.No,
                     )
                     if answer == QtWidgets.QMessageBox.Yes:
-                        from stalker.db.session import DBSession
-                        from stalker import Task
-
                         tasks = self.get_selected_tasks()
                         logger.debug("tasks   : %s" % tasks)
 
@@ -650,10 +630,6 @@ class TaskTreeView(QtWidgets.QTreeView):
                     if dialog.exec_():
                         file_path = dialog.selectedFiles()[0]
                         if file_path:
-                            import os
-                            import json
-                            from anima.utils import task_hierarchy_io
-
                             # check file extension
                             parts = os.path.splitext(file_path)
 
@@ -680,48 +656,53 @@ class TaskTreeView(QtWidgets.QTreeView):
 
                 elif selected_action is import_from_json_action:
                     # show a file browser
-                    dialog = QtWidgets.QFileDialog(self, "Choose file")
+                    dialog = QtWidgets.QFileDialog(self, "Choose file or files")
                     dialog.setNameFilter("JSON Files (*.json)")
-                    dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+                    dialog.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
                     if dialog.exec_():
-                        file_path = dialog.selectedFiles()[0]
-                        if file_path:
-                            import json
+                        items_to_reload = set()
+                        imported_json_file_names = []
+                        selected_files = dialog.selectedFiles()
+                        if not selected_files:
+                            return
 
+                        if isinstance(entity, Task):
+                            project = entity.project
+                        elif isinstance(entity, Project):
+                            project = entity
+
+                        parent = None
+                        if isinstance(entity, Task):
+                            parent = entity
+
+                        decoder = task_hierarchy_io.StalkerEntityDecoder(
+                            project=project
+                        )
+                        for file_path in selected_files:
                             with open(file_path) as f:
                                 data = json.load(f)
-                            from anima.utils import task_hierarchy_io
-
-                            if isinstance(entity, Task):
-                                project = entity.project
-                            elif isinstance(entity, Project):
-                                project = entity
-
-                            parent = None
-                            if isinstance(entity, Task):
-                                parent = entity
-
-                            decoder = task_hierarchy_io.StalkerEntityDecoder(
-                                project=project
-                            )
                             loaded_entity = decoder.loads(data, parent=parent)
 
                             try:
-                                from stalker.db.session import DBSession
-
                                 DBSession.add(loaded_entity)
                                 DBSession.commit()
                             except Exception as e:
+                                DBSession.rollback()
                                 QtWidgets.QMessageBox.critical(
                                     self, "Error!", "%s" % e, QtWidgets.QMessageBox.Ok
                                 )
                             else:
-                                item.reload()
-                                QtWidgets.QMessageBox.information(
-                                    self,
-                                    "New Tasks are created!",
-                                    "New Tasks are created",
-                                )
+                                items_to_reload.add(item)
+                                imported_json_file_names.append(os.path.basename(file_path))
+                        for item in items_to_reload:
+                            item.reload()
+                        QtWidgets.QMessageBox.information(
+                            self,
+                            "New Tasks are created!",
+                            "New Tasks are imported from:<br><br>{}".format(
+                                "<br>".join(imported_json_file_names[:40])
+                            ),
+                        )
 
                 elif selected_action is create_project_structure_action:
                     answer = QtWidgets.QMessageBox.question(
@@ -732,11 +713,9 @@ class TaskTreeView(QtWidgets.QTreeView):
                         QtWidgets.QMessageBox.No,
                     )
                     if answer == QtWidgets.QMessageBox.Yes:
-                        from anima import utils
-
                         try:
                             for task in self.get_selected_tasks():
-                                utils.create_structure(task)
+                                create_structure(task)
                         except Exception as e:
                             QtWidgets.QMessageBox.critical(self, "Error", str(e))
                         finally:
@@ -749,14 +728,10 @@ class TaskTreeView(QtWidgets.QTreeView):
                         return
 
                 elif selected_action is fix_task_status_action:
-                    from stalker.db.session import DBSession
-                    from stalker import SimpleEntity, Task
-                    from anima import utils
-
                     for entity in self.get_selected_tasks():
                         if isinstance(entity, Task):
-                            utils.fix_task_statuses(entity)
-                            utils.fix_task_computed_time(entity)
+                            fix_task_statuses(entity)
+                            fix_task_computed_time(entity)
                             DBSession.add(entity)
                     DBSession.commit()
 
@@ -800,9 +775,6 @@ class TaskTreeView(QtWidgets.QTreeView):
                 elif selected_action in change_status_menu_actions:
                     # get the status code
                     status_code = selected_action.text()
-
-                    from sqlalchemy import func
-
                     status = Status.query.filter(
                         func.lower(Status.code) == func.lower(status_code)
                     ).first()
@@ -817,12 +789,9 @@ class TaskTreeView(QtWidgets.QTreeView):
                             task.status = status
 
                             # # fix other task statuses
-                            # from anima import utils
-                            # utils.fix_task_statuses(entity)
+                            # fix_task_statuses(entity)
 
                             # refresh the tree
-                            from stalker.db.session import DBSession
-
                             DBSession.add(task)
                             DBSession.commit()
 
@@ -864,8 +833,6 @@ class TaskTreeView(QtWidgets.QTreeView):
         if item.task.entity_type == "Task":
 
             if task_id:
-                from stalker import SimpleEntity
-
                 entity = SimpleEntity.query.get(task_id)
 
             from anima.ui.dialogs import task_dialog
@@ -938,8 +905,6 @@ class TaskTreeView(QtWidgets.QTreeView):
             # the item is not loaded to the UI yet
             # start loading its parents
             # start from the project
-            from stalker import Task
-
             if isinstance(task, Task):
                 item = self.find_entity_item(task.project, tree_view)
             else:
@@ -1028,8 +993,6 @@ class TaskTreeView(QtWidgets.QTreeView):
     def get_selected_tasks(self):
         """returns the selected tasks"""
         task_ids = self.get_selected_task_ids()
-        from stalker import SimpleEntity
-
         return list(SimpleEntity.query.filter(SimpleEntity.id.in_(task_ids)).all())
 
     def expand_all_selected(self, index):
