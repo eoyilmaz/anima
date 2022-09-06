@@ -1,8 +1,25 @@
 # -*- coding: utf-8 -*-
 
+import calendar
+import copy
+import datetime
+import exifread
+from fractions import Fraction
+import hashlib
+import math
 import os
+import platform
+import pprint
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import uuid
 
-from anima import logger
+from anima import defaults, logger
+from stalker import Link, Project, Repository, Task, Version
+from stalker.db.session import DBSession
 
 
 def all_equal(elements):
@@ -47,8 +64,6 @@ def relpath(p1, p2, sep=os.path.sep, pardir=os.path.pardir):
 
     """
     # replace any trailing slashes at the end
-    import re
-
     p1 = re.sub(r"[/]+$", "", p1)
     p1 = re.sub(r"[\\]+$", "", p1)
 
@@ -65,9 +80,6 @@ def open_browser_in_location(path):
     :param path: The path that the browser should be opened at.
     """
     command = []
-
-    import platform
-
     platform_info = platform.platform()
 
     path = os.path.normpath(os.path.expandvars(path))
@@ -89,8 +101,6 @@ def open_browser_in_location(path):
         command = "open -a /System/Library/CoreServices/Finder.app " + path
 
     if os.path.exists(path):
-        import subprocess
-
         subprocess.Popen(command, shell=True)
     else:
         raise IOError("%s doesn't exists!" % path)
@@ -101,8 +111,6 @@ def md5_checksum(path):
 
     :param path: absolute path to  the file
     """
-    import hashlib
-
     m = hashlib.md5()
     with open(path) as f:
         chunk = f.read(8192)
@@ -118,8 +126,6 @@ class StalkerThumbnailCache(object):
     @classmethod
     def get(cls, thumbnail_full_path, login=None, password=None):
         """returns the file either from cache or from stalker server"""
-        from anima import defaults
-
         # look up in the cache first
         filename = os.path.basename(thumbnail_full_path)
         logger.debug("filename : %s" % filename)
@@ -136,13 +142,21 @@ class StalkerThumbnailCache(object):
 
         if not os.path.exists(cached_file_full_path) and login and password:
             # download the file and put it on to the cache
-            import urllib
-            import urllib2
-            import cookielib
+            if sys.version_info[0] >= 3:
+                # Python 3
+                from http.cookiejar import CookieJar
+                from urllib.request import build_opener
+                from urllib.parse import urlencode
+                from urllib.request import HTTPCookieProcessor
+            else:
+                # Python 2
+                from cookielib import CookieJar
+                from urllib import urlencode
+                from urllib2 import build_opener, HTTPCookieProcessor
 
-            cj = cookielib.CookieJar()
-            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-            login_data = urllib.urlencode(
+            cj = CookieJar()
+            opener = build_opener(HTTPCookieProcessor(cj))
+            login_data = urlencode(
                 {"login": login, "password": password, "submit": True}
             )
             opener.open(login_url, login_data)
@@ -162,8 +176,7 @@ class StalkerThumbnailCache(object):
 
 
 def multiple_replace(text, adict):
-    import re
-
+    """Replace multiple times."""
     rx = re.compile("|".join(map(re.escape, adict)))
 
     def one_xlat(match):
@@ -204,8 +217,7 @@ def unique(s):
 
 
 def embedded_numbers(s):
-    import re
-
+    """Fileter embedded numbers."""
     re_digits = re.compile(r"(\d+)")
     pieces = re_digits.split(str(s))
     pieces[1::2] = list(map(int, pieces[1::2]))
@@ -250,9 +262,6 @@ def utc_to_local(utc_dt):
     http://stackoverflow.com/questions/4563272/how-to-convert-a-python-utc-datetime-to-a-local-datetime-using-only-python-stand/13287083#13287083
     """
     # get integer timestamp to avoid precision lost
-    import datetime
-    import calendar
-
     timestamp = calendar.timegm(utc_dt.timetuple())
     local_dt = datetime.datetime.fromtimestamp(timestamp)
     return local_dt.replace(microsecond=utc_dt.microsecond)
@@ -360,8 +369,6 @@ class MediaManager(object):
         self.web_video_bitrate = 4096  # in kBits/sec
 
         # commands
-        from anima import defaults
-
         self.ffmpeg_command_path = defaults.ffmpeg_command_path
         self.ffprobe_command_path = defaults.ffprobe_command_path
 
@@ -369,8 +376,6 @@ class MediaManager(object):
     def reorient_image(cls, img):
         """re-orients rotated images by looking at EXIF data"""
         # get the image rotation from EXIF information
-        import exifread
-
         file_full_path = img.filename
 
         with open(file_full_path) as f:
@@ -430,9 +435,6 @@ class MediaManager(object):
             # check if the image is in RGB mode
             if img.mode != "RGB":
                 img = img.convert("RGB")
-
-        import tempfile
-
         thumbnail_path = tempfile.mktemp(suffix=suffix)
 
         img.save(thumbnail_path, **self.thumbnail_options)
@@ -467,8 +469,6 @@ class MediaManager(object):
             # check if the image is in RGB mode
             if img.mode != "RGB":
                 img = img.convert("RGB")
-
-        import tempfile
 
         thumbnail_path = tempfile.mktemp(suffix=suffix)
 
@@ -523,8 +523,6 @@ class MediaManager(object):
             logger.debug("frame_rate: %s" % frame_rate)
             nb_frames = int(duration * frame_rate)
         nb_frames = int(nb_frames)
-
-        import tempfile
 
         start_thumb_path = tempfile.mktemp(suffix=self.thumbnail_format)
         mid_thumb_path = tempfile.mktemp(suffix=self.thumbnail_format)
@@ -626,8 +624,6 @@ class MediaManager(object):
         :param str file_full_path: A string showing the full path of the video
           file.
         """
-        import tempfile
-
         web_version_full_path = tempfile.mktemp(suffix=self.web_video_format)
         self.convert_to_webm(file_full_path, web_version_full_path)
         return web_version_full_path
@@ -681,14 +677,9 @@ class MediaManager(object):
         :return:
         """
         # upload it to the stalker server side storage path
-        import uuid
-
         new_filename = uuid.uuid4().hex + extension
         first_folder = new_filename[:2]
         second_folder = new_filename[2:4]
-
-        from anima import defaults
-
         file_path = os.path.join(
             defaults.server_side_storage_path, first_folder, second_folder
         )
@@ -714,8 +705,6 @@ class MediaManager(object):
         media_info = {"video_info": None, "stream_info": []}
         video_info = {}
         stream_info = {}
-
-        import copy
 
         # get STREAM info
         line = output_buffer.pop(0).strip()
@@ -884,8 +873,6 @@ class MediaManager(object):
 
         logger.debug("calling ffmpeg with args: %s" % args)
 
-        import subprocess
-
         startupinfo = None
         if os.name == "nt":
             startupinfo = subprocess.STARTUPINFO()
@@ -939,8 +926,6 @@ class MediaManager(object):
 
         logger.debug("calling ffprobe with args: %s" % args)
 
-        import subprocess
-
         startupinfo = None
         if os.name == "nt":
             startupinfo = subprocess.STARTUPINFO()
@@ -989,13 +974,8 @@ class MediaManager(object):
             "o": output_path,
         }
         conversion_options.update(options)
-
-        import pprint
-
         pprint.pprint(conversion_options)
-
         self.ffmpeg(**conversion_options)
-
         return output_path
 
     def convert_to_webm(self, input_path, output_path, options=None):
@@ -1125,8 +1105,6 @@ class MediaManager(object):
         :param file_params: An object with two attributes, first a
           ``filename`` attribute and a ``file`` which is a file like object.
         """
-        import tempfile
-
         uploaded_file_info = []
         # get the file names
         for file_param in file_params:
@@ -1156,8 +1134,6 @@ class MediaManager(object):
         :param str full_path: The filename to be randomized
         :return: str
         """
-        import uuid
-
         # get the filename
         path = os.path.dirname(full_path)
         filename = os.path.basename(full_path)
@@ -1223,8 +1199,6 @@ class MediaManager(object):
 
         # replace ' ' with '_'
         basename, extension = os.path.splitext(filename)
-        import re
-
         filename = "%s%s" % (
             re.sub(r'[\s\.\\/:\*\?"<>|=,+]+', "_", basename),
             extension,
@@ -1245,8 +1219,6 @@ class MediaManager(object):
         :param str filename: The desired file name for the uploaded file. If it
           is skipped a unique temp filename will be generated.
         """
-        import tempfile
-
         if file_path is None:
             file_path = tempfile.gettempdir()
 
@@ -1300,8 +1272,6 @@ class MediaManager(object):
         :param str filename: The original filename.
         :returns: :class:`.Link` instance.
         """
-        import shutil
-
         ############################################################
         # ORIGINAL
         ############################################################
@@ -1316,10 +1286,6 @@ class MediaManager(object):
         # create a Link instance and return it.
         # use a Repository relative path
         repo = task.project.repository
-
-        from stalker import Repository, Link
-
-        assert isinstance(repo, Repository)
         relative_full_path = repo.make_relative(reference_file_full_path)
 
         link = Link(full_path=relative_full_path, original_filename=filename)
@@ -1407,9 +1373,6 @@ class MediaManager(object):
         :param str extension: The file extension of the version.
         :returns: :class:`.Version` instance.
         """
-        from anima import defaults
-        from stalker import Version
-
         if take_name is None:
             take_name = defaults.version_take_name
 
@@ -1440,8 +1403,6 @@ class MediaManager(object):
         :param str filename: The original filename.
         :returns: :class:`.Link` instance.
         """
-        import shutil
-
         ############################################################
         # ORIGINAL
         ############################################################
@@ -1460,8 +1421,6 @@ class MediaManager(object):
         # create a Link instance and return it.
         # use a Repository relative path
         repo = version.task.project.repository
-
-        from stalker import Link
 
         full_path = str(version_output_file_full_path)
 
@@ -1576,8 +1535,6 @@ class Exposure(object):
         :param float shutter:
         :return:
         """
-        from fractions import Fraction
-
         if not isinstance(shutter, Fraction):
             self._shutter = Fraction(shutter)
         else:
@@ -1591,9 +1548,6 @@ class Exposure(object):
         :return:
         """
         assert isinstance(other_exp, Exposure)
-
-        import math
-
         # convert every thing to fractions
         shutter = math.log(
             float(other_exp.shutter.numerator)
@@ -1626,8 +1580,6 @@ def create_structure(entity):
     :param entity: A Stalker Project or Task instance
     :return:
     """
-    from stalker import Project, Task
-
     custom_template = None
     project = None
     task = None
@@ -2452,12 +2404,10 @@ def upload_thumbnail(task, thumbnail_full_path):
     #     from anima.utils import MediaManager
     #     mm = MediaManager()
     #     thumbnail_full_path = mm.generate_image_thumbnail(thumbnail_full_path)
-
-    import shutil
-
-    shutil.copy(thumbnail_full_path, thumbnail_final_full_path)
-
-    from stalker import Link, Version, Repository
+    try:
+        shutil.copy(thumbnail_full_path, thumbnail_final_full_path)
+    except shutil.SameFileError:
+        pass
 
     thumbnail_os_independent_path = Repository.to_os_independent_path(
         thumbnail_final_full_path
@@ -2473,7 +2423,6 @@ def upload_thumbnail(task, thumbnail_full_path):
     task.thumbnail = l_thumb
 
     # get a version of this Task
-    from stalker.db.session import DBSession
 
     v = Version.query.filter(Version.task == task).first()
     if v:
