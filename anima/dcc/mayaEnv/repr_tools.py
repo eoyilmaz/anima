@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Module that contains Representation (LOD) related functions."""
+
 
 import os
 import re
@@ -7,13 +9,13 @@ import subprocess
 import tempfile
 import uuid
 
-import pymel.core as pm
-from stalker import LocalSession, Repository
-
-from anima.representation import Representation
-from anima.dcc.mayaEnv import auxiliary
 from anima import logger
+from anima.dcc.mayaEnv import auxiliary
+from anima.representation import Representation
 
+import pymel.core as pm
+
+from stalker import LocalSession, Repository
 
 #
 # Stores shading nodes that is commonly used
@@ -139,7 +141,7 @@ RENDER_RELATED_NODE_TYPES = [
     "colorProfile",
     "contrast",  # +
     "gammaCorrect",  # +
-    #'grade_tm',
+    # 'grade_tm',
     "hsvToRgb",  # +
     "luminance",  # +
     "remapColor",  # +
@@ -243,7 +245,7 @@ READ_ONLY_NODE_NAMES = [
 
 
 class RepresentationGenerator(object):
-    """Generates different representations of the current scene"""
+    """Generates different representations of the current scene."""
 
     def __init__(self, version=None):
         local_session = LocalSession()
@@ -261,16 +263,23 @@ class RepresentationGenerator(object):
 
     @classmethod
     def get_local_root_nodes(cls):
-        """returns the root nodes that are not referenced"""
+        """Return the root nodes that are not referenced.
+
+        Returns:
+            list: The local root nodes.
+        """
         return [
             node for node in auxiliary.get_root_nodes() if node.referenceFile() is None
         ]
 
     def get_latest_repr_version(self, take_name):
-        """returns the latest published version or creates a new version
+        """Return the latest published version or creates a new version.
 
-        :param str take_name: The take_name
-        :return:
+        Args:
+            take_name (str): The take_name.
+
+        Returns:
+            Version: The latest repr version of the given take.
         """
         from stalker import Version
 
@@ -299,9 +308,13 @@ class RepresentationGenerator(object):
 
     @classmethod
     def is_model_task(cls, task):
-        """checks if the given task is a model task
+        """Check if the given task is a model task.
 
-        :param task: A Stalker Task instance
+        Args:
+            task (Task): A Stalker Task instance.
+
+        Returns:
+            bool: True if the given Task is a Model task.
         """
         task_type = task.type
         if task_type:
@@ -318,9 +331,13 @@ class RepresentationGenerator(object):
 
     @classmethod
     def is_look_dev_task(cls, task):
-        """checks if the given task is a look development task
+        """Check if the given task is a look development task.
 
-        :param task: A Stalker Task instance
+        Args:
+            task (Task): A Stalker Task instance.
+
+        Returns:
+            bool: True if this is a LookDevelopment task.
         """
         task_type = task.type
         if task_type:
@@ -337,9 +354,13 @@ class RepresentationGenerator(object):
 
     @classmethod
     def is_scene_assembly_task(cls, task):
-        """checks if the given task is a scene assembly task
+        """Check if the given task is a scene assembly task.
 
-        :param task: A Stalker Task instance
+        Args:
+            task (Task): A Stalker Task instance.
+
+        Returns:
+            bool: True if the given task is a task with SceneAssembly type.
         """
         task_type = task.type
         if task_type:
@@ -356,9 +377,13 @@ class RepresentationGenerator(object):
 
     @classmethod
     def is_vegetation_task(cls, task):
-        """checks if the given task is a vegetation task
+        """Check if the given task is a vegetation task.
 
-        :param task: A Stalker Task instance
+        Args:
+            task (Task): A Stalker Task instance
+
+        Returns:
+            bool: True if the given task is a vegetation related Task.
         """
         task_type = task.type
         if task_type:
@@ -375,13 +400,14 @@ class RepresentationGenerator(object):
 
     @classmethod
     def is_exterior_or_interior_task(cls, task):
-        """checks if the given task is the first Layout task of an
-        Exterior or Interior task.
+        """Check if the given task is the Layout task of an Exterior/Interior task.
 
-        :param task: a stalker.task
-        :return:
+        Args:
+            task (Task): A stalker.task instance.
+
+        Returns:
+            bool: True if the given task is an Exterior or Interior asset related task.
         """
-
         if task.type and task.type.name.lower() == "layout":
             parent = task.parent
             if task.name.lower() == "hires":
@@ -403,10 +429,18 @@ class RepresentationGenerator(object):
         return False
 
     def _validate_version(self, version):
-        """validates the given version value
+        """Validate the given version value.
 
-        :param version: A stalker.model.version.Version instance
-        :return:
+        Args:
+            version: A stalker.model.version.Version instance
+
+        Raises:
+            RuntimeError: If Version is None or the given Version is not the base
+                version.
+            TypeError: If the given version is not a Version instance.
+
+        Returns:
+            Version: The validated Version instance.
         """
         if not version:
             raise RuntimeError("Please supply a valid Stalker Version object!")
@@ -430,10 +464,10 @@ class RepresentationGenerator(object):
         return version
 
     def open_version(self, version=None):
-        """Opens the given version
+        """Open the given version.
 
-        :param version: A stalker.models.version.Version instance
-        :return:
+        Args:
+            version (Version): A stalker.models.version.Version instance.
         """
         current_v = self.maya_env.get_current_version()
         if current_v is not version:
@@ -443,11 +477,15 @@ class RepresentationGenerator(object):
 
     @classmethod
     def make_unique(cls, filename, force=True):
-        """Generates a unique filename if the file already exists
+        """Generate a unique filename if the file already exists.
 
-        :param filename:
-        :param force:
-        :return:
+        Args:
+            filename (str): The filename.
+            force (bool): If set to True it will keep trying to generate a filename
+                until it finds a unique one.
+
+        Returns:
+            str: The generated filename
         """
         import uuid
 
@@ -468,13 +506,17 @@ class RepresentationGenerator(object):
             return generate_filename()
 
     def generate_all(self):
-        """generates all representations at once"""
+        """Generate all representations at once."""
         # self.generate_gpu()
         # self.generate_ass()
         self.generate_rs()
 
     def generate_bbox(self):
-        """generates the BBox representation of the current scene"""
+        """Generate the BBox representation of the current scene.
+
+        Raises:
+            RuntimeError: On some certain conditions this function raises RuntimeErrors.
+        """
         # validate the version first
         self.version = self._validate_version(self.version)
 
@@ -566,11 +608,15 @@ class RepresentationGenerator(object):
         pm.newFile(force=True)
 
     def generate_proxy(self):
-        """generates the Proxy representation of the current scene"""
+        """Generate the Proxy representation of the current scene."""
         pass
 
     def generate_gpu(self):
-        """generates the GPU representation of the current scene"""
+        """Generate the GPU representation of the current scene.
+
+        Raises:
+            RuntimeError: On some certain conditions this function raises RuntimeErrors.
+        """
         # validate the version first
         self.version = self._validate_version(self.version)
 
@@ -1002,7 +1048,14 @@ class RepresentationGenerator(object):
         pm.newFile(force=True)
 
     def make_tx(self, texture_path):
-        """converts the given texture to TX"""
+        """Convert the given texture to TX.
+
+        Args:
+            texture_path (str): The texture path to convert.
+
+        Returns:
+            str: Returns the converted texture path.
+        """
         # check if it is tiled
         tile_path = texture_path
         orig_path_as_tx = "".join([os.path.splitext(texture_path)[0], ".tx"])
@@ -1036,9 +1089,65 @@ class RepresentationGenerator(object):
         return orig_path_as_tx
 
     @classmethod
-    def clean_up(self):
-        """cleans up the scene"""
-        num_of_items_deleted = pm.mel.eval("MLdeleteUnused")
+    def bake_mash_nodes(cls):
+        """Convert MASH instances to normal nodes in the current scene."""
+        logger.debug("bake_mash_nodes start!")
+        if not pm.pluginInfo("MASH", q=1, loaded=1):
+            # no MASH no cash!
+            logger.debug("no MASH plugin loaded, bake_mash_nodes returns early!")
+            return
+
+        # first convert all MASH_Repro to instancers
+        from MASH import switchGeometryType
+        from anima.dcc.mayaEnv.config import MASHbakeInstancer
+
+        logger.debug("Converting MASH_Repro to instancers if any!")
+        for mash_waiter in pm.ls(type=pm.nt.MASH_Waiter):
+            nodes_to_convert = []
+            instancers = mash_waiter.instancerMessage.listConnections(d=True, s=False)
+            for instancer in instancers:
+                current_instancer_type = instancer.type()
+                # MASH_Repro or instancer
+                if current_instancer_type != "instancer":
+                    nodes_to_convert.append(instancer)
+            if nodes_to_convert:
+                mash_repro = mash_waiter.outputs()[0]
+                repro_mesh = mash_repro.outputs()[0]
+                pm.select(mash_waiter, ne=1)
+                pm.select([repro_mesh], add=1)
+                switchGeometryType.switch()
+
+        logger.debug("Baking instancers!")
+        # bake the instancer to normal objects
+        for mash_waiter in pm.ls(type=pm.nt.MASH_Waiter):
+            nodes_to_convert = []
+            instancers = mash_waiter.instancerMessage.listConnections(d=True, s=False)
+            for instancer in instancers:
+                current_instancer_type = instancer.type()
+                # MASH_Repro or instancer
+                if current_instancer_type == "instancer":
+                    nodes_to_convert.append(instancer)
+
+            for node in nodes_to_convert:
+                parent_node = node.getParent()
+                new_group_name = "{}_objects".format(node.name())
+
+                pm.select(node)
+                MASHbakeInstancer.MASHbakeInstancer()
+                # move the newly created MASH1_Instancer_objects node to the same level
+                # of the instancer node
+                new_group = pm.PyNode(new_group_name)
+                pm.parent(new_group, parent_node)
+
+        # delete all MASH related nodes
+        logger.debug("Deleting MASH nodes!")
+        pm.delete(pm.ls(type=pm.nt.MASH_Waiter))
+        logger.debug("bake_mash_nodes end!")
+
+    @classmethod
+    def clean_up(cls):
+        """Clean up the scene."""
+        pm.mel.eval("MLdeleteUnused")
 
         logger.debug("deleting unknown references")
         delete_nodes_types = ["reference", "unknown"]
@@ -1052,10 +1161,13 @@ class RepresentationGenerator(object):
             pass
 
     def generate_ass(self):
-        """generates the ASS representation of the current scene
+        """Generate the ASS representation of the current scene.
 
         For Model Tasks the ASS is generated over the LookDev Task because it
         is not possible to assign a material to an object inside an ASS file.
+
+        Raises:
+            RuntimeError: On some certain conditions this function raises RuntimeErrors.
         """
         # before doing anything, check if this is a look dev task
         # and export the objects from the referenced files with their current
@@ -1190,8 +1302,8 @@ class RepresentationGenerator(object):
                         continue
 
                     # randomize child node name
-                    # TODO: This is not working as intended, node names are like |NS:node1|NS:node2
-                    #       resulting a child_node_name as "node2"
+                    # TODO: This is not working as intended, node names are like
+                    #       |NS:node1|NS:node2 resulting a child_node_name as "node2"
                     child_node_name = (
                         child_node.fullPath().replace("|", "_").split(":")[-1]
                     )
@@ -1199,6 +1311,8 @@ class RepresentationGenerator(object):
                     child_node_full_path = child_node.fullPath()
 
                     pm.select(child_node)
+                    # TODO: Instead of uuid4 please use a deterministic so reproducible
+                    #       random suffix using the fullpath.
                     child_node.rename("%s_%s" % (child_node.name(), uuid.uuid4().hex))
 
                     output_filename = "%s_%s.ass" % (
@@ -1465,10 +1579,13 @@ class RepresentationGenerator(object):
         pm.modelEditor(active_panel, e=1, pluginShapes=show_plugin_shapes)
 
     def generate_rs(self):
-        """generates the RS representation of the current scene
+        """Generate the RS representation of the current scene.
 
         For Model Tasks the RS is generated over the LookDev Task because it
         is not possible to assign a material to an object inside an RS file.
+
+        Raises:
+            RuntimeError: On several different occasions this will raise RuntimeError.
         """
         # before doing anything, check if this is a look dev task
         # and export the objects from the referenced files with their current
@@ -1527,7 +1644,36 @@ class RepresentationGenerator(object):
             )
 
         # from anima.dcc.mayaEnv.redshift import RedShiftTextureProcessor
-        if self.is_look_dev_task(task):
+        if self.is_model_task(task):
+            # convert all children of the root node
+            # to an empty rs node
+            # and save it as it is
+            root_nodes = self.get_local_root_nodes()
+
+            for root_node in root_nodes:
+                for child_node in root_node.getChildren(type=pm.nt.Transform):
+                    child_node_name = child_node.name()
+
+                    rp = pm.xform(child_node, q=1, ws=1, rp=1)
+                    sp = pm.xform(child_node, q=1, ws=1, sp=1)
+
+                    pm.delete(child_node)
+
+                    rs_proxy_node, rs_proxy_mesh = auxiliary.create_rs_proxy_node(
+                        path=""
+                    )
+                    rs_proxy_tra = rs_proxy_mesh.getParent()
+                    pm.parent(rs_proxy_tra, root_node)
+                    rs_proxy_tra.rename(child_node_name)
+
+                    # set pivots
+                    pm.xform(rs_proxy_tra, ws=1, rp=rp)
+                    pm.xform(rs_proxy_tra, ws=1, sp=sp)
+
+                    # set the drawing overrides
+                    rs_proxy_tra.overrideEnabled.set(1)
+                    rs_proxy_tra.overrideShading.set(0)
+        elif self.is_look_dev_task(task):
             # in look dev files, we export the RS files directly from the Base
             # version and parent the resulting RS node to the parent of
             # the child node
@@ -1549,18 +1695,18 @@ class RepresentationGenerator(object):
             # replace all "$REPO#" from all texture paths first
             #
             # This is needed to properly render textures with any OS
-            types_and_attrs = {
-                "aiImage": "filename",
-                "file": "computedFileTextureNamePattern",
-                "imagePlane": "imageName",
-            }
+            # types_and_attrs = {
+            #     "aiImage": "filename",
+            #     "file": "computedFileTextureNamePattern",
+            #     "imagePlane": "imageName",
+            # }
 
-            for node_type in types_and_attrs.keys():
-                attr_name = types_and_attrs[node_type]
-                for node in pm.ls(type=node_type):
-                    orig_path = node.getAttr(attr_name).replace("\\", "/")
-                    path = re.sub(r"(\$REPO[0-9/]+)", "", orig_path)
-                    # RedShiftTextureProcessor(path).convert()
+            # for node_type in types_and_attrs.keys():
+            #     attr_name = types_and_attrs[node_type]
+            #     for node in pm.ls(type=node_type):
+            #         orig_path = node.getAttr(attr_name).replace("\\", "/")
+            #         path = re.sub(r"(\$REPO[0-9/]+)", "", orig_path)
+            #         # RedShiftTextureProcessor(path).convert()
 
             # randomize all render node names
             # This is needed to prevent clashing of materials in a bigger scene
@@ -1615,7 +1761,7 @@ class RepresentationGenerator(object):
                         # then move it to the original place
                         try:
                             shutil.move(temp_full_path, output_full_path)
-                        except OSError as e:
+                        except OSError:
                             # some Linux flavors don't allow move to overwrite
                             # if source and target files are under different
                             # file systems. So simply remove the target
@@ -1652,7 +1798,6 @@ class RepresentationGenerator(object):
                     #     nodes_to_rs_files[full_path]
                     # )
                     rs_proxy_node.setAttr("fileName", proxy_file_path)
-
         elif self.is_vegetation_task(task):
             # in vegetation files, we export the RS files directly from the
             # Base version, also we use the geometry under "pfxPolygons"
@@ -1666,18 +1811,18 @@ class RepresentationGenerator(object):
             # replace all "$REPO#" from all texture paths first
             #
             # This is needed to properly render textures with any OS
-            types_and_attrs = {
-                "aiImage": "filename",
-                "file": "computedFileTextureNamePattern",
-                "imagePlane": "imageName",
-            }
+            # types_and_attrs = {
+            #     "aiImage": "filename",
+            #     "file": "computedFileTextureNamePattern",
+            #     "imagePlane": "imageName",
+            # }
 
-            for node_type in types_and_attrs.keys():
-                attr_name = types_and_attrs[node_type]
-                for node in pm.ls(type=node_type):
-                    orig_path = node.getAttr(attr_name).replace("\\", "/")
-                    path = re.sub(r"(\$REPO[0-9/]+)", "", orig_path)
-                    # RedShiftTextureProcessor(path).convert()
+            # for node_type in types_and_attrs.keys():
+            #     attr_name = types_and_attrs[node_type]
+            #     for node in pm.ls(type=node_type):
+            #         orig_path = node.getAttr(attr_name).replace("\\", "/")
+            #         path = re.sub(r"(\$REPO[0-9/]+)", "", orig_path)
+            #         # RedShiftTextureProcessor(path).convert()
 
             # import shaders that are referenced to this scene
             # there is only one reference in the vegetation task and this is
@@ -1769,36 +1914,6 @@ class RepresentationGenerator(object):
             except pm.MayaNodeError:
                 pass
 
-        elif self.is_model_task(task):
-            # convert all children of the root node
-            # to an empty rs node
-            # and save it as it is
-            root_nodes = self.get_local_root_nodes()
-
-            for root_node in root_nodes:
-                for child_node in root_node.getChildren(type=pm.nt.Transform):
-                    child_node_name = child_node.name()
-
-                    rp = pm.xform(child_node, q=1, ws=1, rp=1)
-                    sp = pm.xform(child_node, q=1, ws=1, sp=1)
-
-                    pm.delete(child_node)
-
-                    rs_proxy_node, rs_proxy_mesh = auxiliary.create_rs_proxy_node(
-                        path=""
-                    )
-                    rs_proxy_tra = rs_proxy_mesh.getParent()
-                    pm.parent(rs_proxy_tra, root_node)
-                    rs_proxy_tra.rename(child_node_name)
-
-                    # set pivots
-                    pm.xform(rs_proxy_tra, ws=1, rp=rp)
-                    pm.xform(rs_proxy_tra, ws=1, sp=sp)
-
-                    # set the drawing overrides
-                    rs_proxy_tra.overrideEnabled.set(1)
-                    rs_proxy_tra.overrideShading.set(0)
-
         # convert all references to RS
         for ref in pm.listReferences():
             ref.to_repr("RS")
@@ -1821,6 +1936,9 @@ class RepresentationGenerator(object):
 
             # # now remove them from the group
             # pm.sets('initialShadingGroup', e=1, rm=pm.ls())
+
+            # convert MASH instances to normal geometry
+            self.bake_mash_nodes()
 
             # clean up
             self.clean_up()
