@@ -2660,6 +2660,21 @@ def check_reference_types(progress_controller=None):
         )
 
 
+@publisher("layout")
+def bake_mash_nodes_publisher(progress_controller=None):
+    """Bake MASH nodes.
+
+    This will bake the MASH nodes to normal instances for Layout scenes.
+    """
+    if progress_controller is None:
+        progress_controller = ProgressControllerBase()
+
+    from anima.dcc.mayaEnv.auxiliary import bake_mash_nodes
+
+    bake_mash_nodes()
+    progress_controller.complete()
+
+
 # @publisher('animation')
 # def freezing_last_frame(progress_controller=None):
 #     """

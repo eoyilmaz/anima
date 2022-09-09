@@ -7,6 +7,7 @@ import re
 
 import pymel.core as pm
 
+from anima import logger
 import anima.utils
 from anima.utils.progress import ProgressManager
 
@@ -3887,3 +3888,59 @@ def orphan_rig_finder(project):
                 continue
 
     return orphan_rigs
+
+
+def bake_mash_nodes():
+    """Convert MASH instances to normal nodes in the current scene."""
+    logger.debug("bake_mash_nodes start!")
+    if not pm.pluginInfo("MASH", q=1, loaded=1):
+        # no MASH no cash!
+        logger.debug("no MASH plugin loaded, bake_mash_nodes returns early!")
+        return
+
+    # first convert all MASH_Repro to instancers
+    from MASH import switchGeometryType
+    from anima.dcc.mayaEnv.config import MASHbakeInstancer
+
+    logger.debug("Converting MASH_Repro to instancers if any!")
+    for mash_waiter in pm.ls(type=pm.nt.MASH_Waiter):
+        nodes_to_convert = []
+        instancers = mash_waiter.instancerMessage.listConnections(d=True, s=False)
+        for instancer in instancers:
+            current_instancer_type = instancer.type()
+            # MASH_Repro or instancer
+            if current_instancer_type != "instancer":
+                nodes_to_convert.append(instancer)
+        if nodes_to_convert:
+            mash_repro = mash_waiter.outputs()[0]
+            repro_mesh = mash_repro.outputs()[0]
+            pm.select(mash_waiter, ne=1)
+            pm.select([repro_mesh], add=1)
+            switchGeometryType.switch()
+
+    logger.debug("Baking instancers!")
+    # bake the instancer to normal objects
+    for mash_waiter in pm.ls(type=pm.nt.MASH_Waiter):
+        nodes_to_convert = []
+        instancers = mash_waiter.instancerMessage.listConnections(d=True, s=False)
+        for instancer in instancers:
+            current_instancer_type = instancer.type()
+            # MASH_Repro or instancer
+            if current_instancer_type == "instancer":
+                nodes_to_convert.append(instancer)
+
+        for node in nodes_to_convert:
+            parent_node = node.getParent()
+            new_group_name = "{}_objects".format(node.name())
+
+            pm.select(node)
+            MASHbakeInstancer.MASHbakeInstancer()
+            # move the newly created MASH1_Instancer_objects node to the same level
+            # of the instancer node
+            new_group = pm.PyNode(new_group_name)
+            pm.parent(new_group, parent_node)
+
+    # delete all MASH related nodes
+    logger.debug("Deleting MASH nodes!")
+    pm.delete(pm.ls(type=pm.nt.MASH_Waiter))
+    logger.debug("bake_mash_nodes end!")
