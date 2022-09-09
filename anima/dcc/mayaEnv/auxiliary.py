@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import copy
-
+import json
 import os
 import re
+import tempfile
 
 import pymel.core as pm
 
@@ -1238,11 +1239,6 @@ def ask_playblast_view_options():
     selected view options it will use the defaults from the Playblaster
     """
     # storage
-    import os
-    import tempfile
-    import copy
-    import json
-
     user_playblast_view_options_storage = os.path.join(
         tempfile.gettempdir(), "playblast_view_options.json"
     )
@@ -3900,7 +3896,7 @@ def bake_mash_nodes():
 
     # first convert all MASH_Repro to instancers
     from MASH import switchGeometryType
-    from anima.dcc.mayaEnv.config import MASHbakeInstancer
+    from anima.dcc.mayaEnv import mash_bake_instancer
 
     logger.debug("Converting MASH_Repro to instancers if any!")
     for mash_waiter in pm.ls(type=pm.nt.MASH_Waiter):
@@ -3934,7 +3930,7 @@ def bake_mash_nodes():
             new_group_name = "{}_objects".format(node.name())
 
             pm.select(node)
-            MASHbakeInstancer.MASHbakeInstancer()
+            mash_bake_instancer.mash_bake_instancer()
             # move the newly created MASH1_Instancer_objects node to the same level
             # of the instancer node
             new_group = pm.PyNode(new_group_name)
