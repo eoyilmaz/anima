@@ -1919,7 +1919,7 @@ class RepresentationGenerator(object):
             ref.to_repr("RS")
             ref.load()
 
-        # if this is an Exterior/Interior -> Layout -> Hires task flatten it
+        # if this is an Exterior/Interior -> Layout task flatten it
         is_exterior_or_interior_task = self.is_exterior_or_interior_task(task)
         if is_exterior_or_interior_task:
             # and import all of the references

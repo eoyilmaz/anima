@@ -2,7 +2,6 @@
 # This function takes an instancer, and turns all the particles being fed into it to
 # real geometry.
 
-from builtins import range
 import maya.cmds as cmds
 import maya.OpenMaya as om
 import maya.OpenMayaFX as omfx
