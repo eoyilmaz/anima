@@ -4,6 +4,10 @@ from anima import logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 
+if False:
+    from PySide2 import QtCore, QtGui, QtWidgets
+
+
 class VersionsTableWidget(QtWidgets.QTableWidget):
     """A QTableWidget derivative specialized to hold version data"""
 
@@ -118,12 +122,8 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             """
             my_font = item.font()
             my_font.setBold(True)
-
             item.setFont(my_font)
-
-            foreground = item.foreground()
-            foreground.setColor(QtGui.QColor(0, 192, 0))
-            item.setForeground(foreground)
+            item.setTextColor(QtGui.QColor(0, 192, 0))
 
         # update the previous versions list
         from anima import defaults
