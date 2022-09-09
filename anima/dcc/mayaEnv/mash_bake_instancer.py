@@ -104,7 +104,7 @@ def mash_bake_instancer():
                 ][0]
 
                 # get the instancer object name
-                full_path_name = instanced_transform.partialPathName()
+                full_path_name = instanced_transform.fullPath()
                 # support namespaces, references, crap names
                 name_space_removed = full_path_name.rsplit(":", 1)[-1]
                 pipes_removed = name_space_removed.rsplit("|", 1)[-1]
@@ -115,7 +115,7 @@ def mash_bake_instancer():
                 if pm.objExists(new_name) is False:
                     # duplicate the object
                     if bake_to_instances_flag:
-                        new_node = pm.duplicate(instanced_transform, ilf=True)[0]
+                        new_node = pm.instance(instanced_transform)[0]
                     else:
                         new_node = pm.duplicate(instanced_transform, rr=True, un=True)[0]
 
@@ -139,7 +139,7 @@ def mash_bake_instancer():
                 # get the matrix from the instancer
                 instanced_path_matrix = new_node.worldMatrix.get()
                 final_matrix_for_path = instanced_path_matrix * matrix
-                final_point = pm.nt.Point.origin * final_matrix_for_path
+                final_point = pm.dt.Point.origin * final_matrix_for_path
                 # set the translate
                 try:
                     new_node.t.set(final_point.x, final_point.y, final_point.z)
