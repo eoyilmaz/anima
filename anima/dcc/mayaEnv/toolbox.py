@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 
 import os
@@ -2062,7 +2063,7 @@ def UI():
                     labelArray2=["Isolate", "Unload Refs"],
                     cl3=["left", "left", "left"],
                     cw3=[100, 60, 60],
-                    valueArray2=[1, 1],
+                    valueArray2=[1, 0],
                 )
 
             pm.intFieldGrp(
