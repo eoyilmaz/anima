@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import sys
 
 exceptions = None
@@ -66,8 +67,6 @@ class Fusion(DCCBase):
         version.created_with = self.name
 
         # set project_directory
-        import os
-
         self.project_directory = os.path.dirname(version.absolute_path)
 
         # set range from the shot
@@ -197,8 +196,6 @@ class Fusion(DCCBase):
         skip_update_check=False,
     ):
         """the open action for nuke DCC"""
-        import os
-
         version_full_path = os.path.normpath(version.absolute_full_path)
 
         # # delete all the comps and open new one
@@ -250,8 +247,6 @@ class Fusion(DCCBase):
         :return: :class:`~stalker.models.version.Version`
         """
         # full_path = self._root.knob('name').value()
-        import os
-
         full_path = os.path.normpath(self.comp.GetAttrs()["COMPS_FileName"]).replace(
             "\\", "/"
         )
@@ -342,8 +337,6 @@ class Fusion(DCCBase):
 
     def fix_loader_paths(self):
         """fixes loader paths mainly from one OS to another"""
-        import os
-
         # get all loaders
         for loader in self.comp.GetToolList(False, "Loader").values():
             path = self.get_node_input_entry_value_by_name(loader, "Clip")
@@ -522,8 +515,6 @@ class Fusion(DCCBase):
 
         # check if it is a stereo comp
         # if it is enable separate view rendering
-        import os
-
         output_file_path = os.path.join(
             version.absolute_path,
             "Outputs",
@@ -585,8 +576,6 @@ class Fusion(DCCBase):
         imf = None
         if shot:
             if shot.thumbnail:
-                import os
-
                 thumbnail_full_path = os.path.expandvars(shot.thumbnail.full_path)
                 slate_node.Input1 = thumbnail_full_path
 
@@ -719,7 +708,7 @@ class Fusion(DCCBase):
                             "type": "OCIOColorSpace",
                             "ref_id": random_ref_id,
                             "input_list": {
-                                "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
+                                "OCIOConfig": "" if "OCIO" in os.environ else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
                                 "SourceSpace": "ACES - ACES2065-1",
                                 "OutputSpace": "Output - Rec.709",
                             },
@@ -727,7 +716,7 @@ class Fusion(DCCBase):
                                 "Input": {
                                     "type": "OCIOColorSpace",
                                     "input_list": {
-                                        "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
+                                        "OCIOConfig": "" if "OCIO" in os.environ else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
                                         "SourceSpace": "Utility - Linear - sRGB",
                                         "OutputSpace": "ACES - ACES2065-1",
                                     },
@@ -887,7 +876,7 @@ class Fusion(DCCBase):
                             "Input": {
                                 "type": "OCIOColorSpace",
                                 "input_list": {
-                                    "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
+                                    "OCIOConfig": "" if "OCIO" in os.environ else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
                                     "SourceSpace": "ACES - ACES2065-1",
                                     "OutputSpace": "Utility - sRGB - Texture",
                                 },
@@ -896,7 +885,7 @@ class Fusion(DCCBase):
                                         "type": "OCIOColorSpace",
                                         "ref_id": random_ref_id,
                                         "input_list": {
-                                            "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
+                                            "OCIOConfig": "" if "OCIO" in os.environ else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
                                             "SourceSpace": "ACES - ACES2065-1",
                                             "OutputSpace": "ACES - ACES2065-1",
                                         },
@@ -949,7 +938,7 @@ class Fusion(DCCBase):
                             "Input": {
                                 "type": "OCIOColorSpace",
                                 "input_list": {
-                                    "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
+                                    "OCIOConfig": "" if "OCIO" in os.environ else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
                                     "SourceSpace": "ACES - ACES2065-1",
                                     "OutputSpace": "ACES - ACES2065-1",
                                 },
@@ -997,7 +986,7 @@ class Fusion(DCCBase):
                             "Input": {
                                 "type": "OCIOColorSpace",
                                 "input_list": {
-                                    "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
+                                    "OCIOConfig": "" if "OCIO" in os.environ else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
                                     "SourceSpace": "ACES - ACES2065-1",
                                     "OutputSpace": "Output - Rec.709",
                                 },
@@ -1097,8 +1086,6 @@ class Fusion(DCCBase):
                                 break
 
             try:
-                import os
-
                 os.makedirs(
                     os.path.dirname(self.output_path_generator(version, format_name))
                 )
@@ -1137,8 +1124,6 @@ class Fusion(DCCBase):
         :param str project_directory_in: the project directory
         :return:
         """
-        import os
-
         project_directory_in = os.path.normpath(project_directory_in)
         print("setting project directory to: %s" % project_directory_in)
 
