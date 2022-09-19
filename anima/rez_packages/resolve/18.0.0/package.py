@@ -11,7 +11,6 @@ uuid = "86791641abc04a189b2177f4eff55327"
 description = "DaVinci Resolve package"
 
 requires = [
-    "python",
     "pyside2",
     "anima",
 ]
