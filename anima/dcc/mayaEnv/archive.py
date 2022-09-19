@@ -331,7 +331,7 @@ sourceimages/3dPaintTextures"""
             ref_file_name = os.path.basename(ref_path)
 
             # try to find a corresponding Stalker Version instance with it
-            from stalker import Version, Task
+            from stalker import Project, Task, Version
 
             if project is not None:
                 # use the given project
@@ -351,9 +351,13 @@ sourceimages/3dPaintTextures"""
                     ).all()
             else:
                 # search on all projects
-                versions = Version.query.filter(
-                    Version.full_path.endswith(ref_file_name)
-                ).all()
+                v = (
+                    Version.query.join(Version.task, Task.versions)
+                    .join(Project, Task.project)
+                    .filter(Version.full_path.endswith(ref_file_name))
+                    .order_by(Project.date_created)
+                    .first()
+                )
 
             version = None
             for v in versions:

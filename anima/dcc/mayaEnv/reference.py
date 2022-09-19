@@ -387,7 +387,7 @@ class Reference(object):
         # get all reference paths
         import os
         from anima.dcc import mayaEnv
-        from stalker import Repository, Version, Task
+        from stalker import Repository, Task, Project, Version
 
         m = mayaEnv.Maya()
         current_version = m.get_current_version()
@@ -415,10 +415,12 @@ class Reference(object):
                     .first()
                 )
                 if not v:
-                    # try to look in to all projects
+                    # try to look in to all projects, order by
                     v = (
-                        Version.query
+                        Version.query.join(Version.task, Task.versions)
+                        .join(Project, Task.project)
                         .filter(Version.full_path.endswith(filename))
+                        .order_by(Project.date_created)
                         .first()
                     )
 
