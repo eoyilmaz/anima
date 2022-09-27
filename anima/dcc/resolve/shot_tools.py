@@ -22,6 +22,11 @@ from anima.ui.utils import ColorList, set_widget_bg_color
 from stalker.db.session import DBSession
 from stalker import Version
 
+
+if False:
+    from PySide2 import QtCore, QtWidgets
+
+
 DEFAULT_TAKE_NAME = "Main"
 DEFAULT_RENDER_PRESET_NAME = "PlateInjector"
 
@@ -322,8 +327,24 @@ class ShotManager(object):
             shot.record_in = shot.clip.GetStart()
 
     @classmethod
-    def create_render_jobs(cls, shot_clips, handle=0, take_name=None, preset_name=None):
-        """creates render jobs"""
+    def create_render_jobs(
+        cls,
+        shot_clips,
+        handle=0,
+        take_name=None,
+        preset_name=None,
+        reuse_latest_version=False,
+    ):
+        """Create render jobs.
+
+        Args:
+            shot_clips (list): Shot clips.
+            handle (int): Handle from both ends of the clip.
+            take_name (str): The desired take name for the Stalker Version.
+            preset_name (str): The preset name to be used for rendering.
+            reuse_latest_version (bool): Create a new version everytime (default) or
+                reuse the latest version.
+        """
         if take_name is None:
             take_name = DEFAULT_TAKE_NAME
 
@@ -332,7 +353,10 @@ class ShotManager(object):
 
         for shot_clip in shot_clips:
             shot_clip.create_render_job(
-                handle=handle, take_name=take_name, preset_name=preset_name
+                handle=handle,
+                take_name=take_name,
+                preset_name=preset_name,
+                reuse_latest_version=reuse_latest_version,
             )
 
     def fix_shot_clip_names(self):
@@ -830,14 +854,21 @@ class ShotClip(object):
             DBSession.commit()
         return type_instance
 
-    def create_render_job(self, handle=0, take_name=None, preset_name=None):
+    def create_render_job(
+        self, handle=0, take_name=None, preset_name=None, reuse_latest_version=False
+    ):
         """Create render job for the clip.
 
-        :param int handle: The handles on each side of the clip. The default value is 0.
-        :param str take_name: The take_name of the created Version. Default value is
-            DEFAULT_DEFAULT_TAKE_NAME.
-        :param str preset_name: The template name in Resolve to use when exporting the
-            shot. The default is DEFAULT_RENDER_PRESET_NAME.
+        Args:
+            handle (int): The handles on each side of the clip. The default value is 0.
+            take_name (str): The take_name of the created Version. Default value is
+                DEFAULT_DEFAULT_TAKE_NAME.
+            preset_name (str): The template name in Resolve to use when exporting the
+                shot. The default is DEFAULT_RENDER_PRESET_NAME.
+            reuse_latest_version (bool): If set to True, this will re-use the latest
+                version for newer plate renders. Setting it to False (default) will
+                always create new versions. This is handy if it is desired to write over
+                the previous version.
         """
         if take_name is None:
             take_name = DEFAULT_TAKE_NAME
@@ -893,8 +924,8 @@ class ShotClip(object):
             with DBSession.no_autoflush:
                 sound_task = (
                     Task.query.filter(Task.parent == shot)
-                        .filter(Task.type == sound_type)
-                        .first()
+                    .filter(Task.type == sound_type)
+                    .first()
                 )
             if not sound_task:
                 raise RuntimeError("No sound task in shot: %s" % self.shot_code)
@@ -908,7 +939,7 @@ class ShotClip(object):
                 .all()
             )
 
-        if not all_versions:
+        if not all_versions or reuse_latest_version is False:
             logged_in_user = self.get_logged_in_user()
             version = Version(
                 task=main_task,
@@ -926,6 +957,7 @@ class ShotClip(object):
             DBSession.add(version)
             DBSession.commit()
         else:
+            # use the last version
             version = all_versions[-1]
         version = version.latest_version
         version_sig_name = DCCBase.get_significant_name(
@@ -1217,6 +1249,7 @@ class ShotManagerUI(object):
         self.handle_spin_box = None
         self.take_name_line_edit = None
         self.render_presets_combo_box = None
+        self.reuse_latest_version_check_box = None
         self.refresh_render_presets_button = None
         self._shot_related_data_is_updating = False
 
@@ -1321,8 +1354,8 @@ class ShotManagerUI(object):
 
         handle_label = QtWidgets.QLabel(self.parent_widget)
         handle_label.setText("Handles")
-        handle_label.setMinimumWidth(120)
-        handle_label.setMaximumWidth(120)
+        handle_label.setMinimumWidth(140)
+        handle_label.setMaximumWidth(140)
         handle_horizontal_layout.addWidget(handle_label)
 
         self.handle_spin_box = QtWidgets.QSpinBox(self.parent_widget)
@@ -1340,8 +1373,8 @@ class ShotManagerUI(object):
         # The take name to use
         take_name_label = QtWidgets.QLabel(self.parent_widget)
         take_name_label.setText("Take Name")
-        take_name_label.setMinimumWidth(120)
-        take_name_label.setMaximumWidth(120)
+        take_name_label.setMinimumWidth(140)
+        take_name_label.setMaximumWidth(140)
         take_name_horizontal_layout.addWidget(take_name_label)
 
         self.take_name_line_edit = QtWidgets.QLineEdit(self.parent_widget)
@@ -1359,8 +1392,8 @@ class ShotManagerUI(object):
 
         render_preset_label = QtWidgets.QLabel(self.parent_widget)
         render_preset_label.setText("Render Preset")
-        render_preset_label.setMinimumWidth(120)
-        render_preset_label.setMaximumWidth(120)
+        render_preset_label.setMinimumWidth(140)
+        render_preset_label.setMaximumWidth(140)
 
         render_preset_horizontal_layout.addWidget(render_preset_label)
 
@@ -1380,6 +1413,26 @@ class ShotManagerUI(object):
             partial(self.fill_preset_combo_box)
         )
         render_preset_horizontal_layout.addWidget(self.refresh_render_presets_button)
+
+        # Reuse Latest Version
+        reuse_latest_version_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addLayout(reuse_latest_version_layout)
+        reuse_latest_version_label = QtWidgets.QLabel("Reuse Latest Version")
+        reuse_latest_version_label.setMinimumWidth(140)
+        reuse_latest_version_label.setMaximumWidth(140)
+        reuse_latest_version_layout.addWidget(reuse_latest_version_label)
+
+        self.reuse_latest_version_check_box = QtWidgets.QCheckBox(self.parent_widget)
+        self.reuse_latest_version_check_box.setText("")
+        reuse_latest_version_layout.addWidget(self.reuse_latest_version_check_box)
+        reuse_latest_version_layout.addSpacerItem(
+            QtWidgets.QSpacerItem(
+                20,
+                20,
+                QtWidgets.QSizePolicy.MinimumExpanding,
+                QtWidgets.QSizePolicy.Fixed,
+            )
+        )
 
         # Create Render Jobs button
         create_shots_and_render_jobs_button = QtWidgets.QPushButton(self.parent_widget)
@@ -1661,6 +1714,7 @@ class ShotManagerUI(object):
         handle = self.handle_spin_box.value()
         take_name = self.take_name_line_edit.text()
         preset_name = self.render_presets_combo_box.currentText()
+        reuse_latest_version = self.reuse_latest_version_check_box.isChecked()
 
         message_box = QtWidgets.QMessageBox(self.parent_widget)
         # message_box.setTitle("Which Shots?")
@@ -1688,7 +1742,9 @@ class ShotManagerUI(object):
             if shot_clip:
                 shot_clips.append(shot_clip)
         try:
-            shot_manager.create_render_jobs(shot_clips, handle, take_name, preset_name)
+            shot_manager.create_render_jobs(
+                shot_clips, handle, take_name, preset_name, reuse_latest_version
+            )
             if success:
                 QtWidgets.QMessageBox.information(
                     self.parent_widget,
