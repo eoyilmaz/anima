@@ -2,7 +2,7 @@
 
 name = "redshift"
 
-version = "3.5.b2"
+version = "3.5.08"
 
 author = ["Erkan Ozgur Yilmaz"]
 
@@ -14,7 +14,6 @@ variants = [
     ["maya-2020"],
     ["maya-2022"],
     ["houdini-18.5.759"],
-    ["houdini-19.0.561"],
     ["houdini-19.0.589"],
     ["houdini-19.0.622"],
 ]
@@ -72,11 +71,6 @@ def commands():
             env.REZ_HOUDINI_MINOR_VERSION,
             env.REZ_HOUDINI_PATCH_VERSION,
         )
-
-        if houdini_version_tuple == ("19", "0", "622"):
-            # 19.0.622 is not supported by Redshift 3.5.0b2 originally,
-            # use 19.0.589
-            houdini_version_tuple = ("19", "0", "589")
 
         env.HOUDINI_PATH.prepend(
             "{}/redshift4houdini/{}.{}.{}".format(

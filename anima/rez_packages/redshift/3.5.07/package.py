@@ -2,7 +2,7 @@
 
 name = "redshift"
 
-version = "3.5.b4"
+version = "3.5.07"
 
 author = ["Erkan Ozgur Yilmaz"]
 
