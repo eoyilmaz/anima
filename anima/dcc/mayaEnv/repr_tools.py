@@ -1876,7 +1876,7 @@ class RepresentationGenerator(object):
                 all_refs = pm.listReferences()
 
             # assign lambert1 to all RS nodes
-            pm.sets("initialShadingGroup", e=1, fe=auxiliary.get_root_nodes())
+            # pm.sets("initialShadingGroup", e=1, fe=auxiliary.get_root_nodes())
 
             # # now remove them from the group
             # pm.sets('initialShadingGroup', e=1, rm=pm.ls())
