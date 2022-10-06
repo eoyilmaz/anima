@@ -2142,6 +2142,11 @@ def check_time_logs(progress_controller=None):
         progress_controller.complete()
         return
 
+    # skip if this project is an unmanaged project
+    if v and not v.task.project.is_managed:
+        progress_controller.complete()
+        return
+
     # skip this if Maya is not running in UI mode
     if v and not pm.general.about(batch=1):
         task = v.task

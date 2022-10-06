@@ -26,7 +26,7 @@ import stat
 import tempfile
 import logging
 from anima.config import Config
-from stalker import SimpleEntity
+from stalker import SimpleEntity, Project
 
 __version__ = "0.8.0"
 
@@ -61,6 +61,20 @@ def set_generic_text_attr(self, attr, value):
 
 SimpleEntity.get_generic_text_attr = get_generic_text_attr
 SimpleEntity.set_generic_text_attr = set_generic_text_attr
+
+
+# Patch Stalker.Project
+@property
+def is_managed(self):
+    """Return True if this is a managed project."""
+    project_repo = self.repository
+    return not os.path.exists(
+        os.path.join(
+            project_repo.path, self.code, "unmanaged_project"
+        )
+    )
+
+Project.is_managed = is_managed
 
 
 # create logger

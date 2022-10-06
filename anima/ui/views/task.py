@@ -790,12 +790,15 @@ class TaskTreeView(QtWidgets.QTreeView):
                         func.lower(Status.code) == func.lower(status_code)
                     ).first()
 
+                    status_cmpl = Status.query.filter(Status.code == "CMPL").first()
+
                     # change the status of the entity
                     # if it is a leaf task
-                    # if it doesn't have any dependent_of
+                    # if it doesn't have any task that it depends on
+                    # or all of the dependent tasks are completed
                     # assert isinstance(entity, Task)
                     for task in self.get_selected_tasks():
-                        if task.is_leaf and not task.dependent_of:
+                        if task.is_leaf and (not task.depends or all([t.status == status_cmpl for t in task.depends])):
                             # then we can update it
                             task.status = status
 
