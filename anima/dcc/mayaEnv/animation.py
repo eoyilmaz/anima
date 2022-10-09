@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import functools
+
 from anima.dcc.mayaEnv.camera_tools import cam_to_chan
 from pymel import core as pm
 
@@ -320,21 +322,17 @@ class Animation(object):
         """Bake the selected component animation to a space locator."""
         start = int(pm.playbackOptions(q=1, minTime=1))
         end = int(pm.playbackOptions(q=1, maxTime=1))
-
         vertices = pm.ls(sl=1, fl=1)
-
         locator = pm.spaceLocator()
-
-        import functools
-        functools_reduce = functools.reduce
+        ftreduce = functools.reduce
 
         for i in range(start, end + 1):
             pm.currentTime(i)
             point_positions = pm.xform(vertices, q=1, ws=1, t=1)
             point_count = len(point_positions) / 3
-            px = functools_reduce(lambda x, y: x + y, point_positions[0::3]) / point_count
-            py = functools_reduce(lambda x, y: x + y, point_positions[1::3]) / point_count
-            pz = functools_reduce(lambda x, y: x + y, point_positions[2::3]) / point_count
+            px = ftreduce(lambda x, y: x + y, point_positions[0::3]) / point_count
+            py = ftreduce(lambda x, y: x + y, point_positions[1::3]) / point_count
+            pz = ftreduce(lambda x, y: x + y, point_positions[2::3]) / point_count
 
             locator.t.set(px, py, pz)
             pm.setKeyframe(locator.tx)
@@ -343,23 +341,33 @@ class Animation(object):
         pm.currentTime(start)
 
     @classmethod
-    def bake_locator_animation_to_component(cls):
+    def bake_locator_animation_to_component(
+        cls, vertices=None, locators=None, start=None, end=None
+    ):
         """Bake the selected locator animation to a the selected component."""
-        start = int(pm.playbackOptions(q=1, minTime=1))
-        end = int(pm.playbackOptions(q=1, maxTime=1))
+        if not start:
+            start = int(pm.playbackOptions(q=1, minTime=1))
 
-        selection = pm.ls(sl=1, fl=1)
-        vertex = selection[0]
-        locator = selection[1]
-        if not isinstance(locator, pm.nt.Transform):
-            vertex = selection[0]
-            locator = selection[1]
+        if not end:
+            end = int(pm.playbackOptions(q=1, maxTime=1))
+
+        if not vertices or not locators:
+            selection = pm.ls(sl=1, fl=1)
+            locators = list(filter(lambda x: isinstance(x, pm.nt.Transform), selection))
+            vertices = list(filter(lambda x: isinstance(x, pm.MeshVertex), selection))
+
+        if not isinstance(vertices, list):
+            vertices = [vertices]
+
+        if not isinstance(locators, list):
+            locators = [locators]
 
         for i in range(start, end + 1):
             pm.currentTime(i)
-            pos = pm.xform(locator, q=1, ws=1, t=1)
-            pm.xform(vertex, ws=1, t=pos)
-            pm.setKeyframe(vertex)
+            for vertex, locator in zip(vertices, locators):
+                pos = pm.xform(locator, q=1, ws=1, t=1)
+                pm.xform(vertex, ws=1, t=pos)
+                pm.setKeyframe(vertex)
         pm.currentTime(start)
 
     @classmethod
