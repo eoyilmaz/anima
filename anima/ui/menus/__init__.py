@@ -431,7 +431,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                 from anima.ui.dialogs import project_dialog
 
                 project_main_dialog = project_dialog.MainDialog(
-                    parent=self, project=None
+                    parent=self.parent, project=None
                 )
                 project_main_dialog.exec_()
                 result = project_main_dialog.result()
@@ -491,7 +491,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                     from anima.ui.dialogs import time_log_dialog
 
                     time_log_dialog_main_dialog = time_log_dialog.MainDialog(
-                        parent=self,
+                        parent=self.parent,
                         task=entity,
                     )
                     time_log_dialog_main_dialog.exec_()
@@ -795,7 +795,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                     from anima.ui.dialogs import project_dialog
 
                     project_main_dialog = project_dialog.MainDialog(
-                        parent=self, project=entity
+                        parent=self.parent, project=entity
                     )
                     project_main_dialog.exec_()
                     result = project_main_dialog.result()
@@ -813,7 +813,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                     from anima.ui.dialogs import project_users_dialog
 
                     project_users_main_dialog = project_users_dialog.MainDialog(
-                        parent=self, project=entity
+                        parent=self.parent, project=entity
                     )
                     project_users_main_dialog.exec_()
                     result = project_users_main_dialog.result()
