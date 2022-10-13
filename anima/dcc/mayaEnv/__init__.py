@@ -1095,9 +1095,9 @@ workspace -fr "translatorData" "Outputs/data";
         :param path: the path which wanted to be checked
         :return: True or False
         """
-        from anima import __string_types__
+        from anima import string_types
 
-        assert isinstance(path, __string_types__)
+        assert isinstance(path, string_types)
         path = os.path.expandvars(path)
         repo = cls.find_repo(path)
         return repo is not None

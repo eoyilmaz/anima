@@ -30,11 +30,11 @@ from stalker import SimpleEntity, Project
 
 __version__ = "0.8.0"
 
-__string_types__ = []
+string_types = []
 if sys.version_info[0] >= 3:  # Python 3
-    __string_types__ = tuple([str])
+    string_types = tuple([str])
 else:  # Python 2
-    __string_types__ = tuple([str, unicode])
+    string_types = tuple([str, unicode])
 
 
 def get_generic_text_attr(self, attr):

@@ -196,11 +196,11 @@ class ConversionManagerBase(object):
 
         # rename the material to have a similar name with the original
         if rs_node is not None:
-            from anima import __string_types__
+            from anima import string_types
 
             node_type_name = (
                 conversion_specs["node_type"]
-                if isinstance(conversion_specs["node_type"], __string_types__)
+                if isinstance(conversion_specs["node_type"], string_types)
                 else conversion_specs["secondary_type"].replace(" ", "_")
             )
 
@@ -213,11 +213,11 @@ class ConversionManagerBase(object):
         # set attributes
         attributes = conversion_specs.get("attributes")
         if attributes:
-            from anima import __string_types__
+            from anima import string_types
 
             for source_attr, target_attr in attributes.items():
                 # value can be a string
-                if isinstance(target_attr, __string_types__):
+                if isinstance(target_attr, string_types):
                     # check incoming connections
                     incoming_connections = self.get_node_inputs(node, source_attr)
                     if incoming_connections:
