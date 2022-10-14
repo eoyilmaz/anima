@@ -701,7 +701,7 @@ class Fusion(DCCBase):
                         "ProcessBlue": 1,
                         "ProcessAlpha": 0,
                         "OutputFormat": "JPEGFormat",
-                        "JpegFormat.Quality": 85,
+                        "JpegFormat.Quality": 97,
                     },
                     "connected_to": {
                         "Input": {
@@ -870,7 +870,7 @@ class Fusion(DCCBase):
                             "ProcessBlue": 1,
                             "ProcessAlpha": 0,
                             "OutputFormat": "JPEGFormat",
-                            "JpegFormat.Quality": 85,
+                            "JpegFormat.Quality": 97,
                         },
                         "connected_to": {
                             "Input": {
