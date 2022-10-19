@@ -112,12 +112,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.resize(self.settings.value("size", QtCore.QSize(800, 600)))
         self.move(self.settings.value("pos", QtCore.QPoint(100, 100)))
         self.restoreState(self.settings.value("windowState"))
-        bool_settings_value_lut = {"false": False, "true": True}
-        self.set_ui_theme(
-            dark_theme=bool_settings_value_lut[
-                self.settings.value("dark_theme", "false")
-            ]
-        )
+        bool_settings_value_lut = {
+            "false": False,
+            "true": True,
+        }
+        dark_theme = self.settings.value("dark_theme", "false")
+        if not isinstance(dark_theme, bool):
+            dark_theme = bool_settings_value_lut[dark_theme]
+        self.set_ui_theme(dark_theme=dark_theme)
 
         from anima.ui.views.task import TaskTreeView
 
