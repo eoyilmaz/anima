@@ -376,7 +376,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.start_time_edit.setTime(current_time)
         self.end_time_edit.setTime(current_time.addSecs(TIMING_RESOLUTION * 60))
-        self.show_advanced_time_controls(True)
+        self.show_advanced_time_controls_check_box.setChecked(True)
 
         self.calendar_widget.resource_id = -1
 
@@ -492,7 +492,7 @@ select
     array_agg(task_rec_data.full_path) as task_name,
     array_agg("TimeLogs".start) as start,
     array_agg("TimeLogs".end) as end,
-    sum(extract(epoch from ("TimeLogs".end - "TimeLogs".start)))
+    sum(extract(epoch from ("TimeLogs".end - "TimeLogs".start)))::integer as logged_seconds
 
 from "TimeLogs"
 
@@ -547,11 +547,11 @@ order by cast("TimeLogs".start as date)
 
         last_end_date = None
         for r in result:
-            calendar_day = r[0]
+            calendar_day = r["date"]
             year = calendar_day.year
             month = calendar_day.month
             day = calendar_day.day
-            daily_logged_seconds = r[4]
+            daily_logged_seconds = r["logged_seconds"]
             daily_logged_hours = daily_logged_seconds // 3600
             daily_logged_minutes = (
                 daily_logged_seconds - daily_logged_hours * 3600
@@ -564,7 +564,7 @@ order by cast("TimeLogs".start as date)
             ]
 
             for task_name, start, end in sorted(
-                zip(r[1], r[2], r[3]), key=lambda x: x[1]
+                zip(r["task_name"], r["start"], r["end"]), key=lambda x: x[1]
             ):
                 time_log_tool_tip_text = tool_tip_text_format.format(
                     start=time_shifter(start),
@@ -678,7 +678,8 @@ order by cast("TimeLogs".start as date)
             int: Returns the current resource id.
         """
         resource_name = self.resource_combo_box.currentText()
-        return DBSession.query(User.id).filter(User.name == resource_name).first()
+        result = DBSession.query(User.id).filter(User.name == resource_name).first()
+        return result[0] if result else -1
 
     @classmethod
     def round_to_timing_resolution(cls, q_time):
