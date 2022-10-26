@@ -43,18 +43,13 @@ class HierarchyInstancer(object):
 
     def walk_hierarchy(self, node):
         """for the given dag node, walks through the hierarchy"""
-        assert isinstance(node, pm.nodetypes.Transform)
-
         nodes = []
-
         for node in node.getChildren():
             # try to get children if it is a transform node
             if isinstance(node, pm.nodetypes.Transform):
                 child_nodes = self.walk_hierarchy(node)
-
                 nodes.append(node)
                 nodes += child_nodes
-
         return nodes
 
     def instance(self, source_transform_node):

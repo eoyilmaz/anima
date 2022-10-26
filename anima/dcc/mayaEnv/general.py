@@ -4,6 +4,8 @@ import os
 import tempfile
 
 from pymel import core as pm
+
+from anima import logger
 from anima.utils.progress import ProgressManager
 
 
@@ -719,3 +721,184 @@ def unknown_plugin_cleaner_ui():
                     "Clean",
                     "The file was clean:<br><br>%s" % os.path.basename(file_path),
                 )
+
+
+class AssetMigrationTool(object):
+    """A tool to help migrating Assets from one project to another."""
+
+    def __init__(self):
+        self.source_asset = None
+        self.target_parent = None
+        self.selected_takes = {}
+        # This should be a dict like:
+        #
+        #   selected_takes = {
+        #       "Model": {
+        #           "Main": "Main",  # "old_take_name": "new_take_name",
+        #           "Take1": "TakeA"
+        #       },
+        #       "LookDev": {
+        #           "Main": "Main",
+        #           "Take1": "TakeZ",
+        #       },
+        #       "Rig": {
+        #           "Main": "MainA",
+        #           "Take2": "Take2",
+        #       }
+        #   }
+
+        self.version_lut = {}
+        # Holds previously migrated versions, so that references to the old versions
+        # can be replaced with new one.
+        #
+        # The format is as follows:
+        #  version_lut = {
+        #      old_version.id: new_version.id,
+        #      ...
+        #      ...
+        #      old_version2.id: new_version2.id
+        #  }
+        #
+
+    def migrate(self):
+        """Do the migration."""
+        # traverse the asset child tasks
+        from stalker.db.session import DBSession
+        from stalker import Asset, Repository, Task, Version
+        from anima.dcc import mayaEnv
+        m = mayaEnv.Maya()
+        # create the new asset under the target
+        new_asset = Asset(
+            name=self.source_asset.name,
+            code=self.source_asset.code,
+            parent=self.target_parent,
+            type=self.source_asset.type,
+            description="Migrated from {} under {}".format(
+                self.source_asset.name,
+                self.source_asset.project.name
+            )
+        )
+        DBSession.add(new_asset)
+        DBSession.commit()
+
+        tasks_to_consume = []
+        for child in self.source_asset.walk_hierarchy():
+            tasks_to_consume.append(child)
+
+        while tasks_to_consume:
+            task = tasks_to_consume.pop(0)
+            new_task = None
+            is_consumed = False
+            # group by takes
+            # get distinct takes of the asset task (which is not a repr)
+            unique_takes = (
+                [
+                    t[0]
+                    for t in DBSession.query(Version.take_name)
+                    .filter(Version.task_id == task.id)
+                    .filter(~Version.take_name.contains("@"))
+                    .distinct()
+                    .all()
+                ]
+            )
+            has_skipped_takes = False
+            for take_name in unique_takes:
+                if take_name not in self.selected_takes[task.name]:
+                    # skip this take_name
+                    logger.debug("skipping take_name: {}".format(take_name))
+                    continue
+
+                # get the latest published version of that take_name
+                v = (
+                    Version.query
+                        .filter(Version.task == task)
+                        .filter(Version.take_name == take_name)
+                        .filter(Version.created_with.contains("Maya"))  # Maya only
+                        .filter(Version.is_published == True)
+                        .order_by(Version.version_number.desc())
+                        .first()
+                )
+                if not v:
+                    # oh-oh no published version in this take
+                    # so use the unpublished asset and this should be a dead end for
+                    # this take, which is simple to carry.
+                    v = (
+                        Version.query
+                            .filter(Version.task == task)
+                            .filter(Version.take_name == take_name)
+                            .filter(Version.created_with.contains("Maya"))  # Maya only
+                            .order_by(Version.version_number.desc())
+                            .first()
+                    )
+
+                if not v:
+                    # double oh-oh,
+                    # still no version found.
+                    # this is not possible! (not created with Maya maybe!)
+                    # but skip this take_name
+                    continue
+
+                # if this version is already in the version_lut, it means that we
+                # processed this take already, but one of the takes was referencing
+                # something that is not processed yet
+                if v in self.version_lut:
+                    # skip this take_name, it is already processed
+                    continue
+
+                # lets go over the version inputs (if any)
+                skip_take = False
+                for other_version in v.inputs:
+                    if other_version.task in tasks_to_consume:
+                        # there are references to the tasks
+                        # that are not processed yet
+                        # so we need to skip this take
+                        skip_take = True
+                        break
+                if skip_take:
+                    has_skipped_takes = True
+                    continue
+
+                # good no references to process
+                # this version can be moved directly.
+                if not new_task:
+                    new_task = Task(
+                        parent=new_asset,
+                        name=task.name,
+                        type=task.type
+                    )
+                    DBSession.add(new_task)
+                    DBSession.commit()
+                new_version = Version(
+                    task=new_task,
+                    take_name=self.selected_takes[task.name][take_name],
+                    description=v.description
+                )
+                m.open(version=v, force=True, skip_update_check=True, prompt=False)
+
+                # replace all top level references with the versions from version_lut
+                for ref in pm.listReferences():
+                    # all refs must be base version
+                    if not ref.is_base():
+                        ref.to_base()
+                    ref_version = ref.version
+                    if ref_version in self.version_lut:
+                        ref.replaceWith(
+                            Repository.to_os_independent_path(
+                                self.version_lut[ref_version].absolute_full_path
+                            )
+                        )
+                m.save_as(version=new_version)
+
+                # because publish scripts may fail, set the publish status after
+                # saving the file
+                DBSession.add(new_version)
+                DBSession.commit()
+                new_version.is_published = v.is_published
+                self.version_lut[v] = new_version
+            if has_skipped_takes:
+                # hmmm there are skipped takes,
+                # append this task back to the tasks_to_consume_list
+                tasks_to_consume.append(task)
+
+        pm.newFile()
+        logger.debug("Asset migrated successfully!")
