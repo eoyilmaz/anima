@@ -4,6 +4,7 @@ import os
 import re
 import tempfile
 
+import anima
 from anima.dcc.mayaEnv import auxiliary
 from anima.utils.progress import ProgressManager
 
@@ -3054,7 +3055,7 @@ class LightingSceneBuilder(object):
             self,
             transfer_shaders=True,
             transfer_uvs=False,
-            cache_type=auxiliary.ALEMBIC
+            cache_type=anima.ALEMBIC
         ):
         """Build the lighting scene
 
@@ -3132,7 +3133,7 @@ class LightingSceneBuilder(object):
         look_dev_version_to_ref_node_lut = {}
         for cache_ref_node in pm.listReferences():
             if not cache_ref_node.path.endswith(
-                auxiliary.CACHE_FORMAT_DATA[cache_type]["file_extension"]
+                anima.CACHE_FORMAT_DATA[cache_type]["file_extension"]
             ):
                 continue
 

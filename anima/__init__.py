@@ -37,6 +37,14 @@ else:  # Python 2
     string_types = tuple([str, unicode])
 
 
+ALEMBIC = "Alembic"
+USD = "USD"
+CACHE_FORMAT_DATA = {
+    ALEMBIC: {"output_dir": "alembic", "file_extension": ".abc"},
+    USD: {"output_dir": "usd", "file_extension": ".usd"},
+}
+
+
 def get_generic_text_attr(self, attr):
     """patch Simple entity to add new functionality"""
     import json
@@ -74,7 +82,27 @@ def is_managed(self):
         )
     )
 
+
+@property
+def cache_format(self):
+    """Return the project cache format.
+
+    By default it is Alembic.
+    """
+    project_repo = self.repository
+
+    if os.path.exists(
+        os.path.join(
+            project_repo.path, self.code, "use_usd"
+        )
+    ):
+        return USD
+    else:
+        return ALEMBIC
+
+
 Project.is_managed = is_managed
+Project.cache_format = cache_format
 
 
 # create logger

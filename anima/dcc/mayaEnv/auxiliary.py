@@ -8,21 +8,13 @@ import tempfile
 
 import pymel.core as pm
 
-from anima import logger
+from anima import logger, ALEMBIC, USD, CACHE_FORMAT_DATA
 import anima.utils
 from anima.utils.progress import ProgressManager
 
 FIRST_CAP_RE = re.compile("(.)([A-Z][a-z]+)")
 ALL_CAP_RE = re.compile("([a-z0-9])([A-Z])")
 VERSION_NUMBER_RE = r"([\w\d/_\:\$]+v)([0-9]+)([\w\d._]+)"
-
-ALEMBIC = "Alembic"
-USD = "USD"
-
-CACHE_FORMAT_DATA = {
-    ALEMBIC: {"output_dir": "alembic", "file_extension": ".abc"},
-    USD: {"output_dir": "usd", "file_extension": ".usd"},
-}
 
 
 def kill_all_torn_off_panels():
@@ -864,7 +856,6 @@ def run_pre_publishers():
     This is written to prevent users to save on top of a Published version and
     create a back door to skip un publishable scene to publish
     """
-    import sys
     from anima.dcc.mayaEnv.publish import PublishError
     from anima.dcc import mayaEnv
 
@@ -886,7 +877,6 @@ def run_pre_publishers():
         from anima.publish import (
             run_publishers,
             staging,
-            PRE_PUBLISHER_TYPE,
             POST_PUBLISHER_TYPE,
         )
 
@@ -946,8 +936,6 @@ def run_post_publishers():
     This is written to prevent users to save on top of a Published version and
     create a back door to skip un publishable scene to publish
     """
-    import os
-    from anima.ui.lib import QtCore, QtWidgets, QtGui
     from anima.dcc.mayaEnv.publish import PublishError
     from anima.dcc import mayaEnv
 
@@ -969,7 +957,6 @@ def run_post_publishers():
         from anima.publish import (
             run_publishers,
             staging,
-            PRE_PUBLISHER_TYPE,
             POST_PUBLISHER_TYPE,
         )
 
@@ -1946,7 +1933,9 @@ class Playblaster(object):
             output_dir = os.path.join(os.path.dirname(pm.sceneName()), "temp")
             import tempfile
 
-            playblast_options["filename"] = os.path.join(output_dir, filename).replace("\\", "/")
+            playblast_options["filename"] = os.path.join(output_dir, filename).replace(
+                "\\", "/"
+            )
 
         from anima.dcc import mayaEnv
 
@@ -2027,7 +2016,6 @@ class Playblaster(object):
         if v:
             frame_rate = v.task.project.fps
 
-
         # convert image sequences to h264
         new_result = []
         original_image_sequence_path = ""
@@ -2061,7 +2049,7 @@ class Playblaster(object):
                             smallest_start_number = start_number
 
                     options["start_number"] = smallest_start_number
-            
+
                 # use the correct frame rate
                 options["framerate"] = frame_rate
                 options["r"] = frame_rate
@@ -2504,6 +2492,8 @@ def get_reference_copy_number(node):
 
 def export_cache_of_nodes(
     cacheable_nodes,
+    start_frame=None,
+    end_frame=None,
     handles=0,
     step=1,
     isolate=True,
@@ -2512,18 +2502,27 @@ def export_cache_of_nodes(
 ):
     """Export Alembic/USD caches of the given nodes.
 
-    :param list cacheable_nodes: The top transform nodes
-    :param int handles: An integer that shows the desired handles from start and end.
-    :param int step: Frame step.
-    :param bool isolate: Isolate the exported object, so it is faster to playback. This
-      can sometimes create a problem of constraints not to work on some scenes. Default
-      value is True.
-    :param bool unload_refs: Unloads the references in the scene to speed playback
-      performance.
-    :param str cache_format: Cache format, "alembic" or "usd". The default is "alembic".
-    :return:
+    Args:
+        cacheable_nodes (list): The top transform nodes
+        start_frame (int): The start frame. If both start and end frame are the same and
+            the handle is 0 then a static file will be exported.
+        end_frame (int): The end frame. If both start and end frame are the same and
+            the handle is 0 then a static file will be exported.
+        handles (int): An integer that shows the desired handles from start and end. If
+            both start and end frame are the same and the handle is 0 then a static file
+            will be exported.
+        step (int): Frame step.
+        isolate (bool): Isolate the exported object, so it is faster to playback. This
+            can sometimes create a problem of constraints not to work on some scenes.
+            Default value is True.
+        unload_refs (bool): Unloads the references in the scene to speed playback
+            performance.
+        cache_format (str): Cache format, "alembic" or "usd". The default is "alembic".
+
+    Returns:
+        list: List of exported file paths.
     """
-    print("INFO: Start export_cache_of_nodes!")
+    logger.info("INFO: Start export_cache_of_nodes!")
     # stop if there are no cacheable nodes given
     if not cacheable_nodes:
         return
@@ -2546,10 +2545,12 @@ def export_cache_of_nodes(
 
     caller = pdm.register(len(cacheable_nodes), "Exporting Alembic Caches")
 
-    start_frame = pm.playbackOptions(q=1, ast=1)
-    end_frame = pm.playbackOptions(q=1, aet=1)
+    if start_frame is None:
+        start_frame = pm.playbackOptions(q=1, ast=1)
+    if end_frame is None:
+        end_frame = pm.playbackOptions(q=1, aet=1)
 
-    import os
+    export_animation = bool((end_frame - start_frame + 2 * handles) > 0)
 
     current_file_full_path = pm.sceneName()
     current_file_path = os.path.dirname(current_file_full_path)
@@ -2642,7 +2643,7 @@ def export_cache_of_nodes(
 
     output_full_paths = []
     for cacheable_node_name in sorted(cacheable_node_references):
-        print("INFO: exporting: {}".format(cacheable_node_name))
+        logger.info("INFO: exporting: {}".format(cacheable_node_name))
 
         if unload_refs:
             # load the reference first
@@ -2702,21 +2703,28 @@ def export_cache_of_nodes(
 
         output_path = os.path.join(
             current_file_path,
-            "Outputs/%s/%s%i/"
-            % (
-                CACHE_FORMAT_DATA[cache_format]["output_dir"],
-                cacheable_attr_value,
-                copy_number,
+            "Outputs/{dir_name}/{cacheable_attr}{copy_number}/".format(
+                dir_name=CACHE_FORMAT_DATA[cache_format]["output_dir"],
+                cacheable_attr=cacheable_attr_value,
+                copy_number=copy_number,
             ),
         )
 
-        output_filename = "%s_%i_%i_%s%i%s" % (
-            os.path.splitext(current_file_name)[0],
-            start_frame,
-            end_frame,
-            cacheable_attr_value,
-            copy_number,
-            CACHE_FORMAT_DATA[cache_format]["file_extension"],
+        if cache_format == ALEMBIC:
+            cache_file_name_template = (
+                "{base_name}_{start_frame}_{end_frame}_{cacheable_attr}{copy_number}"
+                "{ext}"
+            )
+        else:
+            # dont use start and end frame numbers in the filename for the USD format
+            cache_file_name_template = "{base_name}_{cacheable_attr}{copy_number}{ext}"
+        output_filename = cache_file_name_template.format(
+            base_name=os.path.splitext(current_file_name)[0],
+            start_frame=start_frame,
+            end_frame=end_frame,
+            cacheable_attr=cacheable_attr_value,
+            copy_number=copy_number,
+            ext=CACHE_FORMAT_DATA[cache_format]["file_extension"],
         )
 
         output_full_path = os.path.join(output_path, output_filename).replace("\\", "/")
@@ -2752,9 +2760,9 @@ def export_cache_of_nodes(
             command = (
                 'file -force -options ";exportUVs=1;exportSkels=none;exportSkin=none;'
                 "exportBlendShapes=0;exportColorSets=1;defaultMeshScheme=catmullClark;"
-                "defaultUSDFormat=usdc;animation=1;eulerFilter=0;staticSingleSample=0;"
-                "startTime={start_frame};endTime={end_frame};frameStride={step};"
-                "frameSample=0.0;parentScope={parentScope};"
+                "defaultUSDFormat=usdc;animation={export_animation};eulerFilter=0;"
+                "staticSingleSample=0;startTime={start_frame};endTime={end_frame};"
+                "frameStride={step};frameSample=0.0;parentScope={parentScope};"
                 "exportDisplayColor=0;shadingMode=useRegistry;"
                 "convertMaterialsTo=UsdPreviewSurface;exportInstances=1;"
                 'exportVisibility=1;mergeTransformAndShape=1;stripNamespaces=1" '
@@ -2777,17 +2785,20 @@ def export_cache_of_nodes(
                 file_path=temp_cache_file_path,
             )
         elif cache_format == USD:
-            print("cacheable_node.fullPath(): {}".format(cacheable_node.fullPath()))
+            logger.info(
+                "cacheable_node.fullPath(): {}".format(cacheable_node.fullPath())
+            )
             pm.select(cacheable_node)
             command_to_exec = command.format(
                 parentScope=cacheable_node.namespace()[:-1],
                 start_frame=int(start_frame - handles),
                 end_frame=int(end_frame + handles),
+                export_animation=1 if export_animation else 0,
                 step=step,
                 file_path=temp_cache_file_path,
             )
 
-        print("INFO: Executing command: {}".format(command_to_exec))
+        logger.info("INFO: Executing command: {}".format(command_to_exec))
         pm.mel.eval(command_to_exec)
         # move in to place
         shutil.move(temp_cache_file_path, output_full_path)
@@ -2877,28 +2888,45 @@ def add_outputs_to_current_version(output_full_paths, output_type_name):
 
 
 def export_cache_of_selected_cacheable_nodes(
-    handles=0, step=1, isolate=True, unload_refs=True, cache_format=ALEMBIC
+    start_frame=None,
+    end_frame=None,
+    handles=0,
+    step=1,
+    isolate=True,
+    unload_refs=True,
+    cache_format=ALEMBIC,
 ):
-    """Exports Alembic/USD caches of the selected cacheable nodes.
+    """Export Alembic/USD caches of the selected cacheable nodes.
 
-    :param int handles: An integer that shows the desired handles from start and end.
-    :param int step:
-    :param bool isolate: Isolate the exported object, so it is faster to playback. This
-      can sometimes create a problem of constraints not to work on some scenes. Default
-      value is True.
-    :param bool unload_refs: Unloads the references in the scene to speed playback
-      performance.
-    :param str cache_format: Cache format, "alembic" or "usd". The default is "alembic".
-    :return:
+    Args:
+        start_frame (int): The start frame. If both start and end frame are the same and
+            the handle is 0 then a static file will be exported.
+        end_frame (int): The end frame. If both start and end frame are the same and
+            the handle is 0 then a static file will be exported.
+        handles (int): An integer that shows the desired handles from start and end. If
+            both start and end frame are the same and the handle is 0 then a static file
+            will be exported.
+        step (int): Frame step.
+        isolate (bool): Isolate the exported object, so it is faster to playback. This
+            can sometimes create a problem of constraints not to work on some scenes.
+            Default value is True.
+        unload_refs (bool): Unloads the references in the scene to speed playback
+            performance.
+        cache_format (str): Cache format, "alembic" or "usd". The default is "alembic".
+
+    Returns:
+        list: List of exported file paths.
     """
     # get selected cacheable nodes in the current scene
     cacheable_nodes = [
         n for n in pm.selected() if n.hasAttr("cacheable") and n.getAttr("cacheable")
     ]
     return export_cache_of_nodes(
-        cacheable_nodes,
-        handles,
-        step,
+        cacheable_nodes=cacheable_nodes,
+        start_frame=start_frame,
+        end_frame=end_frame,
+        handles=handles,
+        step=step,
         isolate=isolate,
         unload_refs=unload_refs,
         cache_format=cache_format,
@@ -2906,26 +2934,44 @@ def export_cache_of_selected_cacheable_nodes(
 
 
 def export_cache_of_all_cacheable_nodes(
-    handles=0, step=1, isolate=True, unload_refs=True, cache_format=ALEMBIC
+    start_frame=None,
+    end_frame=None,
+    handles=0,
+    step=1,
+    isolate=True,
+    unload_refs=True,
+    cache_format=ALEMBIC,
 ):
     """Export Alembic/USD caches by looking at the current scene and try to find
     transform nodes which has an attribute called "cacheable".
 
-    :param int handles: An integer that shows the desired handles from start and end.
-    :param int step: Frame step.
-    :param bool isolate: Isolate the exported object, so it is faster to playback. This
-      can sometimes create a problem of constraints not to work on some scenes. Default
-      value is True.
-    :param bool unload_refs: Unloads the references in the scene to speed playback
-      performance.
-    :param str cache_format: Cache format, "alembic" or "usd". The default is "alembic".
+    Args:
+        start_frame (int): The start frame. If both start and end frame are the same and
+            the handle is 0 then a static file will be exported.
+        end_frame (int): The end frame. If both start and end frame are the same and
+            the handle is 0 then a static file will be exported.
+        handles (int): An integer that shows the desired handles from start and end. If
+            both start and end frame are the same and the handle is 0 then a static file
+            will be exported.
+        step (int): Frame step.
+        isolate (bool): Isolate the exported object, so it is faster to playback. This
+            can sometimes create a problem of constraints not to work on some scenes.
+            Default value is True.
+        unload_refs (bool): Unloads the references in the scene to speed playback
+            performance.
+        cache_format (str): Cache format, "alembic" or "usd". The default is "alembic".
+
+    Returns:
+        list: List of exported file paths.
     """
     # get cacheable nodes in the current scene
     cacheable_nodes = get_cacheable_nodes()
     return export_cache_of_nodes(
-        cacheable_nodes,
-        handles,
-        step,
+        cacheable_nodes=cacheable_nodes,
+        start_frame=start_frame,
+        end_frame=end_frame,
+        handles=handles,
+        step=step,
         isolate=isolate,
         unload_refs=unload_refs,
         cache_format=cache_format,

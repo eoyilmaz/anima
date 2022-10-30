@@ -7,6 +7,7 @@ import pymel.core as pm
 import maya.cmds as mc
 import tempfile
 
+import anima
 from anima.publish import (
     clear_publishers,
     publisher,
@@ -224,7 +225,7 @@ def fix_locked_default_shader(progress_controller=None):
     """Fix locked default shader."""
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
-    pm.lockNode('initialShadingGroup', l=0, lockUnpublished=0)
+    pm.lockNode("initialShadingGroup", l=0, lockUnpublished=0)
     progress_controller.complete()
 
 
@@ -384,7 +385,6 @@ def check_representations(progress_controller=None):
     wrong_reprs = []
 
     v = staging.get("version")
-
     if v:
         r = Representation(version=v)
         current_repr = r.repr
@@ -2008,6 +2008,7 @@ def check_cacheable_attr___fix():
     if len(cacheable_nodes) == 0:
         # no cacheable node create cacheable attribute on the root node
         from anima.dcc.mayaEnv import rigging
+
         # assumes there is only one root node
         root_node = auxiliary.get_root_nodes()[0]
         rigging.Rigging.add_cacheable_attribute(root_node)
@@ -2833,12 +2834,35 @@ def update_shot_range(progress_controller=None):
     progress_controller.complete()
 
 
+@publisher(
+    ["model", "camera", "layout"] + LOOK_DEV_TYPES, publisher_type=POST_PUBLISHER_TYPE
+)
+def usd_export(progress_controller=None):
+    """Export USD caches."""
+    if progress_controller is None:
+        progress_controller = ProgressControllerBase()
+    progress_controller.maximum = 1
+
+    # skip anything other than the base representation
+    v = staging.get("version")
+    if v:
+        r = Representation(version=v)
+        if not r.is_base():
+            progress_controller.complete()
+            return
+        from anima.dcc.mayaEnv import auxiliary
+
+        auxiliary.export_cache_of_all_cacheable_nodes(handles=1, cache_format=anima.USD)
+    progress_controller.increment()
+    progress_controller.complete()
+
+
 @publisher(["animation", "pose", "mocap", "camera"], publisher_type=POST_PUBLISHER_TYPE)
 def cache_animations(progress_controller=None):
     """Cache animations."""
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
-    progress_controller.maximum = 1
+    progress_controller.maximum = 2
 
     # bake constraints
     # from anima.dcc.mayaEnv import toolbox
@@ -2847,10 +2871,14 @@ def cache_animations(progress_controller=None):
     # progress_controller.increment()
 
     # export Alembic/USD caches.
-    # TODO: How to decide which cache format is going to be used.
-    auxiliary.export_cache_of_all_cacheable_nodes(handles=1)
+    from anima.dcc.mayaEnv import auxiliary
+
+    # For now export both cache formats, deprecate Alembics later.
+    auxiliary.export_cache_of_all_cacheable_nodes(handles=1, cache_format=anima.ALEMBIC)
     progress_controller.increment()
 
+    auxiliary.export_cache_of_all_cacheable_nodes(handles=1, cache_format=anima.USD)
+    progress_controller.increment()
     progress_controller.complete()
 
 

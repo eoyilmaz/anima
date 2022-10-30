@@ -2036,7 +2036,7 @@ def UI():
             # rowLayout = pm.rowLayout(nc=2, adj=1, bgc=color.color)
             pm.text(l="===== EXPORT =====")
 
-            from anima.dcc.mayaEnv.auxiliary import CACHE_FORMAT_DATA, ALEMBIC
+            from anima import ALEMBIC, CACHE_FORMAT_DATA
 
             cache_format_names = list(CACHE_FORMAT_DATA.keys())
 
