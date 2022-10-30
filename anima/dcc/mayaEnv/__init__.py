@@ -502,16 +502,16 @@ workspace -fr "translatorData" "Outputs/data";
             # show dialog during post publish progress and lock maya
             from anima.ui.utils import initialize_post_publish_dialog
 
-            d = initialize_post_publish_dialog()
-            d.show()
+            publish_dialog = initialize_post_publish_dialog()
+            publish_dialog.show()
 
             # before running use the staging area to store the current version
             staging["version"] = version
             try:
                 run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
-                d.close()
+                publish_dialog.close()
             except (PublishError, RuntimeError) as e:
-                d.close()
+                publish_dialog.close()
                 # do not forget to clean up the staging area
                 staging.clear()
                 # pop up a message box with the error
@@ -523,7 +523,7 @@ workspace -fr "translatorData" "Outputs/data";
                 )
                 raise e
             # close dialog in any case
-            d.close()
+            publish_dialog.close()
 
         end = time.time()
         logger.debug("save_as took %f seconds" % (end - start))
