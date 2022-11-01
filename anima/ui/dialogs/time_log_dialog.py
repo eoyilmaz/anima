@@ -609,6 +609,9 @@ order by cast("TimeLogs".start as date)
         selected_date = self.calendar_widget.selectedDate()
         assert isinstance(selected_date, QtCore.QDate)
 
+        day_name = selected_date.longDayName(selected_date.dayOfWeek()).encode("utf-8", "replace")
+        month_name = selected_date.longMonthName(selected_date.month()).encode("utf-8", "replace")
+
         date_format = """<div>
     <div style="width: 100px; height: 100px; font-size: 60pt; float: initial">
         <span><strong>{day_number}</strong></span>
@@ -622,8 +625,8 @@ order by cast("TimeLogs".start as date)
     </div>
 </div>""".format(
             day_number=selected_date.day(),
-            day_name=selected_date.longDayName(selected_date.dayOfWeek()),
-            month_name=selected_date.longMonthName(selected_date.month()),
+            day_name=day_name,
+            month_name=month_name,
             year=selected_date.year(),
         )
 
