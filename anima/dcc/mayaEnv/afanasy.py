@@ -63,7 +63,7 @@ class MayaRenderCommandBuilder(object):
             ]
         else:
             # use the default command
-            cmd_buffer = ["mayarender%s" % os.getenv("AF_CMDEXTENSION", "")]
+            cmd_buffer = ["mayarender%s" % os.getenv("MAYA_VERSION", "")]
 
         if self.render_engine == "mentalRay":
             cmd_buffer.append("-r mr")
