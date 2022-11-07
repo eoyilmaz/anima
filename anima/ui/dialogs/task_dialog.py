@@ -707,9 +707,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         for item in items:
             value = getattr(item, attr)
-            if not isinstance(value, string_types) and hasattr(
-                value, "__getitem__"
-            ):
+            if not isinstance(value, string_types) and hasattr(value, "__getitem__"):
                 merged_items += value
             else:
                 merged_items.append(value)
@@ -1432,7 +1430,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :return:
         """
         # if the only item in the list is MULTI_VALUE_ENUM
-        # then remove it, because apparently we are now setting dependencies\
+        # then remove it, because apparently we are now setting dependencies
         # for all the selected tasks to a single dependency
         self.remove_multi_value_enum_from_list_widget(self.depends_to_list_widget)
 
@@ -1502,7 +1500,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if item_text != MULTI_VALUE_ENUM:
             index = self.resources_combo_box.findText(item_text, QtCore.Qt.MatchExactly)
 
-            # Remove MULTI_VALUE_ENUM because we are apparently setting a resource for all the selected tasks\
+            # Remove MULTI_VALUE_ENUM because we are apparently setting a resource for
+            # all the selected tasks
             self.remove_multi_value_enum_from_list_widget(self.resources_list_widget)
 
             if index:
@@ -1851,6 +1850,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         self.tasks[0].image_format = None
 
             from stalker.exceptions import CircularDependencyError
+
             try:
                 for task in self.tasks:
                     task.parent = parent_task
@@ -2010,7 +2010,9 @@ class DuplicateTaskHierarchyDialog(QtWidgets.QDialog):
         # ====================
         # Duplicated Task Name
         i += 1
-        form_layout.setWidget(i, label_role, QtWidgets.QLabel("Duplicated Task Name", self))
+        form_layout.setWidget(
+            i, label_role, QtWidgets.QLabel("Duplicated Task Name", self)
+        )
 
         # the line edit
         self.task_name_line_edit = QtWidgets.QLineEdit(self)
