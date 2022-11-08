@@ -203,7 +203,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # refresh the task list
         if dialog.result() == accepted:
-            self.tasks_tree_view.fill()
+            self.tasks_tree_view.fill_ui()
 
         dialog.deleteLater()
 
@@ -280,8 +280,24 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.tasks_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
-        self.tasks_tree_view.show_completed_projects = True
-        self.tasks_tree_view.fill()
+        from sqlalchemy import alias
+        from stalker import Task, Project, Status
+        from stalker.db.session import DBSession
+        inner_tasks = alias(Task.__table__)
+        subquery = DBSession.query(inner_tasks.c.id).filter(
+            inner_tasks.c.project_id == Project.id
+        )
+        query = DBSession.query(
+            Project.id,
+            Project.name,
+            Project.entity_type,
+            Project.status_id,
+            subquery.exists().label("has_children"),
+        )
+        query = query.order_by(Project.name)
+        projects = query.all()
+
+        self.tasks_tree_view.tasks = projects
 
         # also setup the signal
         self.tasks_tree_view.selectionModel().selectionChanged.connect(

@@ -56,19 +56,19 @@ class VersionMover(QtWidgets.QDialog, AnimaDialogBase):
         dialog.setWindowModality(QtCore.Qt.ApplicationModal)
         dialog.resize(1200, 800)
         # layout vertical first
-        self.vertical_layout = QtWidgets.QVBoxLayout(dialog)
+        self.vertical_layout = QtWidgets.QVBoxLayout(parent=dialog)
         self.vertical_layout.setObjectName("verticalLayout1")
 
         self.horizontal_layout = QtWidgets.QHBoxLayout()
 
-        self.from_task_tree_view = QtWidgets.QTreeView(dialog)
+        self.from_task_tree_view = QtWidgets.QTreeView(parent=dialog)
         self.from_task_tree_view.setObjectName("from_tasks_treeView")
 
-        self.copy_push_button = QtWidgets.QPushButton(dialog)
+        self.copy_push_button = QtWidgets.QPushButton(parent=dialog)
         self.copy_push_button.setObjectName("copy_push_button")
         self.copy_push_button.setText(">")
 
-        self.to_task_tree_view = TaskTreeView(dialog)
+        self.to_task_tree_view = TaskTreeView(parent=dialog)
         self.to_task_tree_view.setObjectName("to_tasks_treeView")
 
         # self.horizontal_layout1.addWidget(self.from_task_tree_view)
@@ -84,7 +84,7 @@ class VersionMover(QtWidgets.QDialog, AnimaDialogBase):
 
         self.vertical_layout.addLayout(self.horizontal_layout_2)
 
-        QtCore.QMetaObject.connectSlotsByName(dialog)
+        QtCore.QMetaObject.connectSlotsByName(parent=dialog)
 
         # initialize elements
 

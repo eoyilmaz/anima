@@ -37,12 +37,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         from anima.ui.views.task import TaskTreeView
 
         self.tasks_tree_view = TaskTreeView(
-            project=project, allow_multi_selection=allow_multi_selection
+            tasks=[project], allow_multi_selection=allow_multi_selection
         )
 
         self.tasks_tree_view.replace_with_other(self.verticalLayout, 0)
 
-        self.tasks_tree_view.fill()
+        self.tasks_tree_view.fill_ui()
 
         # setup the double click signal
         self.tasks_tree_view.doubleClicked.disconnect(

@@ -421,10 +421,10 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
         if selected_action:
             if selected_action is reload_action:
                 if isinstance(entity, Project):
-                    self.parent.fill()
+                    self.parent.fill_ui()
                     self.parent.find_and_select_entity_item(item.task)
                 else:
-                    for item in self.parent.get_selected_task_items():
+                    for item in self.parent.get_selected_items():
                         item.reload()
 
             if create_project_action and selected_action is create_project_action:
@@ -438,7 +438,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
 
                 # refresh the task list
                 if result == accepted:
-                    self.parent.fill()
+                    self.parent.fill_ui()
 
                 project_main_dialog.deleteLater()
 
@@ -503,7 +503,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                         if item.parent:
                             item.parent.reload()
                         else:
-                            self.parent.fill()
+                            self.parent.fill_ui()
 
                         # reselect the same task
                         self.parent.find_and_select_entity_item(entity)
@@ -525,7 +525,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                             item.parent.reload()
                         else:
                             # reload the entire
-                            self.parent.fill()
+                            self.parent.fill_ui()
                         self.parent.find_and_select_entity_item(entity)
 
                 elif selected_action is upload_thumbnail_action:
@@ -558,7 +558,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                         if item.parent:
                             item.parent.reload()
                         else:
-                            self.parent.fill()
+                            self.parent.fill_ui()
                         self.parent.find_and_select_entity_item(tasks[0])
 
                 elif selected_action is duplicate_task_hierarchy_action:
@@ -584,7 +584,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
 
                         new_tasks = []
                         parents_to_reload = set()
-                        for item in self.parent.get_selected_task_items():
+                        for item in self.parent.get_selected_items():
                             task = Task.query.get(item.task.id)
                             new_tasks += duplicate_task_hierarchy(
                                 task,
@@ -644,7 +644,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                         DBSession.commit()
                         # reload the parent
                         unique_parent_items = []
-                        for item in self.parent.get_selected_task_items():
+                        for item in self.parent.get_selected_items():
                             if item.parent and item.parent not in unique_parent_items:
                                 unique_parent_items.append(item.parent)
 
@@ -652,7 +652,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                             for parent_item in unique_parent_items:
                                 parent_item.reload()
                         else:
-                            self.parent.fill()
+                            self.parent.fill_ui()
                         # either select the next or previous task or the parent
                         self.parent.find_and_select_entity_item(select_task)
 
@@ -784,7 +784,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                     DBSession.commit()
 
                     unique_parent_items = []
-                    for item in self.parent.get_selected_task_items():
+                    for item in self.parent.get_selected_items():
                         if item.parent and item.parent not in unique_parent_items:
                             unique_parent_items.append(item.parent)
 
@@ -802,7 +802,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
 
                     # refresh the task list
                     if result == accepted:
-                        self.parent.fill()
+                        self.parent.fill_ui()
 
                         # reselect the same task
                         self.parent.find_and_select_entity_item(entity)

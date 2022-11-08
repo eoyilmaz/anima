@@ -147,6 +147,16 @@ class TaskItem(QtGui.QStandardItem):
         self.display_full_path = kwargs.pop("display_full_path", False)
 
         QtGui.QStandardItem.__init__(self, *args, **kwargs)
+
+        # color with task status
+        self.setData(
+            QtGui.QColor(*defaults.status_colors_by_id.get(task.status_id)),
+            QtCore.Qt.BackgroundRole,
+        )
+
+        # use black text
+        self.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
+
         self.parent = None
         self.setEditable(False)
 
@@ -343,9 +353,24 @@ class TaskTreeModel(QtGui.QStandardItemModel):
     """Implement the model view for the task hierarchy."""
 
     def __init__(self, *args, **kwargs):
-        QtGui.QStandardItemModel.__init__(self, *args, **kwargs)
         logger.debug("TaskTreeModel.__init__() is started")
         self.root = None
+
+        self.horizontal_labels = kwargs.pop("horizontal_labels", None)
+        if self.horizontal_labels is None:
+            # use default
+            self.horizontal_labels = ["Name", "Type", "Resources", "Dependencies"]
+        self.show_dependency_info = kwargs.pop("show_dependency_info", False)
+        self.show_asset_and_shot_children = kwargs.pop(
+            "show_asset_and_shot_children", True
+        )
+        self.show_asset_child_task_takes = kwargs.pop(
+            "show_asset_child_task_takes", False
+        )
+        self.allow_editing = kwargs.pop("allow_editing", False)
+        parent = kwargs.pop("parent", None)
+        super(TaskTreeModel, self).__init__(parent=parent)
+
         logger.debug("TaskTreeModel.__init__() is finished")
 
     def flags(self, model_index):
@@ -357,20 +382,12 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         Returns:
             int: Combined enum data of model flags.
         """
-        if not model_index.isValid():
-            return (
-                QtCore.Qt.ItemIsEnabled
-                | QtCore.Qt.ItemIsDropEnabled
-                # | default_flags
-            )
-
-        return (
-            QtCore.Qt.ItemIsEnabled
-            | QtCore.Qt.ItemIsSelectable
-            | QtCore.Qt.ItemIsDragEnabled
-            | QtCore.Qt.ItemIsDropEnabled
-            # | default_flags
-        )
+        default_flags = QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsDropEnabled
+        if model_index.isValid():
+            default_flags |= QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsDragEnabled
+            if self.allow_editing:
+                default_flags |= QtCore.Qt.ItemIsEditable
+        return default_flags
 
     def canDropMimeData(self, data, action, row, column, parent):
         """Return if the item in the index can drop mime data.
@@ -471,36 +488,22 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         """
         return QtCore.Qt.MoveAction
 
-    def populateTree(self, projects):
+    def populateTree(self, tasks):
         """Populate tree with user projects.
 
         Args:
-            projects (list): A list of Stalker Project instances.
+            tasks (list): A list of Stalker Tasks instances.
         """
         logger.debug("TaskTreeModel.populateTree() is started")
         self.setColumnCount(4)
-        self.setHorizontalHeaderLabels(["Name", "Type", "Resources", "Dependencies"])
+        self.setHorizontalHeaderLabels(self.horizontal_labels)
 
-        for project in projects:
-            project_item = TaskItem(0, 4, task=project)
-            project_item.parent = None
-            project_item.setColumnCount(4)
+        for task in tasks:
+            task_item = TaskItem(0, 4, task=task)
+            task_item.parent = None
+            task_item.setColumnCount(4)
 
-            # Set Font
-            # my_font = project_item.font()
-            # my_font.setBold(True)
-            # project_item.setFont(my_font)
-
-            # color with task status
-            project_item.setData(
-                QtGui.QColor(*defaults.status_colors_by_id.get(project.status_id)),
-                QtCore.Qt.BackgroundRole,
-            )
-
-            # use black text
-            project_item.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
-
-            self.appendRow(project_item)
+            self.appendRow(task_item)
 
         logger.debug("TaskTreeModel.populateTree() is finished")
 
