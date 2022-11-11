@@ -218,7 +218,10 @@ class TaskItem(QtGui.QStandardItem):
         logger.debug("TaskItem.canFetchMore() is started for item: %s" % self.text())
         # return_value = False
         if self.task and self.task.id and not self.fetched_all:
-            return_value = self.task.has_children
+            if isinstance(self.task, Project):
+                return_value = self.task.root_tasks is not []
+            else:
+                return_value = self.task.has_children
         else:
             return_value = False
         logger.debug("TaskItem.canFetchMore() is finished for item: %s" % self.text())
@@ -315,8 +318,10 @@ class TaskItem(QtGui.QStandardItem):
             bool: True if the Task related to this item has children, False otherwise.
         """
         logger.debug("TaskItem.hasChildren() is started for item: %s" % self.text())
-        return_value = self.task.has_children
-
+        if isinstance(self.task, Project):
+            return_value = self.task.root_tasks is not []
+        else:
+            return_value = self.task.has_children
         logger.debug("TaskItem.hasChildren() is finished for item: %s" % self.text())
         return return_value
 
