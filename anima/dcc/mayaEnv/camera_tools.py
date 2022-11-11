@@ -592,7 +592,7 @@ def find_cut_info(cam):
 
     i = 0
     iter_count = 0
-    while i < range(len(keyframes) - 2) and iter_count < 1000:
+    while i < (len(keyframes) - 2) and iter_count < 1000:
         iter_count += 1
         start_frame = keyframes[i]
 

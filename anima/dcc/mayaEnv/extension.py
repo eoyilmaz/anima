@@ -37,7 +37,7 @@ class MayaExtension(object):
         available_index = 0
 
         try:
-            for i in xrange(max(indices) + 2):
+            for i in range(max(indices) + 2):
                 if not self[i].connections():
                     available_index = i
                     break

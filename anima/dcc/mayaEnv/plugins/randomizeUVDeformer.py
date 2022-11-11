@@ -71,7 +71,7 @@ class RandomizeDeformer(OpenMayaMPx.MPxDeformerNode):
         max_offset = max_offset_attr_handle.asInt()
 
         # compute and write the new uvs
-        for uv_id in xrange(len(u_array)):
+        for uv_id in range(len(u_array)):
             shell_id = uv_shell_array[uv_id]
             offset_u = shell_id % max_offset
             u_array[uv_id] += offset_u
