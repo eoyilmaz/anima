@@ -1163,13 +1163,15 @@ class Previs(object):
             for cut_in, cut_out in cut_info:
                 print(cut_in, cut_out)
                 # duplicate the original camera with input graph
-                dup_cam = pm.duplicate(cam, un=1)[0]
+                dup_cam, dup_cam_shape = pm.duplicate(cam, un=1)
 
                 # remove all keyframes out of the cut range
                 # remove befor
                 pm.cutKey(dup_cam, time=(-1000, cut_in - 1))
+                pm.cutKey(dup_cam_shape, time=(-1000, cut_in - 1))
                 # # remove after
                 pm.cutKey(dup_cam, time=(cut_out + 1, 100000))
+                pm.cutKey(dup_cam_shape, time=(cut_out + 1, 100000))
 
                 # rename the new cam
                 dup_cam.rename("%s_#" % cam.name())
