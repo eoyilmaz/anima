@@ -36,8 +36,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         from anima.ui.views.task import TaskTreeView
 
+        if project is None:
+            # use all projects
+            from stalker import Project
+            project = Project.query.order_by(Project.name).all()
+        else:
+            # wrap it in to a list
+            project = [project]
+
         self.tasks_tree_view = TaskTreeView(
-            tasks=[project], allow_multi_selection=allow_multi_selection
+            tasks=project, allow_multi_selection=allow_multi_selection
         )
 
         self.tasks_tree_view.replace_with_other(self.verticalLayout, 0)
