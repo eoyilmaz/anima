@@ -393,7 +393,7 @@ class TaskTreeView(QtWidgets.QTreeView):
 
     def get_selected_tasks(self):
         """returns the selected tasks"""
-        return [item.task for item in self.get_selected_items()]
+        return Task.query.filter(Task.id.in_([item.task.id for item in self.get_selected_items()])).all()
 
     def expand_all_selected(self, index):
         """Expand all the selected items.
