@@ -1875,7 +1875,7 @@ def check_root_node_name(progress_controller=None):
             raise PublishError(
                 "Imported namespaces are not allowed in non-referenced root node names"
             )
-        if not root_node_name.startswith(asset_name):
+        if not root_node_name.lower().startswith(asset_name.lower()):
             progress_controller.complete()
             raise PublishError(
                 "The name of the root node should start with asset's name"
