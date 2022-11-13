@@ -2666,6 +2666,28 @@ def convert_to_partial_task(task=None):
     )
 
 
+def convert_to_partial_project(project=None):
+    """Convert the given project to a partial representation.
+
+    Args:
+        project (stalker.Project): A stalker.Project instance.
+
+    Returns:
+        sqlalchemy.engine.row.Row: This can be used like a dictionary.
+    """
+    inner_tasks = aliased(Task.__table__)
+    subquery = DBSession.query(inner_tasks.c.id).filter(
+        inner_tasks.c.project_id == Project.id
+    )
+    return DBSession.query(
+        Project.id,
+        Project.name,
+        Project.entity_type,
+        Project.status_id,
+        subquery.exists().label("has_children"),
+    ).filter(Project.id==project.id).first()
+
+
 def partial_task_query(parent_task=None):
     """Do a partial Task query.
 

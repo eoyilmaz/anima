@@ -2,7 +2,9 @@
 
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtGui, QtCore, QtWidgets
-from anima.utils import partial_project_query
+from anima.utils import partial_project_query, convert_to_partial_project
+
+from stalker import Project
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -42,7 +44,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             project = partial_project_query()
         else:
             # wrap it in to a list
-            project = [project]
+            if isinstance(project, Project):
+                project = [convert_to_partial_project(project)]
+            else:
+                project = [project]
 
         self.tasks_tree_view = TaskTreeView(
             tasks=project, allow_multi_selection=allow_multi_selection
