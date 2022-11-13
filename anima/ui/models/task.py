@@ -4,13 +4,10 @@
 from anima import defaults, logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.utils import load_font, get_cached_icon
+from anima.utils import partial_task_query, convert_to_partial_task
 
-from sqlalchemy.dialects.postgresql import array_agg
-from sqlalchemy.orm import aliased
-
-from stalker import Project, SimpleEntity, Task, User
+from stalker import Project, SimpleEntity, Task
 from stalker.db.session import DBSession
-from stalker.models.task import Task_Resources
 
 
 if False:
@@ -179,7 +176,11 @@ class TaskItem(QtGui.QStandardItem):
         Args:
             task: A stalker Task instance
         """
+        if isinstance(task, Task):
+            task = convert_to_partial_task(task)
+
         self._task = task
+
         if not self._task:
             return
 
@@ -191,7 +192,7 @@ class TaskItem(QtGui.QStandardItem):
             task_name = "{} ({} | {})".format(
                 task.name,
                 task.project.code,
-                " | ".join(list(map(lambda x: x.name, task.parents)))
+                " | ".join(list(map(lambda x: x.name, task.parents))),
             )
 
         self.setData(task_name, QtCore.Qt.DisplayRole)
@@ -218,10 +219,7 @@ class TaskItem(QtGui.QStandardItem):
         logger.debug("TaskItem.canFetchMore() is started for item: %s" % self.text())
         # return_value = False
         if self.task and self.task.id and not self.fetched_all:
-            if isinstance(self.task, Project):
-                return_value = self.task.root_tasks is not []
-            else:
-                return_value = self.task.has_children
+            return_value = self.task.has_children
         else:
             return_value = False
         logger.debug("TaskItem.canFetchMore() is finished for item: %s" % self.text())
@@ -232,41 +230,7 @@ class TaskItem(QtGui.QStandardItem):
         logger.debug("TaskItem.fetchMore() is started for item: %s" % self.text())
 
         if self.canFetchMore():
-            inner_tasks = aliased(Task)
-            subquery = DBSession.query(Task.id).filter(Task.id == inner_tasks.parent_id)
-
-            query = (
-                DBSession.query(
-                    Task.id,
-                    Task.name,
-                    Task.entity_type,
-                    Task.status_id,
-                    subquery.exists().label("has_children"),
-                    array_agg(User.name).label("resources"),
-                )
-                .outerjoin(
-                    Task_Resources, Task.__table__.c.id == Task_Resources.c.task_id
-                )
-                .outerjoin(User, Task_Resources.c.resource_id == User.id)
-                .group_by(
-                    Task.id,
-                    Task.name,
-                    Task.entity_type,
-                    Task.status_id,
-                    subquery.exists().label("has_children"),
-                )
-            )
-
-            if self.task.entity_type != "Project":
-                # query child tasks
-                query = query.filter(Task.parent_id == self.task.id)
-            else:
-                # query only root tasks
-                query = query.filter(Task.project_id == self.task.id).filter(
-                    Task.parent_id == None
-                )
-
-            tasks = query.order_by(Task.name).all()
+            tasks = partial_task_query(parent_task=self.task)
 
             # model = self.model() # This will cause a SEGFAULT
             # TODO: update it later on
@@ -318,10 +282,7 @@ class TaskItem(QtGui.QStandardItem):
             bool: True if the Task related to this item has children, False otherwise.
         """
         logger.debug("TaskItem.hasChildren() is started for item: %s" % self.text())
-        if isinstance(self.task, Project):
-            return_value = self.task.root_tasks is not []
-        else:
-            return_value = self.task.has_children
+        return_value = self.task.has_children
         logger.debug("TaskItem.hasChildren() is finished for item: %s" % self.text())
         return return_value
 
@@ -588,10 +549,13 @@ class TaskTableModel(QtGui.QStandardItemModel):
         )
 
     def populate_table(self, tasks):
-        """Populate table with data."""
-        for task in tasks:
-            assert isinstance(task, Task)
+        """Populate table with data.
 
+        Args:
+            tasks (list): A list of tasks or it can be a list out of the
+                anima.utils.part_task_query() method.
+        """
+        for task in tasks:
             # CheckBox item
             check_box_item = QtGui.QStandardItem()
             check_box_item.setCheckable(True)
@@ -623,15 +587,17 @@ class TaskTableModel(QtGui.QStandardItemModel):
                 "{} {}".format(int(task.schedule_timing), task.schedule_unit)
             )
 
-            self.appendRow([
-                check_box_item,
-                thumbnail_item,
-                start_date_item,
-                end_date_item,
-                name_item,
-                bid_timing_item,
-                schedule_timing_item,
-            ])
+            self.appendRow(
+                [
+                    check_box_item,
+                    thumbnail_item,
+                    start_date_item,
+                    end_date_item,
+                    name_item,
+                    bid_timing_item,
+                    schedule_timing_item,
+                ]
+            )
 
 
 # class TaskTableSortFilterProxyModel(QtCore.QSortFilterProxyModel):

@@ -1,23 +1,41 @@
 # -*- coding: utf-8 -*-
+"""This is the old version of the Project Manager.
+
+Still useful.
+
+Usage is as follows:
+
+```python
+    import os
+    os.environ['STALKER_PATH'] = '/mnt/NAS/Users/eoyilmaz/Stalker_Projects'
+
+    from anima.ui import SET_PYSIDE2
+    SET_PYSIDE2()
+
+    from anima.ui import project_manager
+    project_manager.ui_caller(None, None, project_manager.MainWindow)
+```
 """
 import os
-os.environ['STALKER_PATH'] = '/mnt/NAS/Users/eoyilmaz/Stalker_Projects'
-
-from anima.ui import SET_PYSIDE2
-SET_PYSIDE2()
-
-from anima.ui import project_manager
-project_manager.ui_caller(None, None, project_manager.MainWindow)
-"""
 
 from anima import logger
+from anima import ui
 from anima.ui.base import ui_caller
+from anima.ui.dialogs import login_dialog
+from anima.ui.dialogs import project_dialog
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.utils import load_font, set_widget_style
+from anima.ui.views.task import TaskTreeView
+from anima.ui.widgets.task_dashboard import TaskDashboardWidget
+from anima.utils import do_db_setup, partial_project_query
+
+from stalker import LocalSession
+from stalker import Task
+from stalker.db.session import DBSession
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    """The main application"""
+    """The main application."""
 
     __company_name__ = "Erkan Ozgur Yilmaz"
     __app_name__ = "Project Manager Old"
@@ -66,19 +84,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @classmethod
     def setup_db(cls):
-        """setup the db"""
-        from anima.utils import do_db_setup
-
+        """Set the the db up."""
         do_db_setup()
 
     def _setup_ui(self):
-        """creates the UI widgets"""
+        """Create the UI widgets."""
         self.setWindowTitle("%s v%s" % (self.__app_name__, self.__version__))
 
         # set application icon
-        from anima import ui
-        import os
-
         logger.debug("ui.__path__: %s" % ui.__path__[0])
 
         app_icon_path = os.path.join(ui.__path__[0], "images", "app_icon.png")
@@ -91,7 +104,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.read_settings()
 
     def write_settings(self):
-        """stores the settings to persistent storage"""
+        """Store the settings to persistent storage."""
         self.settings.beginGroup("MainWindow")
 
         self.settings.setValue("size", self.size())
@@ -106,7 +119,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings.endGroup()
 
     def read_settings(self):
-        """read settings from persistent storage"""
+        """Read settings from persistent storage."""
         self.settings.beginGroup("MainWindow")
 
         self.resize(self.settings.value("size", QtCore.QSize(800, 600)))
@@ -121,25 +134,19 @@ class MainWindow(QtWidgets.QMainWindow):
             dark_theme = bool_settings_value_lut[dark_theme]
         self.set_ui_theme(dark_theme=dark_theme)
 
-        from anima.ui.views.task import TaskTreeView
-
-        assert isinstance(self.tasks_tree_view, TaskTreeView)
-
         task_id = self.settings.value("last_viewed_task_id")
         if task_id:
-            from stalker import Task
-
-            task = Task.query.get(task_id)
+            task = Task.query.filter_by(id=task_id).first()
             self.tasks_tree_view.find_and_select_entity_item(task)
 
         self.settings.endGroup()
 
     def reset_window_state(self):
-        """reset window states"""
+        """Reset window states."""
         self.project_dock_widget.setVisible(True)
 
     def create_main_menu(self):
-        """creates the main application menu"""
+        """Create the main application menu."""
         file_menu = self.menuBar().addMenu(self.tr("&File"))
 
         # -------------------------
@@ -186,10 +193,8 @@ class MainWindow(QtWidgets.QMainWindow):
         reset_action.triggered.connect(self.reset_window_state)
 
     def create_project_action_clicked(self):
-        """runs when new project menu action is clicked"""
+        """Run when new project menu action is clicked."""
         # show the new project dialog
-        from anima.ui.dialogs import project_dialog
-
         dialog = project_dialog.MainDialog(parent=self)
         dialog.exec_()
 
@@ -208,18 +213,16 @@ class MainWindow(QtWidgets.QMainWindow):
         dialog.deleteLater()
 
     def login(self):
-        """returns the logged in user"""
-        from stalker import LocalSession
+        """Return the logged in user.
 
+        Returns:
+            stalker.User: The logged in user.
+        """
         local_session = LocalSession()
-        from stalker.db.session import DBSession
-
         with DBSession.no_autoflush:
             logged_in_user = local_session.logged_in_user
 
         if not logged_in_user:
-            from anima.ui.dialogs import login_dialog
-
             dialog = login_dialog.MainDialog(parent=self)
             # dialog.deleteLater()
             dialog.exec_()
@@ -245,9 +248,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return logged_in_user
 
     def logout(self):
-        """log the current user out"""
-        from stalker import LocalSession
-
+        """Log the current user out."""
         session = LocalSession()
         session.delete()
 
@@ -258,7 +259,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.close()
 
     def create_toolbars(self):
-        """creates the toolbars"""
+        """Create the toolbars."""
         file_toolbar = self.addToolBar(self.tr("File"))
         file_toolbar.setObjectName("file_toolbar")
         create_project_action = file_toolbar.addAction("Create Project")
@@ -267,37 +268,17 @@ class MainWindow(QtWidgets.QMainWindow):
         create_project_action.triggered.connect(self.create_project_action_clicked)
 
     def create_dock_widgets(self):
-        """creates the dock widgets"""
+        """Create the dock widget."""
         # ----------------------------------------
         # create the Project Dock Widget
         self.project_dock_widget = QtWidgets.QDockWidget("Projects", self)
         self.project_dock_widget.setObjectName("project_dock_widget")
         # create the TaskTreeView as the main widget
-        from anima.ui.views.task import TaskTreeView
-
         self.tasks_tree_view = TaskTreeView(
             parent=self, allow_multi_selection=True, allow_drag=True
         )
         self.tasks_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-
-        from sqlalchemy import alias
-        from stalker import Task, Project, Status
-        from stalker.db.session import DBSession
-        inner_tasks = alias(Task.__table__)
-        subquery = DBSession.query(inner_tasks.c.id).filter(
-            inner_tasks.c.project_id == Project.id
-        )
-        query = DBSession.query(
-            Project.id,
-            Project.name,
-            Project.entity_type,
-            Project.status_id,
-            subquery.exists().label("has_children"),
-        )
-        query = query.order_by(Project.name)
-        projects = query.all()
-
-        self.tasks_tree_view.tasks = projects
+        self.tasks_tree_view.tasks = partial_project_query()
 
         # also setup the signal
         self.tasks_tree_view.selectionModel().selectionChanged.connect(
@@ -311,33 +292,32 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # ----------------------------------------
         # create the Central Widget
-        from anima.ui.widgets.task_dashboard import TaskDashboardWidget
-
         self.task_dashboard_widget = TaskDashboardWidget(parent=self)
         self.setCentralWidget(self.task_dashboard_widget)
 
     def tasks_tree_view_changed(self):
-        """runs when the tasks tree view changed"""
+        """Run when the tasks tree view changed."""
         # get the currently selected task
         task_id = None
         task_ids = self.tasks_tree_view.get_selected_task_ids()
         if task_ids:
             task_id = task_ids[-1]
-
-        from stalker import Task
-
         task = Task.query.filter_by(id=task_id).first()
 
         # update the task dashboard widget
         self.task_dashboard_widget.task = task
 
     def show_and_raise(self):
-        """ """
+        """Show and raise."""
         self.show()
         self.raise_()
 
     def closeEvent(self, event):
-        """The overridden close event"""
+        """Override close event.
+
+        Args:
+            event (QtCore.QEvent): QEvent instance.
+        """
         self.write_settings()
         event.accept()
 

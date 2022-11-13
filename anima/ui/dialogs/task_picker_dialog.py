@@ -2,6 +2,7 @@
 
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtGui, QtCore, QtWidgets
+from anima.utils import partial_project_query
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -38,8 +39,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         if project is None:
             # use all projects
-            from stalker import Project
-            project = Project.query.order_by(Project.name).all()
+            project = partial_project_query()
         else:
             # wrap it in to a list
             project = [project]
@@ -89,7 +89,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             task_id = task_ids[0]
         from stalker import Task
 
-        task = Task.query.get(task_id)
+        task = Task.query.filter_by(id=task_id).first()
         # if the task is a leaf task then return it
         if task and task.is_leaf:
             self.accept()
