@@ -2754,3 +2754,23 @@ def partial_project_query():
     )
     query = query.order_by(Project.name)
     return query.all()
+
+
+def get_task_hierarchy_name(task):
+    """Generate the task hierarchy name that includes the full path.
+
+    Args:
+        task (stalker.Task): A stalker.Task instance.
+
+    Returns:
+        str: Task hierarchy name.
+    """
+    if task.parents:
+        path = "%s | %s" % (
+            task.project.code,
+            " | ".join(map(lambda x: x.name, task.parents)),
+        )
+    else:
+        path = task.project.code
+
+    return "%s (%s) (%s)" % (task.name, path, task.id)

@@ -5,6 +5,7 @@ import re
 from anima import logger, string_types
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtWidgets
+from anima.utils import get_task_hierarchy_name
 
 if False:
     from PySide2 import QtWidgets, QtCore
@@ -1185,22 +1186,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         else:
             return
 
-    @classmethod
-    def get_task_hierarchy_name(cls, task):
-        """returns the task hierarchy name which includes the path
-
-        :return str: Task hierarchy name
-        """
-        if task.parents:
-            path = "%s | %s" % (
-                task.project.code,
-                " | ".join(map(lambda x: x.name, task.parents)),
-            )
-        else:
-            path = task.project.code
-
-        return "%s (%s) (%s)" % (task.name, path, task.id)
-
     def set_parent_task(self, task):
         """sets the parent_task_line_edit
 
@@ -1220,7 +1205,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
             if isinstance(task, Task):
                 self.parent_task = task
-                self.parent_task_line_edit.setText(self.get_task_hierarchy_name(task))
+                self.parent_task_line_edit.setText(get_task_hierarchy_name(task))
             else:
                 self.parent_task = None
                 self.parent_task_line_edit.setText("")
@@ -1437,7 +1422,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         task_path = MULTI_VALUE_ENUM
         tasks_exists = False
         if task != MULTI_VALUE_ENUM:
-            task_path = self.get_task_hierarchy_name(task)
+            task_path = get_task_hierarchy_name(task)
 
         # don't add if the task already exists
         tasks_exists = self.depends_to_list_widget.findItems(
@@ -1860,7 +1845,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 # revert the parent field
                 if self.tasks[0].parent:
                     self.parent_task_line_edit.setText(
-                        self.get_task_hierarchy_name(self.tasks[0].parent)
+                        get_task_hierarchy_name(self.tasks[0].parent)
                     )
                 else:
                     self.parent_task_line_edit.setText("")
