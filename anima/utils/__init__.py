@@ -3,8 +3,7 @@
 import calendar
 import copy
 import datetime
-import exifread
-from fractions import Fraction
+import fractions
 import hashlib
 import math
 import os
@@ -18,24 +17,63 @@ import tempfile
 import uuid
 
 from anima import defaults, logger
-from stalker import Link, Project, Repository, Task, Version
+
+import exifread
+
+import pytz
+
+from sqlalchemy import and_, exists, or_
+from sqlalchemy.exc import UnboundExecutionError
+from sqlalchemy.orm import aliased
+from sqlalchemy.pool import NullPool
+from sqlalchemy.sql.functions import array_agg
+
+from stalker import (
+    Asset,
+    Link,
+    Project,
+    Repository,
+    Sequence,
+    Shot,
+    Status,
+    Task,
+    TimeLog,
+    User,
+    Version,
+    db,
+)
 from stalker.db.session import DBSession
+from stalker.models.auth import AuthenticationLog, LOGIN, LocalSession
+from stalker.models.task import Task_Resources
 
 
 def all_equal(elements):
-    """return True if all the elements are equal, otherwise False."""
-    first_element = elements[0]
+    """Return True if all the elements are equal, otherwise False.
 
+    Args:
+        elements (list): List of elements.
+
+    Returns:
+        bool: True if all elements are equal, False otherwise.
+    """
+    first_element = elements[0]
     for other_element in elements[1:]:
         if other_element != first_element:
             return False
-
     return True
 
 
 def common_prefix(*sequences):
-    """return a list of common elements at the start of all sequences, then a
-    list of lists that are the unique tails of each sequence.
+    """Return a list of common elements at the start of all sequences.
+
+    Then a list of lists that are the unique tails of each sequence.
+
+    Args:
+        sequences: Arg list.
+
+    Returns:
+        list, list: The first list contains the common parts, the second list contains
+            uncommon elements.
     """
     # if there are no sequences at all, we're done
     if not sequences:
@@ -54,15 +92,29 @@ def common_prefix(*sequences):
     return common, [sequence[len(common) :] for sequence in sequences]
 
 
-def relpath(p1, p2, sep=os.path.sep, pardir=os.path.pardir):
-    """return a relative path from p1 equivalent to path p2.
+def relpath(p1, p2, sep=None, pardir=None):
+    """Return a relative path from p1 equivalent to path p2.
 
     In particular:
 
         the empty string, if p1 == p2;
         p2, if p1 and p2 have no common prefix.
 
+    Args:
+        p1 (str): The path that wanted to be converted to a relative path to p2.
+        p2 (str): The other path to base the p1 to.
+        sep (str, Optional): Path separator.
+        pardir (str, Optional): Parent dir operator. ".." most commonly.
+
+    Returns:
+        str: The processed relative path.
     """
+    if sep is None:
+        sep = os.path.sep
+
+    if pardir is None:
+        pardir = os.path.pardir
+
     # replace any trailing slashes at the end
     p1 = re.sub(r"[/]+$", "", p1)
     p1 = re.sub(r"[\\]+$", "", p1)
@@ -75,9 +127,13 @@ def relpath(p1, p2, sep=os.path.sep, pardir=os.path.pardir):
 
 
 def open_browser_in_location(path):
-    """Opens the os native browser at the given path
+    """Open the os native browser at the given path.
 
-    :param path: The path that the browser should be opened at.
+    Args:
+        path (str): The path that the browser should be opened at.
+
+    Raises:
+        IOError: When the given path doesn't exist
     """
     command = []
     platform_info = platform.platform()
@@ -88,17 +144,17 @@ def open_browser_in_location(path):
         path = os.path.dirname(path)
 
     if platform_info.startswith("Linux"):
-        command = "nautilus " + path
+        command = "xdg-open {}".format(path)
     elif platform_info.startswith("Windows"):
         if os.path.isdir(path):
-            command = "explorer " + path.replace("/", "\\")
+            command = "explorer {}".format(path.replace("/", "\\"))
         elif os.path.isfile(path):
-            command = "explorer /select," + path.replace("/", "\\")
+            command = "explorer /select,{}".format(path.replace("/", "\\"))
     elif platform_info.startswith("Darwin"):
         # TODO: finder can not open files for now, fix it later
         if not os.path.isdir(path):
             path = os.path.dirname(path)
-        command = "open -a /System/Library/CoreServices/Finder.app " + path
+        command = "open -a /System/Library/CoreServices/Finder.app {}".format(path)
 
     if os.path.exists(path):
         subprocess.Popen(command, shell=True)
@@ -107,9 +163,13 @@ def open_browser_in_location(path):
 
 
 def md5_checksum(path):
-    """generates md5 of a file with the given path
+    """Generate md5 of a file with the given path.
 
-    :param path: absolute path to  the file
+    Args:
+        path (str): absolute path to  the file.
+
+    Returns:
+        str: The mde5 checksum.
     """
     m = hashlib.md5()
     with open(path) as f:
@@ -121,11 +181,20 @@ def md5_checksum(path):
 
 
 class StalkerThumbnailCache(object):
-    """A simple file cache system"""
+    """A simple file cache system."""
 
     @classmethod
     def get(cls, thumbnail_full_path, login=None, password=None):
-        """returns the file either from cache or from stalker server"""
+        """Return the file either from cache or from stalker server.
+
+        Args:
+            thumbnail_full_path (str): The thumbnail full path.
+            login (str): The user name.
+            password (str): The user password.
+
+        Returns:
+            str: The thumbnail path.
+        """
         # look up in the cache first
         filename = os.path.basename(thumbnail_full_path)
         logger.debug("filename : %s" % filename)
@@ -175,68 +244,8 @@ class StalkerThumbnailCache(object):
         return cached_file_full_path
 
 
-def multiple_replace(text, adict):
-    """Replace multiple times."""
-    rx = re.compile("|".join(map(re.escape, adict)))
-
-    def one_xlat(match):
-        return adict[match.group(0)]
-
-    return rx.sub(one_xlat, text)
-
-
-def unique(s):
-    """Return a list of elements in s in arbitrary order, but without
-    duplicates.
-    """
-
-    # Try using a set first, because it's the fastest and will usually work
-    try:
-        return list(set(s))
-    except TypeError:
-        pass  # Move on to the next method
-
-    # Since you can't hash all elements, try sorting, to bring equal items
-    # together and then weed them out in a single pass
-    t = list(s)
-    try:
-        t.sort()
-    except TypeError:
-        del t  # Move on to the next method
-    else:
-        # the sort worked, so we are fine
-        # do weeding
-        return [x for i, x in enumerate(t) if not i or x != t[i - 1]]
-    # Brute force is all that's left
-    u = []
-    for x in s:
-        if x not in u:
-            u.append(x)
-
-    return u
-
-
-def embedded_numbers(s):
-    """Fileter embedded numbers."""
-    re_digits = re.compile(r"(\d+)")
-    pieces = re_digits.split(str(s))
-    pieces[1::2] = list(map(int, pieces[1::2]))
-    return pieces
-
-
-def sort_strings_with_embedded_numbers(data):
-    """Sorts a string with embedded numbers
-
-    :param list data: A list of strings
-    """
-    return sorted(data, key=embedded_numbers)
-
-
 def do_db_setup():
-    """the common routing for setting up the database"""
-    from sqlalchemy.exc import UnboundExecutionError
-    from stalker.db.session import DBSession
-
+    """Set up the database."""
     try:
         DBSession.connection()
         logger.debug("already connected, not creating any new connections")
@@ -245,21 +254,24 @@ def do_db_setup():
         # DBSession.close()
         # no connection do setup
         logger.debug("doing a new connection with NullPool")
-        from anima import defaults
-        from sqlalchemy.pool import NullPool
 
         settings = defaults.database_engine_settings
         settings["sqlalchemy.poolclass"] = NullPool
-        from stalker import db
-
         db.setup(settings)
 
 
 def utc_to_local(utc_dt):
-    """converts utc time to local time
+    """Convert utc time to local time.
 
-    based on the answer of J.F. Sebastian on
+    based on the answer of J.F. Sebastian at
     http://stackoverflow.com/questions/4563272/how-to-convert-a-python-utc-datetime-to-a-local-datetime-using-only-python-stand/13287083#13287083
+
+    Args:
+        utc_dt (datetime.datetime): The UTC datetime instance.
+
+    Returns:
+        datetime.datetime: The localised version of the given UTC datetime.datetime
+            instance.
     """
     # get integer timestamp to avoid precision lost
     timestamp = calendar.timegm(utc_dt.timetuple())
@@ -268,10 +280,17 @@ def utc_to_local(utc_dt):
 
 
 def local_to_utc(local_dt):
-    """converts local datetime to utc datetime
+    """Convert local datetime to utc datetime.
 
-    based on the answer of J.F. Sebastian on
+    based on the answer of J.F. Sebastian at
     http://stackoverflow.com/questions/4563272/how-to-convert-a-python-utc-datetime-to-a-local-datetime-using-only-python-stand/13287083#13287083
+
+    Args:
+        local_dt (datetime.datetime): The local datetime instance.
+
+    Returns:
+        datetime.datetime: The UTC version of the given local datetime.datetime
+            instance.
     """
     # get the utc_dt as if the local_dt is utc and calculate the timezone
     # difference and add it to the local dt object
@@ -374,7 +393,14 @@ class MediaManager(object):
 
     @classmethod
     def reorient_image(cls, img):
-        """re-orients rotated images by looking at EXIF data"""
+        """Re-orient rotated images by looking at EXIF data.
+
+        Args:
+            img (PIL.Image): A PIL.Image instance.
+
+        Returns:
+            PIL.Image: A PIL.Image instance.
+        """
         # get the image rotation from EXIF information
         file_full_path = img.filename
 
@@ -410,11 +436,14 @@ class MediaManager(object):
         return img
 
     def generate_image_thumbnail(self, file_full_path):
-        """Generates a thumbnail for the given image file
+        """Generate a thumbnail for the given image file.
 
-        :param file_full_path: Generates a thumbnail for the given file in the
-          given path
-        :return str: returns the thumbnail path
+        Args:
+            file_full_path (str): Generates a thumbnail for the given file in the given
+                path.
+
+        Returns:
+            str: The thumbnail path.
         """
         # generate thumbnail for the image and save it to a tmp folder
         suffix = self.thumbnail_format
@@ -441,11 +470,14 @@ class MediaManager(object):
         return thumbnail_path
 
     def generate_image_for_web(self, file_full_path):
-        """Generates a version suitable to be viewed from a web browser.
+        """Generate a version suitable to be viewed from a web browser.
 
-        :param file_full_path: Generates a thumbnail for the given file in the
-          given path.
-        :return str: returns the thumbnail path
+        Args:
+            file_full_path (str): Generates a thumbnail for the given file in the given
+                path.
+
+        Returns:
+            str: The thumbnail path.
         """
         # generate thumbnail for the image and save it to a tmp folder
         suffix = self.thumbnail_format
@@ -476,10 +508,13 @@ class MediaManager(object):
         return thumbnail_path
 
     def generate_video_thumbnail(self, file_full_path):
-        """Generates a thumbnail for the given video link
+        """Generate a thumbnail for the given video link.
 
-        :param str file_full_path: A string showing the full path of the video
-          file.
+        Args:
+            file_full_path (str): A string showing the full path of the video file.
+
+        Returns:
+            str: The thumbnail file path.
         """
         # TODO: split this in to two different methods, one generating
         #       thumbnails from the video and another one accepting three
@@ -619,21 +654,30 @@ class MediaManager(object):
         return thumbnail_path
 
     def generate_video_for_web(self, file_full_path):
-        """Generates a web friendly version for the given video.
+        """Generate a web friendly version for the given video.
 
-        :param str file_full_path: A string showing the full path of the video
-          file.
+        Args:
+            file_full_path (str): A string showing the full path of the video file.
+
+        Returns:
+            str: The web version full path.
         """
         web_version_full_path = tempfile.mktemp(suffix=self.web_video_format)
         self.convert_to_webm(file_full_path, web_version_full_path)
         return web_version_full_path
 
     def generate_thumbnail(self, file_full_path):
-        """Generates a thumbnail for the given link
+        """Generate a thumbnail for the given link.
 
-        :param file_full_path: Generates a thumbnail for the given file in the
-          given path
-        :return str: returns the thumbnail path
+        Args:
+            file_full_path (str): Generates a thumbnail for the given file in the given
+                path.
+
+        Raises:
+            RuntimeError: If the given file path is not a video or image file path.
+
+        Returns:
+            str: The thumbnail path.
         """
         extension = os.path.splitext(file_full_path)[-1].lower()
         # check if it is an image or video or non of them
@@ -650,13 +694,19 @@ class MediaManager(object):
         )
 
     def generate_media_for_web(self, file_full_path):
-        """Generates a media suitable for web browsers.
+        """Generate a media suitable for web browsers.
 
         It will generate PNG for images, and a WebM for video files.
 
-        :param file_full_path: Generates a web suitable version for the given
-          file in the given path.
-        :return str: returns the media file path.
+        Args:
+            file_full_path (str): Generates a web suitable version for the given file in
+                the given path.
+
+        Raises:
+            RuntimeError: If the given file path is not a video or image file path.
+
+        Returns:
+            str: Returns the media file path.
         """
         extension = os.path.splitext(file_full_path)[-1].lower()
         # check if it is an image or video or non of them
@@ -671,10 +721,13 @@ class MediaManager(object):
 
     @classmethod
     def generate_local_file_path(cls, extension=""):
-        """Generates file paths in server side storage.
+        """Generate  file paths in server side storage.
 
-        :param extension: Desired file extension
-        :return:
+        Args:
+            extension (str): Desired file extension.
+
+        Returns:
+            str: The local file path.
         """
         # upload it to the stalker server side storage path
         new_filename = uuid.uuid4().hex + extension
@@ -689,12 +742,15 @@ class MediaManager(object):
         return file_full_path
 
     def get_video_info(self, full_path):
-        """Returns the video info like the duration  in seconds and fps.
+        """Return the video info like the duration in seconds and fps.
 
         Uses ffmpeg to extract information about the video file.
 
-        :param str full_path: The full path of the video file
-        :return: int
+        Args:
+            full_path (str): The full path of the video file
+
+        Returns:
+            list: A list containing the video info.
         """
         output_buffer = self.ffprobe(
             **{
@@ -751,7 +807,14 @@ class MediaManager(object):
         return media_info
 
     def ffmpeg(self, **kwargs):
-        """A simple python wrapper for ``ffmpeg`` command."""
+        """``ffmpeg`` command wrapper.
+
+        Args:
+            kwargs: Keyword arguments to pass to the ffmpeg command.
+
+        Returns:
+            str: The command output buffer.
+        """
         # there is only one special keyword called 'o'
 
         # this will raise KeyError if there is no 'o' key which is good to
@@ -906,7 +969,14 @@ class MediaManager(object):
         return stderr_buffer
 
     def ffprobe(self, **kwargs):
-        """A simple python wrapper for ``ffprobe`` command."""
+        """`ffprobe`` command wrapper.
+
+        Args:
+            kwargs: Keyword arguments to pass to the ffprobe command.
+
+        Returns:
+            str: The command output buffer.
+        """
         # generate args
         args = [self.ffprobe_command_path]
         for key in kwargs:
@@ -957,7 +1027,16 @@ class MediaManager(object):
         return stdout_buffer
 
     def convert_to_h264(self, input_path, output_path, options=None):
-        """converts the given input to h264"""
+        """Convert the given input to h264.
+
+        Args:
+            input_path (str): A string of path, can have wild card characters.
+            output_path (str): The output path.
+            options (dict): Extra options to pass to the ffmpeg command.
+
+        Returns:
+            str: The h264 file path.
+        """
         if options is None:
             options = {}
 
@@ -979,12 +1058,15 @@ class MediaManager(object):
         return output_path
 
     def convert_to_webm(self, input_path, output_path, options=None):
-        """Converts the given input to webm format
+        """Convert the given input to webm format.
 
-        :param input_path: A string of path, can have wild card characters
-        :param output_path: The output path
-        :param options: Extra options to pass to the ffmpeg command
-        :return:
+        Args:
+            input_path (str): A string of path, can have wild card characters.
+            output_path (str): The output path.
+            options (dict): Extra options to pass to the ffmpeg command.
+
+        Returns:
+            str: The webm file path.
         """
         if options is None:
             options = {}
@@ -1005,12 +1087,15 @@ class MediaManager(object):
         return output_path
 
     def convert_to_prores(self, input_path, output_path, options=None):
-        """Converts the given input to Apple Prores 422 format.
+        """Convert the given input to Apple Prores 422 format.
 
-        :param input_path: A string of path, can have wild card characters
-        :param output_path: The output path
-        :param options: Extra options to pass to the ffmpeg command
-        :return:
+        Args:
+            input_path (str): A string of path, can have wild card characters.
+            output_path (str): The output path.
+            options (dict): Extra options to pass to the ffmpeg command.
+
+        Returns:
+            str: The prores file path.
         """
         if options is None:
             options = {}
@@ -1036,12 +1121,15 @@ class MediaManager(object):
         return output_path
 
     def convert_to_mjpeg(self, input_path, output_path, options=None):
-        """Converts the given input to Apple Motion Jpeg format.
+        """Convert the given input to Apple Motion Jpeg format.
 
-        :param input_path: A string of path, can have wild card characters
-        :param output_path: The output path
-        :param options: Extra options to pass to the ffmpeg command
-        :return:
+        Args:
+            input_path (str): A string of path, can have wild card characters.
+            output_path (str): The output path.
+            options (dict): Extra options to pass to the ffmpeg command.
+
+        Returns:
+            str: The mjpg file path.
         """
         if options is None:
             options = {}
@@ -1079,12 +1167,15 @@ class MediaManager(object):
 
     @classmethod
     def convert_to_animated_gif(cls, input_path, output_path, options=None):
-        """converts the given input to animated gif
+        """Convert the given input to animated gif.
 
-        :param input_path: A string of path, can have wild card characters
-        :param output_path: The output path
-        :param options: Extra options to pass to the ffmpeg command
-        :return:
+        Args:
+            input_path (str): A string of path, can have wild card characters.
+            output_path (str): The output path.
+            options (dict): Extra options to pass to the ffmpeg command.
+
+        Returns:
+            str: The gif path.
         """
         if options is None:
             options = {}
@@ -1100,10 +1191,14 @@ class MediaManager(object):
         return output_path
 
     def upload_with_request_params(self, file_params):
-        """upload objects with request params
+        """Upload objects with request params.
 
-        :param file_params: An object with two attributes, first a
-          ``filename`` attribute and a ``file`` which is a file like object.
+        Args:
+            file_params: An object with two attributes, first a ``filename`` attribute
+                and a ``file`` which is a file like object.
+
+        Returns:
+            list: A list containing the uploaded file info.
         """
         uploaded_file_info = []
         # get the file names
@@ -1128,11 +1223,13 @@ class MediaManager(object):
 
     @classmethod
     def randomize_file_name(cls, full_path):
-        """randomizes the file name by adding a the first 4 characters of a
-        UUID4 sequence to it.
+        """Randomize the file name by adding the first 4 characters of a UUID4 sequence.
 
-        :param str full_path: The filename to be randomized
-        :return: str
+        Args:
+            full_path (str): The filename to be randomized.
+
+        Returns:
+            str: The randomized filename.
         """
         # get the filename
         path = os.path.dirname(full_path)
@@ -1156,8 +1253,13 @@ class MediaManager(object):
 
     @classmethod
     def format_filename(cls, filename):
-        """formats the filename to comply with file naming rules of Stalker
-        Pyramid
+        """Format the filename to comply with file naming rules of Stalker Pyramid.
+
+        Args:
+            filename (str): The filename to format.
+
+        Returns:
+            str: The formatted filename.
         """
         if isinstance(filename, str):
             filename = filename.decode("utf-8")
@@ -1207,17 +1309,21 @@ class MediaManager(object):
         return filename
 
     def upload_file(self, file_object, file_path=None, filename=None):
-        """Uploads files to the given path.
+        """Upload files to the given path.
 
         The data of the files uploaded from a Web application is hold in a file
         like object. This method dumps the content of this file like object to
         the given path.
 
-        :param file_object: File like object holding the data.
-        :param str file_path: The path of the file to output the data to. If it
-          is skipped the data will be written to a temp folder.
-        :param str filename: The desired file name for the uploaded file. If it
-          is skipped a unique temp filename will be generated.
+        Args:
+            file_object (file): File like object holding the data.
+            file_path (str): The path of the file to output the data to. If it is
+                skipped the data will be written to a temp folder.
+            filename (str): The desired file name for the uploaded file. If it is
+                skipped a unique temp filename will be generated.
+
+        Returns:
+            str: The uploaded file full path.
         """
         if file_path is None:
             file_path = tempfile.gettempdir()
@@ -1254,9 +1360,10 @@ class MediaManager(object):
         return file_full_path
 
     def upload_reference(self, task, file_object, filename):
-        """Uploads a reference for the given task to
-        Task.path/References/Stalker_Pyramid/ folder and create a Link object
-        to there. Again the Link object will have a Repository root relative
+        """Upload a reference for the given task.
+
+        Upload to the Task.path/References/Stalker_Pyramid/ folder and create a Link
+        object to there. Again the Link object will have a Repository root relative
         path.
 
         It will also create a thumbnail under
@@ -1264,13 +1371,15 @@ class MediaManager(object):
         web friendly version (PNG for images, WebM for video files) under
         {{Task.absolute_path}}/References/Stalker_Pyramid/ForWeb folder.
 
-        :param task: The task that a reference is uploaded to. Should be an
-          instance of :class:`.Task` class.
-        :type task: :class:`.Task`
-        :param file_object: The file like object holding the content of the
-          uploaded file.
-        :param str filename: The original filename.
-        :returns: :class:`.Link` instance.
+        Args:
+            task (stalker.Task): The task that a reference is uploaded to. Should be an
+                instance of :class:`.Task` class.
+            file_object (file): The file like object holding the content of the uploaded
+                file.
+            filename (str): The original filename.
+
+        Returns:
+            stalker.Link: A :class:`stalker.Link` instance.
         """
         ############################################################
         # ORIGINAL
@@ -1358,20 +1467,22 @@ class MediaManager(object):
         return link
 
     def upload_version(self, task, file_object, take_name=None, extension=""):
-        """Uploads versions to the Task.path/ folder and creates a Version
-        object to there. Again the Version object will have a Repository root
-        relative path.
+        """Upload versions to the Task.path folder and create a Version object.
+
+        Again the Version object will have a Repository root relative path.
 
         The filename of the version will be automatically generated by Stalker.
 
-        :param task: The task that a version is uploaded to. Should be an
-          instance of :class:`.Task` class.
-        :param file_object: A file like object holding the content of the
-          version.
-        :param str take_name: A string showing the the take name of the
-          Version. If skipped defaults.version_take_name will be used.
-        :param str extension: The file extension of the version.
-        :returns: :class:`.Version` instance.
+        Args:
+            task (stalker.Task): The task that a version is uploaded to. Should be an
+                instance of :class:`.Task` class.
+            file_object (file): A file like object holding the content of the version.
+            take_name (str): A string showing the the take name of the Version.
+                If skipped defaults.version_take_name will be used.
+            extension (str): The file extension of the version.
+
+        Returns:
+            stalker.Version: A :class:`stalker.Version` instance.
         """
         if take_name is None:
             take_name = defaults.version_take_name
@@ -1386,22 +1497,25 @@ class MediaManager(object):
         return v
 
     def upload_version_output(self, version, file_object, filename):
-        """Uploads a file as an output for the given :class:`.Version`
-        instance. Will store the file in
-        {{Version.absolute_path}}/Outputs/Stalker_Pyramid/ folder.
+        """Upload a file as an output for the given :class:`.Version` instance.
+
+        Will store the file in {{Version.absolute_path}}/Outputs/Stalker_Pyramid/
+        folder.
 
         It will also generate a thumbnail in
         {{Version.absolute_path}}/Outputs/Stalker_Pyramid/Thumbs folder and a
         web friendly version (PNG for images, WebM for video files) under
         {{Version.absolute_path}}/Outputs/Stalker_Pyramid/ForWeb folder.
 
-        :param version: A :class:`.Version` instance that the output is
-          uploaded for.
-        :type version: :class:`.Version`
-        :param file_object: The file like object holding the content of the
-          uploaded file.
-        :param str filename: The original filename.
-        :returns: :class:`.Link` instance.
+        Args:
+            version (stalker.Version): A :class:`.Version` instance that the output is
+                uploaded for.
+            file_object (file): The file like object holding the content of the
+                uploaded file.
+            filename (str): The original filename.
+
+        Returns:
+            stalker.Link: stalker.Link instance.
         """
         ############################################################
         # ORIGINAL
@@ -1510,11 +1624,12 @@ class MediaManager(object):
 
 
 class Exposure(object):
-    """A class for photo exposure calculation
+    """A class for photo exposure calculation.
 
-    :param float, Fraction shutter: The shutter in seconds. 1/125 for 1/125 seconds.
-    :param float f_stop: The F-Stop number. 8 for f/8.
-    :param float iso: The ISO number. 100 for ISO 100.
+    Args:
+        shutter (float | Fraction): The shutter in seconds. 1/125 for 1/125 seconds.
+        f_stop (float): The F-Stop number. 8 for f/8.
+        iso (float): The ISO number. 100 for ISO 100.
     """
 
     def __init__(self, shutter=None, f_stop=None, iso=None):
@@ -1525,29 +1640,34 @@ class Exposure(object):
 
     @property
     def shutter(self):
-        """getter for the shutter"""
+        """Getter for the shutter property.
+
+        Returns:
+            float: The shutter value.
+        """
         return self._shutter
 
     @shutter.setter
     def shutter(self, shutter):
-        """setter for the shutter
+        """Setter for the shutter property.
 
-        :param float shutter:
-        :return:
+        Args:
+            shutter (float): Shutter value.
         """
-        if not isinstance(shutter, Fraction):
-            self._shutter = Fraction(shutter)
+        if not isinstance(shutter, fractions.Fraction):
+            self._shutter = fractions.Fraction(shutter)
         else:
             self._shutter = shutter
 
     def to(self, other_exp):
-        """calculate the exposure to equalize this exposure to the the given
-        exposure
+        """Calculate the exposure to equalize this exposure to the the given exposure.
 
-        :param other_exp: An exposure instance
-        :return:
+        Args:
+            other_exp (Exposure): The other Exposure instance
+
+        Returns:
+            float: The exposure difference.
         """
-        assert isinstance(other_exp, Exposure)
         # convert every thing to fractions
         shutter = math.log(
             float(other_exp.shutter.numerator)
@@ -1565,20 +1685,24 @@ class Exposure(object):
         return shutter + f_stop + iso
 
     def from_(self, other_exp):
-        """calculate the exposure to equalize the other exposure to this
-        exposure
+        """Calculate the exposure to equalize the other exposure to this exposure.
 
-        :param other_exp:
-        :return:
+        Args:
+            other_exp (Exposure): The other Exposure instance.
+
+        Returns:
+            float: The exposure difference.
         """
         return -self.to(other_exp)
 
 
 def create_structure(entity):
-    """Creates the directory structure of the given project or task also considers custom template structure
+    """Create the directory structure of the given project or task.
 
-    :param entity: A Stalker Project or Task instance
-    :return:
+    Also consider custom template structure.
+
+    Args:
+        entity (stalker.Project | stalker.Task): A Stalker Project or Task instance
     """
     custom_template = None
     project = None
@@ -1621,9 +1745,11 @@ def create_structure(entity):
 
 
 def file_browser_name():
-    """returns the file browser name of the current OS"""
-    import platform
+    """Return the file browser name of the current OS.
 
+    Returns:
+        str: The file browser name.
+    """
     file_browsers = {
         "windows": "Explorer",  # All windows versions
         "darwin": "Finder",  # OSX
@@ -1633,15 +1759,21 @@ def file_browser_name():
 
 
 def generate_unique_shot_name(project, base_name, shot_name_increment=10):
-    """generates a unique shot name and code based of the base_name
+    """Generate a unique shot name and code based of the base_name.
 
-    :param project: Search unique shot in this project.
-    :param base_name: The base shot name
-    :param int shot_name_increment: The increment amount
+    Args:
+        project (stalker.Project): Search unique shot in this project.
+        base_name (str): The base shot name
+        shot_name_increment (int): The increment amount
+
+    Raises:
+        RuntimeError: If it is not possible to generate a unique name.
+
+    Returns:
+        str: The unique shot name.
     """
     logger.debug("generating unique shot number based on: {}".format(base_name))
     logger.debug("shot_name_increment is: {}".format(shot_name_increment))
-    import re
 
     regex = re.compile("[0-9]+")
 
@@ -1678,55 +1810,44 @@ def generate_unique_shot_name(project, base_name, shot_name_increment=10):
 def is_unique_shot_name(project, shot_name):
     """Check if the given shot name is unique for the given project.
 
-    :param Project project: A Stalker Project instance.
-    :param str shot_name: The Shot name to check against being unique.
-    :return: bool
-    """
-    from stalker.db.session import DBSession
-    from stalker import Shot
-    from sqlalchemy.sql import exists, and_
+    Args:
+        project (Project): A stalker.Project instance.
+        shot_name (str): The Shot name to check against being unique.
 
+    Returns:
+        bool: True if this is a unique shot name.
+    """
     with DBSession.no_autoflush:
         unique_shot_name = not DBSession.query(
-            exists().where(
-                and_(
-                    Shot.project == project,
-                    Shot.name == shot_name
-                )
-            )
+            exists().where(and_(Shot.project == project, Shot.name == shot_name))
         ).scalar()
     return unique_shot_name
 
 
 def duplicate_task(task, user, keep_resources=False):
-    """Duplicates the given task without children.
+    """Duplicate the given task without children.
 
-    :param task: a stalker.models.task.Task instance
-    :param user:
-    :param bool keep_resources: Set this True if you want to keep the resources
-    :return: stalker.models.task.Task
+    Args:
+        task (stalker.Task): A stalker.Task instance to duplicate.
+        user (stalker.User): A stalker.User instance which will be recorded as the
+            creator of the new entities.
+        keep_resources (bool): Set this True if you want to keep the resources.
+
+    Returns:
+        stalker.Task: The newly created (duplicate) stalker.Task instance.
     """
     # create a new task and change its attributes
-    from stalker import Task
-
     class_ = Task
     extra_kwargs = {}
     if task.entity_type == "Asset":
-        from stalker import Asset
-
         class_ = Asset
         extra_kwargs = {"code": task.code}
     elif task.entity_type == "Shot":
-        from stalker import Shot
-
         class_ = Shot
 
         # generate a unique shot name based on task.name
         logger.debug("generating unique shot name!")
         shot_name = generate_unique_shot_name(task.project, task.name)
-
-        from anima import defaults
-
         extra_kwargs = {
             "name": shot_name,
             "code": shot_name,
@@ -1734,20 +1855,12 @@ def duplicate_task(task, user, keep_resources=False):
             "cut_out": defaults.cut_out,
         }
     elif task.entity_type == "Sequence":
-        from stalker import Sequence
-
         class_ = Sequence
         extra_kwargs = {"code": task.code}
 
     # all duplicated tasks are new tasks
-    from stalker.db.session import DBSession
-    from stalker import Status
-
     with DBSession.no_autoflush:
         wfd = Status.query.filter(Status.code == "WFD").first()
-
-    import pytz
-    import datetime
 
     utc_now = datetime.datetime.now(pytz.utc)
 
@@ -1789,13 +1902,15 @@ def duplicate_task(task, user, keep_resources=False):
 
 
 def walk_and_duplicate_task_hierarchy(task, user, keep_resources=False):
-    """Walks through task hierarchy and creates duplicates of all the tasks
-    it finds
+    """Walk through task hierarchy and create duplicates of all the tasks found.
 
-    :param task: task
-    :param user: stalker.models.auth.User instance that does this action.
-    :param bool keep_resources: Set this True to keep the resources
-    :return:
+    Args:
+        task (stalker.Task): A stalker.Task instance to start the traversal from.
+        user (stalker.User): A stalker.models.auth.User instance that does this action.
+        keep_resources (bool): Set this True to keep the resources
+
+    Returns:
+        stalker.Task: The newly created (duplicate) stalker.Task instance.
     """
     # start from the given task
     logger.debug("duplicating task : %s" % task)
@@ -1812,11 +1927,12 @@ def walk_and_duplicate_task_hierarchy(task, user, keep_resources=False):
 
 
 def update_dependencies_in_duplicated_hierarchy(task):
-    """Updates the dependencies in the given task. Uses the task.duplicate
-    attribute to find the duplicate
+    """Update the dependencies in the given task.
 
-    :param task: The top most task of the hierarchy
-    :return: None
+    Uses the task.duplicate attribute to find the duplicate
+
+    Args:
+        task (stalker.Task): The top most task of the hierarchy
     """
     try:
         duplicated_task = task.duplicate
@@ -1841,10 +1957,10 @@ def update_dependencies_in_duplicated_hierarchy(task):
 
 
 def cleanup_duplicate_residuals(task):
-    """Cleans the duplicate attributes in the hierarchy
+    """Clean the duplicate attributes in the hierarchy.
 
-    :param task: The top task in the hierarchy
-    :return:
+    Args:
+        task (stalker.Task): The top task in the hierarchy
     """
     try:
         delattr(task, "duplicate")
@@ -1858,30 +1974,29 @@ def cleanup_duplicate_residuals(task):
 def duplicate_task_hierarchy(
     task, parent, name, description, user, keep_resources=False, number_of_copies=1
 ):
-    """Duplicates the given task hierarchy.
+    """Duplicate the given task hierarchy.
 
     Walks through the hierarchy of the given task and duplicates every
     instance it finds in a new task.
 
-    :param task: The task that wanted to be duplicated
-    :param parent: The parent task to move the newly created tasks under.
-    :param name: The new task name.
-    :param description: The new task description
-    :param user: The new task resource
-    :param bool keep_resources: If True, the task resources will be kept on newly
-      created tasks. Default is False.
-    :param number_of_copies: The number of copies, default is 1.
+    Args:
+        task (stalker.Task): The task that wanted to be duplicated.
+        parent (stalker.Task): The parent task to move the newly created tasks under.
+        name (str): The new task name.
+        description (str): The new task description
+        user (stalker.User): The new task resource
+        keep_resources (bool): If True, the task resources will be kept on newly
+            created tasks. Default is False.
+        number_of_copies (int): The number of copies, default is 1.
 
-    :return: A list of stalker.models.task.Task
+    Returns:
+        list: A list of stalker.models.task.Task instances.
     """
-    from stalker import Shot
-    from stalker.db.session import DBSession
-
     if not name:
         name = task.name
 
     dup_tasks = []
-    for i in range(number_of_copies):
+    for _ in range(number_of_copies):
         if isinstance(task, Shot):
             # generate a new unique name
             if not is_unique_shot_name(task.project, name):
@@ -1919,11 +2034,12 @@ def duplicate_task_hierarchy(
 
 
 def fix_task_statuses(task):
-    """fixes task statuses"""
-    if task:
-        from stalker import Task
+    """Fix task statuses.
 
-        assert isinstance(task, Task)
+    Args:
+        task (stalker.Task): A stalker.Task instance.
+    """
+    if task:
         task.update_status_with_dependent_statuses()
         task.update_status_with_children_statuses()
         task.update_schedule_info()
@@ -1933,15 +2049,16 @@ def fix_task_statuses(task):
 
 
 def check_task_status_by_schedule_model(task):
-    """after scheduling project checks the task statuses"""
+    """Check task status by schedule model.
+
+    Run this after scheduling project checks the task statuses.
+
+    Args:
+        task (stalker.Task): A stalker.Task instance.
+    """
     logger.debug("check_task_status_by_schedule_model starts")
 
-    import pytz
-    import datetime
-
     utc_now = datetime.datetime.now(pytz.utc)
-
-    from stalker import Status
 
     status_cmpl = Status.query.filter(Status.code == "CMPL").first()
     status_wip = Status.query.filter(Status.code == "WIP").first()
@@ -1969,24 +2086,26 @@ def check_task_status_by_schedule_model(task):
 
 
 def get_actual_start_time(task):
-    """Returns the start time of the earliest time logs of the given task if it
-    has any time logs, or it will return the task start_time.
+    """Return the start time of the earliest time logs of the given task.
 
-    :param task: The stalker task instance that the time log will be
-      investigated.
-    :type task: :class:`stalker.models.task.Task`
-    :return: :class:`datetime.datetime`
+    If the task doesn't have any time logs this function will return the task
+    start_time.
+
+    Args:
+        task (stalker.Task): The stalker task instance that the time log will be
+            investigated.
+
+    Raises:
+        TypeError: If the given task is not a stalker.Task instance.
+
+    Returns:
+        datetime.datetime: The actual start time based on the TimeLogs.
     """
-
-    from stalker import Task
-
     if not isinstance(task, Task):
         raise TypeError(
             "task should be an instance of stalker.models.task.Task, not %s"
             % task.__class__.__name__
         )
-
-    from stalker import TimeLog
 
     first_time_log = (
         TimeLog.query.filter(TimeLog.task == task).order_by(TimeLog.start.asc()).first()
@@ -2006,24 +2125,25 @@ def get_actual_start_time(task):
 
 
 def get_actual_end_time(task):
-    """Returns the end time of the latest time logs of the given task if it
-    has any time logs, or it will return the task end_time.
+    """Return the end time of the latest time logs of the given task.
 
-    :param task: The stalker task instance that the time log will be
-      investigated.
-    :type task: :class:`stalker.models.task.Task`
-    :return: :class:`datetime.datetime`
+    If the task doesn't have any time logs this function will return the task end_time.
+
+    Args:
+        task (stalker.Task): The stalker Task instance that the time log will be
+            investigated.
+
+    Raises:
+        TypeError: If the given task is not a stalker.Task instance.
+
+    Returns:
+        datetime.datetime: The actual end time based on the TimeLogs.
     """
-    import datetime
-    from stalker import Task
-
     if not isinstance(task, Task):
         raise TypeError(
             "task should be an instance of stalker.models.task.Task, not %s"
             % task.__class__.__name__
         )
-
-    from stalker import TimeLog
 
     end_time_log = (
         TimeLog.query.filter(TimeLog.task == task).order_by(TimeLog.end.desc()).first()
@@ -2054,12 +2174,11 @@ def get_actual_end_time(task):
 
 
 def fix_task_computed_time(task):
-    """Fix task's computed_start and computed_end time based on timelogs of the given task.
+    """Fix task's computed_start and computed_end time based on timelogs of the task.
 
-    :param task: The stalker task instance that the time log will be
-      investigated.
-    :type task: :class:`stalker.models.task.Task`
-    :return: :class:`datetime.datetime`
+    Args:
+        task (stalker.Task): The stalker.Task instance that the time log will be
+            investigated.
     """
     if task.status.code not in ["CMPL", "STOP", "OH"]:
         return
@@ -2074,54 +2193,21 @@ def fix_task_computed_time(task):
         logger.debug("Task computed time is fixed!")
 
 
-def hsv_to_rgb(h, s, v):
-    """Converts HSV to RGB values
-
-    :param h:
-    :param s:
-    :param v:
-    :return:
-    """
-    if s == 0.0:
-        return v, v, v
-
-    i = int(h * 6.0)  # XXX assume int() truncates!
-
-    f = (h * 6.0) - i
-    p, q, t = v * (1.0 - s), v * (1.0 - s * f), v * (1.0 - s * (1.0 - f))
-    i %= 6
-
-    if i == 0:
-        return v, t, p
-
-    if i == 1:
-        return q, v, p
-
-    if i == 2:
-        return p, v, t
-
-    if i == 3:
-        return p, q, v
-
-    if i == 4:
-        return t, p, v
-
-    if i == 5:
-        return v, p, q
-
-
 def smooth_array(data, iteration=1):
     """Smooths the given list of data.
 
     Derived from Maya MEL script: modifySelectedCurves.mel
 
-    :param data: A list of objects that can be multiplied of added to each
-      other like simple numbers to Vectors.
-    :return:
-    """
+    Args:
+        data (list): A list of objects that can be multiplied of added to each other
+            like simple numbers to Vectors.
+        iteration (int): Number of iterations. Defaults to 1.
 
+    Returns:
+        list: The smoothed result.
+    """
     # keep te first and last position
-    for j in range(iteration):
+    for _ in range(iteration):
         prev = data[0]
         current = data[1]
         for i in range(1, len(data) - 1):
@@ -2137,7 +2223,7 @@ def smooth_array(data, iteration=1):
 
 
 def authenticate(login, password):
-    """Authenticates the given login and password information.
+    """Authenticate the given login and password information.
 
     If the ``defaults.enable_ldap_authentication`` is False, the system will
     only use Stalker to authenticate.
@@ -2146,12 +2232,13 @@ def authenticate(login, password):
     the given LDAP server for authentication and then will create or update the
     data in Stalker DB.
 
-    :param str login: The login.
-    :param str password: The plain password.
-    :return:
-    """
-    from anima import defaults
+    Args:
+        login (str): The login.
+        password (str): The plain password.
 
+    Returns:
+        bool: True/False based on the success of the operation.
+    """
     if not defaults.enable_ldap_authentication:
         # No LDAP authentication
         # try authenticating with stalker
@@ -2168,9 +2255,6 @@ def authenticate(login, password):
 
     if success:
         # create the local session
-        from stalker.models.auth import LocalSession, User
-        from sqlalchemy import or_
-
         user = User.query.filter(or_(User.login == login, User.email == login)).first()
 
         session = LocalSession()
@@ -2178,14 +2262,9 @@ def authenticate(login, password):
         session.save()
 
         # also store a AuthenticationLog in the database
-        import datetime
-        import pytz
-        from stalker.models.auth import LOGIN, AuthenticationLog
-
         al = AuthenticationLog(
             user=user, date=datetime.datetime.now(pytz.utc), action=LOGIN
         )
-        from stalker.db.session import DBSession
 
         DBSession.add(al)
         DBSession.commit()
@@ -2194,7 +2273,15 @@ def authenticate(login, password):
 
 
 def stalker_authenticate(login, password):
-    """Authenticates with data from Stalker"""
+    """Authenticate with data from Stalker.
+
+    Args:
+        login (str): The user login name.
+        password (str): The raw password.
+
+    Returns:
+        bool: True/False depending on the success of the operation.
+    """
     # check the given user password
     from stalker import User
 
@@ -2211,7 +2298,17 @@ def stalker_authenticate(login, password):
 
 
 def ldap_authenticate(login, password, ldap_server_address=None, ldap_base_dn=None):
-    """Authenticates with data from Stalker and creates a proper local session"""
+    """Authenticate with data from Stalker and creates a proper local session.
+
+    Args:
+        login (str): The login name.
+        password (str): The password.
+        ldap_server_address (str): The LDAP server address.
+        ldap_base_dn (str): The LDAP base domain.
+
+    Returns:
+        bool: True/False based on the success of the operation.
+    """
     # check the LDAP server for login information
     success = False
     from anima import defaults
@@ -2248,15 +2345,19 @@ def ldap_authenticate(login, password, ldap_server_address=None, ldap_base_dn=No
 
 
 def create_user_with_ldap_info(ldap_connection, ldap_base_dn, login, password):
-    """Creates the user in Stalker with data coming from LDAP server or if the
-    user exists in the Stalker DB it updates the password and group information
+    """Create/Update the user in Stalker with data coming from LDAP server.
+
+    If the user exists in the Stalker DB it updates the password and group information
     of the user.
 
-    :param ldap3.Connection ldap_connection:
-    :param str ldap_base_dn:
-    :param str login: The login.
-    :param str password: The clear text password.
-    :return:
+    Args:
+        ldap_connection (ldap3.Connection): The LDAP connection.
+        ldap_base_dn (str): Domain name.
+        login (str): The login.
+        password (str): The clear text password.
+
+    Returns:
+        stalker.User: The stalker.User that has been created or updated.
     """
     # so there is a user in the LDAP server
     # also create it here in StalkerDB
@@ -2306,14 +2407,19 @@ def create_user_with_ldap_info(ldap_connection, ldap_base_dn, login, password):
 
 
 def get_user_attributes_from_ldap(ldap_connection, ldap_base_dn, login, attribute):
-    """returns the user group names, no permissions for now
+    """Return the user group names.
 
-    :param ldap3.Connection ldap_connection: The ldap_client as ldap3.Connection instance
-    :param str ldap_base_dn: The domain name in LDAP format (all this CN, DN stuff)
-    :param str login: The login
-    :param str attribute: The attribute to query
+    No permissions for now
+
+    Args:
+        ldap_connection (ldap3.Connection): The ldap_client as ldap3.Connection instance
+        ldap_base_dn (str): The domain name in LDAP format (all this CN, DN stuff)
+        login (str): The login
+        attribute (str): The attribute to query
+
+    Returns:
+        list: A list of user attributes.
     """
-
     result = []
     if ldap_connection:
         ldap_filter = "(sAMAccountName=%s)" % login
@@ -2331,12 +2437,16 @@ def get_user_attributes_from_ldap(ldap_connection, ldap_base_dn, login, attribut
 
 
 def get_user_name_from_ldap(ldap_connection, ldap_base_dn, login):
-    """returns the real user name from ldap
+    """Return the real user name from LDAP server.
 
-    :param ldap3.Connection ldap_connection: The ldap_connection as ldap3.Connection instance
-    :param str ldap_base_dn: The domain name in LDAP format (all this CN, DN stuff)
-    :param str login: the login to query the name of
-    :return:
+    Args:
+        ldap_connection (ldap3.Connection): The ldap_connection as ldap3.Connection
+            instance.
+        ldap_base_dn (str): The domain name in LDAP format (all this CN, DN stuff)
+        login (str): the login to query the name of.
+
+    Returns:
+        str: The user name.
     """
     return get_user_attributes_from_ldap(
         ldap_connection, ldap_base_dn, login, "displayName"
@@ -2344,11 +2454,18 @@ def get_user_name_from_ldap(ldap_connection, ldap_base_dn, login):
 
 
 def get_user_groups_from_ldap(ldap_connection, ldap_base_dn, login):
-    """returns the user group names, no permissions for now
+    """Return the user group names.
 
-    :param ldap3.Connection ldap_connection: The ldap_connection as ldap3.Connection instance
-    :param str ldap_base_dn: The domain name in LDAP format (all this CN, DN stuff)
-    :param str login: the login to query the name of
+    No permissions for now.
+
+    Args:
+        ldap_connection (ldap3.Connection): The ldap_connection as ldap3.Connection
+            instance.
+        ldap_base_dn (str): The domain name in LDAP format (all this CN, DN stuff).
+        login (str): the login to query the name of.
+
+    Returns:
+        list: List of group names.
     """
     data = get_user_attributes_from_ldap(
         ldap_connection, ldap_base_dn, login, "memberOf"
@@ -2357,10 +2474,13 @@ def get_user_groups_from_ldap(ldap_connection, ldap_base_dn, login):
 
 
 def milliseconds_to_tc(milliseconds):
-    """converts the given milliseconds to FFMpeg compatible timecode
+    """Convert the given milliseconds to FFMpeg compatible timecode.
 
-    :param milliseconds:
-    :return:
+    Args:
+        milliseconds (int, flot): The milliseconds value.
+
+    Returns:
+        str: The FFMpeg compatible timecode.
     """
     hours = int(milliseconds / 3600000)
     residual_minutes = milliseconds - hours * 3600000
@@ -2374,13 +2494,15 @@ def milliseconds_to_tc(milliseconds):
 
 
 def upload_thumbnail(task, thumbnail_full_path):
-    """Uploads the given thumbnail for the given entity
+    """Upload the given thumbnail for the given entity.
 
-    :param task: An instance of :class:`~stalker.models.entity.SimpleEntity`
-      or a derivative.
+    Args:
+        task: An instance of stalker.models.entity.SimpleEntity or a derivative.
+        thumbnail_full_path (str): A string which is showing the path of the thumbnail
+            image.
 
-    :param str thumbnail_full_path: A string which is showing the path
-      of the thumbnail image
+    Returns:
+        bool: That shows the result.
     """
     extension = os.path.splitext(thumbnail_full_path)[-1]
 
@@ -2438,11 +2560,16 @@ def upload_thumbnail(task, thumbnail_full_path):
 
 
 def text_splitter(input_text, max_line_length=32):
-    """Splits the text from white spaces and the joins them word by word but in groups of max_characters length
+    """Split the text from white spaces.
 
-    :param str input_text: The text
-    :param int max_line_length: The max line length. Default 32.
-    :return:
+    Splits will be joined word by word but in groups of max_characters length.
+
+    Args:
+        input_text (str): The text
+        max_line_length (int): The max line length. Default 32.
+
+    Returns:
+        str: The splitted and joined text.
     """
     lines = []
     words = input_text.split(" ")
@@ -2462,17 +2589,21 @@ def text_splitter(input_text, max_line_length=32):
 
 
 def to_unit(seconds, unit, model):
-    """converts the ``seconds`` value to the given ``unit``, depending on
-    to the ``schedule_model`` the value will differ. So if the
+    """Convert the ``seconds`` value to the given ``unit``.
+
+    Depending on to the ``schedule_model`` the value will differ. So if the
     ``schedule_model`` is 'effort' or 'length' then the ``seconds`` and
     ``schedule_unit`` values are interpreted as work time, if the
     ``schedule_model`` is 'duration' then the ``seconds`` and
     ``schedule_unit`` values are considered as calendar time.
 
-    :param int seconds: The seconds to convert
-    :param str unit: The unit value, one of 'min', 'h', 'd', 'w', 'm', 'y'
-    :param str model: The schedule model, one of 'effort', 'length' or
-      'duration'
+    Args:
+        seconds (int): The seconds to convert
+        unit (str): The unit value, one of 'min', 'h', 'd', 'w', 'm', 'y'
+        model (str): The schedule model, one of 'effort', 'length' or 'duration'
+
+    Returns:
+        None, float: The resultant value of the converted unit.
 
     # TODO: This is temporarily ported from Stalker 0.2.27
     """
@@ -2499,3 +2630,105 @@ def to_unit(seconds, unit, model):
         }
 
     return seconds / lut[unit]
+
+
+def convert_to_partial_task(task=None):
+    """Convert the given task to a partial representation.
+
+    Args:
+        task (stalker.Task): A stalker.Task instance.
+
+    Returns:
+        sqlalchemy.engine.row.Row: This can be used like a dictionary.
+    """
+    inner_tasks = aliased(Task)
+    subquery = DBSession.query(Task.id).filter(Task.id == inner_tasks.parent_id)
+    return (
+        DBSession.query(
+            Task.id,
+            Task.name,
+            Task.entity_type,
+            Task.status_id,
+            subquery.exists().label("has_children"),
+            array_agg(User.name).label("resources"),
+        )
+        .outerjoin(Task_Resources, Task.__table__.c.id == Task_Resources.c.task_id)
+        .outerjoin(User, Task_Resources.c.resource_id == User.id)
+        .group_by(
+            Task.id,
+            Task.name,
+            Task.entity_type,
+            Task.status_id,
+            subquery.exists().label("has_children"),
+        )
+        .filter(Task.id == task.id)
+        .first()
+    )
+
+
+def partial_task_query(parent_task=None):
+    """Do a partial Task query.
+
+    Using this query is super fast compared to using real stalker Task, Asset, Shot,
+    Sequence, Project instances and it is generally enough to use the output of this
+    function for UI purposes.
+
+    Args:
+        parent_task (stalker.Task): This can be another result proxy object.
+
+    Returns:
+        list[sqlalchemy.engine.row.Row]: Returns a list of sqlalchemy.engine.row.Row
+            instances which can be used like dictionaries.
+    """
+    inner_tasks = aliased(Task)
+    subquery = DBSession.query(Task.id).filter(Task.id == inner_tasks.parent_id)
+    query = (
+        DBSession.query(
+            Task.id,
+            Task.name,
+            Task.entity_type,
+            Task.status_id,
+            subquery.exists().label("has_children"),
+            array_agg(User.name).label("resources"),
+        )
+        .outerjoin(Task_Resources, Task.__table__.c.id == Task_Resources.c.task_id)
+        .outerjoin(User, Task_Resources.c.resource_id == User.id)
+        .group_by(
+            Task.id,
+            Task.name,
+            Task.entity_type,
+            Task.status_id,
+            subquery.exists().label("has_children"),
+        )
+    )
+    if parent_task.entity_type != "Project":
+        # query child tasks
+        query = query.filter(Task.parent_id == parent_task.id)
+    else:
+        # query only root tasks
+        query = query.filter(Task.project_id == parent_task.id).filter(
+            Task.parent_id == None  # noqa: E711
+        )
+    return query.order_by(Task.name).all()
+
+
+def partial_project_query():
+    """Return all the projects in the database.
+
+    Returns:
+        list[sqlalchemy.engine.row.Row]: Returns a list of sqlalchemy.engine.row.Row
+            instances which can be used like dictionaries.
+    """
+    inner_tasks = aliased(Task.__table__)
+    subquery = DBSession.query(inner_tasks.c.id).filter(
+        inner_tasks.c.project_id == Project.id
+    )
+    query = DBSession.query(
+        Project.id,
+        Project.name,
+        Project.entity_type,
+        Project.status_id,
+        subquery.exists().label("has_children"),
+    )
+    query = query.order_by(Project.name)
+    return query.all()

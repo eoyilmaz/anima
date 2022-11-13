@@ -61,7 +61,7 @@ class Render(object):
         s = random.random() * 0.5 + 0.25  # 0.25-0.75
         v = random.random() * 0.5 + 0.5  # 0.5 - 1
 
-        from anima.utils import hsv_to_rgb
+        from colorsys import hsv_to_rgb
 
         r, g, b = hsv_to_rgb(h, s, v)
         lambert.color.set(r, g, b)
@@ -88,7 +88,7 @@ class Render(object):
                         all_materials.append(material)
 
         import random
-        from anima.utils import hsv_to_rgb
+        from colorsys import hsv_to_rgb
 
         attr_lut = {
             "lambert": "color",
