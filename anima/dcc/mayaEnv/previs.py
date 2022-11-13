@@ -777,7 +777,7 @@ class ShotExporter(object):
 
         shots = self.shot_list
         for shot in shots:
-            for item in attrs.iteritems():
+            for item in attrs.items():
                 value = shot.getAttr(item[0])
                 if value != item[1]:
                     shots_with_bad_attrs.append([shot, item[0], value, item[1]])
