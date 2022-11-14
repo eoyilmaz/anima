@@ -3865,14 +3865,7 @@ def orphan_rig_finder(project):
         # get the latest published rig version
         # we need to consider all the takes differently
 
-        unique_takes = (
-            DBSession.query(Version.take_name)
-            .filter(Version.task_id == rig_task.id)
-            .filter(~Version.take_name.contains("@"))
-            .distinct()
-            .all()
-        )
-        unique_takes = [t[0] for t in unique_takes]
+        unique_takes = anima.utils.get_unique_take_names(rig_task.id)
 
         # check LookDev first
         # if no LookDev with the same take_name

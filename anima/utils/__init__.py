@@ -2774,3 +2774,25 @@ def get_task_hierarchy_name(task):
         path = task.project.code
 
     return "%s (%s) (%s)" % (task.name, path, task.id)
+
+
+def get_unique_take_names(task_id, include_reprs=False):
+    """Return the unique take names for the given task.
+
+    Args:
+        task_id (int): The task id.
+        include_reprs (bool): Including representations (takes with "@" in their name).
+            By default this is False.
+
+    Returns:
+        list: A list of strings of unique take names.
+    """
+    query = (
+        DBSession.query(Version.take_name)
+        .filter(Version.task_id == task_id)
+    )
+    if not include_reprs:
+        from anima.representation import Representation
+        query = query.filter(~Version.take_name.contains(Representation.repr_separator))
+
+    return [t[0] for t in query.distinct().order_by(Version.take_name).all()]

@@ -14,6 +14,8 @@ from anima.ui.views.task import TaskTreeView
 from anima.ui.widgets import TakesListWidget, RecentFilesComboBox
 from anima.ui.widgets.version import VersionsTableWidget
 
+from anima.utils import get_unique_take_names
+
 if sys.version_info.major > 2:
     exceptionMessageGenerator = lambda e: str(e)
 else:
@@ -1398,28 +1400,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             if children_count == 0:
                 from sqlalchemy import text
 
-                sql = """SELECT
-                    DISTINCT "Versions".take_name
-                FROM "Versions"
-                WHERE "Versions".task_id = :task_id
-                """
-                result = (
-                    DBSession.connection()
-                    .execute(text(sql), task_id=task_id)
-                    .fetchall()
+                takes = get_unique_take_names(
+                    task_id,
+                    include_reprs=self.repr_as_separate_takes_check_box.isChecked()
                 )
-
-                takes = list(map(lambda x: x[0], result))
-
-                if not self.repr_as_separate_takes_check_box.isChecked():
-                    # filter representations
-                    from anima.representation import Representation
-
-                    takes = [
-                        take
-                        for take in takes
-                        if Representation.repr_separator not in take
-                    ]
                 takes = sorted(takes, key=lambda x: x.lower())
 
             logger.debug("len(takes) from db: %s" % len(takes))

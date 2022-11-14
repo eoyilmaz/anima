@@ -149,18 +149,9 @@ class Representation(object):
 
         # find any version that starts with the base_repr_name
         # under the same task
-        from stalker import Version
-        from stalker.db.session import DBSession
-        from sqlalchemy import distinct
+        from anima.utils import get_unique_take_names
 
-        take_names = list(
-            map(
-                lambda x: x[0],
-                DBSession.query(distinct(Version.take_name))
-                .filter(Version.task == self.version.task)
-                .all(),
-            )
-        )
+        take_names = get_unique_take_names(self.version.task.id, include_reprs=True)
         take_names.sort()
 
         repr_names = []

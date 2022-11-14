@@ -2,13 +2,13 @@
 
 import os
 import shutil
-from sqlalchemy import distinct
 from stalker import Project, Version
 
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.views.task import TaskTreeView
 from anima.ui.models.task import TaskTreeModel
+from anima.utils import get_unique_take_names
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -209,13 +209,7 @@ class VersionMover(QtWidgets.QDialog, AnimaDialogBase):
         # get distinct take names
         from stalker.db.session import DBSession
 
-        from_take_names = list(map(
-            lambda x: x[0],
-            DBSession.query(distinct(Version.take_name))
-            .filter(Version.task == from_task)
-            .order_by(Version.take_name)
-            .all(),
-        ))
+        from_take_names = get_unique_take_names(from_task.id)
 
         # create versions for each take
         answer = QtWidgets.QMessageBox.question(
