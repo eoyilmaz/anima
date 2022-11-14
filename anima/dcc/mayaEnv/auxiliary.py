@@ -1343,6 +1343,8 @@ def perform_playblast_shot(shot_name):
     :param shot_name: Shot name
     :return:
     """
+    if not shot_name:
+        return
 
     response = pm.confirmDialog(
         title="Perform Playblast?",
@@ -1356,18 +1358,23 @@ def perform_playblast_shot(shot_name):
         return
 
     # ask resolution
-    resolution = ask_playblast_resolution()
-    if resolution is None:
-        return
+    resolution = 100
 
     extra_playblast_options = {"viewer": 0, "percent": resolution}
 
-    shot = pm.PyNode(shot_name)
+    if " " in shot_name:
+        # there are probabaly more than one shot
+        shots = [pm.PyNode(s_name) for s_name in shot_name.split(" ")]
+    else:
+        shots = [pm.PyNode(shot_name)]
 
     pb = Playblaster()
-    video_file_output = pb.playblast_shot(
-        shot, extra_playblast_options=extra_playblast_options
-    )
+    video_file_outputs = []
+    for shot in shots:
+        video_file_output = pb.playblast_shot(
+            shot, extra_playblast_options=extra_playblast_options
+        )
+        video_file_outputs.append(video_file_output)
 
     response = pm.confirmDialog(
         title="Upload To Server?",
@@ -1378,7 +1385,8 @@ def perform_playblast_shot(shot_name):
         dismissString="No",
     )
     if response == "Yes":
-        pb.upload_output(pb.version, video_file_output)
+        for video_file_output in video_file_outputs:
+            pb.upload_output(pb.version, video_file_output)
 
 
 class Playblaster(object):
@@ -1829,7 +1837,7 @@ class Playblaster(object):
         return active_panel
 
     def playblast(self, extra_playblast_options=None):
-        """does a scene playblast
+        """Do a scene playblast.
 
         Decides what kind of playblast it needs to do.
 
@@ -2172,7 +2180,7 @@ class Playblaster(object):
         return temp_video_file_full_path
 
     def playblast_all_shots(self, extra_playblast_options=None):
-        """Playblasts all shots
+        """Playblast all shots.
 
         :return:
         """
@@ -2212,6 +2220,8 @@ class Playblaster(object):
 
             shot_start_frame = shot.startFrame.get()
             shot_end_frame = shot.endFrame.get()
+            per_shot_playblast_options["startTime"] = shot_start_frame
+            per_shot_playblast_options["endTime"] = shot_end_frame
 
             if self.is_frame_range_selected():
                 # skip this shot if the selected playback range do not

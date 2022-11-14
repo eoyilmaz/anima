@@ -622,7 +622,7 @@ proc string assembleCmd( string $shots )
 global proc string performPlayblastShot (int $action, string $shots )
 {
     // The patched version
-    python("from anima.dcc.mayaEnv import auxiliary; pb = auxiliary.perform_playblast_shot(\"" + $shots + "\")");
+    python("from anima.dcc.mayaEnv import auxiliary; pb = auxiliary.perform_playblast_shot(" + $shots + ")");
 
     return "";
 }
