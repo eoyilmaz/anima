@@ -471,7 +471,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
     def setup_ui(self):
         """Create UI elements."""
         self.setWindowTitle("Asset Migration Tool")
-        self.resize(1000, 600)
+        self.resize(600, 1000)
         self.main_layout = QtWidgets.QVBoxLayout(self)
 
         # Dialog Label
