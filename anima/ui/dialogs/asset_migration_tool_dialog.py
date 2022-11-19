@@ -196,6 +196,10 @@ class AssetWidget(QtWidgets.QGroupBox):
         self.setTitle(get_task_hierarchy_name(asset))
         # add all the child tasks as TaskGroupBoxes
         for child_task in sorted(asset.children, key=lambda x: x.name):
+            if len(child_task.children):
+                # this task has other child tasks
+                # don't append it
+                continue
             task_grp_box = TaskWidget(parent=self, task=child_task)
             self.tasks_layout.addWidget(task_grp_box)
 
@@ -254,6 +258,10 @@ class ProjectWidget(QtWidgets.QGroupBox):
         Args:
             asset (stalker.Asset): A stalker.Asset instance.
         """
+        if not isinstance(asset, Asset):
+            # skip non asset entities
+            return
+
         if asset not in [asset_widget.asset for asset_widget in self.asset_widgets]:
             asset_widget = AssetWidget(parent=self)
             self.asset_widgets.append(asset_widget)
@@ -524,7 +532,6 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
                 if not project_widget:
                     project_widget = ProjectWidget(parent=self)
                     self.project_widgets.append(project_widget)
-                    assert isinstance(self.projects_layout, QtWidgets.QVBoxLayout)
                     self.projects_layout.insertWidget(
                         self.projects_layout.count() - 1,
                         project_widget
@@ -533,6 +540,16 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
 
                 project_widget.add_asset(asset)
                 assets_added.append(asset)
+                # also walk through child tasks of this asset and try to find
+                # more assets
+                child_tasks = [task for task in asset.children]
+                while child_tasks:
+                    child_task = child_tasks.pop(0)
+                    if isinstance(child_task, Asset):
+                        assets.append(child_task)
+                    else:
+                        child_tasks += [task for task in child_task.children]
+
                 # connect the signal
                 project_widget.remove_project.connect(self.remove_project)
 
