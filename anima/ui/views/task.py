@@ -29,7 +29,7 @@ class TaskTreeView(QtWidgets.QTreeView):
             the tasks for the dependency information. Default is False.
         show_asset_and_shot_children (bool): If set to True it will show the step tasks
             for each Asset and Shot. The default value is True.
-        show_asset_child_task_takes (bool): If set to True, shows another level in the
+        show_takes (bool): If set to True, shows another level in the
             tree of takes information for the child task of an Asset.
         context_menu_handler_class (:obj:``rbl_pipe_ui.menus.BaseContextMenuHandler``):
             A :obj:``rbl_pipe_ui.menus.BaseContextMenuHandler`` variant to handle the
@@ -47,7 +47,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         context_menu_handler_class=None,
         horizontal_labels=None,
         show_asset_and_shot_children=True,
-        show_asset_child_task_takes=False,
+        show_takes=False,
         show_dependency_info=False,
     ):
         super(TaskTreeView, self).__init__(parent=parent)
@@ -57,7 +57,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         self.horizontal_labels = horizontal_labels
         self.show_dependency_info = show_dependency_info
         self.show_asset_and_shot_children = show_asset_and_shot_children
-        self.show_asset_child_task_takes = show_asset_child_task_takes
+        self.show_takes = show_takes
 
         if context_menu_handler_class is None:
             self.context_menu_handler = TaskDataContextMenuHandler(parent=self)
@@ -192,7 +192,7 @@ class TaskTreeView(QtWidgets.QTreeView):
             parent=self,
             show_dependency_info=self.show_dependency_info,
             show_asset_and_shot_children=self.show_asset_and_shot_children,
-            show_asset_child_task_takes=self.show_asset_child_task_takes,
+            show_takes=self.show_takes,
             horizontal_labels=self.horizontal_labels,
             allow_editing=self.allow_editing,
         )
@@ -393,7 +393,9 @@ class TaskTreeView(QtWidgets.QTreeView):
 
     def get_selected_tasks(self):
         """returns the selected tasks"""
-        return Task.query.filter(Task.id.in_([item.task.id for item in self.get_selected_items()])).all()
+        return Task.query.filter(
+            Task.id.in_([item.task.id for item in self.get_selected_items()])
+        ).all()
 
     def expand_all_selected(self, index):
         """Expand all the selected items.

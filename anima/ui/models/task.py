@@ -3,8 +3,12 @@
 
 from anima import defaults, logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
-from anima.ui.utils import load_font, get_cached_icon
-from anima.utils import partial_task_query, convert_to_partial_task
+from anima.ui.utils import get_cached_icon
+from anima.utils import (
+    partial_task_query,
+    convert_to_partial_task,
+    get_unique_take_names,
+)
 
 from stalker import Project, SimpleEntity, Task
 from stalker.db.session import DBSession
@@ -141,6 +145,7 @@ class TaskItem(QtGui.QStandardItem):
         self.loaded = False
         self.fetched_all = False
         task = kwargs.pop("task", None)
+        self.show_takes = kwargs.pop("show_takes", False)
         self.display_full_path = kwargs.pop("display_full_path", False)
 
         QtGui.QStandardItem.__init__(self, *args, **kwargs)
@@ -204,7 +209,7 @@ class TaskItem(QtGui.QStandardItem):
             TaskItem: A copy of this item.
         """
         logger.debug("TaskItem.clone() is started for item: %s" % self.text())
-        new_item = TaskItem(task=self.task)
+        new_item = TaskItem(task=self.task, show_takes=self.show_takes)
         new_item.parent = self.parent
         new_item.fetched_all = self.fetched_all
         logger.debug("TaskItem.clone() is finished for item: %s" % self.text())
@@ -217,9 +222,8 @@ class TaskItem(QtGui.QStandardItem):
             bool: True if the item has children, False otherwise.
         """
         logger.debug("TaskItem.canFetchMore() is started for item: %s" % self.text())
-        # return_value = False
         if self.task and self.task.id and not self.fetched_all:
-            return_value = self.task.has_children
+            return_value = self.task.has_children or self.show_takes
         else:
             return_value = False
         logger.debug("TaskItem.canFetchMore() is finished for item: %s" % self.text())
@@ -230,30 +234,24 @@ class TaskItem(QtGui.QStandardItem):
         logger.debug("TaskItem.fetchMore() is started for item: %s" % self.text())
 
         if self.canFetchMore():
-            tasks = partial_task_query(parent_task=self.task)
+            if self.task.has_children:
+                tasks = partial_task_query(parent_task=self.task)
+                task_items = []
+                for task in tasks:
+                    task_item = TaskItem(0, 4, task=task, show_takes=self.show_takes)
+                    task_item.parent = self
 
-            # model = self.model() # This will cause a SEGFAULT
-            # TODO: update it later on
+                    # color with task status
+                    task_item.setData(
+                        QtGui.QColor(*defaults.status_colors_by_id[task.status_id]),
+                        QtCore.Qt.BackgroundRole,
+                    )
 
-            # start = time.time()
-            task_items = []
-            for task in tasks:
-                task_item = TaskItem(0, 4, task=task)
-                task_item.parent = self
+                    # use black text
+                    task_item.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
 
-                # color with task status
-                task_item.setData(
-                    QtGui.QColor(*defaults.status_colors_by_id[task.status_id]),
-                    QtCore.Qt.BackgroundRole,
-                )
+                    task_items.append(task_item)
 
-                # use black text
-                task_item.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
-
-                task_items.append(task_item)
-
-            if task_items:
-                # self.appendRows(task_items)
                 for task_item in task_items:
                     # TODO: Create a custom QStandardItem for each data type in
                     #       different columns
@@ -270,6 +268,14 @@ class TaskItem(QtGui.QStandardItem):
                         )
 
                     self.appendRow([task_item, entity_type_item, resources_item])
+            elif self.show_takes:
+                # There are no child tasks.
+                # Look for takes
+                for take in get_unique_take_names(self.task.id):
+                    take_item = TakeItem(task=self.task, take=take)
+                    entity_type_item = QtGui.QStandardItem()
+                    entity_type_item.setData("Take", QtCore.Qt.DisplayRole)
+                    self.appendRow([take_item, entity_type_item])
 
             self.fetched_all = True
 
@@ -282,7 +288,7 @@ class TaskItem(QtGui.QStandardItem):
             bool: True if the Task related to this item has children, False otherwise.
         """
         logger.debug("TaskItem.hasChildren() is started for item: %s" % self.text())
-        return_value = self.task.has_children
+        return_value = self.task.has_children or self.show_takes
         logger.debug("TaskItem.hasChildren() is finished for item: %s" % self.text())
         return return_value
 
@@ -315,6 +321,132 @@ class TaskItem(QtGui.QStandardItem):
         return self.task.id
 
 
+class TakeItem(QtGui.QStandardItem):
+    def __init__(self, *args, **kwargs):
+        self.loaded = False
+        self.fetched_all = False
+        take = kwargs.pop("take", None)
+        task = kwargs.pop("task", None)
+        QtGui.QStandardItem.__init__(self, *args, **kwargs)
+        # color with task status
+        # self.setData(
+        #     QtGui.QColor(*defaults.status_colors_by_id.get(task.status_id)),
+        #     QtCore.Qt.BackgroundRole,
+        # )
+
+        # use black text
+        self.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
+
+        self.parent = None
+        self.setEditable(False)
+
+        self._task = None
+        self.task = task
+
+        self._take = None
+        self.take = take
+
+    @property
+    def task(self):
+        """Return Task.
+
+        Returns:
+            Task: The Stalker Task instance stored in this item.
+        """
+        return self._task
+
+    @task.setter
+    def task(self, task):
+        """Set the task property.
+
+        Args:
+            task: A stalker Task instance
+        """
+        if isinstance(task, Task):
+            task = convert_to_partial_task(task)
+
+        self._task = task
+
+        if not self._task:
+            return
+
+    @property
+    def take(self):
+        """Return the take.
+
+        Returns:
+            str: the take name.
+        """
+        return self._take
+
+    @take.setter
+    def take(self, take):
+        """Set the take property.
+
+        Args:
+            take (str): The take name.
+        """
+        self.setData(take, QtCore.Qt.DisplayRole)
+
+    def clone(self):
+        """Return a copy of this item.
+
+        Returns:
+            TakeItem: A copy of this item.
+        """
+        logger.debug("TakeItem.clone() is started for item: %s" % self.text())
+        new_item = TakeItem(task=self.task, take=self.take)
+        new_item.parent = self.parent
+        new_item.fetched_all = self.fetched_all
+        logger.debug("TakeItem.clone() is finished for item: %s" % self.text())
+        return new_item
+
+    def canFetchMore(self):
+        """Check if this item have children.
+
+        Returns:
+            bool: True if the item has children, False otherwise.
+        """
+        return False
+
+    def fetchMore(self):
+        """Fetch child items."""
+        return
+
+    def hasChildren(self):
+        """Check if this TaskItem has children.
+
+        Returns:
+            bool: True if the Task related to this item has children, False otherwise.
+        """
+        return False
+
+    def type(self, *args, **kwargs):
+        """Generate a custom type to distinguish this item from a QStandardItem.
+
+        Args:
+            args (list): The given arguments.
+            kwargs (dict): The given keyword arguments.
+
+        Returns:
+            int: The custom user type value.
+        """
+        return QtGui.QStandardItem.UserType + 1
+
+    def reload(self):
+        """Reload the data."""
+        # delete all the children and fetch them again
+        return
+
+    def __hash__(self):
+        """Generate a hash value from the Task.id.
+
+        Returns:
+            int: The hash value which is the task id.
+        """
+        return self.task.id
+
+
 class TaskTreeModel(QtGui.QStandardItemModel):
     """Implement the model view for the task hierarchy."""
 
@@ -330,9 +462,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         self.show_asset_and_shot_children = kwargs.pop(
             "show_asset_and_shot_children", True
         )
-        self.show_asset_child_task_takes = kwargs.pop(
-            "show_asset_child_task_takes", False
-        )
+        self.show_takes = kwargs.pop("show_takes", False)
         self.allow_editing = kwargs.pop("allow_editing", False)
         parent = kwargs.pop("parent", None)
         super(TaskTreeModel, self).__init__(parent=parent)
@@ -465,7 +595,9 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         self.setHorizontalHeaderLabels(self.horizontal_labels)
 
         for task in tasks:
-            task_item = TaskItem(0, 4, task=task)
+            task_item = TaskItem(
+                0, 4, task=task, show_takes=self.show_takes
+            )
             task_item.parent = None
             task_item.setColumnCount(4)
 
