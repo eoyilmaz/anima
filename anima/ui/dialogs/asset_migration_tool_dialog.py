@@ -2,6 +2,7 @@
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.base import ui_caller
 from anima.ui.dialogs import task_picker_dialog
+from anima.ui.views.task import TaskTreeView
 from anima.utils import get_task_hierarchy_name, get_unique_take_names
 
 from stalker import Asset, Task, Version
@@ -9,6 +10,9 @@ from stalker import Asset, Task, Version
 
 if False:
     from PySide2 import QtCore, QtGui, QtWidgets
+
+
+COLORS = {"project": "#ffe5bf", "asset": "#c3e6a1", "task": "#acd2e5"}
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -87,6 +91,10 @@ class AssetWidget(QtWidgets.QGroupBox):
 
         self.tasks_layout = QtWidgets.QVBoxLayout()
         self.main_layout.addLayout(self.tasks_layout)
+
+        self.setStyleSheet(
+            "QGroupBox {{ background-color: {}; }}".format(COLORS["asset"])
+        )
 
     def remove(self):
         """Remove self from parent."""
@@ -223,6 +231,9 @@ class ProjectWidget(QtWidgets.QGroupBox):
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.assets_layout = QtWidgets.QVBoxLayout()
         self.main_layout.addLayout(self.assets_layout)
+        self.setStyleSheet(
+            "QGroupBox {{ background-color: {}; }}".format(COLORS["project"])
+        )
 
     @property
     def project(self):
@@ -405,6 +416,9 @@ class TaskWidget(QtWidgets.QGroupBox):
         self.no_versions_place_holder.setDisabled(True)
         self.takes_layout.addWidget(self.no_versions_place_holder)
         self.main_layout.addLayout(self.takes_layout)
+        self.setStyleSheet(
+            "QGroupBox {{ background-color: {}; }}".format(COLORS["task"])
+        )
 
     @property
     def task(self):
@@ -446,13 +460,12 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.main_layout = None
+        self.pick_assets_button = None
         self.projects_scroll_area = None
         self.projects_layout = None
-        self.pick_assets_button = None
-        self.migrate_button = None
         self.project_widgets = []
+        self.migrate_button = None
         self.task_tree_view = None
-
         self.setup_ui()
 
     def setup_ui(self):
@@ -487,6 +500,10 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
 
         self.projects_layout = QtWidgets.QVBoxLayout()
         projects_inner_widget.setLayout(self.projects_layout)
+
+        # A TaskTreeView can also be used
+        # self.task_tree_view = TaskTreeView(parent=self, show_takes=True)
+        # self.main_layout.addWidget(self.task_tree_view)
 
         self.migrate_button = QtWidgets.QPushButton(self)
         self.migrate_button.setText("Migrate")
@@ -533,12 +550,13 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
                     project_widget = ProjectWidget(parent=self)
                     self.project_widgets.append(project_widget)
                     self.projects_layout.insertWidget(
-                        self.projects_layout.count() - 1,
-                        project_widget
+                        self.projects_layout.count() - 1, project_widget
                     )
                     project_widget.project = asset.project
 
                 project_widget.add_asset(asset)
+                # If a TaskTreeView is used, use the following to add the tasks
+                # self.task_tree_view.tasks += [asset]
                 assets_added.append(asset)
                 # also walk through child tasks of this asset and try to find
                 # more assets
