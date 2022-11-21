@@ -1,0 +1,15 @@
+stalker
+edl
+timecode
+sqlalchemy
+pillow
+exifread
+jinja2
+pytz
+ldap3
+pyside2;sys_platform != 'darwin'
+pyside6;sys_platform == 'darwin'
+tzlocal
+qtawesome
+qtpy
+packaging
