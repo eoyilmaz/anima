@@ -12,7 +12,12 @@ if False:
     from PySide2 import QtCore, QtGui, QtWidgets
 
 
-COLORS = {"project": "#ffe5bf", "asset": "#c3e6a1", "task": "#acd2e5"}
+COLORS = {
+    "project": "#ffe5bf",
+    "asset": "#c3e6a1",
+    "invalid_asset": "#f24949",
+    "task": "#acd2e5",
+}
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -146,6 +151,7 @@ class AssetWidget(QtWidgets.QGroupBox):
 
             # selecting a Project to be the new parent is okay
             self.new_parent = new_parent
+            self.validate()
 
     @property
     def new_parent(self):
@@ -161,6 +167,7 @@ class AssetWidget(QtWidgets.QGroupBox):
         """Set new parent."""
         self._new_parent = new_parent
         self.update_new_parent_label()
+        self.validate()
 
     def update_new_parent_label(self):
         """Update the new parent label."""
@@ -210,6 +217,20 @@ class AssetWidget(QtWidgets.QGroupBox):
                 continue
             task_grp_box = TaskWidget(parent=self, task=child_task)
             self.tasks_layout.addWidget(task_grp_box)
+
+    def validate(self):
+        """Validate the data."""
+        # Check if there is a new parent
+        if not self.new_parent:
+            self.setStyleSheet(
+                "QGroupBox {{ background-color: {}; }}".format(COLORS["invalid_asset"])
+            )
+            return False
+        else:
+            self.setStyleSheet(
+                "QGroupBox {{ background-color: {}; }}".format(COLORS["asset"])
+            )
+            return True
 
 
 class ProjectWidget(QtWidgets.QGroupBox):
@@ -471,7 +492,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
     def setup_ui(self):
         """Create UI elements."""
         self.setWindowTitle("Asset Migration Tool")
-        self.resize(600, 1000)
+        self.resize(900, 1000)
         self.main_layout = QtWidgets.QVBoxLayout(self)
 
         # Dialog Label
@@ -489,7 +510,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
         # Pick Assets button
         self.pick_assets_button = QtWidgets.QPushButton(self)
         self.pick_assets_button.setText("Pick Assets...")
-        self.pick_assets_button.clicked.connect(self.pick_assets_button_clicked)
+        self.pick_assets_button.clicked.connect(self.pick_assets)
         self.main_layout.addWidget(self.pick_assets_button)
 
         self.projects_scroll_area = QtWidgets.QScrollArea(self)
@@ -507,6 +528,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
 
         self.migrate_button = QtWidgets.QPushButton(self)
         self.migrate_button.setText("Migrate")
+        self.migrate_button.clicked.connect(self.migrate)
         self.main_layout.addWidget(self.migrate_button)
 
         self.projects_layout.addItem(
@@ -515,7 +537,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
             )
         )
 
-    def pick_assets_button_clicked(self):
+    def pick_assets(self):
         """Show a Task Picker Dialog."""
         dialog = task_picker_dialog.MainDialog(
             parent=self, project=None, allow_multi_selection=True
@@ -590,3 +612,22 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
                 child_project_widget.deleteLater()
                 self.project_widgets.pop(i)
                 break
+
+    def migrate(self):
+        """Migrate assets."""
+        # Validate all assets first
+        invalid_assets = []
+        for project_widget in self.project_widgets:
+            for asset_widget in project_widget.asset_widgets:
+                if not asset_widget.validate():
+                    invalid_assets.append(asset_widget)
+
+        if invalid_assets:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Invalid Assets!",
+                "There are invalid assets (marked with red).\n\nPlease fix them!",
+            )
+            return
+
+        # if all assets are valid, do the migration work
