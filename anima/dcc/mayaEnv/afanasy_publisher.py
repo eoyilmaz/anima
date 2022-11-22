@@ -4,13 +4,13 @@ import os
 
 
 def submit_job(job_name, block_name, command, host_mask=""):
-    """Submits an Afanasy job
+    """Submit an Afanasy job.
 
-    :param job_name:
-    :param block_name:
-    :param command:
-    :param str host_mask: The host mask.
-    :return:
+    Args:
+        job_name (str): The job name.
+        block_name (str): The block name.
+        command (str): The render command.
+        host_mask (str): The host mask.
     """
 
     import af
@@ -31,16 +31,27 @@ def submit_job(job_name, block_name, command, host_mask=""):
 
 
 def submit_alembic_job(path, project_code="", host_mask=""):
-    """creates a afanasy job that exports the alembics on a given scene
+    """Create an Afanasy job that exports the alembics on a given scene
 
-    :param str path: Path to a maya file
-    :param project_code: Project.code
-    :param str host_mask: The host mask.
+    Args:
+        path (str): Path to a maya file
+        project_code (str): Project.code
+        host_mask (str): The host mask.
     """
     job_name = "%s:%s - Alembic Export" % (project_code, os.path.basename(path))
     block_name = job_name
-    command = [
-        "mayapy",
+
+    if "REZ_USED_RESOLVE" in os.environ:
+        # this is a rez configured environment
+        # use the same rez request to build the render command
+        command = [
+            "rez-env {} -- mayapy".format(os.environ["REZ_USED_RESOLVE"])
+        ]
+    else:
+        # use the default command
+        command = ["mayapy%s" % os.getenv("MAYA_VERSION", "")]
+
+    command += [
         "-c",
         '"import pymel.core as pm;'
         "from anima.dcc.mayaEnv import afanasy_publisher;"
@@ -50,16 +61,17 @@ def submit_alembic_job(path, project_code="", host_mask=""):
 
 
 def submit_playblast_job(path, project_code="", host_mask=""):
-    """creates a afanasy job that exports the alembics on a given scene
+    """Create an Afanasy job that exports the alembics on a given scene.
 
-    :param str path: Path to a maya file
-    :param project_code: Project.code
-    :param str host_mask: The host mask.
+    Args:
+        path (str): Path to a maya file
+        project_code (str): Project.code
+        host_mask (str): The host mask.
     """
     job_name = "%s:%s - Playblast" % (project_code, os.path.basename(path))
     block_name = job_name
     command = [
-        "mayapy",
+        "mayapy%s" % os.getenv("MAYA_VERSION", ""),
         "-c",
         '"import pymel.core as pm;'
         "from anima.dcc.mayaEnv import afanasy_publisher;"
@@ -69,10 +81,10 @@ def submit_playblast_job(path, project_code="", host_mask=""):
 
 
 def export_alembics(path):
-    """Creates alembic files
+    """Create alembic files.
 
-    :param str path: The path of the file version
-    :return:
+    Args:
+        path (str): The path of the file version.
     """
     from anima.dcc import mayaEnv
 
@@ -97,10 +109,10 @@ def export_alembics(path):
 
 
 def export_playblast(path):
-    """Playblasts the current scene
+    """Playblast the current scene.
 
-    :param str path: The path of the file version
-    :return:
+    Args:
+        path (str): The path of the file version.
     """
     import pymel.core as pm
     from anima.dcc import mayaEnv
