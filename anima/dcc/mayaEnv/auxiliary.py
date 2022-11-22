@@ -2556,9 +2556,9 @@ def export_cache_of_nodes(
     caller = pdm.register(len(cacheable_nodes), "Exporting Alembic Caches")
 
     if start_frame is None:
-        start_frame = pm.playbackOptions(q=1, ast=1)
+        start_frame = int(pm.playbackOptions(q=1, ast=1))
     if end_frame is None:
-        end_frame = pm.playbackOptions(q=1, aet=1)
+        end_frame = int(pm.playbackOptions(q=1, aet=1))
 
     export_animation = bool((end_frame - start_frame + 2 * handles) > 0)
 
