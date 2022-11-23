@@ -152,42 +152,44 @@ if not pm.general.about(batch=1):
 
     mayautils.executeDeferred(create_menus)
 
-    if "ANIMA_TEST_SETUP" not in os.environ:
+    # MayaScanner only if Maya is not in batch mode.
+    mayautils.executeDeferred(__plugin_loader, "MayaScanner")
+    mayautils.executeDeferred(__plugin_loader, "MayaScannerCB")
 
-        def load_arnold():
-            try:
-                __plugin_loader("mtoa")
+if "ANIMA_TEST_SETUP" not in os.environ:
 
-                # patch auto-tx option in arnold for Maya 2017
-                if pymel.versions.current() >= 201700:
-                    from anima.dcc.mayaEnv.config import arnold_patches
-                    from mtoa.ui.globals import settings
+    def load_arnold():
+        try:
+            __plugin_loader("mtoa")
 
-                    settings.createArnoldTextureSettings = (
-                        arnold_patches.createArnoldTextureSettings
-                    )
+            # patch auto-tx option in arnold for Maya 2017
+            if pymel.versions.current() >= 201700:
+                from anima.dcc.mayaEnv.config import arnold_patches
+                from mtoa.ui.globals import settings
 
-            except RuntimeError:
-                pass
+                settings.createArnoldTextureSettings = (
+                    arnold_patches.createArnoldTextureSettings
+                )
 
-        def load_redshift():
-            try:
-                # For Maya 2020 and RS 3.0.44+ if the XGenToolkit is not loaded Redshift will not load too
-                __plugin_loader("xgenToolkit")
-                __plugin_loader("redshift4maya")
-            except RuntimeError:
-                pass
+        except RuntimeError:
+            pass
 
-        # mayautils.executeDeferred(load_arnold)
-        mayautils.executeDeferred(load_redshift)
-        mayautils.executeDeferred(__plugin_loader, "AbcExport")
-        mayautils.executeDeferred(__plugin_loader, "AbcImport")
-        mayautils.executeDeferred(__plugin_loader, "objExport")
-        mayautils.executeDeferred(__plugin_loader, "MayaScanner")
-        mayautils.executeDeferred(__plugin_loader, "MayaScannerCB")
-        mayautils.executeDeferred(__plugin_loader, "mayaUsdPlugin")
-    else:
-        logprint("ANIMA_TEST_SETUP detected, skipping auto plugin loads!")
+    def load_redshift():
+        try:
+            # For Maya 2020 and RS 3.0.44+ if the XGenToolkit is not loaded Redshift will not load too
+            __plugin_loader("xgenToolkit")
+            __plugin_loader("redshift4maya")
+        except RuntimeError:
+            pass
+
+    # mayautils.executeDeferred(load_arnold)
+    mayautils.executeDeferred(load_redshift)
+    mayautils.executeDeferred(__plugin_loader, "AbcExport")
+    mayautils.executeDeferred(__plugin_loader, "AbcImport")
+    mayautils.executeDeferred(__plugin_loader, "objExport")
+    mayautils.executeDeferred(__plugin_loader, "mayaUsdPlugin")
+else:
+    logprint("ANIMA_TEST_SETUP detected, skipping auto plugin loads!")
 
 # set CMD_EXTENSION for Afanasy
 # os.environ['AF_CMDEXTENSION'] = pm.about(v=1)
