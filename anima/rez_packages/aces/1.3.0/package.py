@@ -12,7 +12,7 @@ uuid = "5d2cff05093e444c899608b842df8ca5"
 
 description = "ACES Package"
 
-build_command = "python {root}/../build.py {install}"
+build_command = "python3 {root}/../build.py {install}"
 
 
 def commands():
