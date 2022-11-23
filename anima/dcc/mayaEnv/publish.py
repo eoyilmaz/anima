@@ -2298,7 +2298,11 @@ def check_sequence_name___fix():
             shot = s
             break
 
-    sequencer = shot.outputs(type="sequencer")[0]
+    sequencers = shot.outputs(type="sequencer")
+    if not sequencers:
+        raise PublishError("There are no sequencers in the scene!")
+
+    sequencer = sequencers[0]
 
     # get current task
     from anima.dcc import mayaEnv
