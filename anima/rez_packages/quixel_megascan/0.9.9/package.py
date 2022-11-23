@@ -20,7 +20,7 @@ variants = [
     ["houdini"],
 ]
 
-build_command = "python {root}/../build.py {install}"
+build_command = "python3 {root}/../build.py {install}"
 
 
 def commands():

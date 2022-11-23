@@ -12,7 +12,7 @@ description = 'Maya package'
 
 requires = ['python-3.7']
 
-build_command = "python {root}/../build.py {install}"
+build_command = "python3 {root}/../build.py {install}"
 
 with scope("config") as c:
     # c.release_packages_path = "/shots/fx/home/software/packages"
@@ -23,7 +23,9 @@ with scope("config") as c:
 def commands():
     # env.PYTHONPATH.append("{root}/python")
     # env.PATH.append("{root}/bin")
+
     env.PATH.append("/usr/autodesk/maya{}/bin".format(env.REZ_MAYA_MAJOR_VERSION))
+
     env.MAYA_DISABLE_CIP = 1
     env.MAYA_DISABLE_CER = 1
 

@@ -12,7 +12,7 @@ uuid = 'f86b5f3700054e94ae2566b81c5a7433'
 
 description = 'Python package'
 
-build_command = "python {root}/../build.py {install}"
+build_command = "python3 {root}/../build.py {install}"
 
 with scope("config") as c:
     # c.release_packages_path = "/shots/fx/home/software/packages"
