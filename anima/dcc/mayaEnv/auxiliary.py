@@ -1401,6 +1401,9 @@ class Playblaster(object):
         "cv": False,
         "deformers": False,
         "dimensions": False,
+        "displayAppearance": "smoothShaded",  # Smooth shaded
+        "dl": "default",  # default lighting
+        # "udm": True,  # use default material
         "dynamics": True,
         "dynamicConstraints": False,
         "fluids": True,
@@ -1444,6 +1447,12 @@ class Playblaster(object):
         "displaySafeTitle",
         "displayFilmPivot",
         "displayFilmOrigin",
+    ]
+
+    hardware_rendering_globals_attr_names = [
+        "ssaoEnable",
+        "motionBlurEnable",
+        "multiSampleEnable"
     ]
 
     global_playblast_options = {
@@ -1707,7 +1716,12 @@ class Playblaster(object):
 
     def reset_user_view_options_storage(self):
         """resets the user view options storage"""
-        self.user_view_options = {"view_options": {}, "huds": {}, "camera_flags": {}}
+        self.user_view_options = {
+            "view_options": {},
+            "huds": {},
+            "camera_flags": {},
+            "hardware_rendering_globals": {}
+        }
 
     def store_user_options(self):
         """stores user options"""
@@ -1739,6 +1753,10 @@ class Playblaster(object):
             for attr in self.cam_attribute_names:
                 per_camera_attr_dict[attr] = camera.getAttr(attr)
             self.user_view_options["camera_flags"][camera_name] = per_camera_attr_dict
+
+        hrg = pm.PyNode("hardwareRenderingGlobals")
+        for attr in self.hardware_rendering_globals_attr_names:
+            self.user_view_options["hardware_rendering_globals"][attr] = hrg.getAttr(attr)
 
     @property
     def playblast_view_options(self):
@@ -1793,6 +1811,11 @@ class Playblaster(object):
 
         # pm.mel.eval('displayStyle("-ss")')
 
+        # set hardwareRenderingGlobals attributes for playblast
+        hrg = pm.PyNode("hardwareRenderingGlobals")
+        hrg.setAttr("ssaoEnable", True)
+        hrg.setAttr("multiSampleEnable", True)
+
     def restore_user_options(self):
         """restores user options"""
         active_panel = self.get_active_panel()
@@ -1821,6 +1844,12 @@ class Playblaster(object):
                     camera.setAttr(attr, value)
                 except RuntimeError:
                     pass
+
+        # re-set original hardware rendering globals
+        hrg = pm.PyNode("hardwareRenderingGlobals")
+        for attr in self.hardware_rendering_globals_attr_names:
+            value = self.user_view_options["hardware_rendering_globals"][attr]
+            hrg.setAttr(attr, value)
 
         self.remove_hud(self.hud_name)
 
