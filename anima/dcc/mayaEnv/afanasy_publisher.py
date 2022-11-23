@@ -130,7 +130,7 @@ def export_playblast(path):
     animation.Animation.set_range_from_shot()
 
     # delete any focusPlane shape nodes to prevent them from being shown in the playblast
-    pm.delete(pm.ls("focusPlane*Shape"))
+    pm.delete(pm.ls(["focusPlane*Shape", "frustumGeo*Shape"]))
 
     shots = pm.ls(type="shot")
     if shots:
