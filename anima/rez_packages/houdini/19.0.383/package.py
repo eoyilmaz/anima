@@ -12,7 +12,7 @@ description = "Houdini package"
 
 requires = [
     ".python-3.7",
-    "qlib"
+    "qLib"
 ]
 
 build_command = "python3 {root}/../build.py {install}"
@@ -42,6 +42,11 @@ def commands():
         env.PATH.append(
             f"/Applications/Houdini/Houdini{major}.{minor}.{patch}/"
             f"Houdini Core {major}.{minor}.{patch}.app/Contents/MacOS"
+        )
+        env.PATH.append(
+            f"/Applications/Houdini/Houdini{major}.{minor}.{patch}/"
+            f"Frameworks/Houdini.framework/Versions/{major}.{minor}/"
+            f"Resources/bin/"
         )
     elif system.platform == "windows":
         env.PATH.append(

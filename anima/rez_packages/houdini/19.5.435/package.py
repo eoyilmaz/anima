@@ -12,7 +12,7 @@ description = "Houdini package"
 
 requires = [
     ".python-3.9",
-    "qlib"
+    "qLib"
 ]
 
 
@@ -44,6 +44,11 @@ def commands():
         env.PATH.append(
             f"/Applications/Houdini/Houdini{major}.{minor}.{patch}/"
             f"Houdini Core {major}.{minor}.{patch}.app/Contents/MacOS"
+        )
+        env.PATH.append(
+            f"/Applications/Houdini/Houdini{major}.{minor}.{patch}/"
+            f"Frameworks/Houdini.framework/Versions/{major}.{minor}/"
+            f"Resources/bin/"
         )
     elif system.platform == "windows":
         env.PATH.append(
