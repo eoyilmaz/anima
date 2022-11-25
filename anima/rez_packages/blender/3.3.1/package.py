@@ -2,7 +2,7 @@
 
 name = "blender"
 
-version = "2.93.6"
+version = "3.3.1"
 
 author = [
     "Erkan Ozgur Yilmaz",
@@ -17,7 +17,7 @@ requires = [
 ]
 
 variants = [
-    [".python-3.9"],
+    [".python-3.10"],
 ]
 
 build_command = "python3 {root}/../build.py {install}"

@@ -5,24 +5,31 @@ import pathlib
 
 
 def build(source_path, build_path, install_path, targets):
+    source_path = pathlib.Path(source_path)
+    build_path = pathlib.Path(build_path)
+    install_path = pathlib.Path(install_path)
     print(f"source_path : {source_path}")
     print(f"build_path  : {build_path}")
     print(f"install_path: {install_path}")
     print(f"targets     : {targets}")
 
-    version_str = os.path.split(source_path)[-1]
-    major_version, minor_version, patch_version = version_str.split(".")
-    print(f"major_version: {major_version}")
-    print(f"minor_version: {minor_version}")
-    print(f"patch_version: {patch_version}")
+    major, minor, patch = os.environ["REZ_BUILD_PROJECT_VERSION"].split(".")
+    print(f"major: {major}")
+    print(f"minor: {minor}")
+    print(f"patch: {patch}")
 
-    # create custom start_blender command to the install path
+    # create custom start_blender command to the install_path
     start_blender_command_path = pathlib.Path(install_path) / "bin" / "blender"
-    start_blender_command_content = """#!/usr/bin/sh
-/opt/blender-{}.{}.{}/blender --python-use-system-env "$@"
-""".format(
-        major_version, minor_version, patch_version
-    )
+
+    start_blender_command_content = ""
+    if sys.platform.startswith("linux"):
+        start_blender_command_content = f"""#!/usr/bin/sh
+/opt/blender-{major}.{minor}.{patch}/blender --python-use-system-env "$@"
+"""
+    elif sys.platform.startswith("darwin"):
+        start_blender_command_content = f"""#!/bin/zsh
+/Applications/Blender-{major}.{minor}.{patch}.app/Contents/MacOS/blender --python-use-system-env "$@"
+"""
 
     os.makedirs(start_blender_command_path.parent.absolute(), exist_ok=True)
     # create the file and write down the content
