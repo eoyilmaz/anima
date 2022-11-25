@@ -108,11 +108,13 @@ def export_alembics(path):
     print("Alembic Export Done!")
 
 
-def export_playblast(path):
+def export_playblast(path, force_batch_mode=False, reference_depth=0):
     """Playblast the current scene.
 
     Args:
         path (str): The path of the file version.
+        force_batch_mode (bool): Force to run in batch mode.
+        reference_depth (int): See anima.dcc.mayaEnv.Maya.open().
     """
     import pymel.core as pm
     from anima.dcc import mayaEnv
@@ -123,7 +125,13 @@ def export_playblast(path):
     if not v:
         raise RuntimeError("version not found!")
 
-    m.open(v, force=True, skip_update_check=True, prompt=False)
+    m.open(
+        v,
+        force=True,
+        skip_update_check=True,
+        prompt=False,
+        reference_depth=reference_depth
+    )
 
     from anima.dcc.mayaEnv import animation
 
@@ -146,6 +154,16 @@ def export_playblast(path):
         if camera:
             camera.renderable.set(1)
 
+            # also create a distant light to fix Maya 2022 bug
+            if not pm.ls(type=pm.nt.DirectionalLight):
+                light_shape = pm.nt.DirectionalLight()
+                light_shape.useRayTraceShadows.set(1)
+                light_tra = light_shape.getParent()
+                camera_tra = camera.getParent()
+                pm.parent(light_tra, camera_tra)
+                light_tra.t.set(0, 0, 0)
+                light_tra.r.set(0, 0, 0)
+
     from anima.dcc.mayaEnv import auxiliary
 
     default_view_options = auxiliary.get_default_playblast_view_options()
@@ -154,5 +172,6 @@ def export_playblast(path):
         resolution=100,
         playblast_view_options=default_view_options,
         upload_to_server=True,
+        force_batch_mode=True
     )
     print("Playblast Done!")

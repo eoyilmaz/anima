@@ -1107,20 +1107,27 @@ def generate_thumbnail():
 
 
 def perform_playblast(
-    action=0, resolution=100, playblast_view_options=None, upload_to_server=None
+    action=0,
+    resolution=100,
+    playblast_view_options=None,
+    upload_to_server=None,
+    force_batch_mode=False
 ):
-    """the patched version of the original perform playblast
+    """The patched version of the original perform playblast.
 
-    :param int action: Passed directly to the Maya version of the playblast if the current scene is not related to a
-      Stalker Version.
-    :param int resolution: An integer value one of 25, 50, 100 defining the playblast resolution as a percent fraction
-      of the original scene resolution. Default value is 100. If given as None, the value or this argument will be asked
-      to the user.
-    :param dict playblast_view_options: A dictionary containing the view options.
-      ``auxiliary.get_default_playblast_view_options`` can be used to get one. If given as None, the value or this
-        argument will be asked to the user.
-    :param bool upload_to_server: A bool value to specify if the resultant video should be uploaded to the server or
-      not. If given as None, the value or this argument will be asked to the user.
+    Args:
+        action (int): Passed directly to the Maya version of the playblast if the
+            current scene is not related to a Stalker Version.
+        resolution(int): An integer value one of 25, 50, 100 defining the playblast
+            resolution as a percent fraction of the original scene resolution.
+            Default value is 100. If given as None, the value or this argument will be
+            asked to the user.
+        playblast_view_options (dict): A dictionary containing the view options.
+            ``auxiliary.get_default_playblast_view_options`` can be used to get one. If
+            given as None, the value or this argument will be asked to the user.
+        upload_to_server (bool): A bool value to specify if the resultant video should
+            be uploaded to the server or not. If given as None, the value or this
+            argument will be asked to the user.
     """
     # check if the current scene is a Stalker related version
     # if not call the default playblast
@@ -1151,7 +1158,10 @@ def perform_playblast(
         if playblast_view_options is None:
             playblast_view_options = ask_playblast_view_options()
 
-        pb = Playblaster(playblast_view_options=playblast_view_options)
+        pb = Playblaster(
+            playblast_view_options=playblast_view_options,
+            force_batch_mode=force_batch_mode
+        )
         outputs = pb.playblast(extra_playblast_options=extra_playblast_options)
 
         if outputs:
@@ -1402,7 +1412,8 @@ class Playblaster(object):
         "deformers": False,
         "dimensions": False,
         "displayAppearance": "smoothShaded",  # Smooth shaded
-        "dl": "default",  # default lighting
+        "displayLights": "default",  # default lighting
+        "shadows": False,  # No Shadows
         # "udm": True,  # use default material
         "dynamics": True,
         "dynamicConstraints": False,
@@ -1470,10 +1481,10 @@ class Playblaster(object):
 
     hud_name = "PlayblasterHUD"
 
-    def __init__(self, playblast_view_options=None):
+    def __init__(self, playblast_view_options=None, force_batch_mode=False):
         self._playblast_view_options = None
         self.playblast_view_options = playblast_view_options
-        self.batch_mode = pm.general.about(batch=1)
+        self.batch_mode = force_batch_mode or pm.general.about(batch=1)
 
         self.logged_in_user = None
         if not self.batch_mode:
@@ -1813,7 +1824,7 @@ class Playblaster(object):
 
         # set hardwareRenderingGlobals attributes for playblast
         hrg = pm.PyNode("hardwareRenderingGlobals")
-        hrg.setAttr("ssaoEnable", True)
+        hrg.setAttr("ssaoEnable", False)
         hrg.setAttr("multiSampleEnable", True)
 
     def restore_user_options(self):
