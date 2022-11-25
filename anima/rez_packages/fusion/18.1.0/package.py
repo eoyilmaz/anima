@@ -2,7 +2,7 @@
 
 name = "fusion"
 
-version = "17.3.1"
+version = "18.1.0"
 
 author = ["Erkan Ozgur Yilmaz"]
 
@@ -23,6 +23,7 @@ build_command = "python3 {root}/../build.py {install}"
 def commands():
     # env.PYTHONPATH.append("{root}/python")
     # env.PATH.append("{root}/bin")
+
     major = env.REZ_FUSION_MAJOR_VERSION
     if system.platform == "linux":
         env.PATH.append(f"/opt/BlackmagicDesign/Fusion{major}/")
