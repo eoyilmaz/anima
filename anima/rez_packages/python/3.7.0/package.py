@@ -4,11 +4,15 @@ name = "python"
 
 version = "3.7.0"
 
-author = ["Guido Van Rossum"]
+author = ["Erkan Ozgur Yilmaz"]
 
 uuid = "f86b5f3700054e94ae2566b81c5a7433"
 
 description = "Python package"
+
+variants = [
+    [".python-3.7"]
+]
 
 build_command = "python3 {root}/../build.py {install}"
 
