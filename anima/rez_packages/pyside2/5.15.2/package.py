@@ -17,9 +17,8 @@ requires = [
 ]
 
 variants = [
-    ["python-3.7"],
-    ["python-3.9"],
-    ["python-3.10"],
+    [".python-3.7"],
+    [".python-3.9"],
 ]
 
 build_command = "python3 {root}/../build.py {install}"
