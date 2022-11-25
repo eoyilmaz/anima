@@ -33,13 +33,13 @@ def commands():
 
     import os
 
-    env.ANIMA_LIB_PATH = "${HOME}/Documents/development/anima"
+    env.ANIMA_LIB_PATH = "${HOME}/Documents/development"
     env.ANIMA_DEV_PATH = "${HOME}/Documents/DEV"
     env.ANIMA_PATH = os.path.expanduser("${ANIMA_LIB_PATH}/anima")
 
     env.PYTHONPATH.append("${ANIMA_LIB_PATH}/anima")
     env.PYTHONPATH.append(
-        "${ANIMA_LIB_PATH}/extra_libraries/"
+        "${ANIMA_LIB_PATH}/pylibs/"
         "py${REZ_PYTHON_MAJOR_VERSION}.${REZ_PYTHON_MINOR_VERSION}"
     )
 
@@ -101,7 +101,3 @@ def commands():
         # Blender cannot use multiple paths in BLENDER_USER_SCRIPTS
         # so, instead of append/prepend directly set to a value
         env.BLENDER_USER_SCRIPTS = "${ANIMA_DEV_PATH}/blender"
-
-    # 3DE4
-    if "3de4" in this.root:
-        pass
