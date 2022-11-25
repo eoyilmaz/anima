@@ -22,16 +22,16 @@ variants = [
     ["python-3.10"],
 ]
 
-build_command = "python {root}/../build.py {install}"
+build_command = "python3 {root}/../build.py {install}"
 
 
 def commands():
     import os
     # env.PYTHONPATH.append("{root}/python")
     # env.PATH.append("{root}/bin")
-    anima_lib_path = os.path.expanduser("$HOME/Documents/development/anima")
-    env.PYTHONPATH.append("{}/extra_libraries/py{}.{}/__extras__".format(
-            anima_lib_path,
+    py_libs_path = os.path.expanduser("$HOME/Documents/development/pylibs")
+    env.PYTHONPATH.append("{}/py{}.{}/__extras__".format(
+            py_libs_path,
             env.REZ_PYTHON_MAJOR_VERSION,
             env.REZ_PYTHON_MINOR_VERSION,
         )

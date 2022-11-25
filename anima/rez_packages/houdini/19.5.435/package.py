@@ -2,7 +2,7 @@
 
 name = "houdini"
 
-version = "19.0.561"
+version = "19.5.435"
 
 author = ["Erkan Ozgur Yilmaz"]
 
@@ -11,9 +11,10 @@ uuid = "e412cb9626164151b088f2bf4a66fe31"
 description = "Houdini package"
 
 requires = [
-    ".python-3.7",
+    ".python-3.9",
     "qlib"
 ]
+
 
 build_command = "python3 {root}/../build.py {install}"
 
@@ -26,6 +27,7 @@ with scope("config") as c:
 def commands():
     # env.PYTHONPATH.append("{root}/python")
     # env.PATH.append("{root}/bin")
+
     major = env.REZ_HOUDINI_MAJOR_VERSION
     minor = env.REZ_HOUDINI_MINOR_VERSION
     patch = env.REZ_HOUDINI_PATCH_VERSION
@@ -51,13 +53,13 @@ def commands():
     else:
         # default to Linux
         env.PATH.append(f"/opt/hfs{major}.{minor}.{patch}/bin")
-        env.LD_PRELOAD = "/lib64/libc_malloc_debug.so.0"
+        # env.LD_PRELOAD = "/lib64/libc_malloc_debug.so.0"
         env.LD_LIBRARY_PATH.append("$HFS/dsolib")
 
     if "&" not in env.PATH.value():
         env.PATH.append("&")
 
-    if "&" not in env.LD_LIBRARY_PATH.value():
+    if "LD_LIBRARY_PATH" in env.keys() and "&" not in env.LD_LIBRARY_PATH.value():
         env.LD_LIBRARY_PATH.append("&")
 
     if "HOUDINI_PATH" not in env.keys():
