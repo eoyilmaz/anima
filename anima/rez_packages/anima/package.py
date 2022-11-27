@@ -4,9 +4,7 @@ name = "anima"
 
 version = "0.7.0"
 
-author = [
-    "Erkan Ozgur Yilmaz",
-]
+author = ["Erkan Ozgur Yilmaz"]
 
 uuid = "7ac53aa7e70c4014a5695f476f992d02"
 
@@ -17,11 +15,12 @@ requires = [
 ]
 
 variants = [
+    ["python"],  # pure python variant
     ["blender"],
     ["fusion"],
     ["houdini"],
     ["maya"],
-    ["3de4"]
+    ["3de4"],
 ]
 
 build_command = "python3 {root}/build.py {install}"
@@ -33,19 +32,46 @@ def commands():
 
     import os
 
+    # find python major and minor version
+    python_major = -1
+    python_minor = 0
+    for p in str(env.REZ_USED_EPH_RESOLVE).split(" "):
+        if "python" not in p:
+            continue
+        python_major, python_minor = p.strip().split("-")[1].split(".")[0:2]
+
     env.ANIMA_LIB_PATH = "${HOME}/Documents/development"
     env.ANIMA_DEV_PATH = "${HOME}/Documents/DEV"
     env.ANIMA_PATH = os.path.expanduser("${ANIMA_LIB_PATH}/anima")
 
     env.PYTHONPATH.append("${ANIMA_LIB_PATH}/anima")
-    env.PYTHONPATH.append(
-        "${ANIMA_LIB_PATH}/pylibs/"
-        "py${REZ_PYTHON_MAJOR_VERSION}.${REZ_PYTHON_MINOR_VERSION}"
-    )
 
-    # Maya
-    if "maya" in this.root:
+    if "maya" not in this.root:
+        print("setting up default PYTHONPATH")
+        # default PYTHONPATH
+        pylibs_path = "{}/pylibs/py{}.{}{}".format(
+            "${ANIMA_LIB_PATH}",
+            python_major,
+            python_minor,
+            "",
+        )
+        print(f"pylibs_path: {pylibs_path}")
+        env.PYTHONPATH.append(pylibs_path)
+    else:
+        # Maya
         # PYTHONPATH
+        env.PYTHONPATH.append(
+            "{}/pylibs/py{}.{}{}".format(
+                "${ANIMA_LIB_PATH}",
+                python_major,
+                python_minor,
+                # maya=<2023 uses x86 under macOS
+                "_x86"
+                if system.platform
+                == "osx"  # and int(env.REZ_MAYA_MAJOR_VERSION) <= 2023
+                else "",
+            )
+        )
         env.PYTHONPATH.append("${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config")
         env.PYTHONPATH.append(
             "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config/${REZ_MAYA_MAJOR_VERSION}"
@@ -82,8 +108,9 @@ def commands():
 
     # Houdini
     if "houdini" in this.root:
-        env.HOUDINI_SHORT_VERSION = \
+        env.HOUDINI_SHORT_VERSION = (
             "${REZ_HOUDINI_MAJOR_VERSION}.${REZ_HOUDINI_MINOR_VERSION}"
+        )
         anima_otl_path = "${ANIMA_DEV_PATH}/houdini/otls/${HOUDINI_SHORT_VERSION}"
         anima_dso_path = "${ANIMA_DEV_PATH}/houdini/dso/${HOUDINI_SHORT_VERSION}"
 
