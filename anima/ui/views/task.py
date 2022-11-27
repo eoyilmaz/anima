@@ -10,7 +10,7 @@ from stalker import SimpleEntity, Task
 
 
 if False:
-    from PySide2 import QtCore, QtWidgets
+    from PySide6 import QtCore, QtWidgets
 
 
 class TaskTreeView(QtWidgets.QTreeView):
@@ -100,7 +100,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         """
         self._allow_drag = allow_drag
         if allow_drag:
-            self.setSelectionMode(self.ExtendedSelection)
+            self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
             self.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
             self.setDragEnabled(True)
             self.setAcceptDrops(True)
@@ -128,9 +128,9 @@ class TaskTreeView(QtWidgets.QTreeView):
         # allow multiple selection
         self._allow_multi_selection = allow_multi_selection
         if self._allow_multi_selection:
-            self.setSelectionMode(self.ExtendedSelection)
+            self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         else:
-            self.setSelectionMode(self.SingleSelection)
+            self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
 
     def setup_signals(self):
         """connects the signals to slots"""
