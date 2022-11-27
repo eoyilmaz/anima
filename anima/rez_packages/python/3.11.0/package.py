@@ -10,9 +10,7 @@ uuid = "f86b5f3700054e94ae2566b81c5a7433"
 
 description = "Python package"
 
-variants = [
-    [".python-3.11"]
-]
+variants = [[".python-3.11"]]
 
 build_command = "python3 {root}/../build.py {install}"
 
@@ -24,5 +22,5 @@ with scope("config") as c:
 
 def commands():
     # env.PYTHONPATH.append("{root}/python")
-    env.PATH.append("{root}/bin")
+    env.PATH.prepend("{root}/bin")
     pass
