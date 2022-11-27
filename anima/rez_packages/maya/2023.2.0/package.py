@@ -2,7 +2,7 @@
 
 name = "maya"
 
-version = "2022.4.0"
+version = "2023.2.0"
 
 author = ["Erkan Ozgur Yilmaz"]
 
@@ -10,7 +10,7 @@ uuid = "926ca70831554917977883498363a94e"
 
 description = "Maya package"
 
-requires = [".python-3.7"]
+requires = [".python-3.9"]
 
 build_command = "python3 {root}/../build.py {install}"
 

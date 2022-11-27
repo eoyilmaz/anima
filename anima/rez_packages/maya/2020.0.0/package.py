@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
-name = 'maya'
+name = "maya"
 
-version = '2020.0.0'
+version = "2020.0.0"
 
-author = ['Erkan Ozgur Yilmaz']
+author = ["Erkan Ozgur Yilmaz"]
 
-uuid = '926ca70831554917977883498363a94e'
+uuid = "926ca70831554917977883498363a94e"
 
-description = 'Maya package'
+description = "Maya package"
 
-requires = ['python-2.7.11']
+requires = [".python-2.7.11"]
 
 build_command = "python3 {root}/../build.py {install}"
 
@@ -23,8 +23,12 @@ with scope("config") as c:
 def commands():
     # env.PYTHONPATH.append("{root}/python")
     # env.PATH.append("{root}/bin")
-    env.PATH.append("/usr/autodesk/maya{}/bin".format(env.REZ_MAYA_MAJOR_VERSION))
+
+    major = env.REZ_MAYA_MAJOR_VERSION
+    if system.platform == "linux":
+        env.PATH.append(f"/usr/autodesk/maya{major}/bin")
+    elif system.platform == "osx":
+        env.PATH.append(f"/Applications/Autodesk/maya{major}/Maya.app/Contents/MacOS")
+
     env.MAYA_DISABLE_CIP = 1
     env.MAYA_DISABLE_CER = 1
-
-
