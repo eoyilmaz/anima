@@ -9,4 +9,5 @@
 #
 
 import ui_common
+
 ui_common.version_dialog(mode=0)

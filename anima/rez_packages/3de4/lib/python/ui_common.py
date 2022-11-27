@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import sys
 from anima import logger
 
 
@@ -11,7 +12,11 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
     from anima import ui
 
     do_db_setup()
-    ui.SET_PYSIDE2()
+
+    if sys.platform in ["linux", "windows"]:
+        ui.SET_PYSIDE2()
+    else:
+        ui.SET_PYSIDE6()
 
     from anima.ui.dialogs import version_dialog
     from anima.dcc import tde4
