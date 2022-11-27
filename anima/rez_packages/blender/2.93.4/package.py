@@ -4,9 +4,7 @@ name = "blender"
 
 version = "2.93.4"
 
-author = [
-    "Erkan Ozgur Yilmaz",
-]
+author = ["Erkan Ozgur Yilmaz"]
 
 uuid = "edf2e1216f1744e286dbfc5becd985e5"
 
@@ -14,10 +12,7 @@ description = "Blender Package"
 
 requires = [
     "aces",
-]
-
-variants = [
-    [".python-3.9"],
+    ".python-3.9",
 ]
 
 build_command = "python3 {root}/../build.py {install}"
