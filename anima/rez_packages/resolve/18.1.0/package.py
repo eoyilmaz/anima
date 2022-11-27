@@ -2,7 +2,7 @@
 
 name = "resolve"
 
-version = "18.0.3"
+version = "18.1.0"
 
 author = ["Erkan Ozgur Yilmaz"]
 

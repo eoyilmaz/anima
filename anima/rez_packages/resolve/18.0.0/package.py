@@ -11,13 +11,12 @@ uuid = "86791641abc04a189b2177f4eff55327"
 description = "DaVinci Resolve package"
 
 requires = [
-    "pyside2",
     "anima",
 ]
 
 variants = [
-    ["python-2"],
-    ["python-3"],
+    [".python-2"],
+    [".python-3"],
 ]
 
 build_command = "python3 {root}/../build.py {install}"
