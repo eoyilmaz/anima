@@ -22,11 +22,12 @@ build_command = "python3 {root}/../build.py {install}"
 
 
 def commands():
-    import os
-
     # env.PYTHONPATH.append("{root}/python")
     # env.PATH.append("{root}/bin")
-    py_libs_path = os.path.expanduser("$HOME/Documents/development/pylibs")
+
+    # Set QT_LIB env var for anima
+    env.QT_LIB.set("PySide2")
+    py_libs_path = "$HOME/Documents/development/pylibs"
     env.PYTHONPATH.append(
         "{}/py{}.{}/__extras__".format(
             py_libs_path,
