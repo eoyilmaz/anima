@@ -4,17 +4,13 @@ name = "qLib"
 
 version = "0.2.207"
 
-author = [
-    "qLab",
-]
+author = ["Erkan Ozgur Yilmaz"]
 
 uuid = "742b691df8324d9a90b072da4cc8d8f0"
 
 description = "qLib Package"
 
-build_command = (
-    "python3 {root}/../../github_project_builder.py --owner=qLab --repo=qLib --tag-prefix=v"
-)
+build_command = "python3 {root}/../../github_project_builder.py --owner=qLab --repo=qLib --tag-prefix=v"
 
 
 def commands():
