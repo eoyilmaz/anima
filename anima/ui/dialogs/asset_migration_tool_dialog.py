@@ -338,7 +338,7 @@ class TakeWidget(QtWidgets.QWidget):
     def setup_ui(self):
         """Create UI widgets."""
         self.main_layout = QtWidgets.QHBoxLayout(self)
-        self.main_layout.setMargin(0)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
 
         # Enable This take Checkbox
         self.enable_take_check_box = QtWidgets.QCheckBox(self)
