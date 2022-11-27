@@ -4,9 +4,7 @@ name = "cgru"
 
 version = "3.2.2"
 
-author = [
-    "Erkan Ozgur Yilmaz",
-]
+author = ["Erkan Ozgur Yilmaz"]
 
 uuid = "3e38a9bf0e364a2995ecacfa30bd4811"
 
@@ -30,11 +28,13 @@ def commands():
     unsetenv("PYTHONHOME")
 
     # Set CGRU root:
-    env.CGRU_LOCATION.set("/opt/cgru-{}.{}.{}".format(
-        env.REZ_CGRU_MAJOR_VERSION,
-        env.REZ_CGRU_MINOR_VERSION,
-        env.REZ_CGRU_PATCH_VERSION,
-    ))
+    env.CGRU_LOCATION.set(
+        "/opt/cgru-{}.{}.{}".format(
+            env.REZ_CGRU_MAJOR_VERSION,
+            env.REZ_CGRU_MINOR_VERSION,
+            env.REZ_CGRU_PATCH_VERSION,
+        )
+    )
 
     # Add CGRU bin to path:
     env.PATH.prepend("${CGRU_LOCATION}/bin")
@@ -91,9 +91,7 @@ def commands():
         env.PYTHONPATH.prepend("${MAYA_CGRU_LOCATION}")
 
         # Locate Maya:
-        env.MAYA_LOCATION = "/usr/autodesk/maya{}".format(
-            env.REZ_MAYA_MAJOR_VERSION
-        )
+        env.MAYA_LOCATION = "/usr/autodesk/maya{}".format(env.REZ_MAYA_MAJOR_VERSION)
         env.MAYA_VERSION = env.REZ_MAYA_MAJOR_VERSION
         env.MAYA_EXEC = "${MAYA_LOCATION}/bin/maya${MAYA_VERSION}"
 
@@ -159,9 +157,15 @@ def commands():
 
     # Fusion
     if "fusion" in this.root:
-        env.FUSION_LOCATION = "/opt/BlackmagicDesign/Fusion{}/".format(env.REZ_FUSION_MAJOR_VERSION)
+        env.FUSION_LOCATION = "/opt/BlackmagicDesign/Fusion{}/".format(
+            env.REZ_FUSION_MAJOR_VERSION
+        )
         env.FUSION_EXEC = "Fusion"
-        env.FUSION_RENDERNODE_LOCATION = "/opt/BlackmagicDesign/FusionRenderNode{}/".format(env.REZ_FUSION_MAJOR_VERSION)
+        env.FUSION_RENDERNODE_LOCATION = (
+            "/opt/BlackmagicDesign/FusionRenderNode{}/".format(
+                env.REZ_FUSION_MAJOR_VERSION
+            )
+        )
         env.FUSION_RENDERNODE_EXEC = "FusionRenderNode"
 
         env.FUSION_CGRU_PATH = "${CGRU_LOCATION}/plugins/fusion"

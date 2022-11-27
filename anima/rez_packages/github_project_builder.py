@@ -4,7 +4,6 @@ import pathlib
 import os
 import shutil
 import subprocess
-import sys
 import zipfile
 
 
@@ -47,11 +46,15 @@ def build(owner="", repo="", tag_prefix=""):
 
     if not zip_full_path.exists():
         print("Downloading installer!")
-        curl_command = ["curl", "-OL", download_url, "--output-dir", str(zip_full_path.parent)]
+        curl_command = [
+            "curl",
+            "-OL",
+            download_url,
+            "--output-dir",
+            str(zip_full_path.parent),
+        ]
         print("curl_command: {}".format(" ".join(curl_command)))
-        process = subprocess.Popen(
-            curl_command, stdout=subprocess.PIPE
-        )
+        process = subprocess.Popen(curl_command, stdout=subprocess.PIPE)
         stdout_buffer = []
         while True:
             stdout = process.stdout.readline()
@@ -95,23 +98,11 @@ def build(owner="", repo="", tag_prefix=""):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description='Build GitHub Projects.'
-    )
+    parser = argparse.ArgumentParser(description="Build GitHub Projects.")
     parser.add_argument(
-        '-o', '--owner', required=True,
-        help="The repo owner (eoyilmaz)"
+        "-o", "--owner", required=True, help="The repo owner (eoyilmaz)"
     )
-    parser.add_argument(
-        '-r', '--repo', required=True,
-        help="The repo name (anima)"
-    )
-    parser.add_argument(
-        '-t', '--tag-prefix', required=False, default=""
-    )
+    parser.add_argument("-r", "--repo", required=True, help="The repo name (anima)")
+    parser.add_argument("-t", "--tag-prefix", required=False, default="")
     args = parser.parse_args()
-    build(
-        owner=args.owner,
-        repo=args.repo,
-        tag_prefix=args.tag_prefix
-    )
+    build(owner=args.owner, repo=args.repo, tag_prefix=args.tag_prefix)

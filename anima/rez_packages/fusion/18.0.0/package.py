@@ -12,10 +12,7 @@ description = "Fusion package"
 
 requires = []
 
-variants = [
-    [".python-2"],
-    [".python-3"]
-]
+variants = [[".python-2"], [".python-3"]]
 
 build_command = "python3 {root}/../build.py {install}"
 

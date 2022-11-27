@@ -4,15 +4,11 @@ name = "stalker"
 
 version = "0.2.27"
 
-author = [
-    "Erkan Ozgur Yilmaz"
-]
+author = ["Erkan Ozgur Yilmaz"]
 
 uuid = "4f67b7696af4423e8b340d2f965c092f"
 
 description = "Stalker package"
-
-requires = []
 
 variants = [
     [".python-2.7"],
@@ -24,7 +20,9 @@ variants = [
     [".python-3.11"],
 ]
 
-build_command = "python3 {root}/../../github_project_builder.py --owner=eoyilmaz --repo=stalker"
+build_command = (
+    "python3 {root}/../../github_project_builder.py --owner=eoyilmaz --repo=stalker"
+)
 
 
 def commands():

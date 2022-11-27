@@ -4,9 +4,7 @@ name = "aces"
 
 version = "1.2.0"
 
-author = [
-    "Erkan Ozgur Yilmaz",
-]
+author = ["Erkan Ozgur Yilmaz"]
 
 uuid = "5d2cff05093e444c899608b842df8ca5"
 

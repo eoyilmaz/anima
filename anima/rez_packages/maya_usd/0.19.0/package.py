@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-name = 'maya_usd'
+name = "maya_usd"
 
-version = '0.19.0'
+version = "0.19.0"
 
-author = ['Erkan Ozgur Yilmaz']
+author = ["Erkan Ozgur Yilmaz"]
 
-uuid = '821275f80a914b8eb4b690810192c235'
+uuid = "821275f80a914b8eb4b690810192c235"
 
-description = 'Maya USD'
+description = "Maya USD"
 
 requires = []
 

@@ -110,7 +110,9 @@ def build(source_path, build_path, install_path, targets):
         print("Tarball exists, not extracting!")
 
     # extract tarball content
-    process = subprocess.Popen(["tar", "-xvzf", tar_ball_file_full_path], stdout=subprocess.PIPE)
+    process = subprocess.Popen(
+        ["tar", "-xvzf", tar_ball_file_full_path], stdout=subprocess.PIPE
+    )
     process.wait()
 
     # find the RPM file

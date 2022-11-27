@@ -16,5 +16,5 @@ if __name__ == "__main__":
         source_path=os.environ["REZ_BUILD_SOURCE_PATH"],
         build_path=os.environ["REZ_BUILD_PATH"],
         install_path=os.environ["REZ_BUILD_INSTALL_PATH"],
-        targets=sys.argv[1:]
+        targets=sys.argv[1:],
     )

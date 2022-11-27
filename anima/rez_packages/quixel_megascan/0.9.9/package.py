@@ -4,9 +4,7 @@ name = "quixel_megascan"
 
 version = "0.9.9"
 
-author = [
-    "Erkan Ozgur Yilmaz",
-]
+author = ["Erkan Ozgur Yilmaz"]
 
 uuid = "e2f583d1a3ab41ef91431a5362bf1937"
 
