@@ -10,8 +10,6 @@ uuid = "59a8d4cd31414e888b4f859ef14b0fb7"
 
 description = "Fusion package"
 
-requires = []
-
 variants = [[".python-2"], [".python-3"]]
 
 build_command = "python3 {root}/../build.py {install}"

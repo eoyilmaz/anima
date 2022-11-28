@@ -10,7 +10,6 @@ uuid = "3e38a9bf0e364a2995ecacfa30bd4811"
 
 description = "CGRU/Afanasy Package"
 
-
 variants = [
     ["maya"],
     ["houdini"],

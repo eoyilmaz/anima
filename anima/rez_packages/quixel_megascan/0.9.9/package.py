@@ -10,8 +10,6 @@ uuid = "e2f583d1a3ab41ef91431a5362bf1937"
 
 description = "Quixel Megascan Package"
 
-requires = []
-
 variants = [
     ["blender"],
     ["maya"],
