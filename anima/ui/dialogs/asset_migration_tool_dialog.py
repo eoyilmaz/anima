@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+import re
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.base import ui_caller
 from anima.ui.dialogs import task_picker_dialog
+from anima.ui.widgets import ValidatedLineEdit
 from anima.utils import get_task_hierarchy_name, get_unique_take_names
 
 from stalker import Asset, Task, Version
 
+
+TAKE_NAME_VALIDATOR_REGEX = re.compile("([A-Z]{1})([a-zA-Z0-9]+)")
 
 if False:
     from PySide6 import QtCore, QtGui, QtWidgets
@@ -286,13 +290,15 @@ class ProjectWidget(QtWidgets.QGroupBox):
             "{} ({} Assets)".format(self._project.name, len(self.asset_widgets))
         )
 
-    def add_assets(self, assets):
+    def add_assets(self, assets, silent=True):
         """Add the given assets as a AssetWidget.
 
         Args:
             assets ([stalker.Asset]): List of stalker.Asset instances.
+            silent (bool): Do not show info dialog when set to False.
         """
-
+        assets_added = []
+        assets_not_added = []
         for asset in assets:
             if not isinstance(asset, Asset):
                 # skip non asset entities
@@ -305,9 +311,33 @@ class ProjectWidget(QtWidgets.QGroupBox):
                 asset_widget.asset = asset
                 # connect signals
                 asset_widget.remove_asset.connect(self.remove_asset)
-                asset_widget.add_assets.connect(self.add_assets)
-
+                asset_widget.add_assets.connect(lambda x: self.add_assets(x, silent=False))
+                assets_added.append(asset)
+            else:
+                assets_not_added.append(asset)
         self.update_title()
+
+        if not silent:
+            if assets_added:
+                QtWidgets.QMessageBox.information(
+                    self,
+                    "{} Assets added!".format(len(assets_added)),
+                    "The following Assets are added:\n\n{}".format(
+                        "\n".join(
+                            [get_task_hierarchy_name(asset) for asset in assets_added]
+                        )
+                    ),
+                )
+            else:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    "{} Assets NOT added!".format(len(assets_not_added)),
+                    "The following Assets are NOT added:\n\n{}".format(
+                        "\n".join(
+                            [get_task_hierarchy_name(asset) for asset in assets_not_added]
+                        )
+                    ),
+                )
 
     def remove_asset(self, asset_widget):
         """Remove the given asset."""
@@ -340,6 +370,7 @@ class TakeWidget(QtWidgets.QWidget):
         self.take_new_name_line_edit = None
         self.versions_combo_box = None
         self.check_references_button = None
+        self.take_new_name_validation_message_field = None
         self.setup_ui()
         self.task = task
         self.take = take
@@ -358,11 +389,22 @@ class TakeWidget(QtWidgets.QWidget):
         self.main_layout.addWidget(self.enable_take_check_box)
 
         # New Take Name
-        self.take_new_name_line_edit = QtWidgets.QLineEdit(self)
+        take_new_name_layout = QtWidgets.QVBoxLayout()
+        take_new_name_layout.setContentsMargins(0, 0, 0, 0)
+        self.take_new_name_validation_message_field = QtWidgets.QLabel(self)
+        self.take_new_name_validation_message_field.setStyleSheet("color: red;")
+        self.take_new_name_line_edit = ValidatedLineEdit(
+            parent=self,
+            message_field=self.take_new_name_validation_message_field
+        )  # QtWidgets.QLineEdit(self)
         self.take_new_name_line_edit.setToolTip("New Take Name")
         self.take_new_name_line_edit.setFixedWidth(150)
         self.take_new_name_line_edit.editingFinished.connect(self.take_new_name_edited)
-        self.main_layout.addWidget(self.take_new_name_line_edit)
+        take_new_name_layout.addWidget(self.take_new_name_line_edit)
+        take_new_name_layout.addWidget(self.take_new_name_validation_message_field)
+
+        # self.main_layout.addWidget(self.take_new_name_line_edit)
+        self.main_layout.addLayout(take_new_name_layout)
 
         # Versions
         self.versions_combo_box = QtWidgets.QComboBox()
@@ -428,6 +470,7 @@ class TakeWidget(QtWidgets.QWidget):
         self._take = take
         self.enable_take_check_box.setText(take)
         self.take_new_name_line_edit.setText(take)
+        self.validate_take_new_name()
 
         # Update Versions list
         versions = (
@@ -445,9 +488,24 @@ class TakeWidget(QtWidgets.QWidget):
 
     def take_new_name_edited(self):
         """Check the text."""
+        self.validate_take_new_name()
+
+    def validate_take_new_name(self):
         text = self.take_new_name_line_edit.text()
-        if text == "":
-            self.take_new_name_line_edit.setText(self.take)
+        match = TAKE_NAME_VALIDATOR_REGEX.match(text)
+        if not match or "".join(match.groups()) != text:
+            self.take_new_name_line_edit.set_invalid(
+                "Take name is not in correct format")
+        else:
+            self.take_new_name_line_edit.set_valid()
+
+    @classmethod
+    def get_related_asset(cls, task):
+        """Return related Asset to the given task."""
+        for parent in reversed(task.parents):
+            if isinstance(parent, Asset):
+                return parent
+        return None
 
     def versions_combo_box_changed(self, index):
         """Check if newly selected version has inputs.
@@ -458,7 +516,15 @@ class TakeWidget(QtWidgets.QWidget):
         version = self.versions_combo_box.currentData()
         if not version:
             return
-        if version.inputs:
+
+        asset = self.get_related_asset(self.task)
+        referenced_assets = []
+        for other_v in version.inputs:
+            other_asset = self.get_related_asset(other_v.task)
+            if other_asset != asset:
+                referenced_assets.append(other_asset)
+
+        if referenced_assets:
             self.check_references_button.setEnabled(True)
             self.check_references_button.setVisible(True)
         else:
@@ -676,7 +742,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
                     )
                     project_widget.project = asset.project
 
-                project_widget.add_assets([asset])
+                project_widget.add_assets([asset], silent=True)
                 # If a TaskTreeView is used, use the following to add the tasks
                 # self.task_tree_view.tasks += [asset]
                 assets_added.append(asset)
