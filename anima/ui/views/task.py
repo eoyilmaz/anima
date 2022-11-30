@@ -214,7 +214,7 @@ class TaskTreeView(QtWidgets.QTreeView):
             self.context_menu_handler.show_context_menu(position)
 
     def double_clicked_on_entity(self, index):
-        """runs when double clicked on an leaf entity
+        """runs when double-clicked on an leaf entity
 
         :param index:
         :return:

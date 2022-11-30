@@ -2,21 +2,32 @@
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.base import ui_caller
 from anima.ui.dialogs import task_picker_dialog
-from anima.ui.views.task import TaskTreeView
 from anima.utils import get_task_hierarchy_name, get_unique_take_names
 
 from stalker import Asset, Task, Version
 
 
 if False:
-    from PySide2 import QtCore, QtGui, QtWidgets
+    from PySide6 import QtCore, QtGui, QtWidgets
 
 
 COLORS = {
-    "project": "#ffe5bf",
-    "asset": "#c3e6a1",
-    "invalid_asset": "#f24949",
-    "task": "#acd2e5",
+    "project": {
+        "fg": "#000000",
+        "bg": "#ffe5bf",
+    },
+    "asset": {
+        "fg": "#000000",
+        "bg": "#c3e6a1",
+    },
+    "invalid_asset": {
+        "fg": "#000000",
+        "bg": "#f24949",
+    },
+    "task": {
+        "fg": "#000000",
+        "bg": "#acd2e5",
+    },
 }
 
 
@@ -35,6 +46,7 @@ def UI(app_in=None, executor=None, **kwargs):
 class AssetWidget(QtWidgets.QGroupBox):
     """A QGroupBox variant to hold stalker.Asset related data."""
 
+    add_assets = QtCore.Signal(object)
     remove_asset = QtCore.Signal(object)
 
     def __init__(self, parent=None, asset=None):
@@ -43,7 +55,6 @@ class AssetWidget(QtWidgets.QGroupBox):
         self.main_layout = None
         self.remove_button = None
         self.pick_new_parent_button = None
-        self.check_references_button = None
         self.tasks_layout = None
         self._new_parent = None
         self.new_parent_label = None
@@ -72,17 +83,6 @@ class AssetWidget(QtWidgets.QGroupBox):
         self.pick_new_parent_button.clicked.connect(self.pick_new_parent)
         buttons_layout.addWidget(self.pick_new_parent_button)
 
-        # Check References
-        self.check_references_button = QtWidgets.QPushButton(self)
-        self.check_references_button.setText("Check References...")
-        self.check_references_button.setToolTip(
-            "Check all the selected child takes\n"
-            "for references to other assets\n"
-            "and add them to the list..."
-        )
-        self.check_references_button.clicked.connect(self.check_references)
-        buttons_layout.addWidget(self.check_references_button)
-
         # New Parent Label
         self.new_parent_label = QtWidgets.QLabel(self)
         buttons_layout.addWidget(self.new_parent_label)
@@ -98,7 +98,10 @@ class AssetWidget(QtWidgets.QGroupBox):
         self.main_layout.addLayout(self.tasks_layout)
 
         self.setStyleSheet(
-            "QGroupBox {{ background-color: {}; }}".format(COLORS["asset"])
+            "QGroupBox {{ background-color: {}; color: {}}}".format(
+                COLORS["asset"]["bg"],
+                COLORS["asset"]["fg"]
+            )
         )
 
     def remove(self):
@@ -178,17 +181,6 @@ class AssetWidget(QtWidgets.QGroupBox):
             "New Parent: {}".format(new_parent_hierarchy_name)
         )
 
-    def check_references(self):
-        """Check references of the selected takes.
-
-        Add the referenced assets to the end of the list.
-        """
-        QtWidgets.QMessageBox.critical(
-            self,
-            "Not Implemented Yet!",
-            "This part is not implemented yet!",
-        )
-
     @property
     def asset(self):
         """Return the asset.
@@ -216,6 +208,7 @@ class AssetWidget(QtWidgets.QGroupBox):
                 # don't append it
                 continue
             task_grp_box = TaskWidget(parent=self, task=child_task)
+            task_grp_box.add_assets.connect(self.add_assets)
             self.tasks_layout.addWidget(task_grp_box)
 
     def validate(self):
@@ -223,12 +216,18 @@ class AssetWidget(QtWidgets.QGroupBox):
         # Check if there is a new parent
         if not self.new_parent:
             self.setStyleSheet(
-                "QGroupBox {{ background-color: {}; }}".format(COLORS["invalid_asset"])
+                "QGroupBox {{ background-color: {}; color: {}}}".format(
+                    COLORS["invalid_asset"]["bg"],
+                    COLORS["invalid_asset"]["fg"],
+                )
             )
             return False
         else:
             self.setStyleSheet(
-                "QGroupBox {{ background-color: {}; }}".format(COLORS["asset"])
+                "QGroupBox {{ background-color: {}; color:{}}}".format(
+                    COLORS["asset"]["bg"],
+                    COLORS["asset"]["fg"],
+                )
             )
             return True
 
@@ -253,7 +252,10 @@ class ProjectWidget(QtWidgets.QGroupBox):
         self.assets_layout = QtWidgets.QVBoxLayout()
         self.main_layout.addLayout(self.assets_layout)
         self.setStyleSheet(
-            "QGroupBox {{ background-color: {}; }}".format(COLORS["project"])
+            "QGroupBox {{ background-color: {}; color: {}}}".format(
+                COLORS["project"]["bg"],
+                COLORS["project"]["fg"],
+            )
         )
 
     @property
@@ -284,24 +286,28 @@ class ProjectWidget(QtWidgets.QGroupBox):
             "{} ({} Assets)".format(self._project.name, len(self.asset_widgets))
         )
 
-    def add_asset(self, asset):
-        """Add the given asset as a AssetWidget.
+    def add_assets(self, assets):
+        """Add the given assets as a AssetWidget.
 
         Args:
-            asset (stalker.Asset): A stalker.Asset instance.
+            assets ([stalker.Asset]): List of stalker.Asset instances.
         """
-        if not isinstance(asset, Asset):
-            # skip non asset entities
-            return
 
-        if asset not in [asset_widget.asset for asset_widget in self.asset_widgets]:
-            asset_widget = AssetWidget(parent=self)
-            self.asset_widgets.append(asset_widget)
-            self.assets_layout.addWidget(asset_widget)
-            asset_widget.asset = asset
-            # connect signals
-            asset_widget.remove_asset.connect(self.remove_asset)
-            self.update_title()
+        for asset in assets:
+            if not isinstance(asset, Asset):
+                # skip non asset entities
+                continue
+
+            if asset not in [asset_widget.asset for asset_widget in self.asset_widgets]:
+                asset_widget = AssetWidget(parent=self)
+                self.asset_widgets.append(asset_widget)
+                self.assets_layout.addWidget(asset_widget)
+                asset_widget.asset = asset
+                # connect signals
+                asset_widget.remove_asset.connect(self.remove_asset)
+                asset_widget.add_assets.connect(self.add_assets)
+
+        self.update_title()
 
     def remove_asset(self, asset_widget):
         """Remove the given asset."""
@@ -323,6 +329,8 @@ class ProjectWidget(QtWidgets.QGroupBox):
 class TakeWidget(QtWidgets.QWidget):
     """A QWidget variant to hold stalker.Task related data."""
 
+    add_references = QtCore.Signal(object)
+
     def __init__(self, parent=None, task=None, take=None):
         super(TakeWidget, self).__init__(parent=parent)
         self._task = None
@@ -331,6 +339,7 @@ class TakeWidget(QtWidgets.QWidget):
         self.enable_take_check_box = None
         self.take_new_name_line_edit = None
         self.versions_combo_box = None
+        self.check_references_button = None
         self.setup_ui()
         self.task = task
         self.take = take
@@ -344,18 +353,41 @@ class TakeWidget(QtWidgets.QWidget):
         self.enable_take_check_box = QtWidgets.QCheckBox(self)
         self.enable_take_check_box.setChecked(True)
         self.enable_take_check_box.setText("--Take Name--")
-        self.enable_take_check_box.setMinimumWidth(100)
+        self.enable_take_check_box.setFixedWidth(150)
+        self.enable_take_check_box.stateChanged.connect(self.enable_take)
         self.main_layout.addWidget(self.enable_take_check_box)
 
         # New Take Name
         self.take_new_name_line_edit = QtWidgets.QLineEdit(self)
         self.take_new_name_line_edit.setToolTip("New Take Name")
+        self.take_new_name_line_edit.setFixedWidth(150)
         self.take_new_name_line_edit.editingFinished.connect(self.take_new_name_edited)
         self.main_layout.addWidget(self.take_new_name_line_edit)
 
         # Versions
         self.versions_combo_box = QtWidgets.QComboBox()
+        self.versions_combo_box.setFixedWidth(100)
+        self.versions_combo_box.currentIndexChanged.connect(self.versions_combo_box_changed)
         self.main_layout.addWidget(self.versions_combo_box)
+
+        # Check References
+        self.check_references_button = QtWidgets.QPushButton(self)
+        self.check_references_button.setText("Check References...")
+        self.check_references_button.setEnabled(False)
+        self.check_references_button.setVisible(False)
+        self.check_references_button.setToolTip(
+            "Check all the selected child takes\n"
+            "for references to other assets\n"
+            "and add them to the list..."
+        )
+        self.check_references_button.clicked.connect(self.check_references)
+        self.main_layout.addWidget(self.check_references_button)
+
+        self.main_layout.addSpacerItem(
+            QtWidgets.QSpacerItem(
+                20, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+            )
+        )
 
     @property
     def task(self):
@@ -405,9 +437,11 @@ class TakeWidget(QtWidgets.QWidget):
             .all()
         )
         self.versions_combo_box.clear()
-        self.versions_combo_box.addItems(
-            ["v{:03d}".format(version.version_number) for version in versions]
-        )
+        for version in versions:
+            self.versions_combo_box.addItem(
+                "v{:03d}".format(version.version_number),
+                version
+            )
 
     def take_new_name_edited(self):
         """Check the text."""
@@ -415,9 +449,71 @@ class TakeWidget(QtWidgets.QWidget):
         if text == "":
             self.take_new_name_line_edit.setText(self.take)
 
+    def versions_combo_box_changed(self, index):
+        """Check if newly selected version has inputs.
+
+        Args:
+            index (int): Current index
+        """
+        version = self.versions_combo_box.currentData()
+        if not version:
+            return
+        if version.inputs:
+            self.check_references_button.setEnabled(True)
+            self.check_references_button.setVisible(True)
+        else:
+            self.check_references_button.setEnabled(False)
+            self.check_references_button.setVisible(False)
+            self.check_references_button.setToolTip(
+                "No references in the currently selected Version"
+            )
+
+    def check_references(self):
+        """Check references of the selected takes.
+
+        Add the referenced assets to the end of the list.
+        """
+        version = self.versions_combo_box.currentData()
+        referenced_assets_dialog = ReferencedAssetTasksDialog(parent=self)
+        tasks = set()
+        for other_v in version.inputs:
+            tasks.add(other_v.task)
+
+        for task in tasks:
+            referenced_assets_dialog.add_task(task)
+
+        referenced_assets_dialog.exec()
+        # and refresh the TaskTreeView
+        try:
+            # PySide and PySide2
+            accepted = QtWidgets.QDialog.DialogCode.Accepted
+        except AttributeError:
+            # PyQt4
+            accepted = QtWidgets.QDialog.Accepted
+
+        if not referenced_assets_dialog.result() == accepted:
+            return
+
+        # get the selected assets
+        assets = referenced_assets_dialog.get_selected_assets()
+        if assets:
+            self.add_references.emit(assets)
+
+    def enable_take(self, state):
+        """Enable or disable take.
+
+        Args:
+            state (bool): Enable or disable state.
+        """
+        self.take_new_name_line_edit.setEnabled(state)
+        self.versions_combo_box.setEnabled(state)
+        self.check_references_button.setEnabled(state)
+
 
 class TaskWidget(QtWidgets.QGroupBox):
     """A QGroupBox variant to hold stalker.Task related data."""
+
+    add_assets = QtCore.Signal(object)
 
     def __init__(self, parent=None, task=None):
         super(TaskWidget, self).__init__(parent=parent)
@@ -438,7 +534,10 @@ class TaskWidget(QtWidgets.QGroupBox):
         self.takes_layout.addWidget(self.no_versions_place_holder)
         self.main_layout.addLayout(self.takes_layout)
         self.setStyleSheet(
-            "QGroupBox {{ background-color: {}; }}".format(COLORS["task"])
+            "QGroupBox {{ background-color: {}; color: {}}}".format(
+                COLORS["task"]["bg"],
+                COLORS["task"]["fg"],
+            )
         )
 
     @property
@@ -467,6 +566,7 @@ class TaskWidget(QtWidgets.QGroupBox):
         for take in take_names:
             take_grp_box = TakeWidget(parent=self, task=self._task, take=take)
             self.takes_layout.addWidget(take_grp_box)
+            take_grp_box.add_references.connect(self.add_assets)
         if take_names:
             self.no_versions_place_holder.setVisible(False)
 
@@ -576,7 +676,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
                     )
                     project_widget.project = asset.project
 
-                project_widget.add_asset(asset)
+                project_widget.add_assets([asset])
                 # If a TaskTreeView is used, use the following to add the tasks
                 # self.task_tree_view.tasks += [asset]
                 assets_added.append(asset)
@@ -631,3 +731,159 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
             return
 
         # if all assets are valid, do the migration work
+
+
+class ReferencedAssetTasksDialog(QtWidgets.QDialog):
+    """Show a list of Tasks referenced to another scene."""
+
+    def __init__(self, parent=None, *args, **kwargs):
+        super(ReferencedAssetTasksDialog, self).__init__(parent=parent)
+        self.main_layout = None
+        self.assets_list_view = None
+        self.add_selected_assets_button = None
+        self.setup_ui()
+
+    def setup_ui(self):
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+
+        # Assets List Widget
+        self.assets_list_view = AssetsListView(parent=self)
+        self.assets_list_view.setModel(AssetItemModel())
+        self.main_layout.addWidget(self.assets_list_view)
+
+        # Add Selected Asset button
+        self.add_selected_assets_button = QtWidgets.QPushButton(self)
+        self.add_selected_assets_button.setText("Add Selected Assets")
+        self.add_selected_assets_button.clicked.connect(self.accept)
+        self.main_layout.addWidget(self.add_selected_assets_button)
+
+    def add_task(self, task):
+        """Add the given task.
+
+        Args:
+            task (stalker.Task): A stalker Task instance.
+        """
+        # check if the task is contained by one of the items
+        asset = None
+        if isinstance(task, Task):
+            # try to get the closes asset to this task
+            for parent in reversed(task.parents):
+                if isinstance(parent, Asset):
+                    asset = parent
+                    break
+        elif isinstance(task, Asset):
+            asset = task
+
+        asset_item_model = self.assets_list_view.model()
+        assert isinstance(asset_item_model, AssetItemModel)
+        asset_item_model.add_asset(asset)
+
+    def get_selected_assets(self):
+        """Get selected assets."""
+        return self.assets_list_view.get_selected_assets()
+
+
+class AssetsListView(QtWidgets.QListView):
+    """Asset specific list view derivative."""
+
+    def __init__(self, parent=None, *args, **kwargs):
+        super(AssetsListView, self).__init__(parent=parent, *args, *kwargs)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+
+    def get_selected_items(self):
+        """Return selected AssetItems.
+
+        Returns:
+            list: List of AssetItem instances.
+        """
+        selection_model = self.selectionModel()
+        indexes = selection_model.selectedIndexes()
+        asset_items = []
+        if indexes:
+            item_model = self.model()
+            for index in indexes:
+                current_item = item_model.itemFromIndex(index)
+                if current_item and isinstance(current_item, AssetItem):
+                    asset_items.append(current_item)
+        return asset_items
+
+    def get_selected_assets(self):
+        """Return selected Assets.
+
+        Returns:
+            list: List of stalker.Asset instances.
+        """
+        assets = []
+        for asset_item in self.get_selected_items():
+            assets.append(asset_item.asset)
+        return assets
+
+
+class AssetItemModel(QtGui.QStandardItemModel):
+    """Asset item model."""
+
+    def __init__(self):
+        super(AssetItemModel, self).__init__()
+
+    def flags(self, model_index):
+        """Return model flags.
+
+        Args:
+            model_index: The item models index.
+
+        Returns:
+            int: Combined enum data of model flags.
+        """
+        default_flags = QtCore.Qt.ItemIsEnabled
+        if model_index.isValid():
+            default_flags |= QtCore.Qt.ItemIsSelectable
+        return default_flags
+
+    def add_asset(self, asset):
+        # add this asset as it is not in the list
+        found_item = None
+        row_count = self.rowCount()
+        for i in range(row_count):
+            item = self.item(i, 0)
+            if isinstance(item, AssetItem) and item.asset == asset:
+                found_item = item
+                break
+
+        if not found_item:
+            asset_item = AssetItem(asset=asset)
+            self.appendRow(asset_item)
+
+
+class AssetItem(QtGui.QStandardItem):
+    """Asset item."""
+
+    def __init__(self, asset=None, *args, **kwargs):
+        super(AssetItem, self).__init__(*args, **kwargs)
+        self._asset = None
+        self.asset = asset
+
+    @property
+    def asset(self):
+        """Return the asset.
+
+        Returns:
+            stalker.Asset: The stalker.Asset instance stored in this item.
+        """
+        return self._asset
+
+    @asset.setter
+    def asset(self, asset):
+        """Set the asset attribute.
+
+        Args:
+            asset (stalker.Asset): A stalker Asset instance.
+        """
+        if asset is None:
+            # This is not an asset related task
+            RuntimeError("Not an asset or asset related task given.")
+
+        self._asset = asset
+        self.setData(
+            get_task_hierarchy_name(asset),
+            QtCore.Qt.ItemDataRole.DisplayRole
+        )
