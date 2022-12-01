@@ -11,7 +11,7 @@ import qtawesome
 ICONS_LUT = {}
 
 
-def get_cached_icon(icon_name):
+def get_cached_icon(icon_name, *args, **kwargs):
     """qtAwesome needs a Qt application to work.
 
     Args:
@@ -84,7 +84,14 @@ def get_cached_icon(icon_name):
                 "version_output": qtawesome.icon("fa.picture-o"),
             }
         )
-    return ICONS_LUT.get(icon_name.lower(), ICONS_LUT["default"])
+
+    if icon_name in ICONS_LUT:
+        return ICONS_LUT[icon_name]
+    else:
+        icon = qtawesome.icon(icon_name, *args, **kwargs)
+        ICONS_LUT[icon_name] = icon
+        return icon
+    # return ICONS_LUT.get(icon_name.lower(), ICONS_LUT["default"])
 
 
 def get_app_icon(icon_name):

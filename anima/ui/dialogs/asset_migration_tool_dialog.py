@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
+
+import qtawesome
+
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.base import ui_caller
 from anima.ui.dialogs import task_picker_dialog
@@ -10,6 +13,7 @@ from stalker import Asset, Task, Version
 
 
 TAKE_NAME_VALIDATOR_REGEX = re.compile("([A-Z]{1})([a-zA-Z0-9]+)")
+
 
 if False:
     from PySide6 import QtCore, QtGui, QtWidgets
@@ -45,6 +49,68 @@ def UI(app_in=None, executor=None, **kwargs):
 
     """
     return ui_caller(app_in, executor, AssetMigrationToolDialog, **kwargs)
+
+
+class AssetStorage(object):
+    """Generic storage for assets.
+
+    This is created as a central storage for the AssetMigrationDialog. So all
+    the assets are going to be stored in this class and be consumed by the UI
+    elements, so that all the UI elements no matter how deep they are will be
+    able to reach the data.
+    """
+
+    storage = {}
+
+    @classmethod
+    def add_asset(cls, asset):
+        """Add the given asset to the storage.
+
+        Args:
+            asset (stalker.Asset): A stalker.Asset instance.
+        """
+        if not isinstance(asset, Asset):
+            raise TypeError(
+                "asset needs to be a stalker.Asset, not {}".format(
+                    asset.__class__.__name__
+                )
+            )
+
+        if asset not in cls.storage:
+            cls.storage[asset] = {}
+
+    @classmethod
+    def add_assets(cls, assets):
+        """Add the given list of assets to the storage."""
+        for asset in assets:
+            cls.add_asset(asset)
+
+    @classmethod
+    def remove_asset(cls, asset):
+        """Remove the given asset.
+
+        Args:
+            asset (stalker.Asset): A stalker.Asset instance.
+        """
+        if not isinstance(asset, Asset):
+            raise TypeError(
+                "asset needs to be a stalker.Asset, not {}".format(
+                    asset.__class__.__name__
+                )
+            )
+
+        if asset in cls.storage:
+            cls.storage.pop(asset)
+
+    @classmethod
+    def is_in_storage(cls, asset):
+        """Check if the given asset is in the storage."""
+        return asset in cls.storage
+
+    @classmethod
+    def reset_storage(cls):
+        """Reset storage."""
+        cls.storage = {}
 
 
 class AssetWidget(QtWidgets.QGroupBox):
@@ -103,8 +169,7 @@ class AssetWidget(QtWidgets.QGroupBox):
 
         self.setStyleSheet(
             "QGroupBox {{ background-color: {}; color: {}}}".format(
-                COLORS["asset"]["bg"],
-                COLORS["asset"]["fg"]
+                COLORS["asset"]["bg"], COLORS["asset"]["fg"]
             )
         )
 
@@ -311,8 +376,13 @@ class ProjectWidget(QtWidgets.QGroupBox):
                 asset_widget.asset = asset
                 # connect signals
                 asset_widget.remove_asset.connect(self.remove_asset)
-                asset_widget.add_assets.connect(lambda x: self.add_assets(x, silent=False))
+                asset_widget.add_assets.connect(
+                    lambda x: self.add_assets(x, silent=False)
+                )
                 assets_added.append(asset)
+
+                # also store the assets in the asset storage
+                AssetStorage.add_asset(asset)
             else:
                 assets_not_added.append(asset)
         self.update_title()
@@ -334,7 +404,10 @@ class ProjectWidget(QtWidgets.QGroupBox):
                     "{} Assets NOT added!".format(len(assets_not_added)),
                     "The following Assets are NOT added:\n\n{}".format(
                         "\n".join(
-                            [get_task_hierarchy_name(asset) for asset in assets_not_added]
+                            [
+                                get_task_hierarchy_name(asset)
+                                for asset in assets_not_added
+                            ]
                         )
                     ),
                 )
@@ -348,12 +421,52 @@ class ProjectWidget(QtWidgets.QGroupBox):
                 a_widget.deleteLater()
                 break
 
+        # also remove the asset from the AssetStorage
+        AssetStorage.remove_asset(a_widget.asset)
+
         # Update Title
         self.update_title()
 
         # if no widget left, emit remove_project signal
         if not self.asset_widgets:
             self.remove_project.emit(self)
+
+
+class ReferenceStatusLabel(QtWidgets.QLabel):
+    """Reference status label.
+
+    Use ``set_status`` method to change the status of this label.
+    """
+    icon_char_lut = {
+        False: {
+            "icon": chr(0xf057),
+            "style": "QLabel {color: red;}",
+        },
+        True: {
+            "icon": chr(0xf058),
+            "style": "QLabel {color: green;}",
+        }
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(ReferenceStatusLabel, self).__init__(*args, **kwargs)
+        self._reference_status = False
+        self.setFont(qtawesome.font("fa", 16))
+        self.update_icon()
+
+    def set_status(self, status):
+        """Set the status.
+
+        Args:
+            status (bool): bool status.
+        """
+        self._reference_status = status
+        self.update_icon()
+
+    def update_icon(self):
+        """Update the icon."""
+        self.setText(self.icon_char_lut[self._reference_status]["icon"])
+        self.setStyleSheet(self.icon_char_lut[self._reference_status]["style"])
 
 
 class TakeWidget(QtWidgets.QWidget):
@@ -369,6 +482,7 @@ class TakeWidget(QtWidgets.QWidget):
         self.enable_take_check_box = None
         self.take_new_name_line_edit = None
         self.versions_combo_box = None
+        self.references_status = None
         self.check_references_button = None
         self.take_new_name_validation_message_field = None
         self.setup_ui()
@@ -394,8 +508,7 @@ class TakeWidget(QtWidgets.QWidget):
         self.take_new_name_validation_message_field = QtWidgets.QLabel(self)
         self.take_new_name_validation_message_field.setStyleSheet("color: red;")
         self.take_new_name_line_edit = ValidatedLineEdit(
-            parent=self,
-            message_field=self.take_new_name_validation_message_field
+            parent=self, message_field=self.take_new_name_validation_message_field
         )  # QtWidgets.QLineEdit(self)
         self.take_new_name_line_edit.setToolTip("New Take Name")
         self.take_new_name_line_edit.setFixedWidth(150)
@@ -409,8 +522,14 @@ class TakeWidget(QtWidgets.QWidget):
         # Versions
         self.versions_combo_box = QtWidgets.QComboBox()
         self.versions_combo_box.setFixedWidth(100)
-        self.versions_combo_box.currentIndexChanged.connect(self.versions_combo_box_changed)
+        self.versions_combo_box.currentIndexChanged.connect(
+            self.versions_combo_box_changed
+        )
         self.main_layout.addWidget(self.versions_combo_box)
+
+        # Reference Status
+        self.references_status = ReferenceStatusLabel(self)
+        self.main_layout.addWidget(self.references_status)
 
         # Check References
         self.check_references_button = QtWidgets.QPushButton(self)
@@ -482,8 +601,7 @@ class TakeWidget(QtWidgets.QWidget):
         self.versions_combo_box.clear()
         for version in versions:
             self.versions_combo_box.addItem(
-                "v{:03d}".format(version.version_number),
-                version
+                "v{:03d}".format(version.version_number), version
             )
 
     def take_new_name_edited(self):
@@ -495,7 +613,8 @@ class TakeWidget(QtWidgets.QWidget):
         match = TAKE_NAME_VALIDATOR_REGEX.match(text)
         if not match or "".join(match.groups()) != text:
             self.take_new_name_line_edit.set_invalid(
-                "Take name is not in correct format")
+                "Take name is not in correct format"
+            )
         else:
             self.take_new_name_line_edit.set_valid()
 
@@ -521,18 +640,21 @@ class TakeWidget(QtWidgets.QWidget):
         referenced_assets = []
         for other_v in version.inputs:
             other_asset = self.get_related_asset(other_v.task)
-            if other_asset != asset:
+            # Filter all the assets that are already in the AssetStorage
+            if other_asset != asset and other_asset not in AssetStorage.storage:
                 referenced_assets.append(other_asset)
 
         if referenced_assets:
             self.check_references_button.setEnabled(True)
             self.check_references_button.setVisible(True)
+            self.references_status.set_status(False)
         else:
             self.check_references_button.setEnabled(False)
             self.check_references_button.setVisible(False)
             self.check_references_button.setToolTip(
                 "No references in the currently selected Version"
             )
+            self.references_status.set_status(True)
 
     def check_references(self):
         """Check references of the selected takes.
@@ -810,7 +932,15 @@ class ReferencedAssetTasksDialog(QtWidgets.QDialog):
         self.setup_ui()
 
     def setup_ui(self):
+        self.resize(600, 500)
         self.main_layout = QtWidgets.QVBoxLayout(self)
+
+        # Info Label
+        info_label = QtWidgets.QLabel(self)
+        info_label.setText(
+            "Select Assets to add\nDisabled items are already in the list!!!"
+        )
+        self.main_layout.addWidget(info_label)
 
         # Assets List Widget
         self.assets_list_view = AssetsListView(parent=self)
@@ -902,14 +1032,19 @@ class AssetItemModel(QtGui.QStandardItemModel):
         """
         default_flags = QtCore.Qt.ItemIsEnabled
         if model_index.isValid():
-            default_flags |= QtCore.Qt.ItemIsSelectable
+            item = self.itemFromIndex(model_index)
+            return item.flags()
         return default_flags
 
     def add_asset(self, asset):
+        """Add the given asset.
+
+        Args:
+            asset (stalker.Asset): A stalker.Asset instance.
+        """
         # add this asset as it is not in the list
         found_item = None
-        row_count = self.rowCount()
-        for i in range(row_count):
+        for i in range(self.rowCount()):
             item = self.item(i, 0)
             if isinstance(item, AssetItem) and item.asset == asset:
                 found_item = item
@@ -917,6 +1052,13 @@ class AssetItemModel(QtGui.QStandardItemModel):
 
         if not found_item:
             asset_item = AssetItem(asset=asset)
+            # disable this item if this is already in the AssetStorage
+            if AssetStorage.is_in_storage(asset):
+                asset_item.setFlags(
+                    asset_item.flags()
+                    & ~QtCore.Qt.ItemIsSelectable
+                    & ~QtCore.Qt.ItemIsEnabled
+                )
             self.appendRow(asset_item)
 
 
@@ -949,7 +1091,4 @@ class AssetItem(QtGui.QStandardItem):
             RuntimeError("Not an asset or asset related task given.")
 
         self._asset = asset
-        self.setData(
-            get_task_hierarchy_name(asset),
-            QtCore.Qt.ItemDataRole.DisplayRole
-        )
+        self.setData(get_task_hierarchy_name(asset), QtCore.Qt.ItemDataRole.DisplayRole)
