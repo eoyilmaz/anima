@@ -535,13 +535,13 @@ class ShotExporter(object):
             raise RuntimeError("Task must be either an Animation or Previs Task.")
 
         # query sequenceManager
-        if len(pm.ls(type="sequenceManager")) is not 1:
+        if len(pm.ls(type="sequenceManager")) != 1:
             raise RuntimeError("There must be just 1 sequenceManager.")
         self.sm = pm.ls("sequenceManager1")[0]
 
         # query sequencer
         seqs = [seq for seq in pm.ls(type="sequencer") if seq.referenceFile() is None]
-        if len(seqs) is not 1:
+        if len(seqs) != 1:
             raise RuntimeError("There must be just 1 sequencer.")
 
         self.sequencer = self.sm.sequences.get()[0]
@@ -1270,3 +1270,10 @@ class Previs(object):
         m = mayaEnv.Maya()
         v = m.get_current_version()
         se.save_previs_to_shots(v.take_name)
+
+    @classmethod
+    def add_sequence_name_attribute_to_all_sequencers(cls):
+        """Add sequence_name to all sequencers in the scene."""
+        for sequencer in pm.ls(type=pm.nt.Sequencer):
+            if not sequencer.hasAttr("sequence_name"):
+                sequencer.addAttr("sequence_name", dt="string")

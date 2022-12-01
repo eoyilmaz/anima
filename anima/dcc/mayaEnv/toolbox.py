@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 import os
@@ -1170,9 +1169,7 @@ def UI():
             pm.button(
                 "unlock_initial_shader_button",
                 l="Unlock Initial Shader",
-                c=repeated_callback(
-                    publish.fix_locked_default_shader
-                ),
+                c=repeated_callback(publish.fix_locked_default_shader),
                 ann=publish.fix_locked_default_shader.__doc__,
                 bgc=color.color,
             )
@@ -1528,6 +1525,7 @@ def UI():
                 # let's update the width and height of the image resolution from the
                 # current project
                 from anima.dcc import mayaEnv
+
                 m = mayaEnv.Maya()
                 v = m.get_current_version()
                 if v:
@@ -1580,7 +1578,7 @@ def UI():
                 l="Transfer Shaders (Component)",
                 c=repeated_callback(Render.transfer_shaders, True),
                 ann="Transfers shaders from one object to other (includes component "
-                    "assignments, use it for LookDev -> Alembic",
+                "assignments, use it for LookDev -> Alembic",
                 bgc=color.color,
             )
 
@@ -1859,6 +1857,7 @@ def UI():
 
             def lighting_scene_builder_callback(*args):
                 from anima.dcc.mayaEnv import render
+
                 lsb = render.LightingSceneBuilder()
                 lsb.build()
 
@@ -1921,6 +1920,17 @@ def UI():
                 l="Create a Very Nice Camera Rig",
                 c=repeated_callback(camera_tools.very_nice_camera_rig),
                 ann=camera_tools.very_nice_camera_rig.__doc__,
+                bgc=color.color,
+            )
+
+            color.next()
+            pm.button(
+                "add_sequence_name_attribute_to_all_sequencers_button",
+                l='Add "sequence_name" Attr. To All Sequencers.',
+                c=repeated_callback(
+                    Previs.add_sequence_name_attribute_to_all_sequencers
+                ),
+                ann=Previs.add_sequence_name_attribute_to_all_sequencers.__doc__,
                 bgc=color.color,
             )
 
