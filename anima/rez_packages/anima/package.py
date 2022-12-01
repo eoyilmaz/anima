@@ -97,8 +97,12 @@ def commands():
         )
 
         # XMBLANGPATH
-        env.XBMLANGPATH.append("${ANIMA_DEV_PATH}/maya/icons/%B")
-        env.XBMLANGPATH.append("${ANIMA_DEV_PATH}/maya/icons/CustomIcons/%B")
+        if system.platform == "linux":
+            env.XBMLANGPATH.append("${ANIMA_DEV_PATH}/maya/icons/%B")
+            env.XBMLANGPATH.append("${ANIMA_DEV_PATH}/maya/icons/CustomIcons/%B")
+        else:
+            env.XBMLANGPATH.append("${ANIMA_DEV_PATH}/maya/icons/")
+            env.XBMLANGPATH.append("${ANIMA_DEV_PATH}/maya/icons/CustomIcons/")
 
         # MAYA_PRESET_PATH
         env.MAYA_PRESET_PATH.append("${ANIMA_DEV_PATH}/maya/presets")
