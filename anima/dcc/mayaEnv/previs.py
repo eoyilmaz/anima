@@ -1272,8 +1272,27 @@ class Previs(object):
         se.save_previs_to_shots(v.take_name)
 
     @classmethod
+    def add_sequence_name_attribute_to_sequencer(cls, sequencer):
+        """Add sequence_name to the given sequencer.
+
+        Args:
+            sequencer (pm.nt.Sequencer): A Sequencer node.
+        """
+        if not sequencer.hasAttr("sequence_name"):
+            sequencer.addAttr("sequence_name", dt="string")
+
+    @classmethod
     def add_sequence_name_attribute_to_all_sequencers(cls):
         """Add sequence_name to all sequencers in the scene."""
         for sequencer in pm.ls(type=pm.nt.Sequencer):
-            if not sequencer.hasAttr("sequence_name"):
-                sequencer.addAttr("sequence_name", dt="string")
+            cls.add_sequence_name_attribute_to_sequencer(sequencer)
+
+    @classmethod
+    def delete_orphan_shot_nodes(cls):
+        """Delete shot nodes that are not connected to a sequencer."""
+        shots_to_delete = []
+        for shot in pm.ls(type=pm.nt.Shot):
+            if not pm.ls(shot.message.get(), type=pm.nt.Sequencer):
+                shots_to_delete.append(shot)
+
+        pm.delete(shots_to_delete)

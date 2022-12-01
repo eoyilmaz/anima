@@ -1111,7 +1111,7 @@ def perform_playblast(
     resolution=100,
     playblast_view_options=None,
     upload_to_server=None,
-    force_batch_mode=False
+    force_batch_mode=False,
 ):
     """The patched version of the original perform playblast.
 
@@ -1160,7 +1160,7 @@ def perform_playblast(
 
         pb = Playblaster(
             playblast_view_options=playblast_view_options,
-            force_batch_mode=force_batch_mode
+            force_batch_mode=force_batch_mode,
         )
         outputs = pb.playblast(extra_playblast_options=extra_playblast_options)
 
@@ -1463,7 +1463,7 @@ class Playblaster(object):
     hardware_rendering_globals_attr_names = [
         "ssaoEnable",
         "motionBlurEnable",
-        "multiSampleEnable"
+        "multiSampleEnable",
     ]
 
     global_playblast_options = {
@@ -1509,8 +1509,22 @@ class Playblaster(object):
         """checks sequence name and asks the user to set one if maya is in UI
         mode and there is no sequence name set
         """
-        sequencer = pm.ls(type="sequencer")[0]
-        sequence_name = sequencer.getAttr("sequence_name")
+        local_sequencers = [
+            seq for seq in pm.ls(type="sequencer") if seq.referenceFile() is None
+        ]
+        if not local_sequencers:
+            sequencer = pm.nt.Sequencer()
+        else:
+            sequencer = local_sequencers[0]
+
+        try:
+            sequence_name = sequencer.getAttr("sequence_name")
+        except pm.MayaAttributeError:
+            from anima.dcc.mayaEnv import previs
+
+            previs.Previs.add_sequence_name_attribute_to_sequencer(sequencer)
+            sequence_name = sequencer.getAttr("sequence_name")
+
         if sequence_name == "" and not self.batch_mode:
             result = pm.promptDialog(
                 title="Please enter a Sequence Name",
@@ -1565,6 +1579,10 @@ class Playblaster(object):
         sequencers = pm.ls(type="sequencer")
         if sequencers:
             sequencer = sequencers[0]
+            if not sequencer.hasAttr("sequence_name"):
+                from anima.dcc.mayaEnv import previs
+
+                previs.Previs.add_sequence_name_attribute_to_sequencer(sequencer)
             if sequencer.getAttr("sequence_name") != "":
                 shot_info = sequencer.getAttr("sequence_name")
             else:
@@ -1731,7 +1749,7 @@ class Playblaster(object):
             "view_options": {},
             "huds": {},
             "camera_flags": {},
-            "hardware_rendering_globals": {}
+            "hardware_rendering_globals": {},
         }
 
     def store_user_options(self):
@@ -1767,7 +1785,9 @@ class Playblaster(object):
 
         hrg = pm.PyNode("hardwareRenderingGlobals")
         for attr in self.hardware_rendering_globals_attr_names:
-            self.user_view_options["hardware_rendering_globals"][attr] = hrg.getAttr(attr)
+            self.user_view_options["hardware_rendering_globals"][attr] = hrg.getAttr(
+                attr
+            )
 
     @property
     def playblast_view_options(self):

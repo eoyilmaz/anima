@@ -1934,6 +1934,17 @@ def UI():
                 bgc=color.color,
             )
 
+            color.next()
+            pm.button(
+                "delete_orphan_shot_nodes_button",
+                l='Delete Orphan Shot nodes',
+                c=repeated_callback(
+                    Previs.delete_orphan_shot_nodes
+                ),
+                ann=Previs.delete_orphan_shot_nodes.__doc__,
+                bgc=color.color,
+            )
+
         # store commands
         __commands__.extend(previs_columnLayout.children())
 
