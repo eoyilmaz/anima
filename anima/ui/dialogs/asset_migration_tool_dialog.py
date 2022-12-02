@@ -126,6 +126,7 @@ class AssetWidget(QtWidgets.QGroupBox):
         self.remove_button = None
         self.pick_new_parent_button = None
         self.tasks_layout = None
+        self.task_widgets = []
         self._new_parent = None
         self.new_parent_label = None
         self.setup_ui()
@@ -276,9 +277,10 @@ class AssetWidget(QtWidgets.QGroupBox):
                 # this task has other child tasks
                 # don't append it
                 continue
-            task_grp_box = TaskWidget(parent=self, task=child_task)
-            task_grp_box.add_assets.connect(self.add_assets)
-            self.tasks_layout.addWidget(task_grp_box)
+            task_widget = TaskWidget(parent=self, task=child_task)
+            task_widget.add_assets.connect(self.add_assets)
+            self.task_widgets.append(task_widget)
+            self.tasks_layout.addWidget(task_widget)
 
     def validate(self):
         """Validate the data."""
@@ -299,6 +301,11 @@ class AssetWidget(QtWidgets.QGroupBox):
                 )
             )
             return True
+
+    def check_versions(self):
+        """Trigger a version check in all the child tasks widgets."""
+        for task_widget in self.task_widgets:
+            task_widget.check_versions()
 
 
 class ProjectWidget(QtWidgets.QGroupBox):
@@ -431,11 +438,16 @@ class ProjectWidget(QtWidgets.QGroupBox):
         if not self.asset_widgets:
             self.remove_project.emit(self)
 
+    def check_versions(self):
+        """Trigger a version check in all the child asset."""
+        for asset_widget in self.asset_widgets:
+            asset_widget.check_versions()
 
-class ReferenceStatusLabel(QtWidgets.QLabel):
-    """Reference status label.
 
-    Use ``set_status`` method to change the status of this label.
+class StatusIcon(QtWidgets.QLabel):
+    """Status icon widget.
+
+    Use ``set_status`` method to change the status of this widget.
     """
     icon_char_lut = {
         False: {
@@ -449,8 +461,8 @@ class ReferenceStatusLabel(QtWidgets.QLabel):
     }
 
     def __init__(self, *args, **kwargs):
-        super(ReferenceStatusLabel, self).__init__(*args, **kwargs)
-        self._reference_status = False
+        super(StatusIcon, self).__init__(*args, **kwargs)
+        self._status = False
         self.setFont(qtawesome.font("fa", 16))
         self.update_icon()
 
@@ -460,13 +472,13 @@ class ReferenceStatusLabel(QtWidgets.QLabel):
         Args:
             status (bool): bool status.
         """
-        self._reference_status = status
+        self._status = status
         self.update_icon()
 
     def update_icon(self):
         """Update the icon."""
-        self.setText(self.icon_char_lut[self._reference_status]["icon"])
-        self.setStyleSheet(self.icon_char_lut[self._reference_status]["style"])
+        self.setText(self.icon_char_lut[self._status]["icon"])
+        self.setStyleSheet(self.icon_char_lut[self._status]["style"])
 
 
 class TakeWidget(QtWidgets.QWidget):
@@ -482,7 +494,9 @@ class TakeWidget(QtWidgets.QWidget):
         self.enable_take_check_box = None
         self.take_new_name_line_edit = None
         self.versions_combo_box = None
-        self.references_status = None
+        self.references_status_icon = None
+        self.no_references_message_label = None
+        self.all_references_are_included_label = None
         self.check_references_button = None
         self.take_new_name_validation_message_field = None
         self.setup_ui()
@@ -528,8 +542,18 @@ class TakeWidget(QtWidgets.QWidget):
         self.main_layout.addWidget(self.versions_combo_box)
 
         # Reference Status
-        self.references_status = ReferenceStatusLabel(self)
-        self.main_layout.addWidget(self.references_status)
+        self.references_status_icon = StatusIcon(self)
+        self.main_layout.addWidget(self.references_status_icon)
+
+        self.no_references_message_label = QtWidgets.QLabel(self)
+        self.no_references_message_label.setText("No references")
+        self.no_references_message_label.setVisible(True)
+        self.main_layout.addWidget(self.no_references_message_label)
+
+        self.all_references_are_included_label = QtWidgets.QLabel(self)
+        self.all_references_are_included_label.setText("All refs. are included")
+        self.all_references_are_included_label.setVisible(False)
+        self.main_layout.addWidget(self.all_references_are_included_label)
 
         # Check References
         self.check_references_button = QtWidgets.QPushButton(self)
@@ -537,9 +561,8 @@ class TakeWidget(QtWidgets.QWidget):
         self.check_references_button.setEnabled(False)
         self.check_references_button.setVisible(False)
         self.check_references_button.setToolTip(
-            "Check all the selected child takes\n"
-            "for references to other assets\n"
-            "and add them to the list..."
+            "Check references to other assets\n"
+            "in this version and add them to the list..."
         )
         self.check_references_button.clicked.connect(self.check_references)
         self.main_layout.addWidget(self.check_references_button)
@@ -636,25 +659,34 @@ class TakeWidget(QtWidgets.QWidget):
         if not version:
             return
 
-        asset = self.get_related_asset(self.task)
-        referenced_assets = []
-        for other_v in version.inputs:
-            other_asset = self.get_related_asset(other_v.task)
-            # Filter all the assets that are already in the AssetStorage
-            if other_asset != asset and other_asset not in AssetStorage.storage:
-                referenced_assets.append(other_asset)
+        if version.inputs:
+            # There are references in this version
+            self.no_references_message_label.setVisible(False)
 
-        if referenced_assets:
-            self.check_references_button.setEnabled(True)
-            self.check_references_button.setVisible(True)
-            self.references_status.set_status(False)
+            asset = self.get_related_asset(self.task)
+            referenced_assets = []
+            for other_v in version.inputs:
+                other_asset = self.get_related_asset(other_v.task)
+                # Filter all the assets that are already in the AssetStorage
+                if other_asset != asset and other_asset not in AssetStorage.storage:
+                    referenced_assets.append(other_asset)
+
+            if referenced_assets:
+                self.check_references_button.setEnabled(True)
+                self.check_references_button.setVisible(True)
+                self.references_status_icon.set_status(False)
+                self.all_references_are_included_label.setVisible(False)
+            else:
+                self.check_references_button.setEnabled(False)
+                self.check_references_button.setVisible(False)
+                self.references_status_icon.set_status(True)
+                self.all_references_are_included_label.setVisible(True)
         else:
-            self.check_references_button.setEnabled(False)
+            # no references in this version
+            self.no_references_message_label.setVisible(True)
             self.check_references_button.setVisible(False)
-            self.check_references_button.setToolTip(
-                "No references in the currently selected Version"
-            )
-            self.references_status.set_status(True)
+            self.references_status_icon.set_status(True)
+            self.all_references_are_included_label.setVisible(False)
 
     def check_references(self):
         """Check references of the selected takes.
@@ -696,6 +728,15 @@ class TakeWidget(QtWidgets.QWidget):
         self.take_new_name_line_edit.setEnabled(state)
         self.versions_combo_box.setEnabled(state)
         self.check_references_button.setEnabled(state)
+        self.all_references_are_included_label.setEnabled(state)
+        self.no_references_message_label.setEnabled(state)
+        if not state:
+            # this take has been disabled, we don't car about the validity of
+            # the new take name field
+            self.take_new_name_line_edit.set_valid()
+        else:
+            # this take is re-enabled, re-validate the new take name
+            self.validate_take_new_name()
 
 
 class TaskWidget(QtWidgets.QGroupBox):
@@ -709,13 +750,16 @@ class TaskWidget(QtWidgets.QGroupBox):
         self.main_layout = None
         self.no_versions_place_holder = None
         self.takes_layout = None
+        self.take_widgets = []
         self.setup_ui()
         self.task = task
 
     def setup_ui(self):
         """Create UI widgets."""
         self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout.setContentsMargins(12, 0, 0, 0)
         self.takes_layout = QtWidgets.QVBoxLayout()
+        self.takes_layout.setContentsMargins(12, 0, 0, 0)
         self.no_versions_place_holder = QtWidgets.QLabel(self)
         self.no_versions_place_holder.setText("--- No Versions ---")
         self.no_versions_place_holder.setDisabled(True)
@@ -752,11 +796,17 @@ class TaskWidget(QtWidgets.QGroupBox):
 
         take_names = get_unique_take_names(self._task.id)
         for take in take_names:
-            take_grp_box = TakeWidget(parent=self, task=self._task, take=take)
-            self.takes_layout.addWidget(take_grp_box)
-            take_grp_box.add_references.connect(self.add_assets)
+            take_widget = TakeWidget(parent=self, task=self._task, take=take)
+            self.takes_layout.addWidget(take_widget)
+            take_widget.add_references.connect(self.add_assets)
+            self.take_widgets.append(take_widget)
         if take_names:
             self.no_versions_place_holder.setVisible(False)
+
+    def check_versions(self):
+        """Trigger a version check in all the child takes."""
+        for take_widget in self.take_widgets:
+            take_widget.versions_combo_box_changed(-1)
 
 
 class AssetMigrationToolDialog(QtWidgets.QDialog):
@@ -880,6 +930,10 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
 
                 # connect the signal
                 project_widget.remove_project.connect(self.remove_project)
+
+            # Trigger a Version check on all the take widgets
+            for project_widget in self.project_widgets:
+                project_widget.check_versions()
 
             if not assets_added:
                 QtWidgets.QMessageBox.critical(
@@ -1089,6 +1143,6 @@ class AssetItem(QtGui.QStandardItem):
         if asset is None:
             # This is not an asset related task
             RuntimeError("Not an asset or asset related task given.")
-
-        self._asset = asset
-        self.setData(get_task_hierarchy_name(asset), QtCore.Qt.ItemDataRole.DisplayRole)
+        else:
+            self._asset = asset
+            self.setData(get_task_hierarchy_name(asset), QtCore.Qt.ItemDataRole.DisplayRole)
