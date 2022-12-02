@@ -526,3 +526,31 @@ def set_widget_style(widget, dark_theme=False):
         palette.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(255, 255, 255))
 
     widget.setPalette(palette)
+
+
+class DiagnoseStyle(QtWidgets.QCommonStyle):
+    def drawControl(self, element, option, painter, widget):
+        """Patch this sucker."""
+        super(self.__class__, self).drawControl(element, option, painter, widget)
+        if widget and painter:
+            # draw a border around the widget
+            painter.setPen(QtGui.QColor("red"))
+            painter.drawRect(widget.rect())
+
+            # show the classname of the widget
+            translucent_brush = QtGui.QBrush(QtGui.QColor(255, 246, 240, 100))
+            painter.fillRect(widget.rect(), translucent_brush)
+            painter.setPen(QtGui.QColor("darkblue"))
+            painter.drawText(
+                widget.rect(),
+                QtCore.Qt.AlignmentFlag.AlignLeft
+                | QtCore.Qt.AlignmentFlag.AlignVCenter,
+                widget.__class__.__name__,
+            )
+
+
+def diagnose_widgets(*args, **kwargs):
+    """Diagnose all widgets."""
+    app = QtWidgets.QApplication.instance()
+    style = DiagnoseStyle()
+    app.setStyle(style)
