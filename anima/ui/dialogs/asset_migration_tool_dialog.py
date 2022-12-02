@@ -39,6 +39,14 @@ COLORS = {
 }
 
 
+def get_related_asset(task):
+    """Return related Asset to the given task."""
+    for parent in reversed(task.parents):
+        if isinstance(parent, Asset):
+            return parent
+    return None
+
+
 def UI(app_in=None, executor=None, **kwargs):
     """
     :param app_in: A Qt Application instance, which you can pass to let the UI
@@ -63,49 +71,94 @@ class AssetStorage(object):
     storage = {}
 
     @classmethod
-    def add_asset(cls, asset):
-        """Add the given asset to the storage.
+    def add_entity(cls, entity):
+        """Add the given entity to the storage.
 
         Args:
-            asset (stalker.Asset): A stalker.Asset instance.
+            entity (stalker.Asset | stalker.Task | stalker.Version): A
+                stalker.Asset or stalker.Task or stalker.Version instance.
         """
-        if not isinstance(asset, Asset):
-            raise TypeError(
-                "asset needs to be a stalker.Asset, not {}".format(
-                    asset.__class__.__name__
-                )
-            )
+        asset = None
+        task = None
+        version = None
 
-        if asset not in cls.storage:
+        if isinstance(entity, Version):
+            task = entity.task
+            version = entity
+
+        if not task and isinstance(entity, Task) and not isinstance(entity, Asset):
+            # we need to find the related asset
+            task = entity
+
+        if task:
+            asset = get_related_asset(task)
+
+        if not asset and isinstance(entity, Asset):
+            asset = entity
+
+        if asset is not None and asset not in cls.storage:
             cls.storage[asset] = {}
 
-    @classmethod
-    def add_assets(cls, assets):
-        """Add the given list of assets to the storage."""
-        for asset in assets:
-            cls.add_asset(asset)
+        if task and task not in cls.storage[asset]:
+            cls.storage[asset][task] = {}
+
+        if version and version.take_name not in cls.storage[asset][task]:
+            cls.storage[asset][task][version.take_name] = version
 
     @classmethod
-    def remove_asset(cls, asset):
-        """Remove the given asset.
+    def add_entities(cls, entities):
+        """Add the given list of assets to the storage."""
+        for entity in entities:
+            cls.add_entity(entity)
+
+    @classmethod
+    def remove_entity(cls, entity):
+        """Remove the given entity.
 
         Args:
-            asset (stalker.Asset): A stalker.Asset instance.
+            entity (stalker.Asset | stalker.Task | stalker.Version): A
+                stalker.Asset or stalker.Task or stalker.Version instance.
         """
-        if not isinstance(asset, Asset):
-            raise TypeError(
-                "asset needs to be a stalker.Asset, not {}".format(
-                    asset.__class__.__name__
-                )
-            )
-
-        if asset in cls.storage:
-            cls.storage.pop(asset)
+        if isinstance(entity, Asset):
+            asset = entity
+            if asset in cls.storage:
+                cls.storage.pop(asset)
+        elif isinstance(entity, Task):
+            task = entity
+            asset = get_related_asset(task)
+            if asset and task:
+                cls.storage[asset].pop(task)
+        elif isinstance(entity, Version):
+            task = entity.task
+            asset = get_related_asset(task)
+            version = entity
+            if asset and task and version:
+                cls.storage[asset][task].pop(version.take_name)
 
     @classmethod
-    def is_in_storage(cls, asset):
-        """Check if the given asset is in the storage."""
-        return asset in cls.storage
+    def is_in_storage(cls, entity):
+        """Check if the given entity is in the storage.
+
+        Args:
+            entity (stalker.Asset | stalker.Task | stalker.Version): A
+                stalker.Asset or stalker.Task or stalker.Version instance.
+
+        Returns:
+            bool: True if the entity is in storage False otherwise.
+        """
+        if isinstance(entity, Asset):
+            asset = entity
+            return asset in cls.storage
+        elif isinstance(entity, Task):
+            task = entity
+            asset = get_related_asset(task)
+            return task in cls.storage[asset]
+        elif isinstance(entity, Version):
+            version = entity
+            task = version.task
+            asset = get_related_asset(task)
+            return version.take_name in cls.storage[asset][task]
+        return False
 
     @classmethod
     def reset_storage(cls):
@@ -389,7 +442,7 @@ class ProjectWidget(QtWidgets.QGroupBox):
                 assets_added.append(asset)
 
                 # also store the assets in the asset storage
-                AssetStorage.add_asset(asset)
+                AssetStorage.add_entity(asset)
             else:
                 assets_not_added.append(asset)
         self.update_title()
@@ -429,7 +482,7 @@ class ProjectWidget(QtWidgets.QGroupBox):
                 break
 
         # also remove the asset from the AssetStorage
-        AssetStorage.remove_asset(a_widget.asset)
+        AssetStorage.remove_entity(a_widget.asset)
 
         # Update Title
         self.update_title()
@@ -451,13 +504,13 @@ class StatusIcon(QtWidgets.QLabel):
     """
     icon_char_lut = {
         False: {
-            "icon": chr(0xf057),
+            "icon": chr(0xF057),
             "style": "QLabel {color: red;}",
         },
         True: {
-            "icon": chr(0xf058),
+            "icon": chr(0xF058),
             "style": "QLabel {color: green;}",
-        }
+        },
     }
 
     def __init__(self, *args, **kwargs):
@@ -641,14 +694,6 @@ class TakeWidget(QtWidgets.QWidget):
         else:
             self.take_new_name_line_edit.set_valid()
 
-    @classmethod
-    def get_related_asset(cls, task):
-        """Return related Asset to the given task."""
-        for parent in reversed(task.parents):
-            if isinstance(parent, Asset):
-                return parent
-        return None
-
     def versions_combo_box_changed(self, index):
         """Check if newly selected version has inputs.
 
@@ -663,12 +708,12 @@ class TakeWidget(QtWidgets.QWidget):
             # There are references in this version
             self.no_references_message_label.setVisible(False)
 
-            asset = self.get_related_asset(self.task)
+            asset = get_related_asset(self.task)
             referenced_assets = []
             for other_v in version.inputs:
-                other_asset = self.get_related_asset(other_v.task)
+                other_asset = get_related_asset(other_v.task)
                 # Filter all the assets that are already in the AssetStorage
-                if other_asset != asset and other_asset not in AssetStorage.storage:
+                if other_asset != asset and not AssetStorage.is_in_storage(other_asset):
                     referenced_assets.append(other_asset)
 
             if referenced_assets:
@@ -1145,4 +1190,6 @@ class AssetItem(QtGui.QStandardItem):
             RuntimeError("Not an asset or asset related task given.")
         else:
             self._asset = asset
-            self.setData(get_task_hierarchy_name(asset), QtCore.Qt.ItemDataRole.DisplayRole)
+            self.setData(
+                get_task_hierarchy_name(asset), QtCore.Qt.ItemDataRole.DisplayRole
+            )
