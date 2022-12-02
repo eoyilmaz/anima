@@ -29,31 +29,31 @@ if qt_lib_key in os.environ:
 
 
 def IS_PYSIDE():
-    return qt_lib == PYSIDE
+    return qt_lib.lower() == PYSIDE.lower()
 
 
 def IS_PYSIDE2():
-    return qt_lib == PYSIDE2
+    return qt_lib.lower() == PYSIDE2.lower()
 
 
 def IS_PYSIDE6():
-    return qt_lib == PYSIDE6
+    return qt_lib.lower() == PYSIDE6.lower()
 
 
 def IS_PYQT4():
-    return qt_lib == PYQT4
+    return qt_lib.lower() == PYQT4.lower()
 
 
 def IS_PYQT5():
-    return qt_lib == PYQT5
+    return qt_lib.lower() == PYQT5.lower()
 
 
 def IS_PYQT6():
-    return qt_lib == PYQT6
+    return qt_lib.lower() == PYQT6.lower()
 
 
 def IS_QTPY():
-    return qt_lib == QTPY
+    return qt_lib.lower() == QTPY.lower()
 
 
 def SET_PYSIDE():
