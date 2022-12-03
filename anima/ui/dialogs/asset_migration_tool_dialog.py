@@ -345,7 +345,9 @@ class AssetWidget(QtWidgets.QGroupBox):
     def validate(self):
         """Validate the data."""
         # Check if there is a new parent
-        if not self.new_parent:
+        if not self.new_parent and not all(
+            task_widget.validate() for task_widget in self.task_widgets
+        ):
             self.setStyleSheet(
                 "QGroupBox {{ background-color: {}; color: {}}}".format(
                     COLORS["invalid_asset"]["bg"],
@@ -506,6 +508,14 @@ class ProjectWidget(QtWidgets.QGroupBox):
         for asset_widget in self.asset_widgets:
             asset_widget.check_versions()
 
+    def validate(self):
+        """Validate the Assets.
+
+        Returns:
+            bool: True for valid, False otherwise.
+        """
+        return all([asset_widget.validate() for asset_widget in self.asset_widgets])
+
 
 class StatusIcon(QtWidgets.QLabel):
     """Status icon widget.
@@ -529,6 +539,15 @@ class StatusIcon(QtWidgets.QLabel):
         self._status = False
         self.setFont(qtawesome.font("fa", 16))
         self.update_icon()
+
+    @property
+    def status(self):
+        """Getter for the status attribute.
+
+        Returns:
+            bool: The status.
+        """
+        return self._status
 
     def set_status(self, status):
         """Set the status.
@@ -589,7 +608,7 @@ class TakeWidget(QtWidgets.QWidget):
         self.take_new_name_validation_message_field.setStyleSheet("color: red;")
         self.take_new_name_line_edit = ValidatedLineEdit(
             parent=self, message_field=self.take_new_name_validation_message_field
-        )  # QtWidgets.QLineEdit(self)
+        )
         self.take_new_name_line_edit.setToolTip("New Take Name")
         self.take_new_name_line_edit.setFixedWidth(150)
         self.take_new_name_line_edit.editingFinished.connect(self.take_new_name_edited)
@@ -706,17 +725,35 @@ class TakeWidget(QtWidgets.QWidget):
         """Check the text."""
         self.validate_take_new_name()
 
+    def validate(self):
+        """Validate the general status of this take.
+
+        Returns:
+            bool: True for valid, False otherwise.
+        """
+        if not self.enable_take_check_box.isChecked():
+            # doesn't matter return this is valid.
+            self.migrate_status_icon.set_status(True)
+            return True
+
+        return self.validate_take_new_name() and self.validate_versions()
+
     def validate_take_new_name(self):
+        """Validate take new name.
+
+        Returns:
+            bool: True for valid, False otherwise.
+        """
         text = self.take_new_name_line_edit.text()
         match = TAKE_NAME_VALIDATOR_REGEX.match(text)
         if not match or "".join(match.groups()) != text:
-            self.migrate_status_icon.set_status(False)
             self.take_new_name_line_edit.set_invalid(
                 "Take name is not in correct format"
             )
+            return False
         else:
-            self.migrate_status_icon.set_status(True)
             self.take_new_name_line_edit.set_valid()
+            return True
 
     def versions_combo_box_changed(self, index):
         """Check if newly selected version has inputs.
@@ -725,19 +762,23 @@ class TakeWidget(QtWidgets.QWidget):
             index (int): Current index
         """
         version = self.versions_combo_box.currentData()
-        self.check_versions()
+        self.validate_versions()
         # trigger a version update
         if not AssetStorage.is_in_storage(version):
             AssetStorage.add_entity(version)
             self.version_updated.emit()
 
-    def check_versions(self):
-        """Check referenced versions of the currently selected version.
+    def validate_versions(self):
+        """Validate referenced versions of the currently selected version.
+
+        Returns:
+            bool: True if all referenced versions are valid, False otherwise.
         """
         version = self.versions_combo_box.currentData()
         if version is None:
-            return
+            return False
 
+        validation_status = True
         if version.inputs:
             # There are references in this version
             self.no_references_message_label.setVisible(False)
@@ -756,9 +797,7 @@ class TakeWidget(QtWidgets.QWidget):
             tooltip = "\n".join(
                 [
                     "{} | {} | v{:03d}".format(
-                        get_task_hierarchy_name(v.task),
-                        v.take_name,
-                        v.version_number
+                        get_task_hierarchy_name(v.task), v.take_name, v.version_number
                     )
                     for v in version.inputs
                 ]
@@ -770,6 +809,7 @@ class TakeWidget(QtWidgets.QWidget):
                 self.migrate_status_icon.set_status(False)
                 self.all_references_are_included_label.setVisible(False)
                 self.references_are_not_final_label.setVisible(False)
+                validation_status = False
 
             if missing_versions:
                 self.check_references_button.setEnabled(True)
@@ -777,6 +817,7 @@ class TakeWidget(QtWidgets.QWidget):
                 self.migrate_status_icon.set_status(False)
                 self.all_references_are_included_label.setVisible(False)
                 self.references_are_not_final_label.setVisible(True)
+                validation_status = False
 
             if not missing_assets and not missing_versions:
                 self.check_references_button.setEnabled(False)
@@ -784,12 +825,14 @@ class TakeWidget(QtWidgets.QWidget):
                 self.migrate_status_icon.set_status(True)
                 self.all_references_are_included_label.setVisible(True)
                 self.references_are_not_final_label.setVisible(False)
+                validation_status = True
         else:
             # no references in this version
             self.no_references_message_label.setVisible(True)
             self.check_references_button.setVisible(False)
             self.migrate_status_icon.set_status(True)
             self.all_references_are_included_label.setVisible(False)
+        return validation_status
 
     def pick_references(self):
         """Pick references of the selected takes.
@@ -839,13 +882,14 @@ class TakeWidget(QtWidgets.QWidget):
             # the new take name field
             self.migrate_status_icon.setVisible(False)
             self.take_new_name_line_edit.set_valid()
+            self.validate()
 
             # remove the version from the AssetStorage
             AssetStorage.remove_entity(version)
         else:
             # this take is re-enabled, re-validate the new take name
             self.migrate_status_icon.setVisible(True)
-            self.validate_take_new_name()
+            self.validate()
 
             # add the version to the AssetStorage
             AssetStorage.add_entity(version)
@@ -923,7 +967,15 @@ class TaskWidget(QtWidgets.QGroupBox):
     def check_versions(self):
         """Trigger a version check in all the child takes."""
         for take_widget in self.take_widgets:
-            take_widget.check_versions()
+            take_widget.validate_versions()
+
+    def validate(self):
+        """Validate the current task widget.
+
+        Returns:
+            bool: True if all TaskWidgets are valid, False otherwise.
+        """
+        return all([take_widget.validate() for take_widget in self.take_widgets])
 
 
 class AssetMigrationToolDialog(QtWidgets.QDialog):
@@ -1072,16 +1124,20 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
                 self.project_widgets.pop(i)
                 break
 
+    def validate(self):
+        """Validates the selected assets and versions.
+
+        Returns:
+            bool: A bool result showing True for valid, False for invalid result.
+        """
+        return all(
+            [project_widget.validate() for project_widget in self.project_widgets]
+        )
+
     def migrate(self):
         """Migrate assets."""
-        # Validate all assets first
-        invalid_assets = []
-        for project_widget in self.project_widgets:
-            for asset_widget in project_widget.asset_widgets:
-                if not asset_widget.validate():
-                    invalid_assets.append(asset_widget)
-
-        if invalid_assets:
+        # validate assets
+        if not self.validate():
             QtWidgets.QMessageBox.critical(
                 self,
                 "Invalid Assets!",
@@ -1089,7 +1145,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
             )
             return
 
-        # if all assets are valid, do the migration work
+        # display a report
 
 
 class ReferencedAssetTasksDialog(QtWidgets.QDialog):
