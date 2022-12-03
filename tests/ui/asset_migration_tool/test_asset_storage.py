@@ -208,7 +208,11 @@ def test_asset_storage_is_in_storage_asset(
     model = Task.query.filter(Task.parent == char1).filter(Task.name == "Model").first()
     assert model is not None
     v1 = model.versions[0]
+    v2 = model.versions[1]
+    v3 = model.versions[2]
     assert v1 is not None
+    assert v2 is not None
+    assert v3 is not None
 
     storage = AssetStorage()
     storage.add_entity(v1)
@@ -216,3 +220,5 @@ def test_asset_storage_is_in_storage_asset(
     assert storage.is_in_storage(char1) is True
     assert storage.is_in_storage(model) is True
     assert storage.is_in_storage(v1) is True
+    assert storage.is_in_storage(v2) is False
+    assert storage.is_in_storage(v3) is False

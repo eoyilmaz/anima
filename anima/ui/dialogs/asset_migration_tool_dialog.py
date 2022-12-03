@@ -83,17 +83,17 @@ class AssetStorage(object):
         version = None
 
         if isinstance(entity, Version):
-            task = entity.task
             version = entity
+            task = version.task
 
-        if not task and isinstance(entity, Task) and not isinstance(entity, Asset):
+        if not task and entity.entity_type == "Task":
             # we need to find the related asset
             task = entity
 
         if task:
             asset = get_related_asset(task)
 
-        if not asset and isinstance(entity, Asset):
+        if not asset and entity.entity_type == "Asset":
             asset = entity
 
         if asset is not None and asset not in cls.storage:
@@ -102,7 +102,7 @@ class AssetStorage(object):
         if task and task not in cls.storage[asset]:
             cls.storage[asset][task] = {}
 
-        if version and version.take_name not in cls.storage[asset][task]:
+        if version:
             cls.storage[asset][task][version.take_name] = version
 
     @classmethod
@@ -129,10 +129,10 @@ class AssetStorage(object):
             if asset and task:
                 cls.storage[asset].pop(task)
         elif isinstance(entity, Version):
-            task = entity.task
-            asset = get_related_asset(task)
             version = entity
-            if asset and task and version:
+            task = version.task
+            asset = get_related_asset(task)
+            if asset and task and version and task in cls.storage[asset]:
                 cls.storage[asset][task].pop(version.take_name)
 
     @classmethod
@@ -146,18 +146,23 @@ class AssetStorage(object):
         Returns:
             bool: True if the entity is in storage False otherwise.
         """
-        if isinstance(entity, Asset):
+        if entity.entity_type == "Asset":
             asset = entity
             return asset in cls.storage
-        elif isinstance(entity, Task):
+        elif entity.entity_type == "Task":
             task = entity
             asset = get_related_asset(task)
             return task in cls.storage[asset]
-        elif isinstance(entity, Version):
+        elif entity.entity_type == "Version":
             version = entity
             task = version.task
             asset = get_related_asset(task)
-            return version.take_name in cls.storage[asset][task]
+            return (
+                asset in cls.storage
+                and task in cls.storage[asset]
+                and version.take_name in cls.storage[asset][task]
+                and cls.storage[asset][task][version.take_name] == version
+            )
         return False
 
     @classmethod
@@ -171,6 +176,7 @@ class AssetWidget(QtWidgets.QGroupBox):
 
     add_assets = QtCore.Signal(object)
     remove_asset = QtCore.Signal(object)
+    version_updated = QtCore.Signal()
 
     def __init__(self, parent=None, asset=None):
         super(AssetWidget, self).__init__(parent=parent)
@@ -332,6 +338,7 @@ class AssetWidget(QtWidgets.QGroupBox):
                 continue
             task_widget = TaskWidget(parent=self, task=child_task)
             task_widget.add_assets.connect(self.add_assets)
+            task_widget.version_updated.connect(self.version_updated)
             self.task_widgets.append(task_widget)
             self.tasks_layout.addWidget(task_widget)
 
@@ -436,6 +443,7 @@ class ProjectWidget(QtWidgets.QGroupBox):
                 asset_widget.asset = asset
                 # connect signals
                 asset_widget.remove_asset.connect(self.remove_asset)
+                asset_widget.version_updated.connect(self.check_versions)
                 asset_widget.add_assets.connect(
                     lambda x: self.add_assets(x, silent=False)
                 )
@@ -490,6 +498,8 @@ class ProjectWidget(QtWidgets.QGroupBox):
         # if no widget left, emit remove_project signal
         if not self.asset_widgets:
             self.remove_project.emit(self)
+        else:
+            self.check_versions()
 
     def check_versions(self):
         """Trigger a version check in all the child asset."""
@@ -502,6 +512,7 @@ class StatusIcon(QtWidgets.QLabel):
 
     Use ``set_status`` method to change the status of this widget.
     """
+
     icon_char_lut = {
         False: {
             "icon": chr(0xF057),
@@ -538,6 +549,7 @@ class TakeWidget(QtWidgets.QWidget):
     """A QWidget variant to hold stalker.Task related data."""
 
     add_references = QtCore.Signal(object)
+    version_updated = QtCore.Signal()
 
     def __init__(self, parent=None, task=None, take=None):
         super(TakeWidget, self).__init__(parent=parent)
@@ -547,8 +559,9 @@ class TakeWidget(QtWidgets.QWidget):
         self.enable_take_check_box = None
         self.take_new_name_line_edit = None
         self.versions_combo_box = None
-        self.references_status_icon = None
+        self.migrate_status_icon = None
         self.no_references_message_label = None
+        self.references_are_not_final_label = None
         self.all_references_are_included_label = None
         self.check_references_button = None
         self.take_new_name_validation_message_field = None
@@ -594,14 +607,15 @@ class TakeWidget(QtWidgets.QWidget):
         )
         self.main_layout.addWidget(self.versions_combo_box)
 
-        # Reference Status
-        self.references_status_icon = StatusIcon(self)
-        self.main_layout.addWidget(self.references_status_icon)
-
         self.no_references_message_label = QtWidgets.QLabel(self)
         self.no_references_message_label.setText("No references")
         self.no_references_message_label.setVisible(True)
         self.main_layout.addWidget(self.no_references_message_label)
+
+        self.references_are_not_final_label = QtWidgets.QLabel(self)
+        self.references_are_not_final_label.setText("Refs are not final")
+        self.references_are_not_final_label.setVisible(False)
+        self.main_layout.addWidget(self.references_are_not_final_label)
 
         self.all_references_are_included_label = QtWidgets.QLabel(self)
         self.all_references_are_included_label.setText("All refs. are included")
@@ -625,6 +639,10 @@ class TakeWidget(QtWidgets.QWidget):
                 20, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
             )
         )
+
+        # Reference Status
+        self.migrate_status_icon = StatusIcon(self)
+        self.main_layout.addWidget(self.migrate_status_icon)
 
     @property
     def task(self):
@@ -677,7 +695,11 @@ class TakeWidget(QtWidgets.QWidget):
         self.versions_combo_box.clear()
         for version in versions:
             self.versions_combo_box.addItem(
-                "v{:03d}".format(version.version_number), version
+                "v{:03d}{}".format(
+                    version.version_number,
+                    " (Published)" if version.is_published else "",
+                ),
+                version,
             )
 
     def take_new_name_edited(self):
@@ -688,10 +710,12 @@ class TakeWidget(QtWidgets.QWidget):
         text = self.take_new_name_line_edit.text()
         match = TAKE_NAME_VALIDATOR_REGEX.match(text)
         if not match or "".join(match.groups()) != text:
+            self.migrate_status_icon.set_status(False)
             self.take_new_name_line_edit.set_invalid(
                 "Take name is not in correct format"
             )
         else:
+            self.migrate_status_icon.set_status(True)
             self.take_new_name_line_edit.set_valid()
 
     def versions_combo_box_changed(self, index):
@@ -708,30 +732,60 @@ class TakeWidget(QtWidgets.QWidget):
             # There are references in this version
             self.no_references_message_label.setVisible(False)
 
-            asset = get_related_asset(self.task)
-            referenced_assets = []
+            missing_assets = []
+            missing_versions = []
+
             for other_v in version.inputs:
                 other_asset = get_related_asset(other_v.task)
                 # Filter all the assets that are already in the AssetStorage
-                if other_asset != asset and not AssetStorage.is_in_storage(other_asset):
-                    referenced_assets.append(other_asset)
+                if not AssetStorage.is_in_storage(other_asset):
+                    missing_assets.append(other_asset)
+                    missing_versions.append(other_v)
+                elif not AssetStorage.is_in_storage(other_v):
+                    # The asset is moving but not this version
+                    missing_versions.append(other_v)
 
-            if referenced_assets:
+            tooltip = "\n".join(
+                [
+                    "{} | v{:03d}".format(
+                        get_task_hierarchy_name(v.task), v.version_number
+                    )
+                    for v in version.inputs
+                ]
+            )
+            self.migrate_status_icon.setToolTip(tooltip)
+
+            if missing_assets:
                 self.check_references_button.setEnabled(True)
                 self.check_references_button.setVisible(True)
-                self.references_status_icon.set_status(False)
+                self.migrate_status_icon.set_status(False)
                 self.all_references_are_included_label.setVisible(False)
-            else:
+                self.references_are_not_final_label.setVisible(False)
+
+            if missing_versions:
+                self.check_references_button.setEnabled(True)
+                self.check_references_button.setVisible(True)
+                self.migrate_status_icon.set_status(False)
+                self.all_references_are_included_label.setVisible(False)
+                self.references_are_not_final_label.setVisible(True)
+
+            if not missing_assets and not missing_versions:
                 self.check_references_button.setEnabled(False)
                 self.check_references_button.setVisible(False)
-                self.references_status_icon.set_status(True)
+                self.migrate_status_icon.set_status(True)
                 self.all_references_are_included_label.setVisible(True)
+                self.references_are_not_final_label.setVisible(False)
         else:
             # no references in this version
             self.no_references_message_label.setVisible(True)
             self.check_references_button.setVisible(False)
-            self.references_status_icon.set_status(True)
+            self.migrate_status_icon.set_status(True)
             self.all_references_are_included_label.setVisible(False)
+
+        # trigger a version update
+        if not AssetStorage.is_in_storage(version):
+            AssetStorage.add_entity(version)
+            self.version_updated.emit()
 
     def check_references(self):
         """Check references of the selected takes.
@@ -775,19 +829,32 @@ class TakeWidget(QtWidgets.QWidget):
         self.check_references_button.setEnabled(state)
         self.all_references_are_included_label.setEnabled(state)
         self.no_references_message_label.setEnabled(state)
+        version = self.versions_combo_box.currentData()
         if not state:
-            # this take has been disabled, we don't car about the validity of
+            # this take has been disabled, we don't care about the validity of
             # the new take name field
+            self.migrate_status_icon.setVisible(False)
             self.take_new_name_line_edit.set_valid()
+
+            # remove the version from the AssetStorage
+            AssetStorage.remove_entity(version)
         else:
             # this take is re-enabled, re-validate the new take name
+            self.migrate_status_icon.setVisible(True)
             self.validate_take_new_name()
+
+            # add the version to the AssetStorage
+            AssetStorage.add_entity(version)
+
+        # trigger an version check update
+        self.version_updated.emit()
 
 
 class TaskWidget(QtWidgets.QGroupBox):
     """A QGroupBox variant to hold stalker.Task related data."""
 
     add_assets = QtCore.Signal(object)
+    version_updated = QtCore.Signal()
 
     def __init__(self, parent=None, task=None):
         super(TaskWidget, self).__init__(parent=parent)
@@ -802,9 +869,9 @@ class TaskWidget(QtWidgets.QGroupBox):
     def setup_ui(self):
         """Create UI widgets."""
         self.main_layout = QtWidgets.QVBoxLayout(self)
-        self.main_layout.setContentsMargins(12, 0, 0, 0)
+        self.main_layout.setContentsMargins(12, 0, 12, 0)
         self.takes_layout = QtWidgets.QVBoxLayout()
-        self.takes_layout.setContentsMargins(12, 0, 0, 0)
+        self.takes_layout.setContentsMargins(12, 0, 12, 0)
         self.no_versions_place_holder = QtWidgets.QLabel(self)
         self.no_versions_place_holder.setText("--- No Versions ---")
         self.no_versions_place_holder.setDisabled(True)
@@ -844,6 +911,7 @@ class TaskWidget(QtWidgets.QGroupBox):
             take_widget = TakeWidget(parent=self, task=self._task, take=take)
             self.takes_layout.addWidget(take_widget)
             take_widget.add_references.connect(self.add_assets)
+            take_widget.version_updated.connect(self.version_updated)
             self.take_widgets.append(take_widget)
         if take_names:
             self.no_versions_place_holder.setVisible(False)
