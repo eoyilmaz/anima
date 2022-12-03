@@ -631,7 +631,7 @@ class TakeWidget(QtWidgets.QWidget):
             "Check references to other assets\n"
             "in this version and add them to the list..."
         )
-        self.check_references_button.clicked.connect(self.check_references)
+        self.check_references_button.clicked.connect(self.pick_references)
         self.main_layout.addWidget(self.check_references_button)
 
         self.main_layout.addSpacerItem(
@@ -725,16 +725,24 @@ class TakeWidget(QtWidgets.QWidget):
             index (int): Current index
         """
         version = self.versions_combo_box.currentData()
-        if not version:
+        self.check_versions()
+        # trigger a version update
+        if not AssetStorage.is_in_storage(version):
+            AssetStorage.add_entity(version)
+            self.version_updated.emit()
+
+    def check_versions(self):
+        """Check referenced versions of the currently selected version.
+        """
+        version = self.versions_combo_box.currentData()
+        if version is None:
             return
 
         if version.inputs:
             # There are references in this version
             self.no_references_message_label.setVisible(False)
-
             missing_assets = []
             missing_versions = []
-
             for other_v in version.inputs:
                 other_asset = get_related_asset(other_v.task)
                 # Filter all the assets that are already in the AssetStorage
@@ -747,14 +755,15 @@ class TakeWidget(QtWidgets.QWidget):
 
             tooltip = "\n".join(
                 [
-                    "{} | v{:03d}".format(
-                        get_task_hierarchy_name(v.task), v.version_number
+                    "{} | {} | v{:03d}".format(
+                        get_task_hierarchy_name(v.task),
+                        v.take_name,
+                        v.version_number
                     )
                     for v in version.inputs
                 ]
             )
             self.migrate_status_icon.setToolTip(tooltip)
-
             if missing_assets:
                 self.check_references_button.setEnabled(True)
                 self.check_references_button.setVisible(True)
@@ -782,13 +791,8 @@ class TakeWidget(QtWidgets.QWidget):
             self.migrate_status_icon.set_status(True)
             self.all_references_are_included_label.setVisible(False)
 
-        # trigger a version update
-        if not AssetStorage.is_in_storage(version):
-            AssetStorage.add_entity(version)
-            self.version_updated.emit()
-
-    def check_references(self):
-        """Check references of the selected takes.
+    def pick_references(self):
+        """Pick references of the selected takes.
 
         Add the referenced assets to the end of the list.
         """
@@ -919,7 +923,7 @@ class TaskWidget(QtWidgets.QGroupBox):
     def check_versions(self):
         """Trigger a version check in all the child takes."""
         for take_widget in self.take_widgets:
-            take_widget.versions_combo_box_changed(-1)
+            take_widget.check_versions()
 
 
 class AssetMigrationToolDialog(QtWidgets.QDialog):
