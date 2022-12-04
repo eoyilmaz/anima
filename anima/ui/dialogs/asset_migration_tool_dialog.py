@@ -345,17 +345,9 @@ class AssetWidget(QtWidgets.QGroupBox):
     def validate(self):
         """Validate the data."""
         # Check if there is a new parent
-        if not self.new_parent and not all(
+        if self.new_parent and all(
             task_widget.validate() for task_widget in self.task_widgets
         ):
-            self.setStyleSheet(
-                "QGroupBox {{ background-color: {}; color: {}}}".format(
-                    COLORS["invalid_asset"]["bg"],
-                    COLORS["invalid_asset"]["fg"],
-                )
-            )
-            return False
-        else:
             self.setStyleSheet(
                 "QGroupBox {{ background-color: {}; color:{}}}".format(
                     COLORS["asset"]["bg"],
@@ -363,11 +355,34 @@ class AssetWidget(QtWidgets.QGroupBox):
                 )
             )
             return True
+        else:
+            self.setStyleSheet(
+                "QGroupBox {{ background-color: {}; color: {}}}".format(
+                    COLORS["invalid_asset"]["bg"],
+                    COLORS["invalid_asset"]["fg"],
+                )
+            )
+            return False
 
     def check_versions(self):
         """Trigger a version check in all the child tasks widgets."""
         for task_widget in self.task_widgets:
             task_widget.check_versions()
+
+    def to_dict(self):
+        """Return a dictionary representing the migration data.
+
+        Returns:
+            dict: The migration data.
+        """
+        return {
+            "new_parent_id": self.new_parent.id,
+            "selected_takes": dict(
+                (task_widget.task.id, task_widget.to_dict())
+                for task_widget in self.task_widgets
+                if task_widget.is_enabled()
+            )
+        }
 
 
 class ProjectWidget(QtWidgets.QGroupBox):
@@ -515,6 +530,17 @@ class ProjectWidget(QtWidgets.QGroupBox):
             bool: True for valid, False otherwise.
         """
         return all([asset_widget.validate() for asset_widget in self.asset_widgets])
+
+    def to_dict(self):
+        """Return a dictionary representing the migration data.
+
+        Returns:
+            dict: The migration data.
+        """
+        return dict(
+            (asset_widget.asset.id, asset_widget.to_dict())
+            for asset_widget in self.asset_widgets
+        )
 
 
 class StatusIcon(QtWidgets.QLabel):
@@ -744,7 +770,7 @@ class TakeWidget(QtWidgets.QWidget):
         Returns:
             bool: True for valid, False otherwise.
         """
-        text = self.take_new_name_line_edit.text()
+        text = self.get_new_take_name()
         match = TAKE_NAME_VALIDATOR_REGEX.match(text)
         if not match or "".join(match.groups()) != text:
             self.take_new_name_line_edit.set_invalid(
@@ -754,6 +780,10 @@ class TakeWidget(QtWidgets.QWidget):
         else:
             self.take_new_name_line_edit.set_valid()
             return True
+
+    def get_new_take_name(self):
+        """Return the new take name."""
+        return self.take_new_name_line_edit.text()
 
     def versions_combo_box_changed(self, index):
         """Check if newly selected version has inputs.
@@ -768,13 +798,21 @@ class TakeWidget(QtWidgets.QWidget):
             AssetStorage.add_entity(version)
             self.version_updated.emit()
 
+    def get_current_version(self):
+        """Return the currently selected version.
+
+        Returns:
+            stalker.Version: Currently selected version in the UI.
+        """
+        return self.versions_combo_box.currentData()
+
     def validate_versions(self):
         """Validate referenced versions of the currently selected version.
 
         Returns:
             bool: True if all referenced versions are valid, False otherwise.
         """
-        version = self.versions_combo_box.currentData()
+        version = self.get_current_version()
         if version is None:
             return False
 
@@ -897,6 +935,25 @@ class TakeWidget(QtWidgets.QWidget):
         # trigger an version check update
         self.version_updated.emit()
 
+    def is_enabled(self):
+        """Return True if this take is enabled.
+
+        Returns:
+            bool: Return True if this take is enabled.
+        """
+        return self.enable_take_check_box.isChecked()
+
+    def to_dict(self):
+        """Return a dictionary representing the migration data.
+
+        Returns:
+            dict: The migration data.
+        """
+        return {
+            "new_take_name": self.get_new_take_name(),
+            "versions": [self.get_current_version().version_number],
+        }
+
 
 class TaskWidget(QtWidgets.QGroupBox):
     """A QGroupBox variant to hold stalker.Task related data."""
@@ -969,6 +1026,14 @@ class TaskWidget(QtWidgets.QGroupBox):
         for take_widget in self.take_widgets:
             take_widget.validate_versions()
 
+    def is_enabled(self):
+        """Return True if all takes are enabled.
+
+        Returns:
+            bool: If all take widgets are enabled.
+        """
+        return any(take_widget.is_enabled() for take_widget in self.take_widgets)
+
     def validate(self):
         """Validate the current task widget.
 
@@ -976,6 +1041,18 @@ class TaskWidget(QtWidgets.QGroupBox):
             bool: True if all TaskWidgets are valid, False otherwise.
         """
         return all([take_widget.validate() for take_widget in self.take_widgets])
+
+    def to_dict(self):
+        """Return a dictionary representing the migration data.
+
+        Returns:
+            dict: The migration data.
+        """
+        return dict(
+            (take_widget.take, take_widget.to_dict())
+            for take_widget in self.take_widgets
+            if take_widget.is_enabled()
+        )
 
 
 class AssetMigrationToolDialog(QtWidgets.QDialog):
@@ -1134,6 +1211,17 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
             [project_widget.validate() for project_widget in self.project_widgets]
         )
 
+    def to_dict(self):
+        """Return a dictionary representing the migration data.
+
+        Returns:
+            dict: The migration data.
+        """
+        empty_dict = {}
+        for project_widget in self.project_widgets:
+            empty_dict.update(project_widget.to_dict())
+        return empty_dict
+
     def migrate(self):
         """Migrate assets."""
         # validate assets
@@ -1146,6 +1234,8 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
             return
 
         # display a report
+        import pprint
+        pprint.pprint(self.to_dict(), indent=4)
 
 
 class ReferencedAssetTasksDialog(QtWidgets.QDialog):
