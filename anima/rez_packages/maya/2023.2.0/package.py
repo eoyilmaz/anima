@@ -28,6 +28,7 @@ def commands():
     if system.platform == "linux":
         env.PATH.append(f"/usr/autodesk/maya{major}/bin")
     elif system.platform == "osx":
+        env.PATH.append(f"/Applications/Autodesk/maya{major}/Maya.app/Contents/bin")
         env.PATH.append(f"/Applications/Autodesk/maya{major}/Maya.app/Contents/MacOS")
 
     env.MAYA_DISABLE_CIP = 1
