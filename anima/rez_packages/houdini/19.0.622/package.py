@@ -23,6 +23,7 @@ with scope("config") as c:
 def commands():
     # env.PYTHONPATH.append("{root}/python")
     # env.PATH.append("{root}/bin")
+
     major = env.REZ_HOUDINI_MAJOR_VERSION
     minor = env.REZ_HOUDINI_MINOR_VERSION
     patch = env.REZ_HOUDINI_PATCH_VERSION
@@ -59,7 +60,7 @@ def commands():
     if "&" not in env.PATH.value():
         env.PATH.append("&")
 
-    if "&" not in env.LD_LIBRARY_PATH.value():
+    if "LD_LIBRARY_PATH" in env.keys() and "&" not in env.LD_LIBRARY_PATH.value():
         env.LD_LIBRARY_PATH.append("&")
 
     if "HOUDINI_PATH" not in env.keys():
