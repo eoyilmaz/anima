@@ -47,31 +47,29 @@ def commands():
     env.PYTHONPATH.append("${ANIMA_LIB_PATH}/anima")
 
     if "maya" not in this.root:
-        print("setting up default PYTHONPATH")
         # default PYTHONPATH
-        pylibs_path = "{}/pylibs/py{}.{}{}".format(
+        pylibs_base_path = "{}/pylibs/py{}.{}{}".format(
             "${ANIMA_LIB_PATH}",
             python_major,
             python_minor,
             "",
         )
-        print(f"pylibs_path: {pylibs_path}")
-        env.PYTHONPATH.append(pylibs_path)
+        env.PATH.append("{}/bin".format(pylibs_base_path))
+        env.PYTHONPATH.append("{}/lib/python/site-packages".format(pylibs_base_path))
     else:
         # Maya
         # PYTHONPATH
-        env.PYTHONPATH.append(
-            "{}/pylibs/py{}.{}{}".format(
-                "${ANIMA_LIB_PATH}",
-                python_major,
-                python_minor,
-                # maya=<2023 uses x86 under macOS
-                "_x86"
-                if system.platform
-                == "osx"  # and int(env.REZ_MAYA_MAJOR_VERSION) <= 2023
-                else "",
-            )
+        pylibs_base_path = "{}/pylibs/py{}.{}{}".format(
+            "${ANIMA_LIB_PATH}",
+            python_major,
+            python_minor,
+            # maya=<2023 uses x86 under macOS
+            "_x86"
+            if system.platform == "osx"  # and int(env.REZ_MAYA_MAJOR_VERSION) <= 2023
+            else "",
         )
+        env.PATH.append("{}/bin".format(pylibs_base_path))
+        env.PYTHONPATH.append("{}/lib/python/site-packages".format(pylibs_base_path))
         env.PYTHONPATH.append("${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config")
         env.PYTHONPATH.append(
             "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config/${REZ_MAYA_MAJOR_VERSION}"

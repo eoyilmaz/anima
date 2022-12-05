@@ -32,7 +32,7 @@ def commands():
     env.QT_LIB.set("PySide6")
     py_libs_path = "$HOME/Documents/development/pylibs"
     env.PYTHONPATH.append(
-        "{}/py{}.{}/__extras__".format(
+        "{}/py{}.{}/lib/python/site_packages__extras__".format(
             py_libs_path,
             env.REZ_PYTHON_MAJOR_VERSION,
             env.REZ_PYTHON_MINOR_VERSION,
