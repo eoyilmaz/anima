@@ -578,17 +578,19 @@ def __b85_encode(data, lut, byte_order, special_values=None):
 
 
 def __encode_multithreaded(f, data):
-    """The base function that runs the given function f in multithreaded
-    fashion.
+    """Run the given function with the given data in multi-threaded fashion.
 
-    :param f: The function
-    :param data: The data
-    :return:
+    Args:
+        f: The function
+        data: The data.
+
+    Returns:
+        Any: The function result.
     """
     import multiprocessing
     import platform
 
-    number_of_threads = multiprocessing.cpu_count() / 2
+    number_of_threads = int(multiprocessing.cpu_count() / 2)
 
     if platform.system() == "Windows":
         multiprocessing.set_executable("C:/Python27/pythonw.exe")
@@ -598,23 +600,26 @@ def __encode_multithreaded(f, data):
     p = multiprocessing.Pool(number_of_threads)
 
     number_of_chunks = len(data) // 4
-    chunk_per_thread = number_of_chunks / number_of_threads
+    chunk_per_thread = int(number_of_chunks / number_of_threads)
     split_per_char = chunk_per_thread * 4
 
     thread_data = []
     for i in range(0, len(data), split_per_char):
         thread_data.append(data[i : i + split_per_char])
 
-    data = "".join(p.map(f, thread_data))
+    data = b"".join(p.map(f, thread_data))
     p.close()
     return data
 
 
 def rfc1924_b85_encode(data):
-    """Encodes the given string data in to Base85 using the RFC1924 LUT
+    """Encode the given string data in to Base85 using the RFC1924 LUT.
 
-    :param str data: A string which contains a string to be encoded in Base85
-    :returns: str
+    Args:
+        data (bytes): A string which contains a string to be encoded in Base85
+
+    Returns:
+        bytes: The encoded data.
     """
     lut = LUTS["rfc1924"]["int_to_char"]
     byte_order = LUTS["rfc1924"]["byte_order"]
@@ -622,10 +627,13 @@ def rfc1924_b85_encode(data):
 
 
 def rfc1924_b85_encode_multithreaded(data):
-    """Encodes the given string data in to Base85 using the RFC1924 LUT
+    """Encode the given string data in to Base85 using the RFC1924 LUT.
 
-    :param str data: A string which contains a string to be encoded in Base85
-    :returns: str
+    Args:
+        data (bytes): A string which contains a string to be encoded in Base85.
+
+    Returns:
+        bytes: The encoded data.
     """
     return __encode_multithreaded(rfc1924_b85_encode, data)
 
@@ -646,10 +654,13 @@ def arnold_b85_encode(data):
 
 
 def arnold_b85_encode_multithreaded(data):
-    """Encodes the given string data in to Base85 using arnold LUT.
+    """Encode the given string data in to Base85 using arnold LUT.
 
-    :param str data: String to be encoded in Base85
-    :return: str
+    Args:
+        data (bytes): String to be encoded in Base85.
+
+    Returns:
+        bytes: Encoded data.
     """
     return __encode_multithreaded(arnold_b85_encode, data)
 
@@ -680,21 +691,21 @@ def __b85_decode(data, lut, byte_order, special_values=None):
     byte_format = b"%sI" % byte_order
     for i in range(0, len(data), 5):
         int_sum = (
-            52200625 * lut[data[i: i + 1]]
-            + 614125 * lut[data[i + 1: i + 2]]
-            + 7225 * lut[data[i + 2: i + 3]]
-            + 85 * lut[data[i + 3: i + 4]]
-            + lut[data[i + 4: i + 5]]
+            52200625 * lut[data[i : i + 1]]
+            + 614125 * lut[data[i + 1 : i + 2]]
+            + 7225 * lut[data[i + 2 : i + 3]]
+            + 85 * lut[data[i + 3 : i + 4]]
+            + lut[data[i + 4 : i + 5]]
         )
         parts_append(pack(byte_format, int_sum))
     return b"".join(parts)
 
 
 def b85_decode(data):
-    """Decodes the given string data by using the standard LUT and network (=
-    big endian) byte order.
+    """Decode data by using the standard LUT and byte order (=big endian).
 
-    :param str data: A string which contains the encoded data
+    Args:
+        data (bytes): A string which contains the encoded data.
     """
     lut = LUTS["standard"]["char_to_int"]
     byte_order = LUTS["standard"]["byte_order"]
@@ -702,10 +713,10 @@ def b85_decode(data):
 
 
 def rfc1924_b85_decode(data):
-    """Decodes the given string data by using the RFC1924 LUT and network (=
-    big endian) byte order.
+    """Decode data by using the RFC1924 LUT and byte order (=big endian).
 
-    :param str data: A string which contains the encoded data
+    Args:
+        data (bytes): A string which contains the encoded data.
     """
     lut = LUTS["rfc1924"]["char_to_int"]
     byte_order = LUTS["rfc1924"]["byte_order"]
@@ -729,10 +740,12 @@ def arnold_b85_decode(data):
 
 
 def mapper(encoded_data, raw_data, special_values=None):
-    """A simple utility to create a lut for known Base85 encoding
+    """Create a lut for known Base85 encoding.
 
-    :param str encoded_data: The path of the encoded file,
-    :param list raw_data: A list of raw data, showing the unencoded data
+    Args:
+        encoded_data (str): The path of the encoded file.
+        raw_data (list): A list of raw data, showing the unencoded data.
+        special_values (dict): A dictionary containing special values.
     """
     data = encoded_data
     if special_values:
@@ -763,10 +776,11 @@ def mapper(encoded_data, raw_data, special_values=None):
 
 
 def auto_mapper(encoded_data_path, raw_data):
-    """A simple utility to create a lut for known Base85 encoding
+    """Create a lut for known Base85 encoding.
 
-    :param str encoded_data_path: The path of the encoded file,
-    :param list raw_data: A list of raw numbers, showing the unencoded data
+    Args:
+        encoded_data_path (string): The path of the encoded file.
+        raw_data (list): A list of raw numbers, showing the unencoded data.
     """
     data = open(encoded_data_path, "r").read().strip()
     return mapper(data, raw_data)
