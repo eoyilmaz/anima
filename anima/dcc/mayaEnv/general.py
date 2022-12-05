@@ -912,11 +912,20 @@ class AssetMigrationToolNew(object):
 
         self.source_data = {
             {asset.id}: {
-                "target_parent_id": new_parent_task.id,
+                # Asset Data
+                "new_parent_id": new_parent_task.id,
                 "selected_takes": {
-                    {direct_child_task.id}: {
-                        {old_take_name}: {new_take_name},
-                    }
+                    {direct_child_task.id}: [  # Task data
+                        {old_take_name_1}: {  # Take data
+                            "new_take_name": {new_take_name},
+                            "versions": [version1, version2]
+                        },
+                        {old_take_name_2}: {  # Take data
+                            "new_take_name": {new_take_name},
+                            "versions": [version1, version2]
+                        }
+
+                    ]
                 }
             }
         }
@@ -925,10 +934,7 @@ class AssetMigrationToolNew(object):
     """
 
     def __init__(self):
-        # self.source_assets = []
         self.source_data = {}
-        # self.target_parents = {}
-        # self.selected_takes = {}
         self.version_lut = {}
 
     def add_asset(self, asset):
@@ -971,13 +977,13 @@ class AssetMigrationToolNew(object):
         # create the new asset under the target
         for source_asset_id in self.source_data:
             source_asset = Asset.query.filter(Asset.id == source_asset_id).first()
-            target_parent_id = self.source_data[source_asset_id]["target_parent_id"]
-            target_parent = Task.query.filter(Task.id == target_parent_id).first()
+            new_parent_id = self.source_data[source_asset_id]["new_parent_id"]
+            new_parent = Task.query.filter(Task.id == new_parent_id).first()
 
             new_asset = Asset(
                 name=source_asset.name,
                 code=source_asset.code,
-                parent=target_parent,
+                parent=new_parent,
                 type=source_asset.type,
                 description="Migrated from {} under {}".format(
                     source_asset.name,
@@ -1000,7 +1006,7 @@ class AssetMigrationToolNew(object):
                 unique_takes = get_unique_take_names(task.id)
                 has_skipped_takes = False
                 for take_name in unique_takes:
-                    if take_name not in self.selected_takes[task.id]:
+                    if take_name not in self.source_data[source_asset_id]["selected_takes"][task.id]:
                         # skip this take_name
                         logger.debug("skipping take_name: {}".format(take_name))
                         continue

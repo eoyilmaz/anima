@@ -5,7 +5,7 @@ import logging
 import unittest
 from stalker import (db, Repository, Project, Structure, FilenameTemplate,
                      Status, StatusList, Task, Version)
-from stalker.db import DBSession
+from stalker.db.session import DBSession
 
 from anima.dcc.base import DCCBase
 
