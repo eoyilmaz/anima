@@ -46,7 +46,7 @@ def commands():
 
     env.PYTHONPATH.append("${ANIMA_LIB_PATH}/anima")
 
-    if "maya" not in this.root:
+    if "maya" not in this.root and "houdini" not in this.root:
         # default PYTHONPATH
         pylibs_base_path = "{}/pylibs/py{}.{}{}".format(
             "${ANIMA_LIB_PATH}",
@@ -56,7 +56,8 @@ def commands():
         )
         env.PATH.append("{}/bin".format(pylibs_base_path))
         env.PYTHONPATH.append("{}/lib/python/site-packages".format(pylibs_base_path))
-    else:
+
+    if "maya" in this.root:
         # Maya
         # PYTHONPATH
         pylibs_base_path = "{}/pylibs/py{}.{}{}".format(
@@ -108,8 +109,21 @@ def commands():
         # ANIMA MAYA SHELVES PATH
         env.ANIMA_MAYA_SHELVES_PATH = "${ANIMA_DEV_PATH}/maya/shelves"
 
-    # Houdini
-    if "houdini" in this.root:
+    elif "houdini" in this.root:
+        # Houdini
+        # PYTHONPATH
+        pylibs_base_path = "{}/pylibs/py{}.{}{}".format(
+            "${ANIMA_LIB_PATH}",
+            python_major,
+            python_minor,
+            # Houdini uses x86 under macOS
+            "_x86"
+            if system.platform == "osx"  # and int(env.REZ_MAYA_MAJOR_VERSION) <= 2023
+            else "",
+        )
+        env.PATH.append("{}/bin".format(pylibs_base_path))
+        env.PYTHONPATH.append("{}/lib/python/site-packages".format(pylibs_base_path))
+
         env.HOUDINI_SHORT_VERSION = (
             "${REZ_HOUDINI_MAJOR_VERSION}.${REZ_HOUDINI_MINOR_VERSION}"
         )
