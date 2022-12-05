@@ -37,6 +37,14 @@ def commands():
             env.REZ_REDSHIFT_PATCH_VERSION,
         )
         env.REDSHIFT_COREDATAPATH = env.REDSHIFT_LOCATION
+    elif system.platform == "osx":
+        env.REDSHIFT_LOCATION = "/Applications/redshift-{}.{}.{}".format(
+            env.REZ_REDSHIFT_MAJOR_VERSION,
+            env.REZ_REDSHIFT_MINOR_VERSION,
+            env.REZ_REDSHIFT_PATCH_VERSION,
+        )
+        env.REDSHIFT_COREDATAPATH = env.REDSHIFT_LOCATION
+        env.PATH.append("/usr/sbin/")
 
     if "maya" in this.root:
         env.REDSHIFT_PLUG_IN_PATH = "$REDSHIFT_COREDATAPATH/redshift4maya/{}".format(

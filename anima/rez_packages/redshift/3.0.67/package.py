@@ -36,6 +36,14 @@ def commands():
             env.REZ_REDSHIFT_PATCH_VERSION,
         )
         env.REDSHIFT_COREDATAPATH = env.REDSHIFT_LOCATION
+    elif system.platform == "osx":
+        env.REDSHIFT_LOCATION = "/Applications/redshift-{}.{}.{}".format(
+            env.REZ_REDSHIFT_MAJOR_VERSION,
+            env.REZ_REDSHIFT_MINOR_VERSION,
+            env.REZ_REDSHIFT_PATCH_VERSION,
+        )
+        env.REDSHIFT_COREDATAPATH = env.REDSHIFT_LOCATION
+        env.PATH.append("/usr/sbin/")
 
     if "maya" in this.root:
         env.REDSHIFT_PLUG_IN_PATH = "$REDSHIFT_COREDATAPATH/redshift4maya/{}".format(
@@ -64,12 +72,19 @@ def commands():
     if "houdini" in this.root:
         env.HOUDINI_DSO_ERROR = 2
         env.PATH.prepend("{}/bin".format(env.REDSHIFT_LOCATION))
+
+        houdini_version_tuple = (
+            env.REZ_HOUDINI_MAJOR_VERSION,
+            env.REZ_HOUDINI_MINOR_VERSION,
+            env.REZ_HOUDINI_PATCH_VERSION,
+        )
+
         env.HOUDINI_PATH.prepend(
             "{}/redshift4houdini/{}.{}.{}".format(
                 env.REDSHIFT_LOCATION,
-                env.REZ_HOUDINI_MAJOR_VERSION,
-                env.REZ_HOUDINI_MINOR_VERSION,
-                env.REZ_HOUDINI_PATCH_VERSION,
+                houdini_version_tuple[0],
+                houdini_version_tuple[1],
+                houdini_version_tuple[2],
             )
         )
         env.REDSHIFT_RV_OPEN_ONLY = 1
@@ -77,8 +92,8 @@ def commands():
         env.PXR_PLUGINPATH_NAME.append(
             "{}/redshift4solaris/{}.{}.{}".format(
                 env.REDSHIFT_LOCATION,
-                env.REZ_HOUDINI_MAJOR_VERSION,
-                env.REZ_HOUDINI_MINOR_VERSION,
-                env.REZ_HOUDINI_PATCH_VERSION,
+                houdini_version_tuple[0],
+                houdini_version_tuple[1],
+                houdini_version_tuple[2],
             )
         )

@@ -2,7 +2,7 @@
 
 name = "redshift"
 
-version = "3.5.07"
+version = "3.5.10"
 
 author = ["Erkan Ozgur Yilmaz"]
 
@@ -11,12 +11,9 @@ uuid = "949dbed5cb0247e4b94445f6ef3a0539"
 description = "Redshift package"
 
 variants = [
-    ["maya-2020"],
     ["maya-2022"],
-    ["houdini-18.5.759"],
-    ["houdini-19.0.561"],
-    ["houdini-19.0.589"],
-    ["houdini-19.0.622"],
+    ["maya-2023"],
+    ["houdini-19.5.403"],
 ]
 
 build_command = "python3 {root}/../build.py {install}"
