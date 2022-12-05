@@ -346,17 +346,22 @@ sourceimages/3dPaintTextures"""
                     print("no version found in the same project, "
                           "looking in to other projects")
                     # try to look all the projects
-                    versions = Version.query.filter(
-                        Version.full_path.endswith(ref_file_name)
-                    ).all()
+                    versions = (
+                        Version.query.join(Task, Version.task_id == Task.id)
+                        .join(Project, Task.project_id == Project.id)
+                        .filter(Version.full_path.endswith(ref_file_name))
+                        .order_by(Project.date_created)
+                        .all()
+                    )
+
             else:
                 # search on all projects
-                v = (
-                    Version.query.join(Version.task, Task.versions)
-                    .join(Project, Task.project)
+                versions = (
+                    Version.query.join(Task, Version.task_id == Task.id)
+                    .join(Project, Task.project_id == Project.id)
                     .filter(Version.full_path.endswith(ref_file_name))
                     .order_by(Project.date_created)
-                    .first()
+                    .all()
                 )
 
             version = None

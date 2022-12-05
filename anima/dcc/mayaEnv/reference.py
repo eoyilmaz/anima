@@ -417,8 +417,8 @@ class Reference(object):
                 if not v:
                     # try to look in to all projects, order by
                     v = (
-                        Version.query.join(Version.task, Task.versions)
-                        .join(Project, Task.project)
+                        Version.query.join(Task, Version.task_id == Task.id)
+                        .join(Project, Task.project_id == Project.id)
                         .filter(Version.full_path.endswith(filename))
                         .order_by(Project.date_created)
                         .first()
