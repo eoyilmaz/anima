@@ -4,7 +4,7 @@ import os
 __here__ = os.path.dirname(__file__)
 
 
-def test_creating_test_data(create_db, create_project):
+def test_creating_test_data(create_test_db, create_project):
     """testing if the test project is created correctly
     """
     # now we should have some projects
@@ -17,7 +17,7 @@ def test_creating_test_data(create_db, create_project):
     assert len(all_tasks) == 79
 
 
-def test_stalker_entity_encoder_is_working_properly(create_db, create_project):
+def test_stalker_entity_encoder_is_working_properly(create_test_db, create_project):
     """testing if JSON Encoder will export data to JSON properly
     """
     from stalker import Task
@@ -39,7 +39,7 @@ def test_stalker_entity_encoder_is_working_properly(create_db, create_project):
     assert data == expected_data
 
 
-def test_stalker_entity_decoder_will_create_new_data(create_db, create_empty_project):
+def test_stalker_entity_decoder_will_create_new_data(create_test_db, create_empty_project):
     """testing if JSON decoder will create new data
     """
     from stalker import Task
@@ -72,7 +72,7 @@ def test_stalker_entity_decoder_will_create_new_data(create_db, create_empty_pro
     assert assets_task.name == 'Assets'
 
 
-def test_stalker_entity_decoder_will_not_create_existing_tasks(create_db, create_empty_project):
+def test_stalker_entity_decoder_will_not_create_existing_tasks(create_test_db, create_empty_project):
     """testing if JSON decoder will not recreate existing data
     """
     from stalker import Task
@@ -104,7 +104,7 @@ def test_stalker_entity_decoder_will_not_create_existing_tasks(create_db, create
     assert len(assets_tasks) == 1
 
 
-def test_stalker_entity_decoder_will_not_create_existing_child_tasks(create_db, create_empty_project):
+def test_stalker_entity_decoder_will_not_create_existing_child_tasks(create_test_db, create_empty_project):
     """testing if JSON decoder will not recreate existing child tasks
     """
     from stalker import Task
@@ -190,7 +190,7 @@ def test_stalker_entity_decoder_will_not_create_existing_child_tasks(create_db, 
     assert len(ananas_models) == 1
 
 
-def test_stalker_entity_decoder_will_append_new_data(create_db, create_empty_project):
+def test_stalker_entity_decoder_will_append_new_data(create_test_db, create_empty_project):
     """testing if JSON decoder will append new data on top of the existing one
     even when the JSON contains data about the already existing tasks
     """
@@ -301,7 +301,7 @@ def test_stalker_entity_decoder_will_append_new_data(create_db, create_empty_pro
     assert isinstance(peach_look_dev, Task)
 
 
-def test_stalker_entity_decoder_will_create_versions(create_db, create_empty_project):
+def test_stalker_entity_decoder_will_create_versions(create_test_db, create_empty_project):
     """testing if JSON decoder will create new versions along with tasks
     """
     from stalker import Task
@@ -341,7 +341,7 @@ def test_stalker_entity_decoder_will_create_versions(create_db, create_empty_pro
     assert len(ananas_look_dev.versions) == 1
 
 
-def test_stalker_entity_decoder_will_not_recreate_versions(create_db, create_empty_project):
+def test_stalker_entity_decoder_will_not_recreate_versions(create_test_db, create_empty_project):
     """testing if JSON decoder will not recreate already created versions
     """
     from stalker import Task
@@ -430,7 +430,7 @@ def test_stalker_entity_decoder_will_not_recreate_versions(create_db, create_emp
     assert ananas_look_dev.versions[0].version_number == 1
 
 
-def test_stalker_entity_decoder_will_not_recreate_versions_2(create_db, create_empty_project):
+def test_stalker_entity_decoder_will_not_recreate_versions_2(create_test_db, create_empty_project):
     """testing if JSON decoder will not recreate already created versions when the versions data is not oredered to the
     version number
     """

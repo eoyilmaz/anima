@@ -3,7 +3,7 @@
 import pytest
 
 
-def test_asset_migration_tool_initialization(create_db, create_project):
+def test_asset_migration_tool_initialization(create_test_db, create_project):
     """Test AssetMigrationTool initialization."""
     from stalker import Asset, Task, Project
     project1 = create_project

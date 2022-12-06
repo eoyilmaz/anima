@@ -9,7 +9,7 @@ def test_asset_storage_initialization():
 
 
 def test_asset_storage_add_entity_asset(
-    create_db, create_project, prepare_asset_storage
+    create_test_db, create_project, prepare_asset_storage
 ):
     """Test AssetStorage.add_entity() with an Asset."""
     from stalker import Asset
@@ -30,7 +30,7 @@ def test_asset_storage_add_entity_asset(
 
 
 def test_asset_storage_add_entity_task(
-    create_db, create_project, prepare_asset_storage
+    create_test_db, create_project, prepare_asset_storage
 ):
     """Test AssetStorage.add_entity() with a Task."""
     from stalker import Asset, Task
@@ -53,7 +53,7 @@ def test_asset_storage_add_entity_task(
 
 
 def test_asset_storage_add_entity_version(
-    create_db, create_project, prepare_asset_storage
+    create_test_db, create_project, prepare_asset_storage
 ):
     """Test AssetStorage.add_entity() with a Version."""
     from stalker import Asset, Task, Version
@@ -80,7 +80,7 @@ def test_asset_storage_add_entity_version(
 
 
 def test_asset_storage_add_entities_assets(
-    create_db, create_project, prepare_asset_storage
+    create_test_db, create_project, prepare_asset_storage
 ):
     """Test AssetStorage.add_entity() with a assets."""
     from stalker import Asset, Task, Version
@@ -107,7 +107,7 @@ def test_asset_storage_add_entities_assets(
 
 
 def test_asset_storage_remove_entity_asset(
-    create_db, create_project, prepare_asset_storage
+    create_test_db, create_project, prepare_asset_storage
 ):
     """Test AssetStorage.remove_entity() with a Asset."""
     from stalker import Asset, Task, Version
@@ -134,7 +134,7 @@ def test_asset_storage_remove_entity_asset(
 
 
 def test_asset_storage_remove_entity_task(
-    create_db, create_project, prepare_asset_storage
+    create_test_db, create_project, prepare_asset_storage
 ):
     """Test AssetStorage.remove_entity() with a Task."""
     from stalker import Asset, Task, Version
@@ -163,7 +163,7 @@ def test_asset_storage_remove_entity_task(
 
 
 def test_asset_storage_remove_entity_version(
-    create_db, create_project, prepare_asset_storage
+    create_test_db, create_project, prepare_asset_storage
 ):
     """Test AssetStorage.remove_entity() with a Version."""
     from stalker import Asset, Task, Version
@@ -194,7 +194,7 @@ def test_asset_storage_remove_entity_version(
 
 
 def test_asset_storage_is_in_storage_asset(
-    create_db, create_project, prepare_asset_storage
+    create_test_db, create_project, prepare_asset_storage
 ):
     """Test AssetStorage.is_in_storage() with an Asset."""
     from stalker import Asset, Task, Version

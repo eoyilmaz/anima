@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-def test_authenticate_with_stalker(create_db):
+def test_authenticate_with_stalker(create_test_db):
     """tests authentication with stalker
     """
     from anima.utils import stalker_authenticate
@@ -12,7 +12,7 @@ def test_authenticate_with_stalker(create_db):
     assert result is False
 
 
-def test_authenticate_with_stalker_called_only_when_enable_ldap_authentication_is_false(ldap_server, create_db):
+def test_authenticate_with_stalker_called_only_when_enable_ldap_authentication_is_false(ldap_server, create_test_db):
     """tests authentication with stalker only called when enable_ldap_authentication is false
     """
     from anima.utils import stalker_authenticate
@@ -23,7 +23,7 @@ def test_authenticate_with_stalker_called_only_when_enable_ldap_authentication_i
     assert result is False
 
 
-def test_authenticate_with_ldap(ldap_server, create_db):
+def test_authenticate_with_ldap(ldap_server, create_test_db):
     """tests authentication with ldap
     """
     from anima.utils import ldap_authenticate
@@ -41,7 +41,7 @@ def test_authenticate_with_ldap(ldap_server, create_db):
     assert result is True
 
 
-def test_get_user_name_from_ldap(ldap_server, create_db):
+def test_get_user_name_from_ldap(ldap_server, create_test_db):
     """testing if getting user name from ldap is working properly
     """
     from anima import defaults
@@ -58,7 +58,7 @@ def test_get_user_name_from_ldap(ldap_server, create_db):
     assert result == 'Pipeline'
 
 
-def test_get_user_groups_from_ldap(ldap_server, create_db):
+def test_get_user_groups_from_ldap(ldap_server, create_test_db):
     """testing if getting user groups from ldap is working properly
     """
     login = 'pipeline'
@@ -77,7 +77,7 @@ def test_get_user_groups_from_ldap(ldap_server, create_db):
     assert result == [u'GPU Users Admin', u'Administrators']
 
 
-def test_create_user_with_ldap_info_create_proper_stalker_user(ldap_server, create_db):
+def test_create_user_with_ldap_info_create_proper_stalker_user(ldap_server, create_test_db):
     """testing if create_user_with_ldap_info will create a proper Stalker user
     """
     login = 'pipeline'
@@ -106,7 +106,7 @@ def test_create_user_with_ldap_info_create_proper_stalker_user(ldap_server, crea
     assert new_user_from_db == new_user
 
 
-def test_create_user_with_ldap_info_create_proper_stalker_user_with_groups(ldap_server, create_db):
+def test_create_user_with_ldap_info_create_proper_stalker_user_with_groups(ldap_server, create_test_db):
     """testing if create_user_with_ldap_info will create a proper Stalker user
     """
     login = 'pipeline'
@@ -146,7 +146,7 @@ def test_create_user_with_ldap_info_create_proper_stalker_user_with_groups(ldap_
     assert new_user.groups[1].name in stalker_group_names
 
 
-def test_authenticate_with_stalker_and_ldap_will_always_authenticate_with_ldap(ldap_server, create_db):
+def test_authenticate_with_stalker_and_ldap_will_always_authenticate_with_ldap(ldap_server, create_test_db):
     """testing if the anima.utils.authenticate() function will authenticate
     fail even if the user exist in stalker when the enable_ldap_authentication
     is True
@@ -158,7 +158,7 @@ def test_authenticate_with_stalker_and_ldap_will_always_authenticate_with_ldap(l
     assert result is False
 
 
-def test_authenticate_with_stalker_and_ldap_authenticates_an_existing_ldap_user(ldap_server, create_db, monkeypatch):
+def test_authenticate_with_stalker_and_ldap_authenticates_an_existing_ldap_user(ldap_server, create_test_db, monkeypatch):
     """testing if the anima.utils.authenticate() function will authenticate a
     ldap user without a problem
     """
@@ -176,7 +176,7 @@ def test_authenticate_with_stalker_and_ldap_authenticates_an_existing_ldap_user(
     assert result is True
 
 
-def test_authenticate_with_stalker_and_ldap_authenticates_a_existing_ldap_user_creates_a_stalker_user(ldap_server, create_db, monkeypatch):
+def test_authenticate_with_stalker_and_ldap_authenticates_a_existing_ldap_user_creates_a_stalker_user(ldap_server, create_test_db, monkeypatch):
     """testing if the anima.utils.authenticate() function will authenticate a
     non-existing ldap user properly
     """
@@ -198,7 +198,7 @@ def test_authenticate_with_stalker_and_ldap_authenticates_a_existing_ldap_user_c
     assert pipeline_user is not None
 
 
-def test_authenticate_updates_user_password_if_stalker_fails_but_ldap_successes(ldap_server, create_db, monkeypatch):
+def test_authenticate_updates_user_password_if_stalker_fails_but_ldap_successes(ldap_server, create_test_db, monkeypatch):
     """testing if the anima.utils.authenticate() will update the user password
     if stalker fails but ldap doesn't fail and the user exists
     """

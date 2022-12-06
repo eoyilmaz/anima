@@ -11,6 +11,8 @@ import logging
 from anima import logger
 from anima.publish import clear_publishers
 
+from stalker import db
+
 logger.setLevel(logging.DEBUG)
 
 # store current folder path
@@ -30,13 +32,9 @@ def test_data():
 
 
 @pytest.fixture(scope="function")
-def create_db():
+def create_test_db():
     """creates a test database"""
-    from stalker import db
-
-    print("setting up test database")
-    db.setup({"sqlalchemy.url": "sqlite://"})
-    print("initializing test database")
+    db.setup({'sqlalchemy.url': 'sqlite:///:memory:'})
     db.init()
 
 

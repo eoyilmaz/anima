@@ -19,14 +19,6 @@ external_dccs = {
             "Outputs",
         ],
     },
-    #'ZBrush Project' : {
-    #    'name': 'ZBrush Project',
-    #    'icon': 'zbrush.png',
-    #    'extensions': ['.zpr'],
-    #    'structure': [
-    #        'Outputs',
-    #    ]
-    # },
     "ZBrush": {
         "name": "ZBrush",
         "icon": "zbrush.png",
@@ -68,7 +60,16 @@ class ExternalDCC(DCCBase):
 
     def _validate_extensions(self, extensions):
         if not extensions:
-            raise TypeError("%s.extension can not be None" % self.__class__.__name__)
+            raise TypeError(
+                "{}.extension should be a str, not None".format(self.__class__.__name__)
+            )
+
+        if not isinstance(extensions, list):
+            raise TypeError(
+                "{}.extension should be a list of str, not {}".format(
+                    self.__class__.__name__, extensions.__class__.__name__
+                )
+            )
 
         for i, extension in enumerate(extensions):
             if not extension.startswith("."):
@@ -287,7 +288,7 @@ class ExternalDCCFactory(object):
         :return list: list
         """
         env_names = []
-        for env_name in external_dccs.keys():
+        for env_name in list(external_dccs.keys()):
             env_data = external_dccs[env_name]
             env_names.append(
                 name_format.replace("%n", env_data["name"]).replace(
@@ -298,12 +299,15 @@ class ExternalDCCFactory(object):
 
     @classmethod
     def get_env(cls, name, name_format="%n"):
-        """Creates a DCC with the given name
+        """Create a DCC with the given name.
 
-        :param str name: The name of the DCC, should be a value from
-          anima.dcc.externalEnv.environment_names list
+        Args:
+            name (str): The name of the DCC, should be a value from
+                anima.dcc.externalEnv.environment_names list.
+            name_format (str): The name format.
 
-        :return ExternalDCC: ExternalDCC instance
+        Returns:
+            ExternalDCC: ExternalDCC instance.
         """
         if not isinstance(name, str):
             raise TypeError(
@@ -315,24 +319,23 @@ class ExternalDCCFactory(object):
         import re
 
         # replace anything that doesn't start with '%' with [\s\(\)\-]+
-        pattern = re.sub(r"[^%\w]+", "[\s\(\)\-]+", name_format)
+        pattern = re.sub(r"[^%\w]+", r"[\\s\\(\\)\\-]+", name_format)
 
-        pattern = pattern.replace("%n", "(?P<name>[\w\s]+)").replace(
-            "%e", "(?P<extension>\.\w+)"
+        pattern = pattern.replace("%n", r"(?P<name>[\w\s]+)").replace(
+            "%e", r"(?P<extension>\.\w+)"
         )
-        logger.debug("pattern : %s" % pattern)
+        logger.debug("pattern : {}".format(pattern))
 
         match = re.search(pattern, name)
         dcc_name = None
         if match:
             dcc_name = match.group("name").strip()
 
-        dcc_names = external_dccs.keys()
-        if dcc_name not in dcc_names:
+        if dcc_name not in external_dccs:
             raise ValueError(
                 "%s is not in "
                 "anima.dcc.externalEnv.environment_names list, "
-                "please supply a value from %s" % (name, dcc_names)
+                "please supply a value from %s" % (name, list(external_dccs.keys()))
             )
 
         dcc = external_dccs[dcc_name]
