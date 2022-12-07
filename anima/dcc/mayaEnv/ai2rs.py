@@ -346,7 +346,7 @@ CONVERSION_SPEC_SHEET = {
 
 
 def connect_input(source_node, source_attr_name, target_node, target_attr_name):
-    """Basic connection from source to target ndoe
+    """Basic connection from source to target node
 
     :param source_node:
     :param source_attr_name:

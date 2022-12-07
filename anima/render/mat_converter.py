@@ -186,18 +186,12 @@ class ConversionManagerBase(object):
         if call_before and callable(call_before):
             call_before(node)
 
-        # some conversion specs doesn't require a new node to be created
-        # so return early if this is the case
-        if "node_type" not in conversion_specs:
-            return node
-
         node_creator = self.node_creator_factory(conversion_specs)
         rs_node = node_creator.create()
 
         # rename the material to have a similar name with the original
+        from anima import string_types
         if rs_node is not None:
-            from anima import string_types
-
             node_type_name = (
                 conversion_specs["node_type"]
                 if isinstance(conversion_specs["node_type"], string_types)
@@ -211,59 +205,14 @@ class ConversionManagerBase(object):
             rs_node = node
 
         # set attributes
-        attributes = conversion_specs.get("attributes")
-        if attributes:
-            from anima import string_types
-
-            for source_attr, target_attr in attributes.items():
-                # value can be a string
-                if isinstance(target_attr, string_types):
-                    # check incoming connections
-                    incoming_connections = self.get_node_inputs(node, source_attr)
-                    if incoming_connections:
-                        # connect any textures to the target node
-                        for input_ in incoming_connections:
-                            # input_ >> rs_node.attr(target_attr)
-                            self.connect_attr(input_, rs_node, target_attr)
-                    else:
-                        # just read and set the value directly
-                        self.set_attr(
-                            rs_node, target_attr, self.get_attr(node, source_attr)
-                        )
-
-                elif isinstance(target_attr, list):
-                    # or a list
-                    # where we set multiple attributes in the rs_node to the
-                    # same value
-                    # source_attr_value = node.getAttr(source_attr)
-                    source_attr_value = self.get_attr(node, source_attr)
-                    for attr in target_attr:
-                        self.set_attr(rs_node, attr, source_attr_value)
-                        # for input_ in node.attr(source_attr).inputs(p=1):
-                        for input_ in self.get_node_inputs(node, source_attr):
-                            self.connect_attr(input_, rs_node, attr)
-                elif isinstance(target_attr, dict):
-                    # or another dictionary
-                    # where we have a converter
-                    source_attr_value = self.get_attr(node, source_attr)
-                    for attr, converter in target_attr.items():
-                        if callable(converter):
-                            try:
-                                attr_value = converter(source_attr_value)
-                            except TypeError:
-                                # it should use two parameters, also include
-                                # the node itself
-                                try:
-                                    attr_value = converter(source_attr_value, node)
-                                except TypeError:
-                                    # so this is the third form that also
-                                    # includes the rs node
-                                    attr_value = converter(
-                                        source_attr_value, node, rs_node
-                                    )
-                        else:
-                            attr_value = converter
-                        self.set_attr(rs_node, attr, attr_value)
+        attributes = conversion_specs.get("attributes", [])
+        for source_attr, target_attr in list(attributes.items()):
+            if isinstance(target_attr, string_types):
+                self.convert_str_attr(node, rs_node, source_attr, target_attr)
+            elif isinstance(target_attr, list):
+                self.convert_list_attr(node, rs_node, source_attr, target_attr)
+            elif isinstance(target_attr, dict):
+                self.convert_dict_attr(node, rs_node, source_attr, target_attr)
 
         # call any call_after
         call_after = conversion_specs.get("call_after")
@@ -271,3 +220,72 @@ class ConversionManagerBase(object):
             call_after(node, rs_node)
 
         return rs_node
+
+    def convert_str_attr(self, source_node, target_node, source_attr, target_attr):
+        """Convert the given string attribute.
+
+        Args:
+            source_node (pm.Node): The source node.
+            target_node (pm.Node): The target node.
+            source_attr (str): Source attribute name.
+            target_attr (str): Target attribute name.
+        """
+        # check incoming connections
+        incoming_connections = self.get_node_inputs(source_node, source_attr)
+        if incoming_connections:
+            # connect any textures to the target node
+            for input_ in incoming_connections:
+                self.connect_attr(input_, target_node, target_attr)
+        else:
+            # just read and set the value directly
+            self.set_attr(
+                target_node, target_attr, self.get_attr(source_node, source_attr)
+            )
+
+    def convert_list_attr(self, source_node, target_node, source_attr, target_attr):
+        """Convert the given list attribute.
+
+        Args:
+            source_node (pm.Node): The source node.
+            target_node (pm.Node): The target node.
+            source_attr (str): Source attribute name.
+            target_attr (str): Target attribute name.
+        """
+        # or a list where we set multiple attributes in the rs_node to the same value
+        # source_attr_value = node.getAttr(source_attr)
+        source_attr_value = self.get_attr(source_node, source_attr)
+        for attr in target_attr:
+            self.set_attr(target_node, attr, source_attr_value)
+            # for input_ in node.attr(source_attr).inputs(p=1):
+            for input_ in self.get_node_inputs(source_node, source_attr):
+                self.connect_attr(input_, target_node, attr)
+
+    def convert_dict_attr(self, source_node, target_node, source_attr, target_attr):
+        """Convert the given list attribute.
+
+        Args:
+            source_node (pm.Node): The source node.
+            target_node (pm.Node): The target node.
+            source_attr (str): Source attribute name.
+            target_attr (str): Target attribute name.
+        """
+        # or another dictionary where we have a converter
+        source_attr_value = self.get_attr(source_node, source_attr)
+        for attr, converter in target_attr.items():
+            if callable(converter):
+                try:
+                    attr_value = converter(source_attr_value)
+                except TypeError:
+                    # it should use two parameters, also include
+                    # the node itself
+                    try:
+                        attr_value = converter(source_attr_value, source_node)
+                    except TypeError:
+                        # so this is the third form that also
+                        # includes the rs node
+                        attr_value = converter(
+                            source_attr_value, source_node, target_node
+                        )
+            else:
+                attr_value = converter
+            self.set_attr(target_node, attr, attr_value)
