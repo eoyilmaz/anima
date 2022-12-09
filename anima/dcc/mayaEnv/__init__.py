@@ -341,15 +341,16 @@ workspace -fr "translatorData" "Outputs/data";
                     staging.clear()
 
                     # pop up a message box with the error
-                    pm.confirmDialog(
-                        title="PublishError",
-                        icon="critical",
-                        message="<b>%s</b><br/><br/>%s" % ("PRE PUBLISH FAILED!!!", e),
-                        button=["Ok"],
-                    )
+                    if not pm.general.about(batch=1):
+                        pm.confirmDialog(
+                            title="PublishError",
+                            icon="critical",
+                            message="<b>%s</b><br/><br/>%s" % ("PRE PUBLISH FAILED!!!", e),
+                            button=["Ok"],
+                        )
                     raise e
         else:
-            # run some of the publishers
+            # run some publishers
             publish_scripts.check_node_names_with_bad_characters()
 
         # get the current version, and store it as the parent of the new
@@ -491,7 +492,7 @@ workspace -fr "translatorData" "Outputs/data";
         self.create_local_copy(version)
 
         # run post publishers here
-        if version.is_published:
+        if version.is_published and not pm.general.about(batch=1):
             from anima.ui.lib import QtCore, QtWidgets, QtGui
 
             # before doing anything run all publishers
@@ -1523,18 +1524,26 @@ workspace -fr "translatorData" "Outputs/data";
             "audio": "filename",
             "AlembicNode": "abc_File",
             "gpuCache": "cacheFileName",
-            # Arnold Nodes
-            "aiImage": "filename",
-            "aiStandIn": "filename",
-            "aiVolume": "filename",
-            # Redshift Nodes
-            "RedshiftNormalMap": "tex0",
-            "RedshiftProxyMesh": "fileName",
-            "RedshiftDomeLight": ["tex0", "tex1"],
-            "RedshiftSprite": "tex0",
         }
 
-        for node_type in types_and_attrs.keys():
+        # Arnold Nodes
+        if pm.pluginInfo("mtoa", q=1, loaded=1):
+            types_and_attrs.update({
+                "aiImage": "filename",
+                "aiStandIn": "filename",
+                "aiVolume": "filename",
+            })
+
+        # Redshift Nodes
+        if pm.pluginInfo("redshift4maya", q=1, loaded=1):
+            types_and_attrs.update({
+                "RedshiftNormalMap": "tex0",
+                "RedshiftProxyMesh": "fileName",
+                "RedshiftDomeLight": ["tex0", "tex1"],
+                "RedshiftSprite": "tex0",
+            })
+
+        for node_type in types_and_attrs:
             attr_names = types_and_attrs[node_type]
             if not isinstance(attr_names, list):
                 attr_names = [attr_names]
