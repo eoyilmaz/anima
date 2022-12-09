@@ -192,6 +192,8 @@ sourceimages/3dPaintTextures"""
             # RSProxy and arnold proxies
             ".rs": "sourceimages",
             ".ass": "sourceimages",
+            # Audio and video files
+            ".wav": "sound",
         }
 
         ref_paths = []
