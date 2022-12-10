@@ -608,12 +608,12 @@ class DCCBase(object):
         :rtype : str
         """
         if include_project_code:
-            sig_name = "%s_%s" % (version.task.project.code, version.nice_name)
+            sig_name = "{}_{}".format(version.task.project.code, version.nice_name)
         else:
             sig_name = version.nice_name
 
         if include_version_number:
-            sig_name = "%s_v%03d" % (sig_name, version.version_number)
+            sig_name = "{}_v{:03d}".format(sig_name, version.version_number)
 
         return sig_name
 

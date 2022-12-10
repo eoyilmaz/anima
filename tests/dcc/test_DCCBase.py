@@ -12,7 +12,7 @@ from anima.dcc.base import DCCBase
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 
 
 def test_get_version_from_full_path_with_multiple_repositories(create_test_db):

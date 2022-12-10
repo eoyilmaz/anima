@@ -357,6 +357,10 @@ workspace -fr "translatorData" "Outputs/data";
         # version
         current_version = self.get_current_version()
 
+        # update the parent info
+        if version != current_version:  # prevent CircularDependencyError
+            version.parent = current_version
+
         version.update_paths()
 
         # set version extension to ma
@@ -429,7 +433,7 @@ workspace -fr "translatorData" "Outputs/data";
         # set the playblast file name
         self.set_playblast_file_name(version)
 
-        # create the folder if it doesn't exists
+        # create the folder if it doesn't exist
         try:
             os.makedirs(version.absolute_path)
         except OSError:
@@ -469,10 +473,6 @@ workspace -fr "translatorData" "Outputs/data";
         # switch back to the last layer
         if int(pm.about(v=1)) >= 2017:
             current_render_layer.setCurrent()
-
-        # update the parent info
-        if version != current_version:  # prevent CircularDependencyError
-            version.parent = current_version
 
         # update the reference list
         # IMPORTANT: without this, the update workflow is not able to do
@@ -1530,7 +1530,7 @@ workspace -fr "translatorData" "Outputs/data";
         if pm.pluginInfo("mtoa", q=1, loaded=1):
             types_and_attrs.update({
                 "aiImage": "filename",
-                "aiStandIn": "filename",
+                "aiStandIn": "dso",
                 "aiVolume": "filename",
             })
 
@@ -1808,13 +1808,13 @@ workspace -fr "translatorData" "Outputs/data";
         # This will be used to determine if we need to create a new
         # version for this version
         updated_namespaces = False
-        # referenceQuery = pm.referenceQuery
+        # reference_query = pm.reference_query
         # use maya.cmds it is safer to use when there are Unicode edits
-        referenceQuery = mc.referenceQuery
+        reference_query = mc.referenceQuery
 
         regex = r"(?P<nice_name>[\w_0-9]+)" r"(?P<version>_v[0-9]+_ma[0-9]*)"
 
-        # re open original scene
+        # re-open original scene
         reference_resolution = self.open(version, force=True)
 
         # check reference namespaces
@@ -1835,8 +1835,8 @@ workspace -fr "translatorData" "Outputs/data";
         for i, ref in enumerate(reversed(refs)):
             # re apply any live edits
             try:
-                # all_edits = referenceQuery(ref, es=1)
-                all_edits = referenceQuery(ref.refNode.name(), es=True)
+                # all_edits = reference_query(ref, es=1)
+                all_edits = reference_query(ref.refNode.name(), es=True)
                 if all_edits is None:
                     all_edits = []
             except UnicodeError:
@@ -1891,7 +1891,7 @@ workspace -fr "translatorData" "Outputs/data";
             logger.debug("new_namespace : %s" % new_namespace)
 
             # external edits, edits that are done in another scene
-            external_edits = referenceQuery(ref, es=1, scs=1)
+            external_edits = reference_query(ref, es=1, scs=1)
 
             for edit in all_edits:
                 updated_edit = edit.replace(old_namespace, new_namespace).replace(

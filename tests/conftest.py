@@ -13,7 +13,7 @@ from anima.publish import clear_publishers
 
 from stalker import db
 
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 
 # store current folder path
 __here__ = os.path.dirname(__file__)
