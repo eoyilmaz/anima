@@ -805,7 +805,11 @@ def check_if_only_one_root_node(progress_controller=None):
     if len(root_transform_nodes) > 1:
         progress_controller.complete()
         pm.select(root_transform_nodes)
-        raise PublishError("There is more than one root node in the scene")
+        raise PublishError(
+            "There is more than one root node in the scene: {}".format(
+                root_transform_nodes
+            )
+        )
     progress_controller.increment()
 
     # check shape

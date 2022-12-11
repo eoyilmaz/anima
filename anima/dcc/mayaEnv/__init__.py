@@ -386,8 +386,8 @@ workspace -fr "translatorData" "Outputs/data";
         logger.debug("next workspace: %s" % workspace_path)
 
         if current_workspace_path != workspace_path:
-            logger.warning("changing workspace detected!")
-            logger.warning(
+            logger.debug("changing workspace detected!")
+            logger.debug(
                 "converting paths to absolute, to be able to " "preserve external paths"
             )
 

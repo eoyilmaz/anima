@@ -13,9 +13,9 @@ def create_ref_test_data(create_test_data, create_pymel):
     pm = create_pymel
     # now do your addition
     # create ass take for asset2
-    data["repr_version1"] = create_version(data["asset2"], "Main@ASS", data["version3"])
-    data["repr_version2"] = create_version(data["asset2"], "Main@ASS", data["version3"])
-    data["repr_version3"] = create_version(data["asset2"], "Main@ASS", data["version3"])
+    data["repr_version1"] = create_version(data["asset2_model"], "Main@ASS", data["version3"])
+    data["repr_version2"] = create_version(data["asset2_model"], "Main@ASS", data["version3"])
+    data["repr_version3"] = create_version(data["asset2_model"], "Main@ASS", data["version3"])
 
     data["repr_version1"].is_published = True
     data["repr_version3"].is_published = True
@@ -33,9 +33,9 @@ def create_ref_test_data(create_test_data, create_pymel):
     data["repr_version4"].is_published = True
     data["repr_version6"].is_published = True
 
-    data["repr_version7"] = create_version(data["asset2"], "Main@GPU", data["version3"])
-    data["repr_version8"] = create_version(data["asset2"], "Main@GPU", data["version3"])
-    data["repr_version9"] = create_version(data["asset2"], "Main@GPU", data["version3"])
+    data["repr_version7"] = create_version(data["asset2_model"], "Main@GPU", data["version3"])
+    data["repr_version8"] = create_version(data["asset2_model"], "Main@GPU", data["version3"])
+    data["repr_version9"] = create_version(data["asset2_model"], "Main@GPU", data["version3"])
 
     data["repr_version9"].is_published = True
 
@@ -78,9 +78,9 @@ def create_ref_test_data(create_test_data, create_pymel):
     data["repr_version18"].is_published = True
 
     # a reference with only ASS representation
-    data["repr_version19"] = create_version(data["asset2"], "Take2")
-    data["repr_version20"] = create_version(data["asset2"], "Take2")
-    data["repr_version21"] = create_version(data["asset2"], "Take2")
+    data["repr_version19"] = create_version(data["asset2_model"], "Take2")
+    data["repr_version20"] = create_version(data["asset2_model"], "Take2")
+    data["repr_version21"] = create_version(data["asset2_model"], "Take2")
 
     data["repr_version21"].is_published = True
 
@@ -163,7 +163,8 @@ def test_list_all_repr_is_working_properly(create_ref_test_data, create_maya_env
     ref = maya_env.reference(data["repr_version1"])
     assert ref.path == data["repr_version1"].absolute_full_path
     result = ref.list_all_repr()
-    assert sorted(["Base", "ASS", "BBox", "GPU"]) == sorted(result)
+    # assert sorted(["Base", "ASS", "BBox", "GPU"]) == sorted(result)
+    assert sorted(["Base", "ASS", "GPU"]) == sorted(result)
 
 
 def test_find_repr_is_working_properly(create_ref_test_data, create_maya_env):

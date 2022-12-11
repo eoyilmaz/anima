@@ -11,12 +11,25 @@ import logging
 from anima import logger
 from anima.publish import clear_publishers
 
-from stalker import db
+from stalker import db, User, LocalSession
 
 logger.setLevel(logging.WARNING)
 
 # store current folder path
 __here__ = os.path.dirname(__file__)
+
+
+@pytest.fixture(scope="function")
+def store_local_session():
+    """login with the first user in the database."""
+    # login with the admin user
+    admin = User.query.filter(User.login == "admin").first()
+    local_session = LocalSession()
+    local_session.store_user(admin)
+    local_session.save()
+    yield
+    # local_session = LocalSession()
+    # local_session.delete()
 
 
 @pytest.fixture(scope="function")

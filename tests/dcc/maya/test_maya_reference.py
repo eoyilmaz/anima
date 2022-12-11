@@ -1,9 +1,12 @@
+# -*- coding: utf-8 -*-
+import os
+
+from stalker.db.session import DBSession
 
 
-
-
-
-def test_update_versions_is_working_properly_case_1(create_test_data):
+def test_update_versions_is_working_properly_case_1(
+    create_test_data, create_pymel, create_maya_env
+):
     """testing if update_versions is working properly in following
     condition:
 
@@ -20,21 +23,23 @@ def test_update_versions_is_working_properly_case_1(create_test_data):
         version2 (do not update version2)
     """
     data = create_test_data
+    pm = create_pymel
+    maya_env = create_maya_env
 
     # create a deep relation
     data["version2"].is_published = True
 
     # new scene
     # version5 references version2
-    data["maya_env"].open(data["version5"])
-    data["maya_env"].reference(data["version2"])
+    maya_env.open(data["version5"])
+    maya_env.reference(data["version2"])
     pm.saveFile()
     data["version5"].is_published = True
     pm.newFile(force=True)
 
     # version12 references version5
-    data["maya_env"].open(data["version12"])
-    data["maya_env"].reference(data["version5"])
+    maya_env.open(data["version12"])
+    maya_env.reference(data["version5"])
     pm.saveFile()
     data["version12"].is_published = True
     pm.newFile(force=True)
@@ -46,39 +51,28 @@ def test_update_versions_is_working_properly_case_1(create_test_data):
     visited_versions = []
     for v in data["version12"].walk_inputs():
         visited_versions.append(v)
-    expected_visited_versions = \
-        [data["version12"], data["version5"], data["version2"]]
-    data["assertEqual"](
-        expected_visited_versions,
-        visited_versions
-    )
+    expected_visited_versions = [data["version12"], data["version5"], data["version2"]]
+    assert expected_visited_versions == visited_versions
 
-    reference_resolution = data["maya_env"].open(data["version12"])
-    updated_versions = \
-        data["maya_env"].update_versions(reference_resolution)
+    reference_resolution = maya_env.open(data["version12"])
+    updated_versions = maya_env.update_versions(reference_resolution)
 
     # we should be still in version12 scene
-    data["assertEqual"](
-        data["version12"],
-        data["maya_env"].get_current_version()
-    )
+    assert data["version12"] == maya_env.get_current_version()
 
     # check references
     # we shouldn't have a new version5 referenced
     refs = pm.listReferences()
-    data["assertEqual"](
-        data["version5"],
-        data["maya_env"].get_version_from_full_path(refs[0].path)
-    )
+    assert data["version5"] == maya_env.get_version_from_full_path(refs[0].path)
 
     # and it should still have referencing version2
     refs = pm.listReferences(refs[0])
-    data["assertEqual"](
-        data["version2"],
-        data["maya_env"].get_version_from_full_path(refs[0].path)
-    )
+    assert data["version2"] == maya_env.get_version_from_full_path(refs[0].path)
 
-def test_update_versions_is_working_properly_case_2(create_test_data):
+
+def test_update_versions_is_working_properly_case_2(
+    create_test_data, create_pymel, create_maya_env
+):
     """testing if update_versions is working properly in following
     condition:
 
@@ -98,28 +92,30 @@ def test_update_versions_is_working_properly_case_2(create_test_data):
         version3
     """
     data = create_test_data
+    pm = create_pymel
+    maya_env = create_maya_env
 
     # create a deep relation
     data["version2"].is_published = True
 
     # new scene
     # version5 references version2
-    data["maya_env"].open(data["version5"])
-    data["maya_env"].reference(data["version2"])
+    maya_env.open(data["version5"])
+    maya_env.reference(data["version2"])
     pm.saveFile()
     data["version5"].is_published = True
     pm.newFile(force=True)
 
     # version6 references version3
-    data["maya_env"].open(data["version6"])
-    data["maya_env"].reference(data["version3"])
+    maya_env.open(data["version6"])
+    maya_env.reference(data["version3"])
     pm.saveFile()
     data["version6"].is_published = True
     pm.newFile(force=True)
 
     # version12 references version5
-    data["maya_env"].open(data["version12"])
-    data["maya_env"].reference(data["version5"])
+    maya_env.open(data["version12"])
+    maya_env.reference(data["version5"])
     pm.saveFile()
     data["version12"].is_published = True
     pm.newFile(force=True)
@@ -133,42 +129,31 @@ def test_update_versions_is_working_properly_case_2(create_test_data):
     for v in data["version12"].walk_inputs():
         visited_versions.append(v)
 
-    expected_visited_versions = \
-        [data["version12"], data["version5"], data["version2"]]
+    expected_visited_versions = [data["version12"], data["version5"], data["version2"]]
 
-    data["assertEqual"](
-        expected_visited_versions,
-        visited_versions
-    )
+    assert expected_visited_versions == visited_versions
 
-    reference_resolution = data["maya_env"].open(data["version12"])
-    created_versions = \
-        data["maya_env"].update_versions(reference_resolution)
+    reference_resolution = maya_env.open(data["version12"])
+    created_versions = maya_env.update_versions(reference_resolution)
 
     # no new versions should have been created
-    data["assertEqual"](0, len(created_versions))
+    assert 0 == len(created_versions)
 
     # check if we are still in version12 scene
-    data["assertEqual"](
-        data["version12"],
-        data["maya_env"].get_current_version()
-    )
+    assert data["version12"] == maya_env.get_current_version()
 
     # and expect maya have the updated references
     refs = pm.listReferences()
-    data["assertEqual"](
-        data["version6"],
-        data["maya_env"].get_version_from_full_path(refs[0].path)
-    )
+    assert data["version6"] == maya_env.get_version_from_full_path(refs[0].path)
 
     # and it should have referenced version3
     refs = pm.listReferences(refs[0])
-    data["assertEqual"](
-        data["version3"],
-        data["maya_env"].get_version_from_full_path(refs[0].path)
-    )
+    assert data["version3"] == maya_env.get_version_from_full_path(refs[0].path)
 
-def test_update_versions_is_working_properly_case_3(create_test_data):
+
+def test_update_versions_is_working_properly_case_3(
+    create_test_data, create_pymel, create_maya_env
+):
     """testing if update_versions is working properly in following
     condition:
 
@@ -192,6 +177,8 @@ def test_update_versions_is_working_properly_case_3(create_test_data):
           version2 -> nothing is updated
     """
     data = create_test_data
+    pm = create_pymel
+    maya_env = create_maya_env
 
     # create a deep relation
     data["version2"].is_published = True
@@ -199,23 +186,23 @@ def test_update_versions_is_working_properly_case_3(create_test_data):
 
     # new scene
     # version5 references version2
-    data["maya_env"].open(data["version5"])
-    data["maya_env"].reference(data["version2"])
+    maya_env.open(data["version5"])
+    maya_env.reference(data["version2"])
     pm.saveFile()
     data["version5"].is_published = True
     pm.newFile(force=True)
 
     # version12 references version5
-    data["maya_env"].open(data["version12"])
-    data["maya_env"].reference(data["version5"])
+    maya_env.open(data["version12"])
+    maya_env.reference(data["version5"])
     pm.saveFile()
     data["version12"].is_published = True
     pm.newFile(force=True)
 
     # version15 references version12 two times
-    data["maya_env"].open(data["version15"])
-    data["maya_env"].reference(data["version12"])
-    data["maya_env"].reference(data["version12"])
+    maya_env.open(data["version15"])
+    maya_env.reference(data["version12"])
+    maya_env.reference(data["version12"])
     pm.saveFile()
     pm.newFile(force=True)
 
@@ -223,84 +210,60 @@ def test_update_versions_is_working_properly_case_3(create_test_data):
     visited_versions = []
     for v in data["version15"].walk_inputs():
         visited_versions.append(v)
-    expected_visited_versions = \
-        [data["version15"], data["version12"], data["version5"], data["version2"]]
+    expected_visited_versions = [
+        data["version15"],
+        data["version12"],
+        data["version5"],
+        data["version2"],
+    ]
 
-    data["assertEqual"](
-        expected_visited_versions,
-        visited_versions
-    )
-    reference_resolution = data["maya_env"].open(data["version15"])
+    assert expected_visited_versions == visited_versions
+    reference_resolution = maya_env.open(data["version15"])
 
     # check reference resolution
-    data["assertEqual"](
-        sorted(reference_resolution['root'], key=lambda x: x.name),
-        sorted([data["version12"]], key=lambda x: x.name)
+    assert sorted(reference_resolution["root"], key=lambda x: x.name) == sorted(
+        [data["version12"]], key=lambda x: x.name
     )
-    data["assertEqual"](
-        sorted(reference_resolution['create'], key=lambda x: x.name),
-        sorted([data["version5"], data["version12"]], key=lambda x: x.name)
+    assert sorted(reference_resolution["create"], key=lambda x: x.name) == sorted(
+        [data["version5"], data["version12"]], key=lambda x: x.name
     )
-    data["assertEqual"](
-        sorted(reference_resolution['update'], key=lambda x: x.name),
-        sorted([data["version2"]], key=lambda x: x.name)
+    assert sorted(reference_resolution["update"], key=lambda x: x.name) == sorted(
+        [data["version2"]], key=lambda x: x.name
     )
-    data["assertEqual"](
-        reference_resolution['leave'],
-        []
-    )
+    assert reference_resolution["leave"] == []
 
-    updated_versions = \
-        data["maya_env"].update_versions(reference_resolution)
+    updated_versions = maya_env.update_versions(reference_resolution)
 
-    data["assertEqual"](0, len(updated_versions))
+    assert 0 == len(updated_versions)
 
     # check if we are still in version15 scene
-    data["assertEqual"](
-        data["version15"],
-        data["maya_env"].get_current_version()
-    )
+    assert data["version15"] == maya_env.get_current_version()
 
     # and expect maya have the updated references
     refs_level1 = pm.listReferences()
-    data["assertEqual"](
-        data["version12"],
-        data["maya_env"].get_version_from_full_path(refs_level1[0].path)
-    )
-    data["assertEqual"](
-        data["version12"],
-        data["maya_env"].get_version_from_full_path(refs_level1[1].path)
-    )
+    assert data["version12"] == maya_env.get_version_from_full_path(refs_level1[0].path)
+    assert data["version12"] == maya_env.get_version_from_full_path(refs_level1[1].path)
 
     # and it should have referenced version5A
     refs_level2 = pm.listReferences(refs_level1[0])
-    data["assertEqual"](
-        data["version5"],
-        data["maya_env"].get_version_from_full_path(refs_level2[0].path)
-    )
+    assert data["version5"] == maya_env.get_version_from_full_path(refs_level2[0].path)
 
     # and it should have referenced version5A
     refs_level3 = pm.listReferences(refs_level2[0])
-    data["assertEqual"](
-        data["version2"],
-        data["maya_env"].get_version_from_full_path(refs_level3[0].path)
-    )
+    assert data["version2"] == maya_env.get_version_from_full_path(refs_level3[0].path)
 
     # the other version5A
     refs_level2 = pm.listReferences(refs_level1[1])
-    data["assertEqual"](
-        data["version5"],
-        data["maya_env"].get_version_from_full_path(refs_level2[0].path)
-    )
+    assert data["version5"] == maya_env.get_version_from_full_path(refs_level2[0].path)
 
     # and it should have referenced version5A
     refs_level3 = pm.listReferences(refs_level2[0])
-    data["assertEqual"](
-        data["version2"],
-        data["maya_env"].get_version_from_full_path(refs_level3[0].path)
-    )
+    assert data["version2"] == maya_env.get_version_from_full_path(refs_level3[0].path)
 
-def test_update_versions_is_working_properly_case_4(create_test_data):
+
+def test_update_versions_is_working_properly_case_4(
+    create_test_data, create_pymel, create_maya_env
+):
     """testing if update_versions is working properly in following
     condition:
 
@@ -332,6 +295,8 @@ def test_update_versions_is_working_properly_case_4(create_test_data):
           version2 -> nothing is updated
     """
     data = create_test_data
+    pm = create_pymel
+    maya_env = create_maya_env
 
     # create a deep relation
     data["version2"].is_published = True
@@ -339,24 +304,24 @@ def test_update_versions_is_working_properly_case_4(create_test_data):
 
     # new scene
     # version5 references version2
-    data["maya_env"].open(data["version5"])
-    data["maya_env"].reference(data["version2"])
+    maya_env.open(data["version5"])
+    maya_env.reference(data["version2"])
     pm.saveFile()
     data["version5"].is_published = True
     pm.newFile(force=True)
 
     # version12 references version5
-    data["maya_env"].open(data["version12"])
-    data["maya_env"].reference(data["version5"])
-    data["maya_env"].reference(data["version5"])  # reference a second time
+    maya_env.open(data["version12"])
+    maya_env.reference(data["version5"])
+    maya_env.reference(data["version5"])  # reference a second time
     pm.saveFile()
     data["version12"].is_published = True
     pm.newFile(force=True)
 
     # version15 references version12 two times
-    data["maya_env"].open(data["version15"])
-    data["maya_env"].reference(data["version12"])
-    data["maya_env"].reference(data["version12"])
+    maya_env.open(data["version15"])
+    maya_env.reference(data["version12"])
+    maya_env.reference(data["version12"])
     pm.saveFile()
     pm.newFile(force=True)
 
@@ -364,25 +329,22 @@ def test_update_versions_is_working_properly_case_4(create_test_data):
     visited_versions = []
     for v in data["version15"].walk_inputs():
         visited_versions.append(v)
-    expected_visited_versions = \
-        [data["version15"], data["version12"], data["version5"], data["version2"]]
+    expected_visited_versions = [
+        data["version15"],
+        data["version12"],
+        data["version5"],
+        data["version2"],
+    ]
 
-    data["assertEqual"](
-        expected_visited_versions,
-        visited_versions
-    )
+    assert expected_visited_versions == visited_versions
 
-    reference_resolution = data["maya_env"].open(data["version15"])
-    updated_versions = \
-        data["maya_env"].update_versions(reference_resolution)
+    reference_resolution = maya_env.open(data["version15"])
+    updated_versions = maya_env.update_versions(reference_resolution)
 
-    data["assertEqual"](0, len(updated_versions))
+    assert 0 == len(updated_versions)
 
     # check if we are still in version15 scene
-    data["assertEqual"](
-        data["version15"],
-        data["maya_env"].get_current_version()
-    )
+    assert data["version15"] == maya_env.get_current_version()
 
     # and expect maya have the updated references
     refs = pm.listReferences()
@@ -404,53 +366,26 @@ def test_update_versions_is_working_properly_case_4(create_test_data):
 
     # Version12
     published_version = data["version12"]
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version12_ref1.path)
-    )
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version12_ref2.path)
-    )
+    assert published_version == maya_env.get_version_from_full_path(version12_ref1.path)
+    assert published_version == maya_env.get_version_from_full_path(version12_ref2.path)
 
     # Version5
     published_version = data["version5"]
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version5_ref1.path)
-    )
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version5_ref2.path)
-    )
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version5_ref3.path)
-    )
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version5_ref4.path)
-    )
+    assert published_version == maya_env.get_version_from_full_path(version5_ref1.path)
+    assert published_version == maya_env.get_version_from_full_path(version5_ref2.path)
+    assert published_version == maya_env.get_version_from_full_path(version5_ref3.path)
+    assert published_version == maya_env.get_version_from_full_path(version5_ref4.path)
 
     # Version2
-    data["assertEqual"](
-        data["version2"],
-        data["maya_env"].get_version_from_full_path(version2_ref1.path)
-    )
-    data["assertEqual"](
-        data["version2"],
-        data["maya_env"].get_version_from_full_path(version2_ref2.path)
-    )
-    data["assertEqual"](
-        data["version2"],
-        data["maya_env"].get_version_from_full_path(version2_ref3.path)
-    )
-    data["assertEqual"](
-        data["version2"],
-        data["maya_env"].get_version_from_full_path(version2_ref4.path)
-    )
+    assert data["version2"] == maya_env.get_version_from_full_path(version2_ref1.path)
+    assert data["version2"] == maya_env.get_version_from_full_path(version2_ref2.path)
+    assert data["version2"] == maya_env.get_version_from_full_path(version2_ref3.path)
+    assert data["version2"] == maya_env.get_version_from_full_path(version2_ref4.path)
 
-def test_update_versions_is_working_properly_case_5(create_test_data):
+
+def test_update_versions_is_working_properly_case_5(
+    create_test_data, create_pymel, create_maya_env
+):
     """testing if update_versions is working properly in following
     condition:
 
@@ -482,45 +417,47 @@ def test_update_versions_is_working_properly_case_5(create_test_data):
           version3
     """
     data = create_test_data
+    pm = create_pymel
+    maya_env = create_maya_env
 
     # create a deep relation
     data["version2"].is_published = True
     data["version3"].is_published = True
 
     # version4 references version2
-    data["maya_env"].open(data["version4"])
-    data["maya_env"].reference(data["version2"])
+    maya_env.open(data["version4"])
+    maya_env.reference(data["version2"])
     pm.saveFile()
     data["version4"].is_published = True
     pm.newFile(force=True)
 
     # version6 references version3
-    data["maya_env"].open(data["version6"])
-    data["maya_env"].reference(data["version3"])
+    maya_env.open(data["version6"])
+    maya_env.reference(data["version3"])
     pm.saveFile()
     data["version6"].is_published = True
     pm.newFile(force=True)
 
     # version11 references version5
-    data["maya_env"].open(data["version11"])
-    data["maya_env"].reference(data["version4"])
-    data["maya_env"].reference(data["version4"])  # reference a second time
+    maya_env.open(data["version11"])
+    maya_env.reference(data["version4"])
+    maya_env.reference(data["version4"])  # reference a second time
     pm.saveFile()
     data["version11"].is_published = True
     pm.newFile(force=True)
 
     # version12 references version6
-    data["maya_env"].open(data["version12"])
-    data["maya_env"].reference(data["version6"])
-    data["maya_env"].reference(data["version6"])  # reference a second time
+    maya_env.open(data["version12"])
+    maya_env.reference(data["version6"])
+    maya_env.reference(data["version6"])  # reference a second time
     pm.saveFile()
     data["version12"].is_published = True
     pm.newFile(force=True)
 
     # version15 references version11 two times
-    data["maya_env"].open(data["version15"])
-    data["maya_env"].reference(data["version11"])
-    data["maya_env"].reference(data["version11"])
+    maya_env.open(data["version15"])
+    maya_env.reference(data["version11"])
+    maya_env.reference(data["version11"])
     pm.saveFile()
     pm.newFile(force=True)
 
@@ -528,25 +465,22 @@ def test_update_versions_is_working_properly_case_5(create_test_data):
     visited_versions = []
     for v in data["version15"].walk_inputs():
         visited_versions.append(v)
-    expected_visited_versions = \
-        [data["version15"], data["version11"], data["version4"], data["version2"]]
+    expected_visited_versions = [
+        data["version15"],
+        data["version11"],
+        data["version4"],
+        data["version2"],
+    ]
 
-    data["assertEqual"](
-        expected_visited_versions,
-        visited_versions
-    )
+    assert expected_visited_versions == visited_versions
 
-    reference_resolution = data["maya_env"].open(data["version15"])
-    updated_versions = \
-        data["maya_env"].update_versions(reference_resolution)
+    reference_resolution = maya_env.open(data["version15"])
+    updated_versions = maya_env.update_versions(reference_resolution)
 
-    data["assertEqual"](0, len(updated_versions))
+    assert 0 == len(updated_versions)
 
     # check if we are still in version15 scene
-    data["assertEqual"](
-        data["version15"],
-        data["maya_env"].get_current_version()
-    )
+    assert data["version15"] == maya_env.get_current_version()
 
     # and expect maya have the updated references
     refs = pm.listReferences()
@@ -568,54 +502,27 @@ def test_update_versions_is_working_properly_case_5(create_test_data):
 
     # Version12
     published_version = data["version12"].latest_published_version
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version12_ref1.path)
-    )
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version12_ref2.path)
-    )
+    assert published_version == maya_env.get_version_from_full_path(version12_ref1.path)
+    assert published_version == maya_env.get_version_from_full_path(version12_ref2.path)
 
     # Version5
     published_version = data["version5"].latest_published_version
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version6_ref1.path)
-    )
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version6_ref2.path)
-    )
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version6_ref3.path)
-    )
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version6_ref4.path)
-    )
+    assert published_version == maya_env.get_version_from_full_path(version6_ref1.path)
+    assert published_version == maya_env.get_version_from_full_path(version6_ref2.path)
+    assert published_version == maya_env.get_version_from_full_path(version6_ref3.path)
+    assert published_version == maya_env.get_version_from_full_path(version6_ref4.path)
 
     # Version2
     published_version = data["version2"].latest_published_version
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version3_ref1.path)
-    )
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version3_ref2.path)
-    )
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version3_ref3.path)
-    )
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version3_ref4.path)
-    )
+    assert published_version == maya_env.get_version_from_full_path(version3_ref1.path)
+    assert published_version == maya_env.get_version_from_full_path(version3_ref2.path)
+    assert published_version == maya_env.get_version_from_full_path(version3_ref3.path)
+    assert published_version == maya_env.get_version_from_full_path(version3_ref4.path)
 
-def test_update_versions_is_working_properly_case_6(create_test_data):
+
+def test_update_versions_is_working_properly_case_6(
+    create_test_data, create_pymel, create_maya_env
+):
     """testing if update_versions is working properly in following
     condition:
 
@@ -637,50 +544,52 @@ def test_update_versions_is_working_properly_case_6(create_test_data):
           version3
     """
     data = create_test_data
+    pm = create_pymel
+    maya_env = create_maya_env
 
     # create a deep relation
     data["version2"].is_published = True
     data["version3"].is_published = True
 
     # version4 references version2
-    data["maya_env"].open(data["version4"])
-    data["maya_env"].reference(data["version2"])
+    maya_env.open(data["version4"])
+    maya_env.reference(data["version2"])
     pm.saveFile()
     data["version4"].is_published = True
     pm.newFile(force=True)
 
     # version6 references version3
-    data["maya_env"].open(data["version6"])
-    data["maya_env"].reference(data["version3"])
+    maya_env.open(data["version6"])
+    maya_env.reference(data["version3"])
     pm.saveFile()
     data["version6"].is_published = True
     pm.newFile(force=True)
 
     # version11 references version5
-    data["maya_env"].open(data["version11"])
-    data["maya_env"].reference(data["version4"])
-    data["maya_env"].reference(data["version4"])  # reference a second time
+    maya_env.open(data["version11"])
+    maya_env.reference(data["version4"])
+    maya_env.reference(data["version4"])  # reference a second time
     pm.saveFile()
     data["version11"].is_published = True
     pm.newFile(force=True)
 
     # version12 references version6
-    data["maya_env"].open(data["version12"])
-    data["maya_env"].reference(data["version6"])
-    data["maya_env"].reference(data["version6"])  # reference a second time
+    maya_env.open(data["version12"])
+    maya_env.reference(data["version6"])
+    maya_env.reference(data["version6"])  # reference a second time
     pm.saveFile()
     data["version12"].is_published = True
     pm.newFile(force=True)
 
     # version15 references version11 two times
-    data["maya_env"].open(data["version15"])
-    data["maya_env"].reference(data["version11"])
+    maya_env.open(data["version15"])
+    maya_env.reference(data["version11"])
 
     # now simulate a shallow update on version2 -> version3 while under
     # in version4
     refs = pm.listReferences(recursive=1)
     # we should have all the references
-    data["assertEqual"](data["version2"].absolute_full_path, refs[-1].path)
+    assert data["version2"].absolute_full_path == refs[-1].path
     refs[-1].replaceWith(data["version3"].absolute_full_path)
 
     pm.saveFile()
@@ -690,25 +599,22 @@ def test_update_versions_is_working_properly_case_6(create_test_data):
     visited_versions = []
     for v in data["version15"].walk_inputs():
         visited_versions.append(v)
-    expected_visited_versions = \
-        [data["version15"], data["version11"], data["version4"], data["version2"]]
+    expected_visited_versions = [
+        data["version15"],
+        data["version11"],
+        data["version4"],
+        data["version2"],
+    ]
 
-    data["assertEqual"](
-        expected_visited_versions,
-        visited_versions
-    )
+    assert expected_visited_versions == visited_versions
 
-    reference_resolution = data["maya_env"].open(data["version15"])
-    updated_versions = \
-        data["maya_env"].update_versions(reference_resolution)
+    reference_resolution = maya_env.open(data["version15"])
+    updated_versions = maya_env.update_versions(reference_resolution)
 
-    data["assertEqual"](0, len(updated_versions))
+    assert 0 == len(updated_versions)
 
     # check if we are still in version15 scene
-    data["assertEqual"](
-        data["version15"],
-        data["maya_env"].get_current_version()
-    )
+    assert data["version15"] == maya_env.get_current_version()
 
     # and expect maya have the updated references
     refs = pm.listReferences()
@@ -723,84 +629,86 @@ def test_update_versions_is_working_properly_case_6(create_test_data):
 
     # Version12
     published_version = data["version12"].latest_published_version
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version12_ref1.path)
-    )
+    assert published_version == maya_env.get_version_from_full_path(version12_ref1.path)
 
     # Version5
     published_version = data["version5"].latest_published_version
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version6_ref1.path)
-    )
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version6_ref2.path)
-    )
+    assert published_version == maya_env.get_version_from_full_path(version6_ref1.path)
+    assert published_version == maya_env.get_version_from_full_path(version6_ref2.path)
 
     # Version2
     published_version = data["version2"].latest_published_version
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version3_ref1.path)
-    )
-    data["assertEqual"](
-        published_version,
-        data["maya_env"].get_version_from_full_path(version3_ref2.path)
-    )
+    assert published_version == maya_env.get_version_from_full_path(version3_ref1.path)
+    assert published_version == maya_env.get_version_from_full_path(version3_ref2.path)
 
-def test_reference_updates_version_inputs_attribute(create_test_data):
-    """testing if Maya.reference updates Version.inputs attribute
-    """
+
+def test_reference_updates_version_inputs_attribute(
+    create_test_data, create_pymel, create_maya_env
+):
+    """testing if Maya.reference updates Version.inputs attribute"""
     data = create_test_data
+    pm = create_pymel
+    maya_env = create_maya_env
     # create references to various versions
-    data["maya_env"].open(data["version6"])
+    maya_env.open(data["version6"])
 
-    data["maya_env"].reference(data["version5"])
-    data["maya_env"].reference(data["version4"])
-    data["maya_env"].reference(data["version3"])
+    maya_env.reference(data["version5"])
+    maya_env.reference(data["version4"])
+    maya_env.reference(data["version3"])
 
     # at this point we should have data["version6"].inputs filled correctly
-    data["assertEqual"](
-        sorted([data["version5"], data["version4"], data["version3"]],
-               key=lambda x: x.name),
-        sorted(data["version6"].inputs, key=lambda x: x.name)
-    )
+    assert sorted(
+        [data["version5"], data["version4"], data["version3"]], key=lambda x: x.name
+    ) == sorted(data["version6"].inputs, key=lambda x: x.name)
 
-def test_get_referenced_versions_returns_a_list_of_Version_instances(create_test_data):
+
+def test_get_referenced_versions_returns_a_list_of_Version_instances(
+    create_test_data, create_pymel, create_maya_env
+):
     """testing if Maya.get_referenced_versions returns a list of Versions
     instances referenced in the current scene
     """
     data = create_test_data
+    pm = create_pymel
+    maya_env = create_maya_env
     # create references to various versions
-    data["maya_env"].open(data["version6"])
+    maya_env.open(data["version6"])
 
-    data["maya_env"].reference(data["version4"])
-    data["maya_env"].reference(data["version5"])
-    data["maya_env"].reference(data["version5"])  # duplicate refs
-    data["maya_env"].reference(data["version4"])  # duplicate refs
-    data["maya_env"].reference(data["version3"])
+    maya_env.reference(data["version4"])
+    maya_env.reference(data["version5"])
+    maya_env.reference(data["version5"])  # duplicate refs
+    maya_env.reference(data["version4"])  # duplicate refs
+    maya_env.reference(data["version3"])
 
     # now try to get the referenced versions
-    referenced_versions = data["maya_env"].get_referenced_versions()
+    referenced_versions = maya_env.get_referenced_versions()
 
-    data["assertEqual"](
-        sorted(referenced_versions, key=lambda x: x.name),
-        sorted([data["version3"], data["version4"], data["version5"]],
-               key=lambda x: x.name)
+    assert sorted(referenced_versions, key=lambda x: x.name) == sorted(
+        [data["version3"], data["version4"], data["version5"]], key=lambda x: x.name
     )
 
-def test_get_referenced_versions_returns_a_list_of_Version_instances_even_with_representations(create_test_data):
+
+def test_get_referenced_versions_returns_a_list_of_Version_instances_even_with_representations(
+    create_test_data, create_pymel, create_maya_env, store_local_session
+):
     """testing if Maya.get_referenced_versions returns a list of Versions
     instances referenced in the current scene
     """
     data = create_test_data
-    from stalker import User, LocalSession
-    u = User.query.first()
-    l = LocalSession()
-    l.store_user(u)
-    l.save()
+    pm = create_pymel
+    maya_env = create_maya_env
+
+    # Asset2 - Take1
+    pm.newFile(force=True)
+    root_node = pm.nt.Transform(name='Asset2_Take1')
+    box = pm.polyCube(name="Box1")[0]
+    pm.parent(box, root_node)
+    pm.runtime.DeleteHistory()
+    maya_env.save_as(data["version3"])
+    maya_env.save_as(data["version4"])
+    maya_env.save_as(data["version5"])
+
+    from anima.dcc.mayaEnv.repr_tools import RepresentationGenerator
 
     gen = RepresentationGenerator()
 
@@ -814,90 +722,92 @@ def test_get_referenced_versions_returns_a_list_of_Version_instances_even_with_r
     gen.generate_all()
 
     # create references to various versions
-    data["maya_env"].open(data["version6"])
+    maya_env.open(data["version6"])
 
-    data["maya_env"].reference(data["version4"])
-    data["maya_env"].reference(data["version5"])
-    data["maya_env"].reference(data["version5"])  # duplicate refs
-    data["maya_env"].reference(data["version4"])  # duplicate refs
-    data["maya_env"].reference(data["version3"])
+    maya_env.reference(data["version4"])
+    maya_env.reference(data["version5"])
+    maya_env.reference(data["version5"])  # duplicate refs
+    maya_env.reference(data["version4"])  # duplicate refs
+    maya_env.reference(data["version3"])
 
     # switch all references to bbox representation
     for ref in pm.listReferences():
-        ref.to_repr('ASS')
+        ref.to_repr("ASS")
 
     # now try to get the referenced versions
-    referenced_versions = data["maya_env"].get_referenced_versions()
+    referenced_versions = maya_env.get_referenced_versions()
 
-    data["assertEqual"](
-        sorted(referenced_versions, key=lambda x: x.name),
-        sorted([data["version3"], data["version5"]],  # version4 will be skipped
-               key=lambda x: x.name)
-    )
+    assert sorted(referenced_versions, key=lambda x: x.name) == sorted(
+        [data["version3"], data["version4"], data["version5"]], key=lambda x: x.name
+    )  # version4 will be skipped
 
-def test_get_referenced_versions_returns_a_list_of_Version_instances_referenced_under_the_given_reference(create_test_data):
+
+def test_get_referenced_versions_returns_a_list_of_Version_instances_referenced_under_the_given_reference(
+    create_test_data, create_pymel, create_maya_env
+):
     """testing if Maya.get_referenced_versions returns a list of Versions
     referenced in the current scene under the given reference
     """
     data = create_test_data
+    pm = create_pymel
+    maya_env = create_maya_env
     # create references to various versions
-    data["maya_env"].open(data["version6"])
+    maya_env.open(data["version6"])
 
-    data["maya_env"].reference(data["version4"])
-    data["maya_env"].reference(data["version5"])
-    data["maya_env"].reference(data["version5"])  # duplicate refs
-    data["maya_env"].reference(data["version4"])  # duplicate refs
-    data["maya_env"].reference(data["version3"])
+    maya_env.reference(data["version4"])
+    maya_env.reference(data["version5"])
+    maya_env.reference(data["version5"])  # duplicate refs
+    maya_env.reference(data["version4"])  # duplicate refs
+    maya_env.reference(data["version3"])
 
     # save the scene and start
     pm.saveFile()
 
     # open version7 and reference version6 to it
-    data["maya_env"].open(data["version7"])
-    data["maya_env"].reference(data["version6"])
+    maya_env.open(data["version7"])
+    maya_env.reference(data["version6"])
 
     # now try to get the referenced versions
-    versions = data["maya_env"].get_referenced_versions()
+    versions = maya_env.get_referenced_versions()
 
-    data["assertEqual"](
-        sorted(versions, key=lambda x: x.name),
-        sorted([data["version6"]], key=lambda x: x.name)
+    assert sorted(versions, key=lambda x: x.name) == sorted(
+        [data["version6"]], key=lambda x: x.name
     )
 
     # and get a deeper one
-    versions = \
-        data["maya_env"].get_referenced_versions(
-            pm.listReferences()[0]
-        )
+    versions = maya_env.get_referenced_versions(pm.listReferences()[0])
 
-    data["assertEqual"](
-        sorted(versions, key=lambda x: x.name),
-        sorted([data["version3"], data["version4"], data["version5"]],
-               key=lambda x: x.name)
+    assert sorted(versions, key=lambda x: x.name) == sorted(
+        [data["version3"], data["version4"], data["version5"]], key=lambda x: x.name
     )
 
-def test_update_version_inputs_method_updates_the_inputs_of_the_open_version(create_test_data):
+
+def test_update_version_inputs_method_updates_the_inputs_of_the_open_version(
+    create_test_data, create_pymel, create_maya_env
+):
     """testing if Maya.update_version_inputs() returns updates the inputs
     attribute of the current open version by looking to the referenced
     versions
     """
     data = create_test_data
+    pm = create_pymel
+    maya_env = create_maya_env
     # do not use maya_env to open and reference files
     # create references to various versions
     def open_(version):
         new_workspace = version.absolute_path
         pm.workspace.open(new_workspace)
-        pm.openFile(version.absolute_full_path, f=True,)
+        pm.openFile(
+            version.absolute_full_path,
+            f=True,
+        )
 
     # create references
     def reference(version):
         namespace = os.path.basename(version.filename)
-        namespace = namespace.replace('.', '_')
+        namespace = namespace.replace(".", "_")
         ref = pm.createReference(
-            version.absolute_full_path,
-            gl=True,
-            namespace=namespace,
-            options='v=0'
+            version.absolute_full_path, gl=True, namespace=namespace, options="v=0"
         )
 
     open_(data["version6"])
@@ -911,48 +821,49 @@ def test_update_version_inputs_method_updates_the_inputs_of_the_open_version(cre
     pm.saveFile()
 
     # the version6.inputs should be an empty list
-    data["assertEqual"](data["version6"].inputs, [])
+    assert data["version6"].inputs == []
 
     # open version7 and reference version6 to it
     open_(data["version7"])
     reference(data["version6"])
 
     # version7.inputs should be an empty list
-    data["assertEqual"](data["version7"].inputs, [])
+    assert data["version7"].inputs == []
 
     # now try to update referenced versions
-    data["maya_env"].update_version_inputs()
+    maya_env.update_version_inputs()
 
-    data["assertEqual"](
-        [data["version6"]],
-        data["version7"].inputs
-    )
+    assert [data["version6"]] == data["version7"].inputs
 
     # now get the version6.inputs right
     refs = pm.listReferences()
-    data["maya_env"].update_version_inputs(refs[0])
+    maya_env.update_version_inputs(refs[0])
 
-    data["assertEqual"](
-        sorted([data["version3"], data["version4"], data["version5"]],
-               key=lambda x: x.name),
-        sorted(data["version6"].inputs, key=lambda x: x.name)
-    )
+    assert sorted(
+        [data["version3"], data["version4"], data["version5"]], key=lambda x: x.name
+    ) == sorted(data["version6"].inputs, key=lambda x: x.name)
 
-def test_reference_method_updates_the_inputs_of_the_referenced_version(create_test_data):
+
+def test_reference_method_updates_the_inputs_of_the_referenced_version(
+    create_test_data, create_pymel, create_maya_env
+):
     """testing if Maya.reference() method updates the Version.inputs of the
     referenced version
     """
+    data = create_test_data
+    pm = create_pymel
+    maya_env = create_maya_env
     # create a new version
-    data["maya_env"].open(data["version6"])
+    maya_env.open(data["version6"])
 
     # check prior to referencing
-    data["assertTrue"](data["version5"] not in data["version6"].inputs)
+    assert data["version5"] not in data["version6"].inputs
 
-    # reference something and let Maya to update the inputs
-    data["maya_env"].reference(data["version5"])
+    # reference something and let Maya update the inputs
+    maya_env.reference(data["version5"])
 
     # check if version5 is in version6.inputs
-    data["assertTrue"](data["version5"] in data["version6"].inputs)
+    assert data["version5"] in data["version6"].inputs
 
     # remove the reference and save the file (do not saveAs)
     pm.listReferences()[0].remove()
@@ -961,16 +872,20 @@ def test_reference_method_updates_the_inputs_of_the_referenced_version(create_te
     pm.saveFile()
 
     # check if version5 still in version6.inputs
-    data["assertTrue"](data["version5"] in data["version6"].inputs)
+    assert data["version5"] in data["version6"].inputs
 
     # create a new scene and reference the previous version and check if
     pm.newFile(f=True)
-    data["maya_env"].reference(data["version6"])
+    maya_env.save_as(data["version3"])
+    maya_env.reference(data["version6"])
 
     # the Version.inputs is updated correctly
-    data["assertTrue"](data["version5"] not in data["version6"].inputs)
+    assert data["version5"] not in data["version6"].inputs
 
-def test_check_referenced_versions_is_working_properly(create_test_data):
+
+def test_check_referenced_versions_is_working_properly(
+    create_test_data, create_pymel, create_maya_env
+):
     """testing if check_referenced_versions will return a list of tuples
     holding info like which ref needs to be updated or which reference
     needs a new version, what is the corresponding Version instance and
@@ -1011,43 +926,46 @@ def test_check_referenced_versions_is_working_properly(create_test_data):
       version38 -> no update
         version27 -> no update
     """
+    data = create_test_data
+    pm = create_pymel
+    maya_env = create_maya_env
     # create a deep relation
     data["version2"].is_published = True
     data["version3"].is_published = True
 
     # version4 references version2
-    data["maya_env"].open(data["version4"])
-    data["maya_env"].reference(data["version2"])
+    maya_env.open(data["version4"])
+    maya_env.reference(data["version2"])
     pm.saveFile()
     data["version4"].is_published = True
     pm.newFile(force=True)
 
     # version6 references version3
-    data["maya_env"].open(data["version6"])
-    data["maya_env"].reference(data["version3"])
+    maya_env.open(data["version6"])
+    maya_env.reference(data["version3"])
     pm.saveFile()
     data["version6"].is_published = True
     pm.newFile(force=True)
 
     # version11 references version5
-    data["maya_env"].open(data["version11"])
-    data["maya_env"].reference(data["version4"])
-    data["maya_env"].reference(data["version4"])  # reference a second time
+    maya_env.open(data["version11"])
+    maya_env.reference(data["version4"])
+    maya_env.reference(data["version4"])  # reference a second time
     pm.saveFile()
     data["version11"].is_published = True
     pm.newFile(force=True)
 
     # version12 references version6
-    data["maya_env"].open(data["version12"])
-    data["maya_env"].reference(data["version6"])
-    data["maya_env"].reference(data["version6"])  # reference a second time
+    maya_env.open(data["version12"])
+    maya_env.reference(data["version6"])
+    maya_env.reference(data["version6"])  # reference a second time
     pm.saveFile()
     data["version12"].is_published = True
     pm.newFile(force=True)
 
     # version21 references version16
-    data["maya_env"].open(data["version21"])
-    data["maya_env"].reference(data["version16"])
+    maya_env.open(data["version21"])
+    maya_env.reference(data["version16"])
     pm.saveFile()
     data["version16"].is_published = True
     data["version18"].is_published = True
@@ -1055,35 +973,39 @@ def test_check_referenced_versions_is_working_properly(create_test_data):
     pm.newFile(force=True)
 
     # version38 references version27
-    data["maya_env"].open(data["version38"])
-    data["maya_env"].reference(data["version27"])
+    maya_env.open(data["version38"])
+    maya_env.reference(data["version27"])
     pm.saveFile()
     data["version38"].is_published = True
     data["version27"].is_published = True
     pm.newFile(force=True)
 
     # version15 references version11 two times
-    data["maya_env"].open(data["version15"])
-    data["maya_env"].reference(data["version11"])
-    data["maya_env"].reference(data["version11"])
-    data["maya_env"].reference(data["version21"])
-    data["maya_env"].reference(data["version38"])
+    maya_env.open(data["version15"])
+    maya_env.reference(data["version11"])
+    maya_env.reference(data["version11"])
+    maya_env.reference(data["version21"])
+    maya_env.reference(data["version38"])
     pm.saveFile()
-    #pm.newFile(force=True)
+    # pm.newFile(force=True)
     DBSession.commit()
 
     # check the setup
     visited_versions = []
     for v in data["version15"].walk_inputs():
         visited_versions.append(v)
-    expected_visited_versions = \
-        [data["version15"], data["version11"], data["version4"], data["version2"],
-         data["version21"], data["version16"], data["version38"], data["version27"]]
+    expected_visited_versions = [
+        data["version15"],
+        data["version11"],
+        data["version4"],
+        data["version2"],
+        data["version21"],
+        data["version16"],
+        data["version38"],
+        data["version27"],
+    ]
 
-    data["assertEqual"](
-        expected_visited_versions,
-        visited_versions
-    )
+    assert expected_visited_versions == visited_versions
 
     root_refs = pm.listReferences()
 
@@ -1105,31 +1027,21 @@ def test_check_referenced_versions_is_working_properly(create_test_data):
     version38_ref = root_refs[3]
     version27_ref = pm.listReferences(version38_ref)[0]
 
-    data["assertFalse"](data["version2"].is_latest_published_version())
+    assert not data["version2"].is_latest_published_version()
 
     expected_reference_resolution = {
-        'root': [
-            data["version38"],
-            data["version11"],
-            data["version21"]
-        ],
-        'leave': [
-            data["version27"],
-            data["version38"]
-        ],
-        'update': [
+        "root": [data["version38"], data["version11"], data["version21"]],
+        "leave": [data["version27"], data["version38"]],
+        "update": [
             data["version16"],
             data["version2"],
             data["version4"],
-            data["version11"]
+            data["version11"],
         ],
-        'create': [
-            data["version21"]
-        ]
+        "create": [data["version21"]],
     }
 
-    result = \
-        data["maya_env"].check_referenced_versions()
+    result = maya_env.check_referenced_versions()
 
     # print('data["version27"]: %s' % data["version27"])
     # print('data["version38"]: %s' % data["version38"])
@@ -1144,31 +1056,23 @@ def test_check_referenced_versions_is_working_properly(create_test_data):
     # print('--------------------------')
     # print(result)
 
-    data["assertEqual"](
-        sorted(expected_reference_resolution['root'],
-               key=lambda x: x.name),
-        sorted(result['root'], key=lambda x: x.name)
-    )
-    data["assertEqual"](
-        sorted(expected_reference_resolution['leave'],
-               key=lambda x: x.name),
-        sorted(result['leave'],
-               key=lambda x: x.name)
-    )
-    data["assertEqual"](
-        sorted(expected_reference_resolution['update'],
-               key=lambda x: x.name),
-        sorted(result['update'],
-               key=lambda x: x.name)
-    )
-    data["assertEqual"](
-        sorted(expected_reference_resolution['create'],
-               key=lambda x: x.name),
-        sorted(result['create'],
-               key=lambda x: x.name)
-    )
+    assert sorted(
+        expected_reference_resolution["root"], key=lambda x: x.name
+    ) == sorted(result["root"], key=lambda x: x.name)
+    assert sorted(
+        expected_reference_resolution["leave"], key=lambda x: x.name
+    ) == sorted(result["leave"], key=lambda x: x.name)
+    assert sorted(
+        expected_reference_resolution["update"], key=lambda x: x.name
+    ) == sorted(result["update"], key=lambda x: x.name)
+    assert sorted(
+        expected_reference_resolution["create"], key=lambda x: x.name
+    ) == sorted(result["create"], key=lambda x: x.name)
 
-def test_check_referenced_versions_is_working_properly_case_2(create_test_data):
+
+def test_check_referenced_versions_is_working_properly_case_2(
+    create_test_data, create_pymel, create_maya_env
+):
     """testing if check_referenced_versions will return a dictionary holding
     info like which ref needs to be updated or which reference needs a new
     version, what is the corresponding Version instance and what is the
@@ -1187,27 +1091,30 @@ def test_check_referenced_versions_is_working_properly_case_2(create_test_data):
         version4 -> create
           version2 -> update
     """
+    data = create_test_data
+    pm = create_pymel
+    maya_env = create_maya_env
     # create a deep relation
     data["version2"].is_published = True
     data["version3"].is_published = True
 
     # version4 references version2
-    data["maya_env"].open(data["version4"])
-    data["maya_env"].reference(data["version2"])
+    maya_env.open(data["version4"])
+    maya_env.reference(data["version2"])
     pm.saveFile()
     data["version4"].is_published = True
     pm.newFile(force=True)
 
     # version11 references version4
-    data["maya_env"].open(data["version11"])
-    data["maya_env"].reference(data["version4"])
+    maya_env.open(data["version11"])
+    maya_env.reference(data["version4"])
     pm.saveFile()
     data["version11"].is_published = True
     pm.newFile(force=True)
 
     # version15 references version11 two times
-    data["maya_env"].open(data["version15"])
-    data["maya_env"].reference(data["version11"])
+    maya_env.open(data["version15"])
+    maya_env.reference(data["version11"])
     pm.saveFile()
 
     DBSession.commit()
@@ -1216,23 +1123,23 @@ def test_check_referenced_versions_is_working_properly_case_2(create_test_data):
     visited_versions = []
     for v in data["version15"].walk_inputs():
         visited_versions.append(v)
-    expected_visited_versions = \
-        [data["version15"], data["version11"], data["version4"], data["version2"]]
+    expected_visited_versions = [
+        data["version15"],
+        data["version11"],
+        data["version4"],
+        data["version2"],
+    ]
 
-    data["assertEqual"](
-        expected_visited_versions,
-        visited_versions
-    )
+    assert expected_visited_versions == visited_versions
 
     expected_reference_resolution = {
-        'root': [data["version11"]],
-        'leave': [],
-        'update': [data["version2"]],
-        'create': [data["version4"], data["version11"]]
+        "root": [data["version11"]],
+        "leave": [],
+        "update": [data["version2"]],
+        "create": [data["version4"], data["version11"]],
     }
 
-    result = \
-        data["maya_env"].check_referenced_versions()
+    result = maya_env.check_referenced_versions()
 
     # print('data["version15"].id: %s' % data["version15"].id)
     # print('data["version11"].id: %s' % data["version11"].id)
@@ -1240,27 +1147,18 @@ def test_check_referenced_versions_is_working_properly_case_2(create_test_data):
     # print('data["version2"].id : %s' % data["version2"].id)
     #
     # print(expected_reference_resolution)
-    # print('--------------------------')
+    # print('--------------------------')s
     # print(result)
 
-    data["assertEqual"](
-        sorted(expected_reference_resolution['root'],
-               key=lambda x: x.name),
-        sorted(result['root'], key=lambda x: x.name)
-    )
-    data["assertEqual"](
-        sorted(expected_reference_resolution['leave'],
-               key=lambda x: x.name),
-        sorted(result['leave'], key=lambda x: x.name)
-    )
-    data["assertEqual"](
-        sorted(expected_reference_resolution['update'],
-               key=lambda x: x.name),
-        sorted(result['update'], key=lambda x: x.name)
-    )
-    data["assertEqual"](
-        sorted(expected_reference_resolution['create'],
-               key=lambda x: x.name),
-        sorted(result['create'], key=lambda x: x.name)
-    )
-
+    assert sorted(
+        expected_reference_resolution["root"], key=lambda x: x.name
+    ) == sorted(result["root"], key=lambda x: x.name)
+    assert sorted(
+        expected_reference_resolution["leave"], key=lambda x: x.name
+    ) == sorted(result["leave"], key=lambda x: x.name)
+    assert sorted(
+        expected_reference_resolution["update"], key=lambda x: x.name
+    ) == sorted(result["update"], key=lambda x: x.name)
+    assert sorted(
+        expected_reference_resolution["create"], key=lambda x: x.name
+    ) == sorted(result["create"], key=lambda x: x.name)

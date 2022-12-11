@@ -11,14 +11,9 @@ from stalker import User, LocalSession
 
 
 @pytest.fixture(scope="function")
-def setup_toolbox_representation_tools_tests(create_pymel):
+def setup_toolbox_representation_tools_tests(create_pymel, store_local_session):
     """Set up env for toolbox representation tools tests."""
     pm = create_pymel
-    # login
-    u = User.query.first()
-    local_session = LocalSession()
-    local_session.store_user(u)
-    local_session.save()
 
     # first path pm.confirmDialog
     orig_confirm_dialog = pm.confirmDialog
@@ -30,26 +25,8 @@ def setup_toolbox_representation_tools_tests(create_pymel):
 
     yield
 
-    local_session = LocalSession()
-    local_session.delete()
-
     # restore confirm dialog
     pm.confirmDialog = orig_confirm_dialog
-
-
-@pytest.fixture(scope="function")
-def setup_representation_generator_tests():
-    """set up tests Representation generator."""
-    # login
-    u = User.query.first()
-    local_session = LocalSession()
-    local_session.store_user(u)
-    local_session.save()
-
-    yield
-
-    local_session = LocalSession()
-    local_session.delete()
 
 
 def test_generating_all_representations_through_environment_layout_scene(
@@ -150,9 +127,9 @@ def test_generating_all_representations_through_environment_layout_scene(
 
 def test_generate_gpu_will_end_up_with_an_empty_scene(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_gpu will end up with an empty scene"""
     data = create_test_data
@@ -166,9 +143,9 @@ def test_generate_gpu_will_end_up_with_an_empty_scene(
 
 def test_generate_gpu_will_overwrite_previous_gpu_version(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_gpu will overwrite to the previous GPU version"""
     data = create_test_data
@@ -192,9 +169,9 @@ def test_generate_gpu_will_overwrite_previous_gpu_version(
 
 def test_generate_gpu_scene_with_references_before_generating_gpu_of_references_first(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if a RuntimeError will be raised when trying to generate
     the GPU Repr of a scene before generating the GPU of all the
@@ -215,9 +192,9 @@ def test_generate_gpu_scene_with_references_before_generating_gpu_of_references_
 
 def test_generate_gpu_of_a_simple_model(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_gpu will generate bounding boxes for each
     object with the same name in a model scene
@@ -243,9 +220,9 @@ def test_generate_gpu_of_a_simple_model(
 
 def test_generate_gpu_of_a_simple_look_dev(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_gpu will just replace the references for a
     simple look dev scene
@@ -272,9 +249,9 @@ def test_generate_gpu_of_a_simple_look_dev(
 
 def test_generate_gpu_of_a_layout_of_a_building(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_gpu of the layout scene of a building is
     working properly
@@ -305,9 +282,9 @@ def test_generate_gpu_of_a_layout_of_a_building(
 
 def test_generate_gpu_of_a_look_dev_of_a_building(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_gpu of the look dev scene of a building is
     working properly
@@ -342,9 +319,9 @@ def test_generate_gpu_of_a_look_dev_of_a_building(
 
 def test_generate_gpu_of_a_layout_of_an_environment(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_gpu of the layout scene of an environment is
     working properly
@@ -405,9 +382,9 @@ def test_generate_gpu_of_a_layout_of_an_environment(
 
 def test_generate_gpu_of_a_look_dev_of_an_environment(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_gpu of the look dev scene of an environment is
     working properly
@@ -464,9 +441,9 @@ def test_generate_gpu_of_a_look_dev_of_an_environment(
 
 def test_generate_gpu_of_a_vegetation_scene(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_gpu of the vegetation scene is working properly"""
     data = create_test_data
@@ -507,9 +484,9 @@ def test_generate_gpu_of_a_vegetation_scene(
 
 def test_generate_ass_will_end_up_with_an_empty_scene(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_ass will end up with a new empty scene"""
     data = create_test_data
@@ -523,9 +500,9 @@ def test_generate_ass_will_end_up_with_an_empty_scene(
 
 def test_generate_ass_will_overwrite_previous_ass_version(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_ass will overwrite to the previous ASS version"""
     data = create_test_data
@@ -549,9 +526,9 @@ def test_generate_ass_will_overwrite_previous_ass_version(
 
 def test_generate_ass_repr_for_building_yapi_look_dev_without_creating_model_first(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if a RuntimeError will be raised when trying to generate the ASS Repr for
     a Look Dev task before generating ASS for the model first
@@ -570,9 +547,9 @@ def test_generate_ass_repr_for_building_yapi_look_dev_without_creating_model_fir
 
 def test_generate_ass_repr_for_building_layout_without_creating_building_look_dev_first(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if a RuntimeError will be raised when trying to generate the ASS Repr for
     a Layout task before generating ASS for the Look Dev first
@@ -591,9 +568,9 @@ def test_generate_ass_repr_for_building_layout_without_creating_building_look_de
 
 def test_generate_ass_repr_for_building_yapi_model(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if creating ASS repr for a model is working properly"""
     data = create_test_data
@@ -627,9 +604,9 @@ def test_generate_ass_repr_for_building_yapi_model(
 
 def test_generate_ass_repr_for_building_yapi_look_dev_is_working_properly(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if ASS repr generation is working properly for a look dev
     version
@@ -675,9 +652,9 @@ def test_generate_ass_repr_for_building_yapi_look_dev_is_working_properly(
 
 def test_generate_ass_repr_for_building_layout_is_working_properly(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if a generating the ASS Repr for a Layout task is working
     properly
@@ -711,9 +688,9 @@ def test_generate_ass_repr_for_building_layout_is_working_properly(
 
 def test_generate_ass_repr_for_building_look_dev_is_working_properly(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_ass() will properly generate an ASS repr for the
     look dev of a building
@@ -750,9 +727,9 @@ def test_generate_ass_repr_for_building_look_dev_is_working_properly(
 
 def test_generate_ass_repr_for_vegetation_scene(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generating ass of a vegetation scene is working properly"""
     data = create_test_data
@@ -788,9 +765,9 @@ def test_generate_ass_repr_for_vegetation_scene(
 
 def test_generate_ass_of_a_layout_of_an_environment(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_ass() will properly generate an ASS repr for the
     environment layout
@@ -856,9 +833,9 @@ def test_generate_ass_of_a_layout_of_an_environment(
 
 def test_generate_all_will_end_up_with_an_empty_scene(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_all will end up with an empty scene"""
     data = create_test_data
@@ -872,9 +849,9 @@ def test_generate_all_will_end_up_with_an_empty_scene(
 
 def test_generate_all_scene_with_references_before_generating_all_of_references_first(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if a RuntimeError will be raised when trying to generate
     the all representations of a scene before generating all the
@@ -895,9 +872,9 @@ def test_generate_all_scene_with_references_before_generating_all_of_references_
 
 def test_generate_all_of_a_simple_model(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_all will generate all representations of a model
     scene
@@ -918,9 +895,9 @@ def test_generate_all_of_a_simple_model(
 
 def test_generate_all_of_a_simple_look_dev(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_all generate all the representations of a
     simple look dev scene
@@ -946,9 +923,9 @@ def test_generate_all_of_a_simple_look_dev(
 
 def test_generate_all_of_a_layout_of_a_building(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_all the layout scene of a building is working
     properly
@@ -978,9 +955,9 @@ def test_generate_all_of_a_layout_of_a_building(
 
 def test_generate_all_of_a_look_dev_of_a_building(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_all the look dev scene of a building is
     working properly
@@ -1014,9 +991,9 @@ def test_generate_all_of_a_look_dev_of_a_building(
 
 def test_generate_all_of_a_layout_of_an_environment(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_all the layout scene of an environment is
     working properly
@@ -1077,9 +1054,9 @@ def test_generate_all_of_a_layout_of_an_environment(
 
 def test_generate_all_of_a_look_dev_of_an_environment(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_all the look dev scene of an environment is
     working properly
@@ -1135,9 +1112,9 @@ def test_generate_all_of_a_look_dev_of_an_environment(
 
 def test_generate_all_of_a_vegetation_scene(
     create_test_data,
+    store_local_session,
     create_pymel,
     create_maya_env,
-    setup_representation_generator_tests,
 ):
     """testing if generate_all the vegetation scene is working properly"""
     data = create_test_data

@@ -1524,19 +1524,16 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
 
     # open version2 and create a locator
     maya_env.open(data["version2"])  # model
-    cube = pm.polyCube(name="test_cube")
-    cube[0].t.set(0, 0, 0)
+    cube = pm.polyCube(name="test_cube")[0]
+    cube.t.set(0, 0, 0)
     tra_group = pm.nt.Transform(name="asset1")
-    pm.parent(cube[0], tra_group)
+    pm.parent(cube, tra_group)
+    pm.runtime.DeleteHistory()
     pm.saveFile()
 
     # asset2_lookdev_take1_version1 references version2
     maya_env.open(data["asset2_lookdev_take1_version1"])  # look dev
-    maya_env.reference(data["version2"])
-    # change the namespace to old one
-    refs = pm.listReferences()
-    ref = refs[0]
-    isinstance(ref, pm.system.FileReference)
+    ref = maya_env.reference(data["version2"])
     ref.namespace = data["version2"].filename.replace(".", "_")
     # assign a new material
     cube = pm.ls("test_cube", type=pm.nt.Transform, r=1)[0]
@@ -1547,21 +1544,21 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
     # version11 references asset2_lookdev_take1_version1
     pm.newFile(force=True)
     maya_env.open(data["version11"])  # layout
-    maya_env.reference(data["asset2_lookdev_take1_version1"])
+    ref = maya_env.reference(data["asset2_lookdev_take1_version1"])
     # use version2 namespace in asset2_lookdev_take1_version1
-    refs = pm.listReferences()
-    refs[0].namespace = data["version2"].filename.replace(".", "_")
+    ref.namespace = data["version2"].filename.replace(".", "_")
     # now do the edits here
     # we need to do some edits
     # there should be only one locator in the current scene
-    cube = pm.ls("test_cube", type=pm.nt.Transform, r=1)[0]
+    from anima.dcc.mayaEnv import auxiliary
+    ref_root_nodes = auxiliary.get_root_nodes(ref)
     # parent it to something else
-    pm.group(cube.getParent(), name="test_group")
-    cube.t.set(1, 0, 0)
+    pm.group(ref_root_nodes, name="test_group")
+    ref_root_nodes[0].t.set(1, 0, 0)
     pm.saveFile()
 
     # we should have created an edit
-    version2_ref_node = pm.listReferences(refs[0])[0]
+    version2_ref_node = pm.listReferences(ref)[0]
     edits = pm.referenceQuery(version2_ref_node, es=1)
     assert len(edits) > 0
 
@@ -1633,10 +1630,8 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_correc
 
     # asset2_lookdev_take1_version1 references version2
     maya_env.open(data["asset2_lookdev_take1_version1"])  # look dev
-    maya_env.reference(data["version2"])
+    ref = maya_env.reference(data["version2"])
     # change the namespace to old one
-    refs = pm.listReferences()
-    ref = refs[0]
     isinstance(ref, pm.system.FileReference)
     ref.namespace = data["version2"].filename.replace(".", "_")
     # assign a new material

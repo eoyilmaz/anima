@@ -88,7 +88,7 @@ class ShotSplitterTestCase(unittest.TestCase):
         )
 
         self.structure = Structure(
-            name='Project Struture',
+            name='Project Structure',
             templates=[self.task_template, self.asset_template,
                        self.shot_template, self.sequence_template]
         )
@@ -228,8 +228,3 @@ class ShotSplitterTestCase(unittest.TestCase):
         self.maya_env.save_as(v)
         pm.newFile(force=1)
         print(v.absolute_full_path)
-
-    def test_test_setup(self):
-        """to test test setup
-        """
-        pass

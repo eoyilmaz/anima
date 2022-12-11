@@ -79,11 +79,11 @@ class VersionUpdaterTester(unittest.TestCase):
         DBSession.add(self.user1)
         DBSession.commit()
 
-        # login as self.user1
-        from stalker import LocalSession
-        local_session = LocalSession()
-        local_session.store_user(self.user1)
-        local_session.save()
+        # # login as self.user1
+        # from stalker import LocalSession
+        # local_session = LocalSession()
+        # local_session.store_user(self.user1)
+        # local_session.save()
 
         self.repo1 = Repository(
             name='Test Project Repository',

@@ -957,6 +957,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
         pm.nt.Transform(name='kksEnv_PFXbrush___acacia1MeshGroup')
     acacia_main = pm.polyCube(name='kksEnv_PFXbrush___acacia1Main')[0]
     acacia_leaf = pm.polyCube(name='kksEnv_PFXbrush___acacia1Leaf')[0]
+    pm.runtime.DeleteHistory()
 
     pm.parent(acacia_mesh_group, acacia_polygons)
     pm.parent(acacia_main, acacia_mesh_group)
@@ -974,6 +975,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
         pm.nt.Transform(name='kksEnv_PFXbrush___clover1MeshGroup')
     clover_main = pm.polyCube(name='kksEnv_PFXbrush___clover1Main')[0]
     clover_leaf = pm.polyCube(name='kksEnv_PFXbrush___clover1Leaf')[0]
+    pm.runtime.DeleteHistory()
 
     pm.parent(clover_mesh_group, clover_polygons)
     pm.parent(clover_main, clover_mesh_group)
@@ -992,6 +994,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     root_node = pm.nt.Transform(name='prop1')
     kulp = pm.polyCube(name='kulp')
     pm.parent(kulp[0], root_node)
+    pm.runtime.DeleteHistory()
     maya_env.save_as(data["version109"])
     maya_env.save_as(data["version110"])
     maya_env.save_as(data["version111"])
