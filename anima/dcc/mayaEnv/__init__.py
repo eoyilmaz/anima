@@ -1416,6 +1416,8 @@ workspace -fr "translatorData" "Outputs/data";
             fps_string = pm.mel.internalTimeUnitStringToDisplayFPSString(
                 time_unit
             ).replace(" ", "")
+            if not fps_string:
+                continue
             fps_value = float(regex.findall(fps_string)[0])
             time_to_fps[time_unit] = fps_value
 
