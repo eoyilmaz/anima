@@ -13,3 +13,4 @@ Thumbs.db
 *.md5
 /anima/env/blender/addons/cgru_tools/
 .vscode/*
+/tests/dcc/maya/test_data/texture.rstexbin
