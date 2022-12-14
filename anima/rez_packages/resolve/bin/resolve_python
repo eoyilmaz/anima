@@ -1,3 +1,3 @@
-#!/usr/bin/sh
+#!{shebang.sh}
 
-python$REZ_PYTHON_MAJOR_VERSION.$REZ_PYTHON_MINOR_VERSION
+python
