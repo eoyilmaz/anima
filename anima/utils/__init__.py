@@ -136,21 +136,19 @@ def open_browser_in_location(path):
         IOError: When the given path doesn't exist
     """
     command = []
-    platform_info = platform.platform()
-
     path = os.path.normpath(os.path.expandvars(path))
 
     if not os.path.exists(path):
         path = os.path.dirname(path)
 
-    if platform_info.startswith("Linux"):
+    if sys.platform.startswith("linux"):
         command = "xdg-open {}".format(path)
-    elif platform_info.startswith("Windows"):
+    elif sys.platform.startswith("win"):
         if os.path.isdir(path):
             command = "explorer {}".format(path.replace("/", "\\"))
         elif os.path.isfile(path):
             command = "explorer /select,{}".format(path.replace("/", "\\"))
-    elif platform_info.startswith("Darwin"):
+    elif sys.platform == "darwin":
         # TODO: finder can not open files for now, fix it later
         if not os.path.isdir(path):
             path = os.path.dirname(path)
