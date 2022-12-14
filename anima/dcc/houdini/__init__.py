@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import os
-import hou
+
 from anima.dcc.base import DCCBase
+from anima import logger
+
+import hou
 
 
 class Houdini(DCCBase):
@@ -18,18 +21,7 @@ class Houdini(DCCBase):
 
     def __init__(self, name="", version=None):
         super(Houdini, self).__init__(name, version)
-
-        from stalker import Repository
-
-        # re initialize repo vars
-        for repo in Repository.query.all():
-            env_var_name = repo.env_var
-            value = repo.path
-            self.set_environment_variable(env_var_name, value)
-            # TODO: remove the following line
-            # export old env var
-            self.set_environment_variable("REPO%s" % repo.id, value)
-
+        self.set_environment_variables()
         self.name = "%s%s.%s" % (
             self.name,
             hou.applicationVersion()[0],
@@ -139,9 +131,12 @@ class Houdini(DCCBase):
         if hou.hipFile.hasUnsavedChanges() and not force:
             raise RuntimeError
 
-        hou.hipFile.load(
-            file_name=str(version.absolute_full_path), suppress_save_prompt=True
-        )
+        try:
+            hou.hipFile.load(
+                file_name=str(version.absolute_full_path), suppress_save_prompt=True
+            )
+        except hou.LoadWarning:
+            pass
 
         # set the environment variables
         self.set_environment_variables(version)
@@ -182,16 +177,26 @@ class Houdini(DCCBase):
 
         return version
 
-    def set_environment_variables(self, version):
-        """sets the environment variables according to the given Version
-        instance
+    def set_environment_variables(self, version=None):
+        """Set the environment variables according to the given Version instance.
+
+        Args:
+            version (Union[None, stalker.Version]): A stalker.Version instance or None.
+                When the version is None the repository environment variables are still
+                set properly.
         """
+        from stalker import Repository
+
+        # re initialize repo vars
+        for repo in Repository.query.all():
+            env_var_name = repo.env_var
+            value = repo.path
+            self.set_environment_variable(env_var_name, value)
+
         if not version:
             return
 
         # set the $JOB variable to the parent of version.full_path
-        from anima import logger
-
         logger.debug("version: %s" % version)
         logger.debug("version.path: %s" % version.absolute_path)
         logger.debug("version.filename: %s" % version.filename)
@@ -218,11 +223,13 @@ class Houdini(DCCBase):
 
     @classmethod
     def set_environment_variable(cls, var, value):
-        """sets environment var
+        """Set environment variable
 
-        :param str var: The name of the var
-        :param value: The value of the variable
+        Args:
+            var (str): The name of the var.
+            value (str): The value of the variable
         """
+        logger.debug("setting {}={}".format(var, value))
         os.environ[var] = value
         try:
             hou.allowEnvironmentVariableToOverwriteVariable(var, True)
