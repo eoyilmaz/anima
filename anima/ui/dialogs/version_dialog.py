@@ -438,7 +438,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.thumbnail_graphics_view.setInteractive(False)
         self.thumbnail_graphics_view.setRenderHints(
             QtGui.QPainter.Antialiasing
-            | QtGui.QPainter.HighQualityAntialiasing
+            # | QtGui.QPainter.HighQualityAntialiasing
             | QtGui.QPainter.SmoothPixmapTransform
             | QtGui.QPainter.TextAntialiasing
         )
