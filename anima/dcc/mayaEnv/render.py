@@ -3227,4 +3227,5 @@ class LightingSceneBuilder(object):
                 if input_version:
                     ref_node = m.reference(input_version)
                     # parent it to the LAYOUTS group
-                    pm.parent(ref_node.nodes()[0], layouts_group)
+                    for root_node in auxiliary.get_root_nodes(reference_node=ref_node):
+                        pm.parent(root_node, layouts_group)
