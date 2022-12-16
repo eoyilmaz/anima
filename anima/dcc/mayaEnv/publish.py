@@ -1840,7 +1840,6 @@ def check_root_node_name(progress_controller=None):
 
     m_env = mayaEnv.Maya()
     v = m_env.get_current_version()
-    take_name = v.take_name
     t = v.task
 
     from stalker import Asset
@@ -1848,9 +1847,6 @@ def check_root_node_name(progress_controller=None):
     asset_name = None
     if isinstance(t.parent, Asset):
         asset_name = t.parent.name
-        if take_name != "Main":
-            # also include the take_name
-            asset_name = "{}_{}".format(asset_name, take_name)
     progress_controller.increment()
 
     if not root_nodes[0].isReferenced():
@@ -1897,7 +1893,6 @@ def check_root_node_name___fix():
     m_env = mayaEnv.Maya()
     v = m_env.get_current_version()
     t = v.task
-    take_name = v.take_name
     asset_name = None
     if isinstance(t.parent, Asset):
         asset_name = t.parent.name
@@ -1907,9 +1902,6 @@ def check_root_node_name___fix():
 
     if asset_name is not None:
         correct_node_name = asset_name
-        if take_name != "Main":
-            # also include the take_name
-            correct_node_name = "{}_{}".format(asset_name, take_name)
         correct_node_name = correct_node_name.replace(" ", "_")
         if correct_node_name[0].isdigit():
             correct_node_name = "_%s" % correct_node_name
