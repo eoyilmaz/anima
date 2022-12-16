@@ -364,6 +364,9 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     data["ext1"] = Asset(
         name="Ext1", code="Ext1", type=data["exterior_type"], parent=data["exteriors"]
     )
+    data["ext2"] = Asset(
+        name="Ext2", code="Ext2", type=data["exterior_type"], parent=data["exteriors"]
+    )
 
     # Building 1
     data["building1"] = Asset(
@@ -375,17 +378,6 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
 
     data["building1_layout"] = Task(
         name="Layout", type=data["layout_type"], parent=data["building1"]
-    )
-
-    data["building1_layout_proxy"] = Task(
-        name="Proxy", type=data["layout_type"], parent=data["building1_layout"]
-    )
-
-    data["building1_layout_hires"] = Task(
-        name="Hires",
-        type=data["layout_type"],
-        parent=data["building1_layout"],
-        depends=[data["building1_layout_proxy"]],
     )
 
     data["building1_look_dev"] = Task(
@@ -400,24 +392,14 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
         name="Model", type=data["model_type"], parent=data["building1_yapi"]
     )
 
-    data["building1_yapi_model_proxy"] = Task(
-        name="Proxy", type=data["model_type"], parent=data["building1_yapi_model"]
-    )
-
-    data["building1_yapi_model_hires"] = Task(
-        name="Hires", type=data["model_type"], parent=data["building1_yapi_model"]
-    )
-
     data["building1_yapi_look_dev"] = Task(
         name="LookDev",
         type=data["look_development_type"],
         parent=data["building1_yapi"],
-        depends=[data["building1_yapi_model_hires"]],
+        depends=[data["building1_yapi_model"]],
     )
 
-    data["building1_layout_proxy"].depends.append(data["building1_yapi_model_proxy"])
-
-    data["building1_layout_hires"].depends.append(data["building1_yapi_model_hires"])
+    data["building1_layout"].depends.append(data["building1_yapi_model"])
 
     # Building 2
     data["building2"] = Asset(
@@ -429,17 +411,6 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
 
     data["building2_layout"] = Task(
         name="Layout", type=data["layout_type"], parent=data["building2"]
-    )
-
-    data["building2_layout_proxy"] = Task(
-        name="Proxy", type=data["layout_type"], parent=data["building2_layout"]
-    )
-
-    data["building2_layout_hires"] = Task(
-        name="Hires",
-        type=data["layout_type"],
-        parent=data["building2_layout"],
-        depends=[data["building2_layout_proxy"]],
     )
 
     data["building2_look_dev"] = Task(
@@ -454,46 +425,41 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
         name="Model", type=data["model_type"], parent=data["building2_yapi"]
     )
 
-    data["building2_yapi_model_proxy"] = Task(
-        name="Proxy", type=data["model_type"], parent=data["building2_yapi_model"]
-    )
-
-    data["building2_yapi_model_hires"] = Task(
-        name="Hires", type=data["model_type"], parent=data["building2_yapi_model"]
-    )
-
     data["building2_yapi_look_dev"] = Task(
         name="LookDev",
         type=data["look_development_type"],
         parent=data["building2_yapi"],
-        depends=[data["building2_yapi_model_hires"]],
+        depends=[data["building2_yapi_model"]],
     )
 
-    data["building2_layout_proxy"].depends.append(data["building2_yapi_model_proxy"])
-
-    data["building2_layout_hires"].depends.append(data["building2_yapi_model_hires"])
+    data["building2_layout"].depends.append(data["building2_yapi_model"])
 
     # continue to ext1 layout
     data["ext1_layout"] = Task(
         name="Layout", type=data["layout_type"], parent=data["ext1"]
     )
-
-    data["ext1_layout_proxy"] = Task(
-        name="Proxy", type=data["layout_type"], parent=data["ext1_layout"]
-    )
-
-    data["ext1_layout_hires"] = Task(
-        name="Hires",
-        type=data["layout_type"],
-        parent=data["ext1_layout"],
-        depends=[data["ext1_layout_proxy"]],
-    )
-
     data["ext1_look_dev"] = Task(
         name="LookDev",
         type=data["look_development_type"],
         parent=data["ext1"],
         depends=[data["ext1_layout"]],
+    )
+    data["ext2_model"] = Task(
+        name="Model",
+        type=data["model_type"],
+        parent=data["ext2"],
+    )
+    data["ext2_look_dev"] = Task(
+        name="LookDev",
+        type=data["look_development_type"],
+        parent=data["ext2"],
+        depends=[data["ext2_model"]],
+    )
+    data["ext2_layout"] = Task(
+        name="Layout",
+        type=data["layout_type"],
+        parent=data["ext2"],
+        depends=[data["ext2_look_dev"]],
     )
 
     data["ext1_props"] = Task(name="Props", parent=data["ext1"])
@@ -504,17 +470,6 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
 
     data["prop1_model"] = Task(
         name="Model", type=data["model_type"], parent=data["prop1"]
-    )
-
-    data["prop1_model_proxy"] = Task(
-        name="Proxy", type=data["model_type"], parent=data["prop1_model"]
-    )
-
-    data["prop1_model_hires"] = Task(
-        name="Hires",
-        type=data["model_type"],
-        parent=data["prop1_model"],
-        depends=[data["prop1_model_proxy"]],
     )
 
     data["prop1_look_dev"] = Task(
@@ -575,37 +530,29 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
             data["environments"],
             data["exteriors"],
             data["ext1"],
+            data["ext2"],
             data["building1"],
             data["building1_layout"],
-            data["building1_layout_proxy"],
-            data["building1_layout_hires"],
             data["building1_look_dev"],
             data["building1_props"],
             data["building1_yapi"],
             data["building1_yapi_model"],
-            data["building1_yapi_model_proxy"],
-            data["building1_yapi_model_hires"],
             data["building1_yapi_look_dev"],
             data["building2"],
             data["building2_layout"],
-            data["building2_layout_proxy"],
-            data["building2_layout_hires"],
             data["building2_look_dev"],
             data["building2_props"],
             data["building2_yapi"],
             data["building2_yapi_model"],
-            data["building2_yapi_model_proxy"],
-            data["building2_yapi_model_hires"],
             data["building2_yapi_look_dev"],
             data["ext1_layout"],
-            data["ext1_layout_proxy"],
-            data["ext1_layout_hires"],
             data["ext1_look_dev"],
             data["ext1_props"],
+            data["ext2_model"],
+            data["ext2_look_dev"],
+            data["ext2_layout"],
             data["prop1"],
             data["prop1_model"],
-            data["prop1_model_proxy"],
-            data["prop1_model_hires"],
             data["prop1_look_dev"],
             data["ext1_vegetation"],
         ]
@@ -727,90 +674,60 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     data["version60"] = create_version(data["char1_rig"], "Main")
 
     # Building1
-    # Building1 - Layout - Proxy
-    data["version61"] = create_version(data["building1_layout_proxy"], "Main")
-    data["version62"] = create_version(data["building1_layout_proxy"], "Main")
-    data["version63"] = create_version(data["building1_layout_proxy"], "Main")
-
-    # Building1 - Layout - Hires
-    data["version64"] = create_version(data["building1_layout_hires"], "Main")
-    data["version65"] = create_version(data["building1_layout_hires"], "Main")
-    data["version66"] = create_version(data["building1_layout_hires"], "Main")
+    # Building1 - Layout
+    data["version64"] = create_version(data["building1_layout"], "Main")
+    data["version65"] = create_version(data["building1_layout"], "Main")
+    data["version66"] = create_version(data["building1_layout"], "Main")
 
     # Building1 - LookDev
     data["version67"] = create_version(data["building1_look_dev"], "Main")
     data["version68"] = create_version(data["building1_look_dev"], "Main")
     data["version69"] = create_version(data["building1_look_dev"], "Main")
 
-    # Building1 | Props | Yapi | Model | Proxy
-    data["version70"] = create_version(data["building1_yapi_model_proxy"], "Main")
-    data["version71"] = create_version(data["building1_yapi_model_proxy"], "Main")
-    data["version72"] = create_version(data["building1_yapi_model_proxy"], "Main")
-
-    # Building1 | Props | Yapi | Model | Hires
-    data["version73"] = create_version(data["building1_yapi_model_hires"], "Main")
-    data["version74"] = create_version(data["building1_yapi_model_hires"], "Main")
-    data["version75"] = create_version(data["building1_yapi_model_hires"], "Main")
+    # Building1 | Props | Yapi | Model
+    data["version73"] = create_version(data["building1_yapi_model"], "Main")
+    data["version74"] = create_version(data["building1_yapi_model"], "Main")
+    data["version75"] = create_version(data["building1_yapi_model"], "Main")
 
     # Building1 | Props | Yapi | LookDev
     data["version76"] = create_version(data["building1_yapi_look_dev"], "Main")
     data["version77"] = create_version(data["building1_yapi_look_dev"], "Main")
     data["version78"] = create_version(data["building1_yapi_look_dev"], "Main")
 
-    # Building2 | Layout | Proxy
-    data["version79"] = create_version(data["building2_layout_proxy"], "Main")
-    data["version80"] = create_version(data["building2_layout_proxy"], "Main")
-    data["version81"] = create_version(data["building2_layout_proxy"], "Main")
-
-    # Building2 | Layout | Hires
-    data["version82"] = create_version(data["building2_layout_hires"], "Main")
-    data["version83"] = create_version(data["building2_layout_hires"], "Main")
-    data["version84"] = create_version(data["building2_layout_hires"], "Main")
+    # Building2 | Layout
+    data["version82"] = create_version(data["building2_layout"], "Main")
+    data["version83"] = create_version(data["building2_layout"], "Main")
+    data["version84"] = create_version(data["building2_layout"], "Main")
 
     # Building2 | LookDev
     data["version85"] = create_version(data["building2_look_dev"], "Main")
     data["version86"] = create_version(data["building2_look_dev"], "Main")
     data["version87"] = create_version(data["building2_look_dev"], "Main")
 
-    # Building2 | Props | Yapi | Model | Proxy
-    data["version88"] = create_version(data["building2_yapi_model_proxy"], "Main")
-    data["version89"] = create_version(data["building2_yapi_model_proxy"], "Main")
-    data["version90"] = create_version(data["building2_yapi_model_proxy"], "Main")
-
-    # Building2 | Props | Yapi | Model | Hires
-    data["version91"] = create_version(data["building2_yapi_model_hires"], "Main")
-    data["version92"] = create_version(data["building2_yapi_model_hires"], "Main")
-    data["version93"] = create_version(data["building2_yapi_model_hires"], "Main")
+    # Building2 | Props | Yapi | Model
+    data["version91"] = create_version(data["building2_yapi_model"], "Main")
+    data["version92"] = create_version(data["building2_yapi_model"], "Main")
+    data["version93"] = create_version(data["building2_yapi_model"], "Main")
 
     # Building2 | Props | Yapi | LookDev
     data["version94"] = create_version(data["building2_yapi_look_dev"], "Main")
     data["version95"] = create_version(data["building2_yapi_look_dev"], "Main")
     data["version96"] = create_version(data["building2_yapi_look_dev"], "Main")
 
-    # Ext1 | Layout | Proxy
-    data["version97"] = create_version(data["ext1_layout_proxy"], "Main")
-    data["version98"] = create_version(data["ext1_layout_proxy"], "Main")
-    data["version99"] = create_version(data["ext1_layout_proxy"], "Main")
-
-    # Ext1 | Layout | Hires
-    data["version100"] = create_version(data["ext1_layout_hires"], "Main")
-    data["version101"] = create_version(data["ext1_layout_hires"], "Main")
-    data["version102"] = create_version(data["ext1_layout_hires"], "Main")
+    # Ext1 | Layout
+    data["version100"] = create_version(data["ext1_layout"], "Main")
+    data["version101"] = create_version(data["ext1_layout"], "Main")
+    data["version102"] = create_version(data["ext1_layout"], "Main")
 
     # Ext1 | LookDev
     data["version103"] = create_version(data["ext1_look_dev"], "Main")
     data["version104"] = create_version(data["ext1_look_dev"], "Main")
     data["version105"] = create_version(data["ext1_look_dev"], "Main")
 
-    # Ext1 | Props | Prop1 | Model | Proxy
-    data["version106"] = create_version(data["prop1_model_proxy"], "Main")
-    data["version107"] = create_version(data["prop1_model_proxy"], "Main")
-    data["version108"] = create_version(data["prop1_model_proxy"], "Main")
-
-    # Ext1 | Props | Prop1 | Model | Hires
-    data["version109"] = create_version(data["prop1_model_hires"], "Main")
-    data["version110"] = create_version(data["prop1_model_hires"], "Main")
-    data["version111"] = create_version(data["prop1_model_hires"], "Main")
+    # Ext1 | Props | Prop1 | Model
+    data["version109"] = create_version(data["prop1_model"], "Main")
+    data["version110"] = create_version(data["prop1_model"], "Main")
+    data["version111"] = create_version(data["prop1_model"], "Main")
 
     # Ext1 | Props | Prop1 | LookDev
     data["version112"] = create_version(data["prop1_look_dev"], "Main")
@@ -828,9 +745,24 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     data["version120"] = create_version(data["prop1_look_dev"], "Kisa")
 
     # Ext1 | Prop | Model (Kisa)
-    data["version121"] = create_version(data["prop1_model_hires"], "Kisa")
-    data["version122"] = create_version(data["prop1_model_hires"], "Kisa")
-    data["version123"] = create_version(data["prop1_model_hires"], "Kisa")
+    data["version121"] = create_version(data["prop1_model"], "Kisa")
+    data["version122"] = create_version(data["prop1_model"], "Kisa")
+    data["version123"] = create_version(data["prop1_model"], "Kisa")
+
+    # Ext2 | Model
+    data["ext2_model_main_version1"] = create_version(data["ext2_model"], "Main")
+    data["ext2_model_main_version2"] = create_version(data["ext2_model"], "Main")
+    data["ext2_model_main_version3"] = create_version(data["ext2_model"], "Main")
+
+    # Ext2 | LookDev
+    data["ext2_look_dev_main_version1"] = create_version(data["ext2_look_dev"], "Main")
+    data["ext2_look_dev_main_version2"] = create_version(data["ext2_look_dev"], "Main")
+    data["ext2_look_dev_main_version3"] = create_version(data["ext2_look_dev"], "Main")
+
+    # Ext2 | Layout
+    data["ext2_layout_main_version1"] = create_version(data["ext2_layout"], "Main")
+    data["ext2_layout_main_version2"] = create_version(data["ext2_layout"], "Main")
+    data["ext2_layout_main_version3"] = create_version(data["ext2_layout"], "Main")
 
     DBSession.commit()
 
@@ -900,7 +832,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     # ***************************************
     # Prop1
     # ***************************************
-    # Prop1 | Model | Hires | Main take
+    # Prop1 | Model | Main take
     pm.newFile(force=True)
     root_node = pm.nt.Transform(name="prop1")
     kulp = pm.polyCube(name="kulp")
@@ -948,7 +880,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     # ****************************************
     # create Building1
     # ****************************************
-    # hires model
+    # model
     pm.newFile(force=True)
 
     building1_yapi = pm.nt.Transform(name="building1_yapi")
@@ -1022,7 +954,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
 
     # building1 | look dev
     pm.newFile(force=True)
-    # reference building1 | Layout | Hires
+    # reference building1 | Layout
     maya_env.save_as(data["version67"])
     maya_env.reference(data["version66"])
     # just save it
@@ -1033,7 +965,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
 
     # building2 | look dev
     pm.newFile(force=True)
-    # reference building1 | Layout | Hires
+    # reference building1 | Layout
     maya_env.save_as(data["version85"])
     maya_env.reference(data["version84"])
     # just save it
@@ -1045,9 +977,9 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     # prepare the main layout of the exterior
     pm.newFile(force=True)
     maya_env.save_as(data["version100"])
-    # reference Building1 | Layout | Hires
+    # reference Building1 | Layout
     maya_env.reference(data["version66"])
-    # reference Building2 | Layout | Hires
+    # reference Building2 | Layout
     maya_env.reference(data["version84"])
 
     # create the layout root node
@@ -1213,124 +1145,101 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     #    +- Environments (Task)
     #       +- Exteriors (Task)
     #          +- Ext1 (Asset - Exterior)
-    #             +- Building1 (Asset - Building)
-    #             |  +- Layout (Task - Layout)
-    #             |  |  +- Proxy (Task - Layout)
-    #             |  |  |  +- version61
-    #             |  |  |  +- version62
-    #             |  |  |  +- version63
-    #             |  |  |
-    #             |  |  +- Hires (Task - Layout)
-    #             |  |     +- version64
-    #             |  |     +- version65
-    #             |  |     +- version66
-    #             |  |
-    #             |  +- LookDev (Task - Look Development)
-    #             |  |  +- version67
-    #             |  |  +- version68
-    #             |  |  +- version69
-    #             |  |
-    #             |  +- Props (Task)
-    #             |     +- YAPI (Task)
-    #             |        +- Model (Task - Model)
-    #             |        |  +- Proxy (Task - Model)
-    #             |        |  |  +- version70
-    #             |        |  |  +- version71
-    #             |        |  |  +- version72
-    #             |        |  |
-    #             |        |  +- Hires (Task - Model)
-    #             |        |     +- version73
-    #             |        |     +- version74
-    #             |        |     +- version75
-    #             |        |
-    #             |        +- LookDev (Task - Look Development)
-    #             |           +- version76
-    #             |           +- version77
-    #             |           +- version78
-    #             |
-    #             +- Building2 (Asset - Building)
-    #             |  +- Layout (Task - Layout)
-    #             |  |  +- Proxy (Task - Layout)
-    #             |  |  |  +- version79
-    #             |  |  |  +- version80
-    #             |  |  |  +- version81
-    #             |  |  |
-    #             |  |  +- Hires (Task - Layout)
-    #             |  |     +- version82
-    #             |  |     +- version83
-    #             |  |     +- version84
-    #             |  |
-    #             |  +- LookDev (Task - Look Development)
-    #             |  |  +- version85
-    #             |  |  +- version86
-    #             |  |  +- version87
-    #             |  |
-    #             |  +- Props (Task)
-    #             |     +- YAPI (Task)
-    #             |        +- Model (Task - Model)
-    #             |        |  +- Proxy (Task - Model)
-    #             |        |  |  +- version88
-    #             |        |  |  +- version89
-    #             |        |  |  +- version90
-    #             |        |  |
-    #             |        |  +- Hires (Task - Model)
-    #             |        |     +- version91
-    #             |        |     +- version92
-    #             |        |     +- version93
-    #             |        |
-    #             |        +- LookDev (Task - Look Development)
-    #             |           +- version94
-    #             |           +- version95
-    #             |           +- version96
-    #             |
-    #             +- Layout (Task - Layout)
-    #             |  +- Proxy (Task - Layout)
-    #             |  |  +- version97
-    #             |  |  +- version98
-    #             |  |  +- version99
-    #             |  |
-    #             |  +- Hires (Task - Layout)
-    #             |     +- version100
-    #             |     +- version101
-    #             |     +- version102
-    #             |
+    #          |  +- Building1 (Asset - Building)
+    #          |  |  +- Layout (Task - Layout)
+    #          |  |  |  +- version64
+    #          |  |  |  +- version65
+    #          |  |  |  +- version66
+    #          |  |  |
+    #          |  |  +- LookDev (Task - Look Development)
+    #          |  |  |  +- version67
+    #          |  |  |  +- version68
+    #          |  |  |  +- version69
+    #          |  |  |
+    #          |  |  +- Props (Task)
+    #          |  |     +- YAPI (Task)
+    #          |  |        +- Model (Task - Model)
+    #          |  |        |  +- version73
+    #          |  |        |  +- version74
+    #          |  |        |  +- version75
+    #          |  |        |
+    #          |  |        +- LookDev (Task - Look Development)
+    #          |  |           +- version76
+    #          |  |           +- version77
+    #          |  |           +- version78
+    #          |  |
+    #          |  +- Building2 (Asset - Building)
+    #          |  |  +- Layout (Task - Layout)
+    #          |  |  |  +- version82
+    #          |  |  |  +- version83
+    #          |  |  |  +- version84
+    #          |  |  |
+    #          |  |  +- LookDev (Task - Look Development)
+    #          |  |  |  +- version85
+    #          |  |  |  +- version86
+    #          |  |  |  +- version87
+    #          |  |  |
+    #          |  |  +- Props (Task)
+    #          |  |     +- YAPI (Task)
+    #          |  |        +- Model (Task - Model)
+    #          |  |        |  +- version91
+    #          |  |        |  +- version92
+    #          |  |        |  +- version93
+    #          |  |        |
+    #          |  |        +- LookDev (Task - Look Development)
+    #          |  |           +- version94
+    #          |  |           +- version95
+    #          |  |           +- version96
+    #          |  |
+    #          |  +- Layout (Task - Layout)
+    #          |  |  +- version100
+    #          |  |  +- version101
+    #          |  |  +- version102
+    #          |  |
+    #          |  +- LookDev (Task - Look Development)
+    #          |  |  +- version103
+    #          |  |  +- version104
+    #          |  |  +- version105
+    #          |  |
+    #          |  +- Props (Task)
+    #          |  |  +- Prop1 (Asset)
+    #          |  |     +- Model (Task - Model)
+    #          |  |     |  +- **Main** (Take)
+    #          |  |     |  |  +- version109
+    #          |  |     |  |  +- version110
+    #          |  |     |  |  +- version111
+    #          |  |     |  +- **Kisa** (Take)
+    #          |  |     |     +- version121
+    #          |  |     |     +- version122
+    #          |  |     |     +- version123
+    #          |  |     |
+    #          |  |     +- LookDev (Task - Look Development)
+    #          |  |        +- **Main** (Take)
+    #          |  |        |  +- version112
+    #          |  |        |  +- version113
+    #          |  |        |  +- version114
+    #          |  |        +- **Kisa** (Take)
+    #          |  |           +- version118
+    #          |  |           +- version119
+    #          |  |           +- version120
+    #          |  |
+    #          |  +- Vegetation (Task - Vegetation)
+    #          |     +- version115
+    #          |     +- version116
+    #          |     +- version117
+    #          +- Ext2 (Asset - Exterior)
+    #             +- Model (Task - Model)
+    #             |  +- ext2_model_main_version1
+    #             |  +- ext2_model_main_version2
+    #             |  +- ext2_model_main_version3
     #             +- LookDev (Task - Look Development)
-    #             |  +- version103
-    #             |  +- version104
-    #             |  +- version105
-    #             |
-    #             +- Props (Task)
-    #             |  +- Prop1 (Asset)
-    #             |     +- Model (Task - Model)
-    #             |     |  +- Proxy (Task - Model)
-    #             |     |  |  +- version106
-    #             |     |  |  +- version107
-    #             |     |  |  +- version108
-    #             |     |  |
-    #             |     |  +- Hires (Task - Model)
-    #             |     |     +- **Main** (Take)
-    #             |     |     |  +- version109
-    #             |     |     |  +- version110
-    #             |     |     |  +- version111
-    #             |     |     +- **Kisa** (Take)
-    #             |     |        +- version121
-    #             |     |        +- version122
-    #             |     |        +- version123
-    #             |     |
-    #             |     +- LookDev (Task - Look Development)
-    #             |        +- **Main** (Take)
-    #             |        |  +- version112
-    #             |        |  +- version113
-    #             |        |  +- version114
-    #             |        +- **Kisa** (Take)
-    #             |           +- version118
-    #             |           +- version119
-    #             |           +- version120
-    #             |
-    #             +- Vegetation (Task - Vegetation)
-    #                +- version115
-    #                +- version116
-    #                +- version117
+    #             |  +- ext2_look_dev_main_version1
+    #             |  +- ext2_look_dev_main_version2
+    #             |  +- ext2_look_dev_main_version3
+    #             +- Layout (Task - Layout)
+    #                +- ext2_layout_main_version1
+    #                +- ext2_layout_main_version2
+    #                +- ext2_layout_main_version3
 
     # just renew the scene
     pm.newFile(force=True)
