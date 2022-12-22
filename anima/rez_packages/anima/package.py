@@ -109,7 +109,7 @@ def commands():
         # ANIMA MAYA SHELVES PATH
         env.ANIMA_MAYA_SHELVES_PATH = "${ANIMA_DEV_PATH}/maya/shelves"
 
-    elif "houdini" in this.root:
+    if "houdini" in this.root:
         # Houdini
         # PYTHONPATH
         pylibs_base_path = "{}/pylibs/py{}.{}{}".format(
