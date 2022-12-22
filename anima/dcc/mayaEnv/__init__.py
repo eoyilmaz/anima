@@ -895,6 +895,7 @@ workspace -fr "translatorData" "Outputs/data";
             version.absolute_path,
             "Outputs",
             "renders",
+            version.take_name,
             "v{:03d}".format(version.version_number),
         ).replace("\\", "/")
 

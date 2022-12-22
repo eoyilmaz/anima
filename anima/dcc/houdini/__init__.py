@@ -404,10 +404,11 @@ class Houdini(DCCBase):
 
         # HIPNAME is not working well with Afanasy
         # So use the scene base name again
-        # output_filename = '$HIP/Outputs/renders/$OS/`$HIPNAME`_$OS.$F4.exr'
+        # output_filename = '$HIP/Outputs/renders/Main/$OS/`$HIPNAME`_$OS.$F4.exr'
         import os
 
-        output_filename = "$HIP/Outputs/renders/v{:03d}/$OS/{}_$OS.$F4.exr".format(
+        output_filename = "$HIP/Outputs/renders/{}/v{:03d}/$OS/{}_$OS.$F4.exr".format(
+            version.take_name,
             version.version_number,
             os.path.splitext(version.filename)[0]
         )

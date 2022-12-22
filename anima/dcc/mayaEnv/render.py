@@ -3213,7 +3213,7 @@ class LightingSceneBuilder(object):
         layout_type = Type.query.filter(Type.name == "Layout").first()
         for input_version in animation_version.inputs:
             if input_version.task.type and input_version.task.type == layout_type:
-                # reference this version here too
+                # reference this version here too,
                 # use the RSProxy repr
                 rs_proxy_take_name = "{}@RS".format(
                     input_version.take_name.split("@")[0]
