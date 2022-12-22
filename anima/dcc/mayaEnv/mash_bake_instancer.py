@@ -19,24 +19,35 @@ import maya.OpenMaya as om
 import gc
 
 
-def mash_bake_instancer():
-    """Bake MASH related instancer nodes."""
-    # if animation is true, the playback range will be baked, otherwise just this frame
-    # will be.
+def mash_bake_instancer(
+    animation_flag=False,
+    translate_flag=True,
+    rotation_flag=True,
+    scale_flag=True,
+    visibility_flag=True,
+    bake_to_instances_flag=True,
+    express_baking=True,
+    flush_undo=True,
+    garbage_collect=True,
+):
+    """Bake MASH related instancer nodes.
 
-    # set settings
-    animation_flag = False
-    translate_flag = True
-    rotation_flag = True
-    scale_flag = True
-    visibility_flag = True
-    bake_to_instances_flag = True
-
-    # Optimization settings
-    express_baking = True
-    flush_undo = True
-    garbage_collect = True
-
+    Args:
+        animation_flag (bool): If animation is true, the playback range will be baked,
+            otherwise just this frame will be. Default is False.
+        translate_flag (bool): Bake translate. Default is True.
+        rotation_flag (bool): Bake rotation. Default is True.
+        scale_flag (bool): Bake Scale. Default is True.
+        visibility_flag (bool): Bake visibility. Default is True.
+        bake_to_instances_flag (bool): Shapes are going to be instanced. Default is
+            True.
+        express_baking (bool): If set to True, it will clear and close the
+            ScriptEditor. Default is True.
+        flush_undo (bool): If set to True, the undo queue will be flushed. Default is
+            True.
+        garbage_collect (bool): If set to True, Python garbage collector will be
+            utilized to reduce memory foot print. Default is True.
+    """
     if express_baking:
         script_editor_open = pm.window("scriptEditorPanel1Window", q=True, exists=True)
         if script_editor_open:
