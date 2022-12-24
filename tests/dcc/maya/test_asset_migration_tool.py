@@ -65,9 +65,9 @@ def migration_test_data(create_test_data, create_pymel, create_maya_env):
     box = pm.polyCube(name="Box1")[0]
     pm.parent(box, root_node)
     pm.runtime.DeleteHistory()
-    maya_env.save_as(data["version1"])
-    maya_env.save_as(data["version2"])
-    maya_env.save_as(data["version3"])
+    maya_env.save_as(data["asset2_model_main_v001"])
+    maya_env.save_as(data["asset2_model_main_v002"])
+    maya_env.save_as(data["asset2_model_main_v003"])
     DBSession.commit()
 
     # Asset2 - Take1
@@ -76,9 +76,9 @@ def migration_test_data(create_test_data, create_pymel, create_maya_env):
     box = pm.polyCube(name="Box4")[0]
     pm.parent(box, root_node)
     pm.runtime.DeleteHistory()
-    maya_env.save_as(data["version4"])
-    maya_env.save_as(data["version5"])
-    maya_env.save_as(data["version6"])
+    maya_env.save_as(data["asset2_model_take1_v001"])
+    maya_env.save_as(data["asset2_model_take1_v002"])
+    maya_env.save_as(data["asset2_model_take1_v003"])
     DBSession.commit()
 
     # --------------------------
@@ -93,10 +93,10 @@ def migration_test_data(create_test_data, create_pymel, create_maya_env):
     )
     pm.parent(ground_geo, root_node)
     pm.runtime.DeleteHistory()
-    maya_env.save_as(data["ext2_model_main_version1"])
-    maya_env.save_as(data["ext2_model_main_version2"])
-    data["ext2_model_main_version3"].is_published = True
-    maya_env.save_as(data["ext2_model_main_version3"])
+    maya_env.save_as(data["ext2_model_main_v001"])
+    maya_env.save_as(data["ext2_model_main_v002"])
+    data["ext2_model_main_v003"].is_published = True
+    maya_env.save_as(data["ext2_model_main_v003"])
     maya_env.save_as(data["random_asset1_model_main_version1"])
     data["random_asset1_model_main_version1"].parent = None
     DBSession.commit()
@@ -104,8 +104,8 @@ def migration_test_data(create_test_data, create_pymel, create_maya_env):
     # --------------------------
     # LookDev
     pm.newFile(force=True)
-    maya_env.save_as(data["ext2_look_dev_main_version1"])
-    maya_env.reference(data["ext2_model_main_version3"])
+    maya_env.save_as(data["ext2_look_dev_main_v001"])
+    maya_env.reference(data["ext2_model_main_v003"])
     # assign a shader
     surface_shader = pm.shadingNode("surfaceShader", asShader=1)
     shading_group = pm.nt.ShadingEngine(name="surfaceShaderSG")
@@ -115,27 +115,27 @@ def migration_test_data(create_test_data, create_pymel, create_maya_env):
     pm.sets(shading_group, fe=ground_geo.getShape())
 
     # save versions
-    maya_env.save_as(data["ext2_look_dev_main_version1"])
-    maya_env.save_as(data["ext2_look_dev_main_version2"])
+    maya_env.save_as(data["ext2_look_dev_main_v001"])
+    maya_env.save_as(data["ext2_look_dev_main_v002"])
     # publish it
-    data["ext2_look_dev_main_version3"].is_published = True
-    maya_env.save_as(data["ext2_look_dev_main_version3"])
+    data["ext2_look_dev_main_v003"].is_published = True
+    maya_env.save_as(data["ext2_look_dev_main_v003"])
 
     # --------------------------
     # Layout
     pm.newFile(force=True)
-    maya_env.save_as(data["ext2_layout_main_version1"])
+    maya_env.save_as(data["ext2_layout_main_v001"])
     # Create a root_node
     root_node = pm.nt.Transform(name="Ext2_Layout")
     # Reference the LookDev
-    ref_node = maya_env.reference(data["ext2_look_dev_main_version3"])
+    ref_node = maya_env.reference(data["ext2_look_dev_main_v003"])
     # parent the root of the look dev node to the root node
     look_dev_root_node = auxiliary.get_root_nodes(ref_node)[0]
     pm.parent(look_dev_root_node, root_node)
-    maya_env.save_as(data["ext2_layout_main_version1"])
-    maya_env.save_as(data["ext2_layout_main_version2"])
-    data["ext2_layout_main_version3"].is_published = True
-    maya_env.save_as(data["ext2_layout_main_version3"])
+    maya_env.save_as(data["ext2_layout_main_v001"])
+    maya_env.save_as(data["ext2_layout_main_v002"])
+    data["ext2_layout_main_v003"].is_published = True
+    maya_env.save_as(data["ext2_layout_main_v003"])
 
     yield data
 
@@ -160,7 +160,7 @@ def test_migrating_simple_asset_1(migration_test_data):
             "new_parent_id": data["assets_task2"].id,
             "tasks": {
                 data["asset2_model"].id: {
-                    "Main": {"new_take_name": "Main", "versions": [data["version3"]]}
+                    "Main": {"new_take_name": "Main", "versions": [data["asset2_model_main_v003"]]}
                 }
             },
         }
@@ -207,7 +207,7 @@ def test_migrating_simple_asset_2(migration_test_data, create_pymel, create_maya
                 data["asset2_model"].id: {
                     "Main": {
                         "new_take_name": "Main",
-                        "versions": [data["version3"]],
+                        "versions": [data["asset2_model_main_v003"]],
                     }
                 }
             },
@@ -252,8 +252,8 @@ def test_migrating_simple_asset_3(migration_test_data, create_pymel, create_maya
             "new_parent_id": data["assets_task2"].id,
             "tasks": {
                 data["asset2_model"].id: {
-                    "Main": {"new_take_name": "Main", "versions": [data["version3"]]},
-                    "Take1": {"new_take_name": "Take1", "versions": [data["version6"]]},
+                    "Main": {"new_take_name": "Main", "versions": [data["asset2_model_main_v003"]]},
+                    "Take1": {"new_take_name": "Take1", "versions": [data["asset2_model_take1_v003"]]},
                 }
             },
         }
@@ -309,8 +309,8 @@ def test_migrating_simple_asset_4(migration_test_data, create_pymel, create_maya
             "new_parent_id": data["assets_task2"].id,
             "tasks": {
                 data["asset2_model"].id: {
-                    "Main": {"new_take_name": "Main", "versions": [data["version3"]]},
-                    "Take1": {"new_take_name": "Take1", "versions": [data["version6"]]},
+                    "Main": {"new_take_name": "Main", "versions": [data["asset2_model_main_v003"]]},
+                    "Take1": {"new_take_name": "Take1", "versions": [data["asset2_model_take1_v003"]]},
                 }
             },
         }
@@ -383,10 +383,10 @@ def test_migrating_simple_env_asset_1(
                 data[
                     "ext2_layout"
                 ].id: {  # tricky part, this needs to be moved after look dev
-                    "Main": {"versions": [data["ext2_layout_main_version3"]]},
+                    "Main": {"versions": [data["ext2_layout_main_v003"]]},
                 },
                 data["ext2_look_dev"].id: {
-                    "Main": {"versions": [data["ext2_look_dev_main_version3"]]},
+                    "Main": {"versions": [data["ext2_look_dev_main_v003"]]},
                 },
             },
         }
@@ -426,7 +426,7 @@ def test_migrating_simple_env_asset_1(
     look_dev_version = look_dev_task.versions[0]
     assert look_dev_version.take_name == "Main"
     assert len(look_dev_version.inputs) == 1
-    assert data["ext2_model_main_version3"] in look_dev_version.inputs  # baam!
+    assert data["ext2_model_main_v003"] in look_dev_version.inputs  # baam!
 
     # Layout Task
     layout_task = (
@@ -460,10 +460,10 @@ def test_migrating_simple_env_asset_2(
                 data[
                     "ext2_layout"
                 ].id: {  # tricky part, this needs to be moved after look dev
-                    "Main": {"versions": [data["ext2_layout_main_version3"]]},
+                    "Main": {"versions": [data["ext2_layout_main_v003"]]},
                 },
                 data["ext2_look_dev"].id: {
-                    "Main": {"versions": [data["ext2_look_dev_main_version3"]]},
+                    "Main": {"versions": [data["ext2_look_dev_main_v003"]]},
                 },
             },
         }
@@ -502,7 +502,7 @@ def test_migrating_simple_env_asset_2(
     maya_env.open(look_dev_version, force=True)
     refs = pm.listReferences()
     assert len(refs) == 1
-    assert refs[0].version == data["ext2_model_main_version3"]  # baam!
+    assert refs[0].version == data["ext2_model_main_v003"]  # baam!
 
     # Layout Task
     layout_task = (
@@ -521,13 +521,75 @@ def test_migrating_complex_env_asset_1(
     migration_test_data, create_pymel, create_maya_env
 ):
     """Test AssetMigrationTool with a complex environment asset."""
-    # EnvAsset
-    #   Layout
-    #   Props
-    #     Bina1
-    #       Model
-    #       LookDev
+    # Ext1 (Asset - Exterior)
+    # +- Building1 (Asset - Building)
+    # |  +- Layout (Task - Layout)
+    # |  |  +- version66
+    # |  +- LookDev (Task - Look Development)
+    # |  |  +- version69
+    # |  +- Props (Task)
+    # |     +- YAPI (Task)
+    # |        +- Model (Task - Model)
+    # |        |  +- version75
+    # |        +- LookDev (Task - Look Development)
+    # |           +- version78
+    # +- Building2 (Asset - Building)
+    # |  +- Layout (Task - Layout)
+    # |  |  +- version84
+    # |  +- LookDev (Task - Look Development)
+    # |  |  +- version87
+    # |  +- Props (Task)
+    # |     +- YAPI (Task)
+    # |        +- Model (Task - Model)
+    # |        |  +- version93
+    # |        +- LookDev (Task - Look Development)
+    # |           +- version96
+    # +- Layout (Task - Layout)
+    # |  +- version102
+    # +- LookDev (Task - Look Development)
+    # |  +- version105
+    # +- Props (Task)
+    # |  +- Prop1 (Asset)
+    # |     +- Model (Task - Model)
+    # |     |  +- **Main** (Take)
+    # |     |  |  +- version111
+    # |     |  +- **Kisa** (Take)
+    # |     |     +- version123
+    # |     +- LookDev (Task - Look Development)
+    # |        +- **Main** (Take)
+    # |        |  +- version114
+    # |        +- **Kisa** (Take)
+    # |           +- version120
+    # +- Vegetation (Task - Vegetation)
+    #    +- version117
     # Check Stalker data
+    data = migration_test_data
+    pm = create_pymel
+    maya_env = create_maya_env
+    migration_recipe = {
+        data["ext2"].id: {
+            "new_parent_id": data["assets_task2"].id,
+            "tasks": {
+                data["ext2_layout"].id: {
+                    # tricky part, this needs to be moved after look dev
+                    "Main": {"versions": [data["ext2_layout_main_v003"]]},
+                },
+                data["ext2_look_dev"].id: {
+                    "Main": {"versions": [data["ext2_look_dev_main_v003"]]},
+                },
+                data["Props"].id: {}
+            },
+        }
+    }
+
+    assert data["assets_task2"].children == []
+
+    from anima.dcc.mayaEnv.asset_migration_tool import AssetMigrationTool
+
+    amt = AssetMigrationTool()
+    amt.migration_recipe = migration_recipe
+    amt.migrate()
+
     raise NotImplementedError("Test is not implemented yet")
 
 
@@ -561,7 +623,7 @@ def test_migrating_with_alternative_versions_data_1(
             "new_parent_id": data["assets_task2"].id,
             "tasks": {
                 data["ext2_look_dev"].id: {
-                    "Main": {"versions": [data["ext2_look_dev_main_version3"]]},
+                    "Main": {"versions": [data["ext2_look_dev_main_v003"]]},
                 },
             },
         }
@@ -574,7 +636,7 @@ def test_migrating_with_alternative_versions_data_1(
     amt = AssetMigrationTool()
     amt.migration_recipe = migration_recipe
     # inject alternative
-    amt.version_lut[data["ext2_model_main_version3"]] = data["random_asset1_model_main_version1"]
+    amt.version_lut[data["ext2_model_main_v003"]] = data["random_asset1_model_main_version1"]
     amt.migrate()
 
     # we now should have a new asset under the Assets Task2

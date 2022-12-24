@@ -127,10 +127,11 @@ def test_save_as_sets_the_render_file_name_for_assets(
 
     # check if the path equals to
     expected_path = (
-        "renders/v{version_number:03d}/<RenderLayer>/"
+        "renders/{take_name}/v{version_number:03d}/<RenderLayer>/"
         "{version_nice_name}_v{version_number:03d}_<RenderLayer>_<RenderPass>".format(
             version_path=version1.absolute_path,
             project_code=version1.task.project.code,
+            take_name=version1.take_name,
             version_nice_name=version1.nice_name,
             version_number=version1.version_number,
         )
@@ -153,9 +154,10 @@ def test_save_as_sets_the_render_file_name_for_shots(create_test_data, create_ma
 
     # check if the path equals to
     expected_path = (
-        "renders/v{version_number:03d}/<RenderLayer>/"
+        "renders/{take_name}/v{version_number:03d}/<RenderLayer>/"
         "{version_nice_name}_v{version_number:03d}_<RenderLayer>_<RenderPass>".format(
             version_path=version1.absolute_path,
+            take_name=version1.take_name,
             project_code=version1.task.project.code,
             version_nice_name=version1.nice_name,
             version_number=version1.version_number,
@@ -170,7 +172,7 @@ def test_save_as_sets_the_render_file_name_for_shots(create_test_data, create_ma
 #     """testing if save_as method replaces image paths with REPO relative
 #     path
 #     """
-#     maya_env.save_as(data["version1"])
+#     maya_env.save_as(data["asset2_model_main_v001"])
 #
 #     # create file node
 #     file_node = pm.createNode("file")

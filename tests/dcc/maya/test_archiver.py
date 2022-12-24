@@ -130,7 +130,7 @@ def test_flatten_is_working_properly_with_no_references(create_test_data, trash_
     """
     data = create_test_data
     arch = Archiver()
-    project_path = arch.flatten(data["version1"].absolute_full_path)
+    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
     trash_bin.append(project_path)
 
     # the returned path should be a maya project directory
@@ -142,7 +142,7 @@ def test_flatten_is_working_properly_with_no_references(create_test_data, trash_
     # there should be a maya scene file under path/scenes with the same
     # name of the source file
     assert os.path.exists(
-        os.path.join(project_path, "scenes", data["version1"].filename)
+        os.path.join(project_path, "scenes", data["asset2_model_main_v001"].filename)
     )
 
 
@@ -155,11 +155,11 @@ def test_flatten_is_working_properly_with_only_one_level_of_references(
     data = create_test_data
     maya_env = create_maya_env
     pm = create_pymel
-    # open data["version1"]
-    maya_env.open(data["version1"], force=True)
+    # open data["asset2_model_main_v001"]
+    maya_env.open(data["asset2_model_main_v001"], force=True)
 
-    # and reference data["version4"] to it
-    maya_env.reference(data["version4"])
+    # and reference data["asset2_model_take1_v001"] to it
+    maya_env.reference(data["asset2_model_take1_v001"])
 
     # and save it
     pm.saveFile()
@@ -170,16 +170,16 @@ def test_flatten_is_working_properly_with_only_one_level_of_references(
     # create an archiver
     arch = Archiver()
 
-    project_path = arch.flatten(data["version1"].absolute_full_path)
+    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
     trash_bin.append(project_path)
 
     # now check if we have two files under the path/scenes directory
     archived_version1_path = os.path.join(
-        project_path, "scenes", data["version1"].filename
+        project_path, "scenes", data["asset2_model_main_v001"].filename
     )
 
     archived_version4_unresolved_path = os.path.join(
-        "scenes/refs", data["version4"].filename
+        "scenes/refs", data["asset2_model_take1_v001"].filename
     )
 
     archived_version4_path = os.path.join(
@@ -212,13 +212,13 @@ def test_flatten_is_working_properly_with_only_one_level_of_multiple_references_
     data = create_test_data
     maya_env = create_maya_env
     pm = create_pymel
-    # open data["version1"]
-    maya_env.open(data["version1"], force=True)
+    # open data["asset2_model_main_v001"]
+    maya_env.open(data["asset2_model_main_v001"], force=True)
 
-    # and reference data["version4"] more than once to it
-    maya_env.reference(data["version4"])
-    maya_env.reference(data["version4"])
-    maya_env.reference(data["version4"])
+    # and reference data["asset2_model_take1_v001"] more than once to it
+    maya_env.reference(data["asset2_model_take1_v001"])
+    maya_env.reference(data["asset2_model_take1_v001"])
+    maya_env.reference(data["asset2_model_take1_v001"])
 
     # and save it
     pm.saveFile()
@@ -229,16 +229,16 @@ def test_flatten_is_working_properly_with_only_one_level_of_multiple_references_
     # create an archiver
     arch = Archiver()
 
-    project_path = arch.flatten(data["version1"].absolute_full_path)
+    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
     trash_bin.append(project_path)
 
     # now check if we have two files under the path/scenes directory
     archived_version1_path = os.path.join(
-        project_path, "scenes", data["version1"].filename
+        project_path, "scenes", data["asset2_model_main_v001"].filename
     )
 
     archived_version4_unresolved_path = os.path.join(
-        "scenes/refs", data["version4"].filename
+        "scenes/refs", data["asset2_model_take1_v001"].filename
     )
 
     archived_version4_path = os.path.join(
@@ -279,8 +279,8 @@ def test_flatten_is_working_properly_with_multiple_level_of_references(
     data = create_test_data
     maya_env = create_maya_env
     pm = create_pymel
-    # open data["version4"]
-    maya_env.open(data["version4"], force=True)
+    # open data["asset2_model_take1_v001"]
+    maya_env.open(data["asset2_model_take1_v001"], force=True)
 
     # and reference data["version7"] to it
     maya_env.reference(data["version7"])
@@ -288,11 +288,11 @@ def test_flatten_is_working_properly_with_multiple_level_of_references(
     # and save it
     pm.saveFile()
 
-    # open data["version1"]
-    maya_env.open(data["version1"], force=True)
+    # open data["asset2_model_main_v001"]
+    maya_env.open(data["asset2_model_main_v001"], force=True)
 
-    # and reference data["version4"] to it
-    maya_env.reference(data["version4"])
+    # and reference data["asset2_model_take1_v001"] to it
+    maya_env.reference(data["asset2_model_take1_v001"])
 
     # and save it
     pm.saveFile()
@@ -303,20 +303,20 @@ def test_flatten_is_working_properly_with_multiple_level_of_references(
     # create an archiver
     arch = Archiver()
 
-    project_path = arch.flatten(data["version1"].absolute_full_path)
+    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
     trash_bin.append(project_path)
 
     # now check if we have two files under the path/scenes directory
     archived_version1_path = os.path.join(
-        project_path, "scenes", data["version1"].filename
+        project_path, "scenes", data["asset2_model_main_v001"].filename
     )
 
     archived_version4_path = os.path.join(
-        project_path, "scenes/refs", data["version4"].filename
+        project_path, "scenes/refs", data["asset2_model_take1_v001"].filename
     )
 
     archived_version4_unresolved_path = os.path.join(
-        "scenes/refs", data["version4"].filename
+        "scenes/refs", data["asset2_model_take1_v001"].filename
     )
 
     archived_version7_path = os.path.join(
@@ -390,8 +390,8 @@ def test_flatten_is_working_properly_with_the_external_files_of_the_references(
     maya_env.replace_external_paths()
     pm.saveFile()
 
-    # open data["version4"]
-    maya_env.open(data["version4"], force=True)
+    # open data["asset2_model_take1_v001"]
+    maya_env.open(data["asset2_model_take1_v001"], force=True)
 
     # and reference data["version7"] to it
     maya_env.reference(data["version7"])
@@ -399,11 +399,11 @@ def test_flatten_is_working_properly_with_the_external_files_of_the_references(
     # and save it
     pm.saveFile()
 
-    # open data["version1"]
-    maya_env.open(data["version1"], force=True)
+    # open data["asset2_model_main_v001"]
+    maya_env.open(data["asset2_model_main_v001"], force=True)
 
-    # and reference data["version4"] to it
-    maya_env.reference(data["version4"])
+    # and reference data["asset2_model_take1_v001"] to it
+    maya_env.reference(data["asset2_model_take1_v001"])
 
     # and save it
     pm.saveFile()
@@ -414,21 +414,21 @@ def test_flatten_is_working_properly_with_the_external_files_of_the_references(
     # create an archiver
     arch = Archiver()
 
-    project_path = arch.flatten(data["version1"].absolute_full_path)
+    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
     trash_bin.append(project_path)
 
     # now check if we have the files under the path/scenes directory
     archived_version1_path = os.path.join(
-        project_path, "scenes", data["version1"].filename
+        project_path, "scenes", data["asset2_model_main_v001"].filename
     )
 
     # and references under path/scenes/refs path
     archived_version4_path = os.path.join(
-        project_path, "scenes/refs", data["version4"].filename
+        project_path, "scenes/refs", data["asset2_model_take1_v001"].filename
     )
 
     archived_version4_unresolved_path = os.path.join(
-        "scenes/refs", data["version4"].filename
+        "scenes/refs", data["asset2_model_take1_v001"].filename
     )
 
     archived_version7_path = os.path.join(
@@ -514,8 +514,8 @@ def test_flatten_is_working_properly_with_exclude_mask(
     maya_env.replace_external_paths()
     pm.saveFile()
 
-    # open data["version4"]
-    maya_env.open(data["version4"], force=True)
+    # open data["asset2_model_take1_v001"]
+    maya_env.open(data["asset2_model_take1_v001"], force=True)
 
     # and reference data["version7"] to it
     maya_env.reference(data["version7"])
@@ -523,11 +523,11 @@ def test_flatten_is_working_properly_with_exclude_mask(
     # and save it
     pm.saveFile()
 
-    # open data["version1"]
-    maya_env.open(data["version1"], force=True)
+    # open data["asset2_model_main_v001"]
+    maya_env.open(data["asset2_model_main_v001"], force=True)
 
-    # and reference data["version4"] to it
-    maya_env.reference(data["version4"])
+    # and reference data["asset2_model_take1_v001"] to it
+    maya_env.reference(data["asset2_model_take1_v001"])
 
     # and save it
     pm.saveFile()
@@ -538,21 +538,21 @@ def test_flatten_is_working_properly_with_exclude_mask(
     # create an archiver
     arch = Archiver(exclude_mask=[".png", ".jpg", ".tga"])
 
-    project_path = arch.flatten(data["version1"].absolute_full_path)
+    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
     trash_bin.append(project_path)
 
     # now check if we have the files under the path/scenes directory
     archived_version1_path = os.path.join(
-        project_path, "scenes", data["version1"].filename
+        project_path, "scenes", data["asset2_model_main_v001"].filename
     )
 
     # and references under path/scenes/refs path
     archived_version4_path = os.path.join(
-        project_path, "scenes/refs", data["version4"].filename
+        project_path, "scenes/refs", data["asset2_model_take1_v001"].filename
     )
 
     archived_version4_unresolved_path = os.path.join(
-        "scenes/refs", data["version4"].filename
+        "scenes/refs", data["asset2_model_take1_v001"].filename
     )
 
     archived_version7_path = os.path.join(
@@ -609,8 +609,8 @@ def test_flatten_is_working_properly_with_multiple_reference_to_the_same_file_wi
     data = create_test_data
     maya_env = create_maya_env
     pm = create_pymel
-    # open data["version4"]
-    maya_env.open(data["version4"], force=True)
+    # open data["asset2_model_take1_v001"]
+    maya_env.open(data["asset2_model_take1_v001"], force=True)
 
     # and reference data["version7"] to it
     maya_env.reference(data["version7"])
@@ -618,13 +618,13 @@ def test_flatten_is_working_properly_with_multiple_reference_to_the_same_file_wi
     # and save it
     pm.saveFile()
 
-    # open data["version1"]
-    maya_env.open(data["version1"], force=True)
+    # open data["asset2_model_main_v001"]
+    maya_env.open(data["asset2_model_main_v001"], force=True)
 
-    # and reference data["version4"] multiple times to it
-    maya_env.reference(data["version4"])
-    maya_env.reference(data["version4"])
-    maya_env.reference(data["version4"])
+    # and reference data["asset2_model_take1_v001"] multiple times to it
+    maya_env.reference(data["asset2_model_take1_v001"])
+    maya_env.reference(data["asset2_model_take1_v001"])
+    maya_env.reference(data["asset2_model_take1_v001"])
 
     # and save it
     pm.saveFile()
@@ -635,17 +635,17 @@ def test_flatten_is_working_properly_with_multiple_reference_to_the_same_file_wi
     # create an archiver
     arch = Archiver()
 
-    project_path = arch.flatten(data["version1"].absolute_full_path)
+    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
     trash_bin.append(project_path)
 
     # now check if we have two files under the path/scenes directory
     archived_version1_path = os.path.join(
-        project_path, "scenes", data["version1"].filename
+        project_path, "scenes", data["asset2_model_main_v001"].filename
     )
 
     # version4
     archived_version4_unresolved_path = os.path.join(
-        "scenes/refs", data["version4"].filename
+        "scenes/refs", data["asset2_model_take1_v001"].filename
     )
 
     archived_version4_path = os.path.join(
@@ -797,13 +797,13 @@ def test_flatten_will_restore_the_current_workspace(
     data = create_test_data
     maya_env = create_maya_env
     pm = create_pymel
-    # open data["version1"]
-    maya_env.open(data["version1"], force=True)
+    # open data["asset2_model_main_v001"]
+    maya_env.open(data["asset2_model_main_v001"], force=True)
 
     current_workspace = pm.workspace.path
 
     arch = Archiver()
-    project_path = arch.flatten(data["version1"].absolute_full_path)
+    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
     trash_bin.append(project_path)
 
     # now check if the current workspace is intact
@@ -818,7 +818,7 @@ def test_archive_will_create_a_zip_file_from_the_given_directory(
     """
     data = create_test_data
     arch = Archiver()
-    project_path = arch.flatten(data["version1"].absolute_full_path)
+    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
     trash_bin.append(project_path)
 
     parent_path = os.path.dirname(project_path) + "/"
@@ -864,8 +864,8 @@ def test_bind_to_original_will_bind_the_references_to_their_original_counter_par
     data = create_test_data
     maya_env = create_maya_env
     pm = create_pymel
-    # open data["version4"]
-    maya_env.open(data["version4"], force=True)
+    # open data["asset2_model_take1_v001"]
+    maya_env.open(data["asset2_model_take1_v001"], force=True)
 
     # and reference data["version7"] to it
     maya_env.reference(data["version7"])
@@ -873,13 +873,13 @@ def test_bind_to_original_will_bind_the_references_to_their_original_counter_par
     # and save it
     pm.saveFile()
 
-    # open data["version1"]
-    maya_env.open(data["version1"], force=True)
+    # open data["asset2_model_main_v001"]
+    maya_env.open(data["asset2_model_main_v001"], force=True)
 
-    # and reference data["version4"] multiple times to it
-    maya_env.reference(data["version4"])
-    maya_env.reference(data["version4"])
-    maya_env.reference(data["version4"])
+    # and reference data["asset2_model_take1_v001"] multiple times to it
+    maya_env.reference(data["asset2_model_take1_v001"])
+    maya_env.reference(data["asset2_model_take1_v001"])
+    maya_env.reference(data["asset2_model_take1_v001"])
 
     # and save it
     pm.saveFile()
@@ -890,17 +890,17 @@ def test_bind_to_original_will_bind_the_references_to_their_original_counter_par
     # create an archiver
     arch = Archiver()
 
-    project_path = arch.flatten(data["version1"].absolute_full_path)
+    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
     trash_bin.append(project_path)
 
     # now check if we have two files under the path/scenes directory
     archived_version1_path = os.path.join(
-        project_path, "scenes", data["version1"].filename
+        project_path, "scenes", data["asset2_model_main_v001"].filename
     )
 
     # version4
     archived_version4_unresolved_path = os.path.join(
-        "scenes/refs", data["version4"].filename
+        "scenes/refs", data["asset2_model_take1_v001"].filename
     )
 
     archived_version4_path = os.path.join(
@@ -949,6 +949,6 @@ def test_bind_to_original_will_bind_the_references_to_their_original_counter_par
     # list references
     all_refs = pm.listReferences()
 
-    assert all_refs[0].unresolvedPath() == data["version4"].full_path
-    assert all_refs[1].unresolvedPath() == data["version4"].full_path
-    assert all_refs[2].unresolvedPath() == data["version4"].full_path
+    assert all_refs[0].unresolvedPath() == data["asset2_model_take1_v001"].full_path
+    assert all_refs[1].unresolvedPath() == data["asset2_model_take1_v001"].full_path
+    assert all_refs[2].unresolvedPath() == data["asset2_model_take1_v001"].full_path
