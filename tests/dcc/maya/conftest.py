@@ -386,7 +386,12 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
 
     data["building1_props"] = Task(name="Props", parent=data["building1"])
 
-    data["building1_yapi"] = Task(name="YAPI", parent=data["building1_props"])
+    data["building1_yapi"] = Asset(
+        name="YAPI",
+        code="YAPI",
+        type=data["building_type"],
+        parent=data["building1_props"],
+    )
 
     data["building1_yapi_model"] = Task(
         name="Model", type=data["model_type"], parent=data["building1_yapi"]
@@ -419,7 +424,12 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
 
     data["building2_props"] = Task(name="Props", parent=data["building2"])
 
-    data["building2_yapi"] = Task(name="YAPI", parent=data["building2_props"])
+    data["building2_yapi"] = Asset(
+        name="YAPI",
+        code="YAPI",
+        type=data["building_type"],
+        parent=data["building2_props"],
+    )
 
     data["building2_yapi_model"] = Task(
         name="Model", type=data["model_type"], parent=data["building2_yapi"]
@@ -569,25 +579,13 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     data["asset2_model_take1_v003"] = create_version(data["asset2_model"], "Take1")
 
     # asset2 lookdev
-    data["asset2_lookdev_main_v001"] = create_version(
-        data["asset2_lookdev"], "Main"
-    )
-    data["asset2_lookdev_main_v002"] = create_version(
-        data["asset2_lookdev"], "Main"
-    )
-    data["asset2_lookdev_main_v003"] = create_version(
-        data["asset2_lookdev"], "Main"
-    )
+    data["asset2_lookdev_main_v001"] = create_version(data["asset2_lookdev"], "Main")
+    data["asset2_lookdev_main_v002"] = create_version(data["asset2_lookdev"], "Main")
+    data["asset2_lookdev_main_v003"] = create_version(data["asset2_lookdev"], "Main")
 
-    data["asset2_lookdev_take1_v001"] = create_version(
-        data["asset2_lookdev"], "Take1"
-    )
-    data["asset2_lookdev_take1_v002"] = create_version(
-        data["asset2_lookdev"], "Take1"
-    )
-    data["asset2_lookdev_take1_v003"] = create_version(
-        data["asset2_lookdev"], "Take1"
-    )
+    data["asset2_lookdev_take1_v001"] = create_version(data["asset2_lookdev"], "Take1")
+    data["asset2_lookdev_take1_v002"] = create_version(data["asset2_lookdev"], "Take1")
+    data["asset2_lookdev_take1_v003"] = create_version(data["asset2_lookdev"], "Take1")
 
     # task5
     data["version7"] = create_version(data["task5"], "Main")
@@ -654,9 +652,15 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
 
     # Reflected Data
     # Char1 - Character Design
-    data["char1_char_design_main_v001"] = create_version(data["char1_char_design"], "Main")
-    data["char1_char_design_main_v002"] = create_version(data["char1_char_design"], "Main")
-    data["char1_char_design_main_v003"] = create_version(data["char1_char_design"], "Main")
+    data["char1_char_design_main_v001"] = create_version(
+        data["char1_char_design"], "Main"
+    )
+    data["char1_char_design_main_v002"] = create_version(
+        data["char1_char_design"], "Main"
+    )
+    data["char1_char_design_main_v003"] = create_version(
+        data["char1_char_design"], "Main"
+    )
 
     # Char1 - Model
     data["char1_model_main_v001"] = create_version(data["char1_model"], "Main")
@@ -675,44 +679,92 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
 
     # Building1
     # Building1 - Layout
-    data["building1_layout_main_v001"] = create_version(data["building1_layout"], "Main")
-    data["building1_layout_main_v002"] = create_version(data["building1_layout"], "Main")
-    data["building1_layout_main_v003"] = create_version(data["building1_layout"], "Main")
+    data["building1_layout_main_v001"] = create_version(
+        data["building1_layout"], "Main"
+    )
+    data["building1_layout_main_v002"] = create_version(
+        data["building1_layout"], "Main"
+    )
+    data["building1_layout_main_v003"] = create_version(
+        data["building1_layout"], "Main"
+    )
 
     # Building1 - LookDev
-    data["building1_look_dev_main_v001"] = create_version(data["building1_look_dev"], "Main")
-    data["building1_look_dev_main_v002"] = create_version(data["building1_look_dev"], "Main")
-    data["building1_look_dev_main_v003"] = create_version(data["building1_look_dev"], "Main")
+    data["building1_look_dev_main_v001"] = create_version(
+        data["building1_look_dev"], "Main"
+    )
+    data["building1_look_dev_main_v002"] = create_version(
+        data["building1_look_dev"], "Main"
+    )
+    data["building1_look_dev_main_v003"] = create_version(
+        data["building1_look_dev"], "Main"
+    )
 
     # Building1 | Props | Yapi | Model
-    data["building1_yapi_model_main_v001"] = create_version(data["building1_yapi_model"], "Main")
-    data["building1_yapi_model_main_v002"] = create_version(data["building1_yapi_model"], "Main")
-    data["building1_yapi_model_main_v003"] = create_version(data["building1_yapi_model"], "Main")
+    data["building1_yapi_model_main_v001"] = create_version(
+        data["building1_yapi_model"], "Main"
+    )
+    data["building1_yapi_model_main_v002"] = create_version(
+        data["building1_yapi_model"], "Main"
+    )
+    data["building1_yapi_model_main_v003"] = create_version(
+        data["building1_yapi_model"], "Main"
+    )
 
     # Building1 | Props | Yapi | LookDev
-    data["building1_yapi_look_dev_main_v001"] = create_version(data["building1_yapi_look_dev"], "Main")
-    data["building1_yapi_look_dev_main_v002"] = create_version(data["building1_yapi_look_dev"], "Main")
-    data["building1_yapi_look_dev_main_v003"] = create_version(data["building1_yapi_look_dev"], "Main")
+    data["building1_yapi_look_dev_main_v001"] = create_version(
+        data["building1_yapi_look_dev"], "Main"
+    )
+    data["building1_yapi_look_dev_main_v002"] = create_version(
+        data["building1_yapi_look_dev"], "Main"
+    )
+    data["building1_yapi_look_dev_main_v003"] = create_version(
+        data["building1_yapi_look_dev"], "Main"
+    )
 
     # Building2 | Layout
-    data["building2_layout_main_v001"] = create_version(data["building2_layout"], "Main")
-    data["building2_layout_main_v002"] = create_version(data["building2_layout"], "Main")
-    data["building2_layout_main_v003"] = create_version(data["building2_layout"], "Main")
+    data["building2_layout_main_v001"] = create_version(
+        data["building2_layout"], "Main"
+    )
+    data["building2_layout_main_v002"] = create_version(
+        data["building2_layout"], "Main"
+    )
+    data["building2_layout_main_v003"] = create_version(
+        data["building2_layout"], "Main"
+    )
 
     # Building2 | LookDev
-    data["building2_look_dev_main_v001"] = create_version(data["building2_look_dev"], "Main")
-    data["building2_look_dev_main_v002"] = create_version(data["building2_look_dev"], "Main")
-    data["building2_look_dev_main_v003"] = create_version(data["building2_look_dev"], "Main")
+    data["building2_look_dev_main_v001"] = create_version(
+        data["building2_look_dev"], "Main"
+    )
+    data["building2_look_dev_main_v002"] = create_version(
+        data["building2_look_dev"], "Main"
+    )
+    data["building2_look_dev_main_v003"] = create_version(
+        data["building2_look_dev"], "Main"
+    )
 
     # Building2 | Props | Yapi | Model
-    data["building2_yapi_model_main_v001"] = create_version(data["building2_yapi_model"], "Main")
-    data["building2_yapi_model_main_v002"] = create_version(data["building2_yapi_model"], "Main")
-    data["building2_yapi_model_main_v003"] = create_version(data["building2_yapi_model"], "Main")
+    data["building2_yapi_model_main_v001"] = create_version(
+        data["building2_yapi_model"], "Main"
+    )
+    data["building2_yapi_model_main_v002"] = create_version(
+        data["building2_yapi_model"], "Main"
+    )
+    data["building2_yapi_model_main_v003"] = create_version(
+        data["building2_yapi_model"], "Main"
+    )
 
     # Building2 | Props | Yapi | LookDev
-    data["building2_yapi_look_dev_main_v001"] = create_version(data["building2_yapi_look_dev"], "Main")
-    data["building2_yapi_look_dev_main_v002"] = create_version(data["building2_yapi_look_dev"], "Main")
-    data["building2_yapi_look_dev_main_v003"] = create_version(data["building2_yapi_look_dev"], "Main")
+    data["building2_yapi_look_dev_main_v001"] = create_version(
+        data["building2_yapi_look_dev"], "Main"
+    )
+    data["building2_yapi_look_dev_main_v002"] = create_version(
+        data["building2_yapi_look_dev"], "Main"
+    )
+    data["building2_yapi_look_dev_main_v003"] = create_version(
+        data["building2_yapi_look_dev"], "Main"
+    )
 
     # Ext1 | Layout
     data["ext1_layout_main_v001"] = create_version(data["ext1_layout"], "Main")
@@ -917,7 +969,9 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     data["building1_yapi_look_dev_main_v003"].is_published = True
 
     # save it for Building2 | Props | Yapi | Look Dev
-    pm.listReferences()[0].replaceWith(data["building2_yapi_model_main_v003"].absolute_full_path)
+    pm.listReferences()[0].replaceWith(
+        data["building2_yapi_model_main_v003"].absolute_full_path
+    )
     maya_env.save_as(data["building2_yapi_look_dev_main_v001"])
     maya_env.save_as(data["building2_yapi_look_dev_main_v002"])
     maya_env.save_as(data["building2_yapi_look_dev_main_v003"])
@@ -1157,7 +1211,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     #          |  |  |  +- building1_look_dev_main_v003
     #          |  |  |
     #          |  |  +- Props (Task)
-    #          |  |     +- YAPI (Task)
+    #          |  |     +- YAPI (Asset)
     #          |  |        +- Model (Task - Model)
     #          |  |        |  +- building1_yapi_model_main_v001
     #          |  |        |  +- building1_yapi_model_main_v002
@@ -1180,7 +1234,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     #          |  |  |  +- building2_look_dev_main_v003
     #          |  |  |
     #          |  |  +- Props (Task)
-    #          |  |     +- YAPI (Task)
+    #          |  |     +- YAPI (Asset)
     #          |  |        +- Model (Task - Model)
     #          |  |        |  +- building2_yapi_model_main_v001
     #          |  |        |  +- building2_yapi_model_main_v002
@@ -1229,17 +1283,17 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     #          |     +- ext1_vegetation_main_v003
     #          +- Ext2 (Asset - Exterior)
     #             +- Model (Task - Model)
-    #             |  +- ext2_model_main_version1
-    #             |  +- ext2_model_main_version2
-    #             |  +- ext2_model_main_version3
+    #             |  +- ext2_model_main_v001
+    #             |  +- ext2_model_main_v002
+    #             |  +- ext2_model_main_v003
     #             +- LookDev (Task - Look Development)
-    #             |  +- ext2_look_dev_main_version1
-    #             |  +- ext2_look_dev_main_version2
-    #             |  +- ext2_look_dev_main_version3
+    #             |  +- ext2_look_dev_main_v001
+    #             |  +- ext2_look_dev_main_v002
+    #             |  +- ext2_look_dev_main_v003
     #             +- Layout (Task - Layout)
-    #                +- ext2_layout_main_version1
-    #                +- ext2_layout_main_version2
-    #                +- ext2_layout_main_version3
+    #                +- ext2_layout_main_v001
+    #                +- ext2_layout_main_v002
+    #                +- ext2_layout_main_v003
 
     # just renew the scene
     pm.newFile(force=True)

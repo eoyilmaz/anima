@@ -79,10 +79,12 @@ def test_fix_reference_namespace_is_working_properly(
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data[
-        "asset2_lookdev_take1_v001"
-    ].filename.replace(".", "_")
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # now let it be fixed
     maya_env.fix_reference_namespaces()
@@ -94,7 +96,10 @@ def test_fix_reference_namespace_is_working_properly(
         all_refs[1].namespace
         == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
     )
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].latest_published_version.nice_name
+    assert (
+        all_refs[2].namespace
+        == data["asset2_model_main_v002"].latest_published_version.nice_name
+    )
 
     # now check we don't have any failed edits
     assert len(pm.referenceQuery(all_refs[0], es=1, fld=1)) == 0
@@ -196,17 +201,21 @@ def test_fix_reference_namespace_is_working_properly_with_duplicate_refs(
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data[
-        "asset2_lookdev_take1_v001"
-    ].filename.replace(".", "_")
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # the second copy
     assert all_refs[3].namespace == "%s1" % data["version11"].filename.replace(".", "_")
-    assert all_refs[4].namespace == data[
-        "asset2_lookdev_take1_v001"
-    ].filename.replace(".", "_")
-    assert all_refs[5].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[4].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[5].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # now let it be fixed
     maya_env.fix_reference_namespaces()
@@ -218,13 +227,19 @@ def test_fix_reference_namespace_is_working_properly_with_duplicate_refs(
         all_refs[1].namespace
         == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
     )
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].latest_published_version.nice_name
+    assert (
+        all_refs[2].namespace
+        == data["asset2_model_main_v002"].latest_published_version.nice_name
+    )
     assert all_refs[3].namespace == "Test_Task_1_Test_Task_5_Take2"
     assert (
         all_refs[4].namespace
         == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
     )
-    assert all_refs[5].namespace == data["asset2_model_main_v002"].latest_published_version.nice_name
+    assert (
+        all_refs[5].namespace
+        == data["asset2_model_main_v002"].latest_published_version.nice_name
+    )
 
     # now check we don't have any failed edits
     assert len(pm.referenceQuery(all_refs[0], es=1, fld=1)) == 0
@@ -347,31 +362,39 @@ def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_re
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data[
-        "asset2_lookdev_take1_v001"
-    ].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[0].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # the second copy
     assert all_refs[2].namespace == "%s%s" % (
         data["asset2_lookdev_take1_v001"].filename.replace(".", "_"),
         all_refs[2].copyNumberList()[1],
     )
-    assert all_refs[3].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[3].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # the third copy
     assert all_refs[4].namespace == "%s%s" % (
         data["asset2_lookdev_take1_v001"].filename.replace(".", "_"),
         all_refs[4].copyNumberList()[2],
     )
-    assert all_refs[5].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[5].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # the forth copy
     assert all_refs[6].namespace == "%s%s" % (
         data["asset2_lookdev_take1_v001"].filename.replace(".", "_"),
         all_refs[6].copyNumberList()[3],
     )
-    assert all_refs[7].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[7].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # now let it be fixed
     maya_env.fix_reference_namespaces()
@@ -385,19 +408,31 @@ def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_re
         all_refs[0].namespace
         == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
     )
-    assert all_refs[1].namespace == data["asset2_model_main_v002"].latest_published_version.nice_name
+    assert (
+        all_refs[1].namespace
+        == data["asset2_model_main_v002"].latest_published_version.nice_name
+    )
 
     # second copy
     assert all_refs[2].namespace == "Asset_2_LookDev_Take2"
-    assert all_refs[3].namespace == data["asset2_model_main_v002"].latest_published_version.nice_name
+    assert (
+        all_refs[3].namespace
+        == data["asset2_model_main_v002"].latest_published_version.nice_name
+    )
 
     # third copy
     assert all_refs[4].namespace == "Asset_2_LookDev_Take3"
-    assert all_refs[5].namespace == data["asset2_model_main_v002"].latest_published_version.nice_name
+    assert (
+        all_refs[5].namespace
+        == data["asset2_model_main_v002"].latest_published_version.nice_name
+    )
 
     # forth copy
     assert all_refs[6].namespace == "Asset_2_LookDev_Take4"
-    assert all_refs[7].namespace == data["asset2_model_main_v002"].latest_published_version.nice_name
+    assert (
+        all_refs[7].namespace
+        == data["asset2_model_main_v002"].latest_published_version.nice_name
+    )
 
     # now check we don't have any failed edits
     # first copy
@@ -514,10 +549,12 @@ def test_fix_reference_namespace_is_working_properly_with_refs_with_new_versions
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data[
-        "asset2_lookdev_take1_v001"
-    ].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[0].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # now let it be fixed
     maya_env.fix_reference_namespaces()
@@ -531,14 +568,21 @@ def test_fix_reference_namespace_is_working_properly_with_refs_with_new_versions
         all_refs[0].namespace
         == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
     )
-    assert all_refs[1].namespace == data["asset2_model_main_v002"].latest_published_version.nice_name
+    assert (
+        all_refs[1].namespace
+        == data["asset2_model_main_v002"].latest_published_version.nice_name
+    )
 
     # check if the reference is created from version2
     assert (
-        maya_env.get_version_from_full_path(all_refs[1].path).parent == data["asset2_model_main_v002"]
+        maya_env.get_version_from_full_path(all_refs[1].path).parent
+        == data["asset2_model_main_v002"]
     )
     # and it is version3
-    assert maya_env.get_version_from_full_path(all_refs[1].path) == data["asset2_model_main_v003"]
+    assert (
+        maya_env.get_version_from_full_path(all_refs[1].path)
+        == data["asset2_model_main_v003"]
+    )
 
     # now check we don't have any failed edits
     # first copy
@@ -641,10 +685,12 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data[
-        "asset2_lookdev_take1_v001"
-    ].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[0].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # now fix the namespaces in version15 let it be fixed
     maya_env.fix_reference_namespaces()
@@ -661,7 +707,10 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
         all_refs[0].namespace
         == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
     )
-    assert all_refs[1].namespace == data["asset2_model_main_v002"].latest_published_version.nice_name
+    assert (
+        all_refs[1].namespace
+        == data["asset2_model_main_v002"].latest_published_version.nice_name
+    )
 
     # now check we don't have any failed edits
     # first copy
@@ -683,10 +732,12 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data[
-        "asset2_lookdev_take1_v001"
-    ].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[0].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     maya_env.fix_reference_namespaces()
     pm.saveFile()
@@ -702,7 +753,10 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
         all_refs[0].namespace
         == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
     )
-    assert all_refs[1].namespace == data["asset2_model_main_v002"].latest_published_version.nice_name
+    assert (
+        all_refs[1].namespace
+        == data["asset2_model_main_v002"].latest_published_version.nice_name
+    )
 
     # now check we don't have any failed edits
     # first copy
@@ -809,10 +863,12 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data[
-        "asset2_lookdev_take1_v001"
-    ].filename.replace(".", "_")
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # version18 references asset2_lookdev_take1_v001
     pm.newFile(force=True)
@@ -850,10 +906,12 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version18"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data[
-        "asset2_lookdev_take1_v001"
-    ].filename.replace(".", "_")
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # check edits
     assert len(pm.referenceQuery(all_refs[0], es=1, fld=1)) == 0
@@ -881,7 +939,10 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
         all_refs[1].namespace
         == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
     )
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].latest_published_version.nice_name
+    assert (
+        all_refs[2].namespace
+        == data["asset2_model_main_v002"].latest_published_version.nice_name
+    )
 
     # now check we don't have any failed edits
     # first copy
@@ -906,10 +967,12 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data[
-        "asset2_lookdev_take1_v001"
-    ].filename.replace(".", "_")
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     maya_env.fix_reference_namespaces()
     pm.saveFile()
@@ -926,7 +989,10 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
         all_refs[1].namespace
         == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
     )
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].latest_published_version.nice_name
+    assert (
+        all_refs[2].namespace
+        == data["asset2_model_main_v002"].latest_published_version.nice_name
+    )
 
     # now check we don't have any failed edits
     # first copy
@@ -1020,10 +1086,12 @@ def test_fix_reference_namespace_returns_a_list_of_newly_created_versions(
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data[
-        "asset2_lookdev_take1_v001"
-    ].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[0].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # now let it be fixed
     list_of_versions = maya_env.fix_reference_namespaces()
@@ -1100,15 +1168,20 @@ def test_fix_reference_namespace_returned_versions_have_correct_description(
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data[
-        "asset2_lookdev_take1_v001"
-    ].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[0].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # now let it be fixed
     maya_env.fix_reference_namespaces()
 
-    assert data["asset2_lookdev_take1_v001"].latest_published_version != data["asset2_lookdev_take1_v001"]
+    assert (
+        data["asset2_lookdev_take1_v001"].latest_published_version
+        != data["asset2_lookdev_take1_v001"]
+    )
     assert (
         "Automatically created with Fix Reference Namespace"
         == data["asset2_lookdev_take1_v001"].latest_published_version.description
@@ -1197,18 +1270,22 @@ def test_fix_reference_namespace_is_working_properly_with_complex_edits(
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data[
-        "asset2_lookdev_take1_v001"
-    ].filename.replace(".", "_")
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data[
-        "asset2_lookdev_take1_v001"
-    ].filename.replace(".", "_")
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     maya_env.fix_reference_namespaces()
     pm.saveFile()
@@ -1222,7 +1299,10 @@ def test_fix_reference_namespace_is_working_properly_with_complex_edits(
         all_refs[1].namespace
         == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
     )
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].latest_published_version.nice_name
+    assert (
+        all_refs[2].namespace
+        == data["asset2_model_main_v002"].latest_published_version.nice_name
+    )
 
     # now check we don't have any failed edits
     # first copy
@@ -1326,10 +1406,12 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_no_nam
     #                                                    |
     #                                                    V
     assert all_refs[0].namespace == data["version11"].filename.split(".")[0]
-    assert all_refs[1].namespace == data[
-        "asset2_lookdev_take1_v001"
-    ].filename.replace(".", "_")
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
@@ -1338,10 +1420,12 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_no_nam
     #                                                     V
     assert all_refs[0].namespace == data["version11"].filename.split(".")[0]
 
-    assert all_refs[1].namespace == data[
-        "asset2_lookdev_take1_v001"
-    ].filename.replace(".", "_")
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     maya_env.fix_reference_namespaces()
     pm.saveFile()
@@ -1355,7 +1439,10 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_no_nam
         all_refs[1].namespace
         == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
     )
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].latest_published_version.nice_name
+    assert (
+        all_refs[2].namespace
+        == data["asset2_model_main_v002"].latest_published_version.nice_name
+    )
 
     # now check we don't have any failed edits
     # first copy
@@ -1460,16 +1547,24 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
 
     # asset2_lookdev_take1_v001 is using version2 namespace
-    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
 
     # asset2_lookdev_take1_v001 is using version2 filename
-    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     maya_env.fix_reference_namespaces()
     pm.saveFile()
@@ -1551,6 +1646,7 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
     # we need to do some edits
     # there should be only one locator in the current scene
     from anima.dcc.mayaEnv import auxiliary
+
     ref_root_nodes = auxiliary.get_root_nodes(ref)
     # parent it to something else
     pm.group(ref_root_nodes, name="test_group")
@@ -1566,13 +1662,21 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
     all_refs = pm.listReferences(recursive=1)
 
     # asset2_lookdev_take1_v001 is using version2 namespace
-    assert all_refs[0].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[0].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     # check namespaces
     # asset2_lookdev_take1_v001 is using version2 filename
-    assert all_refs[0].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[0].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
+    assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     maya_env.fix_reference_namespaces()
     pm.saveFile()
@@ -1681,7 +1785,9 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_correc
 
     # asset2_lookdev_take1_v001 is using correct namespace
     assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].nice_name
-    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(".", "_")
+    assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
+        ".", "_"
+    )
 
     maya_env.fix_reference_namespaces()
     pm.saveFile()

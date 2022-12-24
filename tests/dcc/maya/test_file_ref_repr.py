@@ -13,9 +13,15 @@ def create_ref_test_data(create_test_data, create_pymel):
     pm = create_pymel
     # now do your addition
     # create ass take for asset2
-    data["repr_version1"] = create_version(data["asset2_model"], "Main@ASS", data["asset2_model_main_v003"])
-    data["repr_version2"] = create_version(data["asset2_model"], "Main@ASS", data["asset2_model_main_v003"])
-    data["repr_version3"] = create_version(data["asset2_model"], "Main@ASS", data["asset2_model_main_v003"])
+    data["repr_version1"] = create_version(
+        data["asset2_model"], "Main@ASS", data["asset2_model_main_v003"]
+    )
+    data["repr_version2"] = create_version(
+        data["asset2_model"], "Main@ASS", data["asset2_model_main_v003"]
+    )
+    data["repr_version3"] = create_version(
+        data["asset2_model"], "Main@ASS", data["asset2_model_main_v003"]
+    )
 
     data["repr_version1"].is_published = True
     data["repr_version3"].is_published = True
@@ -33,9 +39,15 @@ def create_ref_test_data(create_test_data, create_pymel):
     data["repr_version4"].is_published = True
     data["repr_version6"].is_published = True
 
-    data["repr_version7"] = create_version(data["asset2_model"], "Main@GPU", data["asset2_model_main_v003"])
-    data["repr_version8"] = create_version(data["asset2_model"], "Main@GPU", data["asset2_model_main_v003"])
-    data["repr_version9"] = create_version(data["asset2_model"], "Main@GPU", data["asset2_model_main_v003"])
+    data["repr_version7"] = create_version(
+        data["asset2_model"], "Main@GPU", data["asset2_model_main_v003"]
+    )
+    data["repr_version8"] = create_version(
+        data["asset2_model"], "Main@GPU", data["asset2_model_main_v003"]
+    )
+    data["repr_version9"] = create_version(
+        data["asset2_model"], "Main@GPU", data["asset2_model_main_v003"]
+    )
 
     data["repr_version9"].is_published = True
 
@@ -102,6 +114,7 @@ def create_ref_test_data(create_test_data, create_pymel):
     DBSession.commit()
 
     import pymel.core as pm
+
     pm.newFile(force=True)
     yield data
 

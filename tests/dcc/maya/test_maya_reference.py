@@ -51,7 +51,11 @@ def test_update_versions_is_working_properly_case_1(
     visited_versions = []
     for v in data["version12"].walk_inputs():
         visited_versions.append(v)
-    expected_visited_versions = [data["version12"], data["asset2_model_take1_v002"], data["asset2_model_main_v002"]]
+    expected_visited_versions = [
+        data["version12"],
+        data["asset2_model_take1_v002"],
+        data["asset2_model_main_v002"],
+    ]
     assert expected_visited_versions == visited_versions
 
     reference_resolution = maya_env.open(data["version12"])
@@ -63,11 +67,15 @@ def test_update_versions_is_working_properly_case_1(
     # check references
     # we shouldn't have a new version5 referenced
     refs = pm.listReferences()
-    assert data["asset2_model_take1_v002"] == maya_env.get_version_from_full_path(refs[0].path)
+    assert data["asset2_model_take1_v002"] == maya_env.get_version_from_full_path(
+        refs[0].path
+    )
 
     # and it should still have referencing version2
     refs = pm.listReferences(refs[0])
-    assert data["asset2_model_main_v002"] == maya_env.get_version_from_full_path(refs[0].path)
+    assert data["asset2_model_main_v002"] == maya_env.get_version_from_full_path(
+        refs[0].path
+    )
 
 
 def test_update_versions_is_working_properly_case_2(
@@ -129,7 +137,11 @@ def test_update_versions_is_working_properly_case_2(
     for v in data["version12"].walk_inputs():
         visited_versions.append(v)
 
-    expected_visited_versions = [data["version12"], data["asset2_model_take1_v002"], data["asset2_model_main_v002"]]
+    expected_visited_versions = [
+        data["version12"],
+        data["asset2_model_take1_v002"],
+        data["asset2_model_main_v002"],
+    ]
 
     assert expected_visited_versions == visited_versions
 
@@ -144,11 +156,15 @@ def test_update_versions_is_working_properly_case_2(
 
     # and expect maya have the updated references
     refs = pm.listReferences()
-    assert data["asset2_model_take1_v003"] == maya_env.get_version_from_full_path(refs[0].path)
+    assert data["asset2_model_take1_v003"] == maya_env.get_version_from_full_path(
+        refs[0].path
+    )
 
     # and it should have referenced version3
     refs = pm.listReferences(refs[0])
-    assert data["asset2_model_main_v003"] == maya_env.get_version_from_full_path(refs[0].path)
+    assert data["asset2_model_main_v003"] == maya_env.get_version_from_full_path(
+        refs[0].path
+    )
 
 
 def test_update_versions_is_working_properly_case_3(
@@ -246,19 +262,27 @@ def test_update_versions_is_working_properly_case_3(
 
     # and it should have referenced version5A
     refs_level2 = pm.listReferences(refs_level1[0])
-    assert data["asset2_model_take1_v002"] == maya_env.get_version_from_full_path(refs_level2[0].path)
+    assert data["asset2_model_take1_v002"] == maya_env.get_version_from_full_path(
+        refs_level2[0].path
+    )
 
     # and it should have referenced version5A
     refs_level3 = pm.listReferences(refs_level2[0])
-    assert data["asset2_model_main_v002"] == maya_env.get_version_from_full_path(refs_level3[0].path)
+    assert data["asset2_model_main_v002"] == maya_env.get_version_from_full_path(
+        refs_level3[0].path
+    )
 
     # the other version5A
     refs_level2 = pm.listReferences(refs_level1[1])
-    assert data["asset2_model_take1_v002"] == maya_env.get_version_from_full_path(refs_level2[0].path)
+    assert data["asset2_model_take1_v002"] == maya_env.get_version_from_full_path(
+        refs_level2[0].path
+    )
 
     # and it should have referenced version5A
     refs_level3 = pm.listReferences(refs_level2[0])
-    assert data["asset2_model_main_v002"] == maya_env.get_version_from_full_path(refs_level3[0].path)
+    assert data["asset2_model_main_v002"] == maya_env.get_version_from_full_path(
+        refs_level3[0].path
+    )
 
 
 def test_update_versions_is_working_properly_case_4(
@@ -377,10 +401,18 @@ def test_update_versions_is_working_properly_case_4(
     assert published_version == maya_env.get_version_from_full_path(version5_ref4.path)
 
     # Version2
-    assert data["asset2_model_main_v002"] == maya_env.get_version_from_full_path(version2_ref1.path)
-    assert data["asset2_model_main_v002"] == maya_env.get_version_from_full_path(version2_ref2.path)
-    assert data["asset2_model_main_v002"] == maya_env.get_version_from_full_path(version2_ref3.path)
-    assert data["asset2_model_main_v002"] == maya_env.get_version_from_full_path(version2_ref4.path)
+    assert data["asset2_model_main_v002"] == maya_env.get_version_from_full_path(
+        version2_ref1.path
+    )
+    assert data["asset2_model_main_v002"] == maya_env.get_version_from_full_path(
+        version2_ref2.path
+    )
+    assert data["asset2_model_main_v002"] == maya_env.get_version_from_full_path(
+        version2_ref3.path
+    )
+    assert data["asset2_model_main_v002"] == maya_env.get_version_from_full_path(
+        version2_ref4.path
+    )
 
 
 def test_update_versions_is_working_properly_case_5(
@@ -658,7 +690,12 @@ def test_reference_updates_version_inputs_attribute(
 
     # at this point we should have data["asset2_model_take1_v003"].inputs filled correctly
     assert sorted(
-        [data["asset2_model_take1_v002"], data["asset2_model_take1_v001"], data["asset2_model_main_v003"]], key=lambda x: x.name
+        [
+            data["asset2_model_take1_v002"],
+            data["asset2_model_take1_v001"],
+            data["asset2_model_main_v003"],
+        ],
+        key=lambda x: x.name,
     ) == sorted(data["asset2_model_take1_v003"].inputs, key=lambda x: x.name)
 
 
@@ -684,7 +721,12 @@ def test_get_referenced_versions_returns_a_list_of_Version_instances(
     referenced_versions = maya_env.get_referenced_versions()
 
     assert sorted(referenced_versions, key=lambda x: x.name) == sorted(
-        [data["asset2_model_main_v003"], data["asset2_model_take1_v001"], data["asset2_model_take1_v002"]], key=lambda x: x.name
+        [
+            data["asset2_model_main_v003"],
+            data["asset2_model_take1_v001"],
+            data["asset2_model_take1_v002"],
+        ],
+        key=lambda x: x.name,
     )
 
 
@@ -700,7 +742,7 @@ def test_get_referenced_versions_returns_a_list_of_Version_instances_even_with_r
 
     # Asset2 - Take1
     pm.newFile(force=True)
-    root_node = pm.nt.Transform(name='Asset2_Take1')
+    root_node = pm.nt.Transform(name="Asset2_Take1")
     box = pm.polyCube(name="Box1")[0]
     pm.parent(box, root_node)
     pm.runtime.DeleteHistory()
@@ -738,7 +780,12 @@ def test_get_referenced_versions_returns_a_list_of_Version_instances_even_with_r
     referenced_versions = maya_env.get_referenced_versions()
 
     assert sorted(referenced_versions, key=lambda x: x.name) == sorted(
-        [data["asset2_model_main_v003"], data["asset2_model_take1_v001"], data["asset2_model_take1_v002"]], key=lambda x: x.name
+        [
+            data["asset2_model_main_v003"],
+            data["asset2_model_take1_v001"],
+            data["asset2_model_take1_v002"],
+        ],
+        key=lambda x: x.name,
     )  # version4 will be skipped
 
 
@@ -778,7 +825,12 @@ def test_get_referenced_versions_returns_a_list_of_Version_instances_referenced_
     versions = maya_env.get_referenced_versions(pm.listReferences()[0])
 
     assert sorted(versions, key=lambda x: x.name) == sorted(
-        [data["asset2_model_main_v003"], data["asset2_model_take1_v001"], data["asset2_model_take1_v002"]], key=lambda x: x.name
+        [
+            data["asset2_model_main_v003"],
+            data["asset2_model_take1_v001"],
+            data["asset2_model_take1_v002"],
+        ],
+        key=lambda x: x.name,
     )
 
 
@@ -840,7 +892,12 @@ def test_update_version_inputs_method_updates_the_inputs_of_the_open_version(
     maya_env.update_version_inputs(refs[0])
 
     assert sorted(
-        [data["asset2_model_main_v003"], data["asset2_model_take1_v001"], data["asset2_model_take1_v002"]], key=lambda x: x.name
+        [
+            data["asset2_model_main_v003"],
+            data["asset2_model_take1_v001"],
+            data["asset2_model_take1_v002"],
+        ],
+        key=lambda x: x.name,
     ) == sorted(data["asset2_model_take1_v003"].inputs, key=lambda x: x.name)
 
 

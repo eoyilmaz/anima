@@ -67,7 +67,8 @@ def test_slices_in_x_attribute_is_set_to_None(prepare_scene):
         rs.slices_in_x = None
 
     assert (
-        str(cm.value) == "RenderSlicer.slices_in_x should be a non-zero positive integer, not NoneType"
+        str(cm.value)
+        == "RenderSlicer.slices_in_x should be a non-zero positive integer, not NoneType"
     )
 
 
@@ -81,8 +82,9 @@ def test_slices_in_x_attribute_is_set_to_a_value_other_than_an_integer(prepare_s
         rs.slices_in_x = "not an integer"
 
     assert (
-        str(cm.value) ==
-        "RenderSlicer.slices_in_x should be a non-zero positive integer, " "not str"
+        str(cm.value)
+        == "RenderSlicer.slices_in_x should be a non-zero positive integer, "
+        "not str"
     )
 
 
@@ -96,8 +98,8 @@ def test_slices_in_x_attribute_is_zero(prepare_scene):
         rs.slices_in_x = 0
 
     assert (
-        str(cm.value) ==
-        "RenderSlicer.slices_in_x should be a non-zero positive integer"
+        str(cm.value)
+        == "RenderSlicer.slices_in_x should be a non-zero positive integer"
     )
 
 
@@ -111,8 +113,8 @@ def test_slices_in_x_attribute_is_smaller_than_1(prepare_scene):
         rs.slices_in_x = 0
 
     assert (
-        str(cm.value) ==
-        "RenderSlicer.slices_in_x should be a non-zero positive integer"
+        str(cm.value)
+        == "RenderSlicer.slices_in_x should be a non-zero positive integer"
     )
 
 
@@ -136,8 +138,8 @@ def test_slices_in_y_attribute_is_set_to_None(prepare_scene):
         rs.slices_in_y = None
 
     assert (
-        str(cm.value) ==
-        "RenderSlicer.slices_in_y should be a non-zero positive integer, not NoneType"
+        str(cm.value)
+        == "RenderSlicer.slices_in_y should be a non-zero positive integer, not NoneType"
     )
 
 
@@ -151,8 +153,9 @@ def test_slices_in_y_attribute_is_set_to_a_value_other_than_an_integer(prepare_s
         rs.slices_in_y = "not an integer"
 
     assert (
-        str(cm.value) ==
-        "RenderSlicer.slices_in_y should be a non-zero positive integer, " "not str",
+        str(cm.value)
+        == "RenderSlicer.slices_in_y should be a non-zero positive integer, "
+        "not str",
     )
 
 
@@ -166,8 +169,8 @@ def test_slices_in_y_attribute_is_zero(prepare_scene):
         rs.slices_in_y = 0
 
     assert (
-        str(cm.value) ==
-        "RenderSlicer.slices_in_y should be a non-zero positive integer",
+        str(cm.value)
+        == "RenderSlicer.slices_in_y should be a non-zero positive integer",
     )
 
 
@@ -181,8 +184,8 @@ def test_slices_in_y_attribute_is_smaller_than_1(prepare_scene):
         rs.slices_in_y = 0
 
     assert (
-        str(cm.value) ==
-        "RenderSlicer.slices_in_y should be a non-zero positive integer"
+        str(cm.value)
+        == "RenderSlicer.slices_in_y should be a non-zero positive integer"
     )
 
 
@@ -269,7 +272,9 @@ def test_slice_will_set_the_render_resolution(prepare_scene, create_pymel):
     assert dres.height.get() == 27
 
 
-def test_slice_will_set_the_pan_zoom_enabled_attribute_of_the_camera(prepare_scene, create_pymel):
+def test_slice_will_set_the_pan_zoom_enabled_attribute_of_the_camera(
+    prepare_scene, create_pymel
+):
     """testing if calling the slice() method will set the panZoomEnabled
     attribute of the camera
     """
@@ -371,7 +376,9 @@ def test_slice_will_un_slice_the_same_camera(prepare_scene, create_pymel):
     assert dres.height.get() == 108
 
 
-def test_slice_will_un_slice_if_the_scene_has_a_silced_camera(prepare_scene, create_pymel):
+def test_slice_will_un_slice_if_the_scene_has_a_silced_camera(
+    prepare_scene, create_pymel
+):
     """testing if calling the slice() method will un-slice the scene if
     there is a previously sliced camera
     """

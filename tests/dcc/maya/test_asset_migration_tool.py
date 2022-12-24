@@ -37,14 +37,12 @@ def migration_test_data(create_test_data, create_pymel, create_maya_env):
         name="Random Asset1",
         code="RandomAsset1",
         type=data["exterior_type"],
-        parent=data["assets_task3"]
+        parent=data["assets_task3"],
     )
     DBSession.add(data["random_asset1"])
 
     data["random_asset1_model"] = Task(
-        name="Model",
-        type=data["model_type"],
-        parent=data["random_asset1"]
+        name="Model", type=data["model_type"], parent=data["random_asset1"]
     )
     DBSession.add(data["random_asset1_model"])
     DBSession.commit()
@@ -160,7 +158,10 @@ def test_migrating_simple_asset_1(migration_test_data):
             "new_parent_id": data["assets_task2"].id,
             "tasks": {
                 data["asset2_model"].id: {
-                    "Main": {"new_take_name": "Main", "versions": [data["asset2_model_main_v003"]]}
+                    "Main": {
+                        "new_take_name": "Main",
+                        "versions": [data["asset2_model_main_v003"]],
+                    }
                 }
             },
         }
@@ -252,8 +253,14 @@ def test_migrating_simple_asset_3(migration_test_data, create_pymel, create_maya
             "new_parent_id": data["assets_task2"].id,
             "tasks": {
                 data["asset2_model"].id: {
-                    "Main": {"new_take_name": "Main", "versions": [data["asset2_model_main_v003"]]},
-                    "Take1": {"new_take_name": "Take1", "versions": [data["asset2_model_take1_v003"]]},
+                    "Main": {
+                        "new_take_name": "Main",
+                        "versions": [data["asset2_model_main_v003"]],
+                    },
+                    "Take1": {
+                        "new_take_name": "Take1",
+                        "versions": [data["asset2_model_take1_v003"]],
+                    },
                 }
             },
         }
@@ -309,8 +316,14 @@ def test_migrating_simple_asset_4(migration_test_data, create_pymel, create_maya
             "new_parent_id": data["assets_task2"].id,
             "tasks": {
                 data["asset2_model"].id: {
-                    "Main": {"new_take_name": "Main", "versions": [data["asset2_model_main_v003"]]},
-                    "Take1": {"new_take_name": "Take1", "versions": [data["asset2_model_take1_v003"]]},
+                    "Main": {
+                        "new_take_name": "Main",
+                        "versions": [data["asset2_model_main_v003"]],
+                    },
+                    "Take1": {
+                        "new_take_name": "Take1",
+                        "versions": [data["asset2_model_take1_v003"]],
+                    },
                 }
             },
         }
@@ -567,7 +580,7 @@ def test_migrating_complex_env_asset_1(
     pm = create_pymel
     maya_env = create_maya_env
     migration_recipe = {
-        data["ext2"].id: {
+        data["ext1"].id: {
             "new_parent_id": data["assets_task2"].id,
             "tasks": {
                 data["ext2_layout"].id: {
@@ -577,7 +590,7 @@ def test_migrating_complex_env_asset_1(
                 data["ext2_look_dev"].id: {
                     "Main": {"versions": [data["ext2_look_dev_main_v003"]]},
                 },
-                data["Props"].id: {}
+                data["Props"].id: {},
             },
         }
     }
@@ -636,7 +649,9 @@ def test_migrating_with_alternative_versions_data_1(
     amt = AssetMigrationTool()
     amt.migration_recipe = migration_recipe
     # inject alternative
-    amt.version_lut[data["ext2_model_main_v003"]] = data["random_asset1_model_main_version1"]
+    amt.version_lut[data["ext2_model_main_v003"]] = data[
+        "random_asset1_model_main_version1"
+    ]
     amt.migrate()
 
     # we now should have a new asset under the Assets Task2
@@ -655,7 +670,9 @@ def test_migrating_with_alternative_versions_data_1(
     assert model_task is None
     # Layout (There should be no layout task as it is not moved)
     layout_task = (
-        Task.query.filter(Task.parent == new_asset).filter(Task.name == "Layout").first()
+        Task.query.filter(Task.parent == new_asset)
+        .filter(Task.name == "Layout")
+        .first()
     )
     assert layout_task is None
 
@@ -846,8 +863,6 @@ def test_asset_migration_tool_add_take_new_take_name_is_a_str(
     raise NotImplementedError("Test is not implemented yet")
 
 
-def test_move_old_versions_1(
-    migration_test_data, create_pymel, create_maya_env
-):
+def test_move_old_versions_1(migration_test_data, create_pymel, create_maya_env):
     """Test AssetMigrationTool to move a scene with newer versions detected."""
     raise NotImplementedError("Test is not implemented yet")
