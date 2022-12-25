@@ -156,15 +156,16 @@ def test_migrating_simple_asset_1(migration_test_data):
     migration_recipe = {
         data["asset2"].id: {
             "new_parent_id": data["assets_task2"].id,
-            "tasks": {
-                data["asset2_model"].id: {
-                    "Main": {
-                        "new_take_name": "Main",
-                        "versions": [data["asset2_model_main_v003"]],
-                    }
+        },
+        data["asset2_model"].id: {
+            "new_parent_id": data["asset2"].id,
+            "takes": {
+                "Main": {
+                    "new_take_name": "Main",
+                    "versions": [data["asset2_model_main_v003"]],
                 }
             },
-        }
+        },
     }
 
     assert data["assets_task2"].children == []
@@ -204,15 +205,16 @@ def test_migrating_simple_asset_2(migration_test_data, create_pymel, create_maya
     migration_recipe = {
         data["asset2"].id: {
             "new_parent_id": data["assets_task2"].id,
-            "tasks": {
-                data["asset2_model"].id: {
-                    "Main": {
-                        "new_take_name": "Main",
-                        "versions": [data["asset2_model_main_v003"]],
-                    }
+        },
+        data["asset2_model"].id: {
+            "new_parent_id": data["asset2"].id,
+            "takes": {
+                "Main": {
+                    "new_take_name": "Main",
+                    "versions": [data["asset2_model_main_v003"]],
                 }
             },
-        }
+        },
     }
 
     assert data["assets_task2"].children == []
@@ -251,19 +253,20 @@ def test_migrating_simple_asset_3(migration_test_data, create_pymel, create_maya
     migration_recipe = {
         data["asset2"].id: {
             "new_parent_id": data["assets_task2"].id,
-            "tasks": {
-                data["asset2_model"].id: {
-                    "Main": {
-                        "new_take_name": "Main",
-                        "versions": [data["asset2_model_main_v003"]],
-                    },
-                    "Take1": {
-                        "new_take_name": "Take1",
-                        "versions": [data["asset2_model_take1_v003"]],
-                    },
-                }
+        },
+        data["asset2_model"].id: {
+            "new_parent_id": data["asset2"].id,
+            "takes": {
+                "Main": {
+                    "new_take_name": "Main",
+                    "versions": [data["asset2_model_main_v003"]],
+                },
+                "Take1": {
+                    "new_take_name": "Take1",
+                    "versions": [data["asset2_model_take1_v003"]],
+                },
             },
-        }
+        },
     }
 
     assert data["assets_task2"].children == []
@@ -314,19 +317,20 @@ def test_migrating_simple_asset_4(migration_test_data, create_pymel, create_maya
     migration_recipe = {
         data["asset2"].id: {
             "new_parent_id": data["assets_task2"].id,
-            "tasks": {
-                data["asset2_model"].id: {
-                    "Main": {
-                        "new_take_name": "Main",
-                        "versions": [data["asset2_model_main_v003"]],
-                    },
-                    "Take1": {
-                        "new_take_name": "Take1",
-                        "versions": [data["asset2_model_take1_v003"]],
-                    },
-                }
+        },
+        data["asset2_model"].id: {
+            "new_parent_id": data["asset2"].id,
+            "takes": {
+                "Main": {
+                    "new_take_name": "Main",
+                    "versions": [data["asset2_model_main_v003"]],
+                },
+                "Take1": {
+                    "new_take_name": "Take1",
+                    "versions": [data["asset2_model_take1_v003"]],
+                },
             },
-        }
+        },
     }
 
     assert data["assets_task2"].children == []
@@ -392,17 +396,19 @@ def test_migrating_simple_env_asset_1(
     migration_recipe = {
         data["ext2"].id: {
             "new_parent_id": data["assets_task2"].id,
-            "tasks": {
-                data[
-                    "ext2_layout"
-                ].id: {  # tricky part, this needs to be moved after look dev
-                    "Main": {"versions": [data["ext2_layout_main_v003"]]},
-                },
-                data["ext2_look_dev"].id: {
-                    "Main": {"versions": [data["ext2_look_dev_main_v003"]]},
-                },
+        },
+        data["ext2_layout"].id: {  # tricky part, this needs to be moved after look dev
+            "new_parent_id": data["ext2"].id,
+            "takes": {
+                "Main": {"versions": [data["ext2_layout_main_v003"]]},
             },
-        }
+        },
+        data["ext2_look_dev"].id: {
+            "new_parent_id": data["ext2"].id,
+            "takes": {
+                "Main": {"versions": [data["ext2_look_dev_main_v003"]]},
+            },
+        },
     }
 
     assert data["assets_task2"].children == []
@@ -469,17 +475,19 @@ def test_migrating_simple_env_asset_2(
     migration_recipe = {
         data["ext2"].id: {
             "new_parent_id": data["assets_task2"].id,
-            "tasks": {
-                data[
-                    "ext2_layout"
-                ].id: {  # tricky part, this needs to be moved after look dev
-                    "Main": {"versions": [data["ext2_layout_main_v003"]]},
-                },
-                data["ext2_look_dev"].id: {
-                    "Main": {"versions": [data["ext2_look_dev_main_v003"]]},
-                },
+        },
+        data["ext2_layout"].id: {  # tricky part, this needs to be moved after look dev
+            "new_parent_id": data["ext2"].id,
+            "takes": {
+                "Main": {"versions": [data["ext2_layout_main_v003"]]},
             },
-        }
+        },
+        data["ext2_look_dev"].id: {
+            "new_parent_id": data["ext2"].id,
+            "takes": {
+                "Main": {"versions": [data["ext2_look_dev_main_v003"]]},
+            },
+        },
     }
 
     assert data["assets_task2"].children == []
@@ -534,47 +542,47 @@ def test_migrating_complex_env_asset_1(
     migration_test_data, create_pymel, create_maya_env
 ):
     """Test AssetMigrationTool with a complex environment asset."""
-    # Ext1 (Asset - Exterior)
-    # +- Building1 (Asset - Building)
-    # |  +- Layout (Task - Layout)
-    # |  |  +- version66
-    # |  +- LookDev (Task - Look Development)
-    # |  |  +- version69
-    # |  +- Props (Task)
-    # |     +- YAPI (Task)
-    # |        +- Model (Task - Model)
-    # |        |  +- version75
-    # |        +- LookDev (Task - Look Development)
-    # |           +- version78
-    # +- Building2 (Asset - Building)
-    # |  +- Layout (Task - Layout)
-    # |  |  +- version84
-    # |  +- LookDev (Task - Look Development)
-    # |  |  +- version87
-    # |  +- Props (Task)
-    # |     +- YAPI (Task)
-    # |        +- Model (Task - Model)
-    # |        |  +- version93
-    # |        +- LookDev (Task - Look Development)
-    # |           +- version96
-    # +- Layout (Task - Layout)
-    # |  +- version102
-    # +- LookDev (Task - Look Development)
-    # |  +- version105
-    # +- Props (Task)
-    # |  +- Prop1 (Asset)
-    # |     +- Model (Task - Model)
-    # |     |  +- **Main** (Take)
-    # |     |  |  +- version111
-    # |     |  +- **Kisa** (Take)
-    # |     |     +- version123
-    # |     +- LookDev (Task - Look Development)
-    # |        +- **Main** (Take)
-    # |        |  +- version114
-    # |        +- **Kisa** (Take)
-    # |           +- version120
-    # +- Vegetation (Task - Vegetation)
-    #    +- version117
+    # +- Ext1 (Asset - Exterior)
+    #    +- Building1 (Asset - Building)
+    #    |  +- Layout (Task - Layout)
+    #    |  |  +- building1_layout_main_v003
+    #    |  +- LookDev (Task - Look Development)
+    #    |  |  +- building1_look_dev_main_v003
+    #    |  +- Props (Task)
+    #    |     +- building1_yapi (Asset)
+    #    |        +- Model (Task - Model)
+    #    |        |  +- building1_yapi_model_main_v003
+    #    |        +- LookDev (Task - Look Development)
+    #    |           +- building1_yapi_look_dev_main_v003
+    #    +- Building2 (Asset - Building)
+    #    |  +- Layout (Task - Layout)
+    #    |  |  +- building2_layout_main_v003
+    #    |  +- LookDev (Task - Look Development)
+    #    |  |  +- building2_look_dev_main_v003
+    #    |  +- Props (Task)
+    #    |     +- building2_yapi (Asset)
+    #    |        +- Model (Task - Model)
+    #    |        |  +- building2_yapi_model_main_v003
+    #    |        +- LookDev (Task - Look Development)
+    #    |           +- building2_yapi_look_dev_main_v003
+    #    +- Layout (Task - Layout)
+    #    |  +- ext1_layout_main_v003
+    #    +- LookDev (Task - Look Development)
+    #    |  +- ext1_look_dev_main_v003
+    #    +- Props (Task)
+    #    |  +- Prop1 (Asset)
+    #    |     +- Model (Task - Model)
+    #    |     |  +- **Main** (Take)
+    #    |     |  |  +- prop1_model_main_v003
+    #    |     |  +- **Kisa** (Take)
+    #    |     |     +- prop1_model_kisa_v003
+    #    |     +- LookDev (Task - Look Development)
+    #    |        +- **Main** (Take)
+    #    |        |  +- prop1_look_dev_main_v003
+    #    |        +- **Kisa** (Take)
+    #    |           +- prop1_look_dev_kisa_v003
+    #    +- Vegetation (Task - Vegetation)
+    #       +- ext1_vegetation_main_v003
     # Check Stalker data
     data = migration_test_data
     pm = create_pymel
@@ -582,42 +590,867 @@ def test_migrating_complex_env_asset_1(
     migration_recipe = {
         data["ext1"].id: {
             "new_parent_id": data["assets_task2"].id,
-            "tasks": {
-                data["ext2_layout"].id: {
-                    # tricky part, this needs to be moved after look dev
-                    "Main": {"versions": [data["ext2_layout_main_v003"]]},
-                },
-                data["ext2_look_dev"].id: {
-                    "Main": {"versions": [data["ext2_look_dev_main_v003"]]},
-                },
-                data["Props"].id: {},
+        },
+        data["ext1_layout"].id: {
+            "takes": {
+                # tricky part, this needs to be moved after look dev
+                "Main": {"versions": [data["ext1_layout_main_v003"]]},
             },
-        }
+        },
+        data["ext1_look_dev"].id: {
+            "takes": {
+                "Main": {"versions": [data["ext1_look_dev_main_v003"]]},
+            },
+        },
+        data["building1"].id: {},
+        data["building1_layout"].id: {
+            "takes": {
+                "Main": {"versions": [data["building1_layout_main_v003"]]},
+            },
+        },
+        data["building1_look_dev"].id: {
+            "takes": {
+                "Main": {"versions": [data["building1_look_dev_main_v003"]]},
+            },
+        },
+        data["building1_props"].id: {},
+        data["building1_yapi"].id: {},
+        data["building1_yapi_model"].id: {
+            "takes": {"Main": {"versions": [data["building1_yapi_model_main_v003"]]}}
+        },
+        data["building1_yapi_look_dev"].id: {
+            "takes": {"Main": {"versions": [data["building1_yapi_look_dev_main_v003"]]}}
+        },
+        data["building2"].id: {},
+        data["building2_layout"].id: {
+            "takes": {
+                "Main": {"versions": [data["building2_layout_main_v003"]]},
+            },
+        },
+        data["building2_look_dev"].id: {
+            "takes": {
+                "Main": {"versions": [data["building2_look_dev_main_v003"]]},
+            },
+        },
+        data["building2_props"].id: {},
+        data["building2_yapi"].id: {},
+        data["building2_yapi_model"].id: {
+            "takes": {"Main": {"versions": [data["building2_yapi_model_main_v003"]]}}
+        },
+        data["building2_yapi_look_dev"].id: {
+            "takes": {"Main": {"versions": [data["building2_yapi_look_dev_main_v003"]]}}
+        },
+        data["ext1_props"].id: {},
+        data["prop1"].id: {},
+        data["prop1_model"].id: {
+            "takes": {
+                "Main": {"versions": [data["prop1_model_main_v003"]]},
+                "Kisa": {"versions": [data["prop1_model_kisa_v003"]]},
+            }
+        },
+        data["prop1_look_dev"].id: {
+            "takes": {
+                "Main": {"versions": [data["prop1_look_dev_main_v003"]]},
+                "Kisa": {"versions": [data["prop1_look_dev_kisa_v003"]]},
+            }
+        },
+        data["ext1_vegetation"].id: {
+            "takes": {"Main": {"versions": [data["ext1_vegetation_main_v003"]]}}
+        },
     }
 
     assert data["assets_task2"].children == []
-
     from anima.dcc.mayaEnv.asset_migration_tool import AssetMigrationTool
 
     amt = AssetMigrationTool()
     amt.migration_recipe = migration_recipe
     amt.migrate()
 
-    raise NotImplementedError("Test is not implemented yet")
+    assert data["assets_task2"].children != []
+    assert len(data["assets_task2"].children) == 1
+    ext1 = data["assets_task2"].children[0]
+    assert isinstance(ext1, Asset)
+    assert ext1.name == data["ext1"].name
+    assert ext1.code == data["ext1"].code
+    assert ext1.type == data["exterior_type"]
+    assert len(ext1.children) == 6
+
+    # Building1
+    building1 = (
+        Asset.query.filter(Asset.parent == ext1)
+        .filter(Asset.name == data["building1"].name)
+        .first()
+    )
+    assert building1 is not None
+    assert isinstance(building1, Asset)
+    assert building1.name == data["building1"].name
+    assert building1.code == data["building1"].code
+    assert building1.type == data["building_type"]
+    assert len(building1.children) == 3
+
+    # Building1 Layout
+    building1_layout = (
+        Task.query.filter(Task.parent == building1)
+        .filter(Task.name == data["building1_layout"].name)
+        .first()
+    )
+    assert building1_layout is not None
+    assert isinstance(building1_layout, Task)
+    assert building1_layout.name == data["building1_layout"].name
+    assert building1_layout.type == data["layout_type"]
+    assert len(building1_layout.versions) == 1
+    v1 = building1_layout.versions[0]
+    assert v1.take_name == "Main"
+    assert v1.version_number == 1
+
+    # Building1 LookDev
+    building1_look_dev = (
+        Task.query.filter(Task.parent == building1)
+        .filter(Task.name == data["building1_look_dev"].name)
+        .first()
+    )
+    assert building1_look_dev is not None
+    assert isinstance(building1_look_dev, Task)
+    assert building1_look_dev.name == data["building1_look_dev"].name
+    assert building1_look_dev.type == data["look_development_type"]
+    assert len(building1_look_dev.versions) == 1
+    v1 = building1_look_dev.versions[0]
+    assert v1.take_name == "Main"
+    assert v1.version_number == 1
+
+    # Building1 Props
+    building1_props = (
+        Task.query.filter(Task.parent == building1)
+        .filter(Task.name == data["building1_props"].name)
+        .first()
+    )
+    assert building1_props is not None
+    assert isinstance(building1_props, Task)
+    assert building1_props.name == data["building1_props"].name
+    assert building1_props.type is None
+    assert len(building1_props.children) == 1
+    assert len(building1_props.versions) == 0
+
+    # Building1 Yapi
+    building1_yapi = building1_props.children[0]
+    assert isinstance(building1_yapi, Asset)
+    assert building1_yapi.name == data["building1_yapi"].name
+    assert building1_yapi.name == data["building1_yapi"].code
+    assert building1_yapi.type == data["building_type"]
+    assert len(building1_yapi.versions) == 0
+    assert len(building1.children) == 3
+
+    # Building1 Yapi Model
+    building1_yapi_model = (
+        Task.query.filter(Task.parent == building1_yapi)
+        .filter(Task.name == data["building1_yapi_model"].name)
+        .first()
+    )
+    assert building1_yapi_model is not None
+    assert isinstance(building1_yapi_model, Task)
+    assert building1_yapi_model.name == data["building1_yapi_model"].name
+    assert building1_yapi_model.type == data["model_type"]
+    assert len(building1_yapi_model.children) == 0
+    assert len(building1_yapi_model.versions) == 1
+    v1 = building1_yapi_model.versions[0]
+    assert v1.take_name == "Main"
+    assert v1.version_number == 1
+
+    # Building1 Yapi LookDev
+    building1_yapi_look_dev = (
+        Task.query.filter(Task.parent == building1_yapi)
+        .filter(Task.name == data["building1_yapi_look_dev"].name)
+        .first()
+    )
+    assert building1_yapi_look_dev is not None
+    assert isinstance(building1_yapi_look_dev, Task)
+    assert building1_yapi_look_dev.name == data["building1_yapi_look_dev"].name
+    assert building1_yapi_look_dev.type == data["look_development_type"]
+    assert len(building1_yapi_look_dev.children) == 0
+    assert len(building1_yapi_look_dev.versions) == 1
+    v1 = building1_yapi_look_dev.versions[0]
+    assert v1.take_name == "Main"
+    assert v1.version_number == 1
+
+    # Building2
+    building2 = (
+        Asset.query.filter(Asset.parent == ext1)
+        .filter(Asset.name == data["building2"].name)
+        .first()
+    )
+    assert building2 is not None
+    assert isinstance(building2, Asset)
+    assert building2.name == data["building2"].name
+    assert building2.code == data["building2"].code
+    assert building2.type == data["building_type"]
+    assert len(building2.children) == 3
+
+    # Building2 Layout
+    building2_layout = (
+        Task.query.filter(Task.parent == building2)
+        .filter(Task.name == data["building2_layout"].name)
+        .first()
+    )
+    assert building2_layout is not None
+    assert isinstance(building2_layout, Task)
+    assert building2_layout.name == data["building2_layout"].name
+    assert building2_layout.type == data["layout_type"]
+    assert len(building2_layout.versions) == 1
+    v1 = building2_layout.versions[0]
+    assert v1.take_name == "Main"
+    assert v1.version_number == 1
+
+    # Building2 LookDev
+    building2_look_dev = (
+        Task.query.filter(Task.parent == building2)
+        .filter(Task.name == data["building2_look_dev"].name)
+        .first()
+    )
+    assert building2_look_dev is not None
+    assert isinstance(building2_look_dev, Task)
+    assert building2_look_dev.name == data["building2_look_dev"].name
+    assert building2_look_dev.type == data["look_development_type"]
+    assert len(building2_look_dev.versions) == 1
+    v1 = building2_look_dev.versions[0]
+    assert v1.take_name == "Main"
+    assert v1.version_number == 1
+
+    # Building2 Props
+    building2_props = (
+        Task.query.filter(Task.parent == building2)
+        .filter(Task.name == data["building2_props"].name)
+        .first()
+    )
+    assert building2_props is not None
+    assert isinstance(building2_props, Task)
+    assert building2_props.name == data["building2_props"].name
+    assert building2_props.type is None
+    assert len(building2_props.versions) == 0
+    assert len(building2_props.children) == 1
+
+    # Building2 Yapi
+    building2_yapi = building2_props.children[0]
+    assert isinstance(building2_yapi, Asset)
+    assert building2_yapi.name == data["building2_yapi"].name
+    assert building2_yapi.name == data["building2_yapi"].code
+    assert building2_yapi.type == data["building_type"]
+    assert len(building2_yapi.versions) == 0
+    assert len(building2.children) == 3
+
+    # Building2 Yapi Model
+    building2_yapi_model = (
+        Task.query.filter(Task.parent == building2_yapi)
+        .filter(Task.name == data["building2_yapi_model"].name)
+        .first()
+    )
+    assert building2_yapi_model is not None
+    assert isinstance(building2_yapi_model, Task)
+    assert building2_yapi_model.name == data["building2_yapi_model"].name
+    assert building2_yapi_model.type == data["model_type"]
+    assert len(building2_yapi_model.children) == 0
+    assert len(building2_yapi_model.versions) == 1
+    v1 = building2_yapi_model.versions[0]
+    assert v1.take_name == "Main"
+    assert v1.version_number == 1
+
+    # Building2 Yapi LookDev
+    building2_yapi_look_dev = (
+        Task.query.filter(Task.parent == building2_yapi)
+        .filter(Task.name == data["building2_yapi_look_dev"].name)
+        .first()
+    )
+    assert building2_yapi_look_dev is not None
+    assert isinstance(building2_yapi_look_dev, Task)
+    assert building2_yapi_look_dev.name == data["building2_yapi_look_dev"].name
+    assert building2_yapi_look_dev.type == data["look_development_type"]
+    assert len(building2_yapi_look_dev.children) == 0
+    assert len(building2_yapi_look_dev.versions) == 1
+    v1 = building2_yapi_look_dev.versions[0]
+    assert v1.take_name == "Main"
+    assert v1.version_number == 1
+
+    # Ext1 Layout
+    ext1_layout = (
+        Task.query.filter(Task.parent == ext1)
+        .filter(Task.name == data["ext1_layout"].name)
+        .first()
+    )
+    assert ext1_layout is not None
+    assert isinstance(ext1_layout, Task)
+    assert ext1_layout.name == data["ext1_layout"].name
+    assert ext1_layout.type == data["layout_type"]
+    assert len(ext1_layout.children) == 0
+    assert len(ext1_layout.versions) == 1
+    v1 = ext1_layout.versions[0]
+    assert v1.take_name == "Main"
+    assert v1.version_number == 1
+
+    # Ext1 Look_dev
+    ext1_look_dev = (
+        Task.query.filter(Task.parent == ext1)
+        .filter(Task.name == data["ext1_look_dev"].name)
+        .first()
+    )
+    assert ext1_look_dev is not None
+    assert isinstance(ext1_look_dev, Task)
+    assert ext1_look_dev.name == data["ext1_look_dev"].name
+    assert ext1_look_dev.type == data["look_development_type"]
+    assert len(ext1_look_dev.children) == 0
+    assert len(ext1_look_dev.versions) == 1
+    v1 = ext1_look_dev.versions[0]
+    assert v1.take_name == "Main"
+    assert v1.version_number == 1
+
+    # Ext1 Props
+    ext1_props = (
+        Task.query.filter(Task.parent == ext1)
+        .filter(Task.name == data["ext1_props"].name)
+        .first()
+    )
+    assert ext1_props is not None
+    assert isinstance(ext1_props, Task)
+    assert ext1_props.name == data["ext1_props"].name
+    assert len(ext1_props.children) == 1
+    assert len(ext1_props.versions) == 0
+
+    # Ext1 Props Prop1
+    prop1 = ext1_props.children[0]
+    assert prop1 is not None
+    assert isinstance(prop1, Asset)
+    assert prop1.name == data["prop1"].name
+    assert prop1.code == data["prop1"].code
+    assert prop1.type == data["prop_type"]
+    assert len(prop1.children) == 2
+    assert len(prop1.versions) == 0
+
+    # Ext1 Props Prop1 Model
+    prop1_model = (
+        Task.query.filter(Task.parent == prop1)
+        .filter(Task.name == data["prop1_model"].name)
+        .first()
+    )
+    assert prop1_model is not None
+    assert isinstance(prop1_model, Task)
+    assert prop1_model.name == data["prop1_model"].name
+    assert prop1_model.type == data["model_type"]
+    assert len(prop1_model.children) == 0
+    assert len(prop1_model.versions) == 2
+    v1 = prop1_model.versions[0]
+    v2 = prop1_model.versions[1]
+    assert v1.take_name in ["Main", "Kisa"]
+    assert v2.take_name in ["Main", "Kisa"]
+
+    # Ext1 Props Prop1 Look_dev
+    prop1_look_dev = (
+        Task.query.filter(Task.parent == prop1)
+        .filter(Task.name == data["prop1_look_dev"].name)
+        .first()
+    )
+    assert prop1_look_dev is not None
+    assert isinstance(prop1_look_dev, Task)
+    assert prop1_look_dev.name == data["prop1_look_dev"].name
+    assert prop1_look_dev.type == data["look_development_type"]
+    assert len(prop1_look_dev.children) == 0
+    assert len(prop1_look_dev.versions) == 2
+    v1 = prop1_look_dev.versions[0]
+    v2 = prop1_look_dev.versions[1]
+    assert v1.take_name in ["Main", "Kisa"]
+    assert v2.take_name in ["Main", "Kisa"]
+
+    # Ext1 Vegetation
+    ext1_vegetation = (
+        Task.query.filter(Task.parent == ext1)
+        .filter(Task.name == data["ext1_vegetation"].name)
+        .first()
+    )
+    assert ext1_vegetation is not None
+    assert isinstance(ext1_vegetation, Task)
+    assert ext1_vegetation.name == data["ext1_vegetation"].name
+    assert ext1_vegetation.type == data["vegetation_type"]
+    assert len(ext1_vegetation.children) == 0
+    assert len(ext1_vegetation.versions) == 1
+    v1 = ext1_vegetation.versions[0]
+    assert v1.take_name == "Main"
+    assert v1.version_number == 1
 
 
-def test_migration_complex_env_asset_2(
+def test_migrating_complex_env_asset_2(
     migration_test_data, create_pymel, create_maya_env
 ):
-    """Test AssetMigrationTool with a complex environment asset."""
-    # EnvAsset
-    #   Layout
-    #   Props
-    #     Bina1
-    #       Model
-    #       LookDev
-    # Check File content
-    raise NotImplementedError("Test is not implemented yet")
+    """Test AssetMigrationTool with a complex environment asset. File content."""
+    # +- Ext1 (Asset - Exterior)
+    #    +- Building1 (Asset - Building)
+    #    |  +- Layout (Task - Layout)
+    #    |  |  +- building1_layout_main_v003
+    #    |  +- LookDev (Task - Look Development)
+    #    |  |  +- building1_look_dev_main_v003
+    #    |  +- Props (Task)
+    #    |     +- building1_yapi (Asset)
+    #    |        +- Model (Task - Model)
+    #    |        |  +- building1_yapi_model_main_v003
+    #    |        +- LookDev (Task - Look Development)
+    #    |           +- building1_yapi_look_dev_main_v003
+    #    +- Building2 (Asset - Building)
+    #    |  +- Layout (Task - Layout)
+    #    |  |  +- building2_layout_main_v003
+    #    |  +- LookDev (Task - Look Development)
+    #    |  |  +- building2_look_dev_main_v003
+    #    |  +- Props (Task)
+    #    |     +- building2_yapi (Asset)
+    #    |        +- Model (Task - Model)
+    #    |        |  +- building2_yapi_model_main_v003
+    #    |        +- LookDev (Task - Look Development)
+    #    |           +- building2_yapi_look_dev_main_v003
+    #    +- Layout (Task - Layout)
+    #    |  +- ext1_layout_main_v003
+    #    +- LookDev (Task - Look Development)
+    #    |  +- ext1_look_dev_main_v003
+    #    +- Props (Task)
+    #    |  +- Prop1 (Asset)
+    #    |     +- Model (Task - Model)
+    #    |     |  +- **Main** (Take)
+    #    |     |  |  +- prop1_model_main_v003
+    #    |     |  +- **Kisa** (Take)
+    #    |     |     +- prop1_model_kisa_v003
+    #    |     +- LookDev (Task - Look Development)
+    #    |        +- **Main** (Take)
+    #    |        |  +- prop1_look_dev_main_v003
+    #    |        +- **Kisa** (Take)
+    #    |           +- prop1_look_dev_kisa_v003
+    #    +- Vegetation (Task - Vegetation)
+    #       +- ext1_vegetation_main_v003
+    # Check Stalker data
+    data = migration_test_data
+    pm = create_pymel
+    maya_env = create_maya_env
+    migration_recipe = {
+        data["ext1"].id: {
+            "new_parent_id": data["assets_task2"].id,
+        },
+        data["ext1_layout"].id: {
+            "takes": {
+                # tricky part, this needs to be moved after look dev
+                "Main": {"versions": [data["ext1_layout_main_v003"]]},
+            },
+        },
+        data["ext1_look_dev"].id: {
+            "takes": {
+                "Main": {"versions": [data["ext1_look_dev_main_v003"]]},
+            },
+        },
+        data["building1"].id: {},
+        data["building1_layout"].id: {
+            "takes": {
+                "Main": {"versions": [data["building1_layout_main_v003"]]},
+            },
+        },
+        data["building1_look_dev"].id: {
+            "takes": {
+                "Main": {"versions": [data["building1_look_dev_main_v003"]]},
+            },
+        },
+        data["building1_props"].id: {},
+        data["building1_yapi"].id: {},
+        data["building1_yapi_model"].id: {
+            "takes": {"Main": {"versions": [data["building1_yapi_model_main_v003"]]}}
+        },
+        data["building1_yapi_look_dev"].id: {
+            "takes": {"Main": {"versions": [data["building1_yapi_look_dev_main_v003"]]}}
+        },
+        data["building2"].id: {},
+        data["building2_layout"].id: {
+            "takes": {
+                "Main": {"versions": [data["building2_layout_main_v003"]]},
+            },
+        },
+        data["building2_look_dev"].id: {
+            "takes": {
+                "Main": {"versions": [data["building2_look_dev_main_v003"]]},
+            },
+        },
+        data["building2_props"].id: {},
+        data["building2_yapi"].id: {},
+        data["building2_yapi_model"].id: {
+            "takes": {"Main": {"versions": [data["building2_yapi_model_main_v003"]]}}
+        },
+        data["building2_yapi_look_dev"].id: {
+            "takes": {"Main": {"versions": [data["building2_yapi_look_dev_main_v003"]]}}
+        },
+        data["ext1_props"].id: {},
+        data["prop1"].id: {},
+        data["prop1_model"].id: {
+            "takes": {
+                "Main": {"versions": [data["prop1_model_main_v003"]]},
+                "Kisa": {"versions": [data["prop1_model_kisa_v003"]]},
+            }
+        },
+        data["prop1_look_dev"].id: {
+            "takes": {
+                "Main": {"versions": [data["prop1_look_dev_main_v003"]]},
+                "Kisa": {"versions": [data["prop1_look_dev_kisa_v003"]]},
+            }
+        },
+        data["ext1_vegetation"].id: {
+            "takes": {"Main": {"versions": [data["ext1_vegetation_main_v003"]]}}
+        },
+    }
+
+    assert data["assets_task2"].children == []
+    from anima.dcc.mayaEnv.asset_migration_tool import AssetMigrationTool
+
+    amt = AssetMigrationTool()
+    amt.migration_recipe = migration_recipe
+    amt.migrate()
+
+    ext1 = data["assets_task2"].children[0]
+
+    # Building1
+    building1 = (
+        Asset.query.filter(Asset.parent == ext1)
+        .filter(Asset.name == data["building1"].name)
+        .first()
+    )
+
+    # Building1 Layout
+    building1_layout = (
+        Task.query.filter(Task.parent == building1)
+        .filter(Task.name == data["building1_layout"].name)
+        .first()
+    )
+    building1_layout_main_v001 = building1_layout.versions[0]
+
+    # Building1 LookDev
+    building1_look_dev = (
+        Task.query.filter(Task.parent == building1)
+        .filter(Task.name == data["building1_look_dev"].name)
+        .first()
+    )
+    building1_look_dev_main_v001 = building1_look_dev.versions[0]
+
+    # Building1 Props
+    building1_props = (
+        Task.query.filter(Task.parent == building1)
+        .filter(Task.name == data["building1_props"].name)
+        .first()
+    )
+
+    # Building1 Yapi
+    building1_yapi = building1_props.children[0]
+
+    # Building1 Yapi Model
+    building1_yapi_model = (
+        Task.query.filter(Task.parent == building1_yapi)
+        .filter(Task.name == data["building1_yapi_model"].name)
+        .first()
+    )
+    building1_yapi_model_main_v001 = building1_yapi_model.versions[0]
+
+    # Building1 Yapi LookDev
+    building1_yapi_look_dev = (
+        Task.query.filter(Task.parent == building1_yapi)
+        .filter(Task.name == data["building1_yapi_look_dev"].name)
+        .first()
+    )
+    building1_yapi_look_dev_main_v001 = building1_yapi_look_dev.versions[0]
+
+    # Building2
+    building2 = (
+        Asset.query.filter(Asset.parent == ext1)
+        .filter(Asset.name == data["building2"].name)
+        .first()
+    )
+
+    # Building2 Layout
+    building2_layout = (
+        Task.query.filter(Task.parent == building2)
+        .filter(Task.name == data["building2_layout"].name)
+        .first()
+    )
+    building2_layout_main_v001 = building2_layout.versions[0]
+
+    # Building2 LookDev
+    building2_look_dev = (
+        Task.query.filter(Task.parent == building2)
+        .filter(Task.name == data["building2_look_dev"].name)
+        .first()
+    )
+    building2_look_dev_main_v001 = building2_look_dev.versions[0]
+
+    # Building2 Props
+    building2_props = (
+        Task.query.filter(Task.parent == building2)
+        .filter(Task.name == data["building2_props"].name)
+        .first()
+    )
+
+    # Building2 Yapi
+    building2_yapi = building2_props.children[0]
+
+    # Building2 Yapi Model
+    building2_yapi_model = (
+        Task.query.filter(Task.parent == building2_yapi)
+        .filter(Task.name == data["building2_yapi_model"].name)
+        .first()
+    )
+    building2_yapi_model_main_v001 = building2_yapi_model.versions[0]
+
+    # Building2 Yapi LookDev
+    building2_yapi_look_dev = (
+        Task.query.filter(Task.parent == building2_yapi)
+        .filter(Task.name == data["building2_yapi_look_dev"].name)
+        .first()
+    )
+    building2_yapi_look_dev_main_v001 = building2_yapi_look_dev.versions[0]
+
+    # Ext1 Layout
+    ext1_layout = (
+        Task.query.filter(Task.parent == ext1)
+        .filter(Task.name == data["ext1_layout"].name)
+        .first()
+    )
+    ext1_layout_main_v001 = ext1_layout.versions[0]
+
+    # Ext1 Look_dev
+    ext1_look_dev = (
+        Task.query.filter(Task.parent == ext1)
+        .filter(Task.name == data["ext1_look_dev"].name)
+        .first()
+    )
+    ext1_look_dev_main_v001 = ext1_look_dev.versions[0]
+
+    # Ext1 Props
+    ext1_props = (
+        Task.query.filter(Task.parent == ext1)
+        .filter(Task.name == data["ext1_props"].name)
+        .first()
+    )
+
+    # Ext1 Props Prop1
+    prop1 = ext1_props.children[0]
+
+    # Ext1 Props Prop1 Model
+    prop1_model = (
+        Task.query.filter(Task.parent == prop1)
+        .filter(Task.name == data["prop1_model"].name)
+        .first()
+    )
+    prop1_model_main_v001 = prop1_model.versions[0]
+    prop1_model_kisa_v001 = prop1_model.versions[1]
+    if prop1_model_main_v001.take_name != "Main":
+        prop1_model_main_v001 = prop1_model.versions[1]
+        prop1_model_kisa_v001 = prop1_model.versions[0]
+
+    # Ext1 Props Prop1 Look_dev
+    prop1_look_dev = (
+        Task.query.filter(Task.parent == prop1)
+        .filter(Task.name == data["prop1_look_dev"].name)
+        .first()
+    )
+    prop1_look_dev_main_v001 = prop1_look_dev.versions[0]
+    prop1_look_dev_kisa_v001 = prop1_look_dev.versions[1]
+    if prop1_look_dev_main_v001.take_name != "Main":
+        prop1_look_dev_main_v001 = prop1_look_dev.versions[1]
+        prop1_look_dev_kisa_v001 = prop1_look_dev.versions[0]
+
+    # Ext1 Vegetation
+    ext1_vegetation = (
+        Task.query.filter(Task.parent == ext1)
+        .filter(Task.name == data["ext1_vegetation"].name)
+        .first()
+    )
+    ext1_vegetation_main_v001 = ext1_vegetation.versions[0]
+
+    # Version Content Check
+    # Building1 Layout Main v001
+    maya_env.open(
+        building1_layout_main_v001,
+        force=True,
+        skip_update_check=True,
+        prompt=False,
+        clean_malware=False,
+    )
+    refs = pm.listReferences()
+    assert len(refs) == 1
+    assert refs[0].version == building1_yapi_look_dev_main_v001
+
+    # Building1 LookDev Main v001
+    maya_env.open(
+        building1_look_dev_main_v001,
+        force=True,
+        skip_update_check=True,
+        prompt=False,
+        clean_malware=False,
+    )
+    refs = pm.listReferences()
+    assert len(refs) == 1
+    assert refs[0].version == building1_layout_main_v001
+
+    # Building1 Yapi Model Main v001
+    maya_env.open(
+        building1_yapi_model_main_v001,
+        force=True,
+        skip_update_check=True,
+        prompt=False,
+        clean_malware=False,
+    )
+    refs = pm.listReferences()
+    assert len(refs) == 0
+
+    # Building1 Yapi LookDev Main v001
+    maya_env.open(
+        building1_yapi_look_dev_main_v001,
+        force=True,
+        skip_update_check=True,
+        prompt=False,
+        clean_malware=False,
+    )
+    refs = pm.listReferences()
+    assert len(refs) == 1
+    assert refs[0].version == building1_yapi_model_main_v001
+
+    # Building2 Layout
+    maya_env.open(
+        building2_layout_main_v001,
+        force=True,
+        skip_update_check=True,
+        prompt=False,
+        clean_malware=False,
+    )
+    refs = pm.listReferences()
+    assert len(refs) == 1
+    assert refs[0].version == building2_yapi_look_dev_main_v001
+
+    # Building2 LookDev
+    maya_env.open(
+        building2_look_dev_main_v001,
+        force=True,
+        skip_update_check=True,
+        prompt=False,
+        clean_malware=False,
+    )
+    refs = pm.listReferences()
+    assert len(refs) == 1
+    assert refs[0].version == building2_layout_main_v001
+
+    # Building2 Yapi Model
+    maya_env.open(
+        building2_yapi_model_main_v001,
+        force=True,
+        skip_update_check=True,
+        prompt=False,
+        clean_malware=False,
+    )
+    refs = pm.listReferences()
+    assert len(refs) == 0
+
+    # Building2 Yapi LookDev
+    maya_env.open(
+        building2_yapi_look_dev_main_v001,
+        force=True,
+        skip_update_check=True,
+        prompt=False,
+        clean_malware=False,
+    )
+    refs = pm.listReferences()
+    assert len(refs) == 1
+    assert refs[0].version == building2_yapi_model_main_v001
+
+    # Ext1 Layout
+    maya_env.open(
+        ext1_layout_main_v001,
+        force=True,
+        skip_update_check=True,
+        prompt=False,
+        clean_malware=False,
+    )
+    refs = pm.listReferences()
+    assert len(refs) == 3
+    assert refs[0].version in [
+        building1_layout_main_v001,
+        building2_layout_main_v001,
+        ext1_vegetation_main_v001,
+    ]
+    assert refs[1].version in [
+        building1_layout_main_v001,
+        building2_layout_main_v001,
+        ext1_vegetation_main_v001,
+    ]
+    assert refs[2].version in [
+        building1_layout_main_v001,
+        building2_layout_main_v001,
+        ext1_vegetation_main_v001,
+    ]
+
+    # Ext1 Look_dev
+    maya_env.open(
+        ext1_look_dev_main_v001,
+        force=True,
+        skip_update_check=True,
+        prompt=False,
+        clean_malware=False,
+    )
+    refs = pm.listReferences()
+    assert len(refs) == 1
+    assert refs[0].version == ext1_layout_main_v001
+
+    # Ext1 Props Prop1 Model
+    # Main
+    maya_env.open(
+        prop1_model_main_v001,
+        force=True,
+        skip_update_check=True,
+        prompt=False,
+        clean_malware=False,
+    )
+    refs = pm.listReferences()
+    assert len(refs) == 0
+
+    # Kisa
+    maya_env.open(
+        prop1_model_kisa_v001,
+        force=True,
+        skip_update_check=True,
+        prompt=False,
+        clean_malware=False,
+    )
+    refs = pm.listReferences()
+    assert len(refs) == 0
+
+    # Ext1 Props Prop1 LookDev
+    # Main
+    maya_env.open(
+        prop1_look_dev_main_v001,
+        force=True,
+        skip_update_check=True,
+        prompt=False,
+        clean_malware=False,
+    )
+    refs = pm.listReferences()
+    assert len(refs) == 1
+    assert refs[0].version == prop1_model_main_v001
+
+    # Kisa
+    maya_env.open(
+        prop1_look_dev_kisa_v001,
+        force=True,
+        skip_update_check=True,
+        prompt=False,
+        clean_malware=False,
+    )
+    refs = pm.listReferences()
+    assert len(refs) == 1
+    assert refs[0].version == prop1_model_kisa_v001
+
+    # Vegetation
+    maya_env.open(
+        ext1_vegetation_main_v001,
+        force=True,
+        skip_update_check=True,
+        prompt=False,
+        clean_malware=False,
+    )
+    refs = pm.listReferences()
+    assert len(refs) == 0
 
 
 def test_migrating_with_alternative_versions_data_1(
@@ -634,12 +1467,13 @@ def test_migrating_with_alternative_versions_data_1(
     migration_recipe = {
         data["ext2"].id: {
             "new_parent_id": data["assets_task2"].id,
-            "tasks": {
-                data["ext2_look_dev"].id: {
-                    "Main": {"versions": [data["ext2_look_dev_main_v003"]]},
-                },
+        },
+        data["ext2_look_dev"].id: {
+            "new_parent_id": data["ext2"].id,
+            "takes": {
+                "Main": {"versions": [data["ext2_look_dev_main_v003"]]},
             },
-        }
+        },
     }
 
     assert data["assets_task2"].children == []

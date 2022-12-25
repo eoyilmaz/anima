@@ -28,7 +28,7 @@ import logging
 from tests.dcc.maya.utils import create_version
 
 logger = logging.getLogger("anima.dcc.mayaEnv")
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture(scope="module")
@@ -1211,7 +1211,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     #          |  |  |  +- building1_look_dev_main_v003
     #          |  |  |
     #          |  |  +- Props (Task)
-    #          |  |     +- YAPI (Asset)
+    #          |  |     +- building1_yapi (Asset)
     #          |  |        +- Model (Task - Model)
     #          |  |        |  +- building1_yapi_model_main_v001
     #          |  |        |  +- building1_yapi_model_main_v002
@@ -1234,7 +1234,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     #          |  |  |  +- building2_look_dev_main_v003
     #          |  |  |
     #          |  |  +- Props (Task)
-    #          |  |     +- YAPI (Asset)
+    #          |  |     +- building2_yapi (Asset)
     #          |  |        +- Model (Task - Model)
     #          |  |        |  +- building2_yapi_model_main_v001
     #          |  |        |  +- building2_yapi_model_main_v002
