@@ -759,10 +759,11 @@ class TakeWidget(QtWidgets.QWidget):
         """
         if not self.enable_take_check_box.isChecked():
             # doesn't matter return this is valid.
-            self.migrate_status_icon.set_status(True)
-            return True
-
-        return self.validate_take_new_name() and self.validate_versions()
+            is_valid = True
+        else:
+            is_valid = self.validate_take_new_name() and self.validate_versions()
+        self.migrate_status_icon.set_status(is_valid)
+        return is_valid
 
     def validate_take_new_name(self):
         """Validate take new name.
@@ -791,12 +792,7 @@ class TakeWidget(QtWidgets.QWidget):
         Args:
             index (int): Current index
         """
-        version = self.versions_combo_box.currentData()
-        self.validate_versions()
-        # trigger a version update
-        if not AssetStorage.is_in_storage(version):
-            AssetStorage.add_entity(version)
-            self.version_updated.emit()
+        self.enable_take(self.enable_take_check_box.isChecked())
 
     def get_current_version(self):
         """Return the currently selected version.
@@ -844,7 +840,6 @@ class TakeWidget(QtWidgets.QWidget):
             if missing_assets:
                 self.check_references_button.setEnabled(True)
                 self.check_references_button.setVisible(True)
-                self.migrate_status_icon.set_status(False)
                 self.all_references_are_included_label.setVisible(False)
                 self.references_are_not_final_label.setVisible(False)
                 validation_status = False
@@ -852,7 +847,6 @@ class TakeWidget(QtWidgets.QWidget):
             if missing_versions:
                 self.check_references_button.setEnabled(True)
                 self.check_references_button.setVisible(True)
-                self.migrate_status_icon.set_status(False)
                 self.all_references_are_included_label.setVisible(False)
                 self.references_are_not_final_label.setVisible(True)
                 validation_status = False
@@ -860,7 +854,6 @@ class TakeWidget(QtWidgets.QWidget):
             if not missing_assets and not missing_versions:
                 self.check_references_button.setEnabled(False)
                 self.check_references_button.setVisible(False)
-                self.migrate_status_icon.set_status(True)
                 self.all_references_are_included_label.setVisible(True)
                 self.references_are_not_final_label.setVisible(False)
                 validation_status = True
@@ -868,8 +861,8 @@ class TakeWidget(QtWidgets.QWidget):
             # no references in this version
             self.no_references_message_label.setVisible(True)
             self.check_references_button.setVisible(False)
-            self.migrate_status_icon.set_status(True)
             self.all_references_are_included_label.setVisible(False)
+            validation_status = True
         return validation_status
 
     def pick_references(self):
@@ -1024,7 +1017,7 @@ class TaskWidget(QtWidgets.QGroupBox):
     def check_versions(self):
         """Trigger a version check in all the child takes."""
         for take_widget in self.take_widgets:
-            take_widget.validate_versions()
+            take_widget.validate()
 
     def is_enabled(self):
         """Return True if all takes are enabled.
