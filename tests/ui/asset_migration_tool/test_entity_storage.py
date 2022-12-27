@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
-from anima.ui.dialogs.asset_migration_tool_dialog import AssetStorage
+from anima.ui.dialogs.asset_migration_tool_dialog import EntityStorage
 
 
-def test_asset_storage_initialization():
-    """Test asset storage initialization."""
-    storage = AssetStorage()
-    assert isinstance(storage, AssetStorage)
+def test_entity_storage_initialization():
+    """Test entity storage initialization."""
+    storage = EntityStorage()
+    assert isinstance(storage, EntityStorage)
 
 
-def test_asset_storage_add_entity_asset(
-    create_test_db, create_project, prepare_asset_storage
+def test_entity_storage_add_entity_asset(
+    create_test_db, create_project, prepare_entity_storage
 ):
-    """Test AssetStorage.add_entity() with an Asset."""
+    """Test EntityStorage.add_entity() with an Asset."""
     from stalker import Asset
 
     project = create_project
@@ -23,16 +23,16 @@ def test_asset_storage_add_entity_asset(
 
     assert char1 is not None
 
-    storage = AssetStorage()
+    storage = EntityStorage()
     storage.add_entity(char1)
 
     assert char1 in storage.storage
 
 
-def test_asset_storage_add_entity_task(
-    create_test_db, create_project, prepare_asset_storage
+def test_entity_storage_add_entity_task(
+    create_test_db, create_project, prepare_entity_storage
 ):
-    """Test AssetStorage.add_entity() with a Task."""
+    """Test EntityStorage.add_entity() with a Task."""
     from stalker import Asset, Task
 
     project = create_project
@@ -45,17 +45,17 @@ def test_asset_storage_add_entity_task(
 
     assert model is not None
 
-    storage = AssetStorage()
+    storage = EntityStorage()
     storage.add_entity(model)
 
     assert char1 in storage.storage
     assert model in storage.storage[char1]
 
 
-def test_asset_storage_add_entity_version(
-    create_test_db, create_project, prepare_asset_storage
+def test_entity_storage_add_entity_version(
+    create_test_db, create_project, prepare_entity_storage
 ):
-    """Test AssetStorage.add_entity() with a Version."""
+    """Test EntityStorage.add_entity() with a Version."""
     from stalker import Asset, Task, Version
 
     project = create_project
@@ -70,7 +70,7 @@ def test_asset_storage_add_entity_version(
     assert v1 is not None
     assert isinstance(v1, Version)
 
-    storage = AssetStorage()
+    storage = EntityStorage()
     storage.add_entity(v1)
 
     assert char1 in storage.storage
@@ -79,10 +79,10 @@ def test_asset_storage_add_entity_version(
     assert v1 == storage.storage[char1][model][v1.take_name]
 
 
-def test_asset_storage_add_entities_assets(
-    create_test_db, create_project, prepare_asset_storage
+def test_entity_storage_add_entities_assets(
+    create_test_db, create_project, prepare_entity_storage
 ):
-    """Test AssetStorage.add_entity() with a assets."""
+    """Test EntityStorage.add_entity() with a assets."""
     from stalker import Asset, Task, Version
 
     project = create_project
@@ -99,17 +99,17 @@ def test_asset_storage_add_entities_assets(
     assert char1 is not None
     assert char2 is not None
 
-    storage = AssetStorage()
+    storage = EntityStorage()
     storage.add_entities([char1, char2])
 
     assert char1 in storage.storage
     assert char2 in storage.storage
 
 
-def test_asset_storage_remove_entity_asset(
-    create_test_db, create_project, prepare_asset_storage
+def test_entity_storage_remove_entity_asset(
+    create_test_db, create_project, prepare_entity_storage
 ):
-    """Test AssetStorage.remove_entity() with a Asset."""
+    """Test EntityStorage.remove_entity() with a Asset."""
     from stalker import Asset, Task, Version
 
     project = create_project
@@ -124,7 +124,7 @@ def test_asset_storage_remove_entity_asset(
     assert v1 is not None
     assert isinstance(v1, Version)
 
-    storage = AssetStorage()
+    storage = EntityStorage()
     storage.add_entity(v1)
 
     # Remove the asset
@@ -133,10 +133,10 @@ def test_asset_storage_remove_entity_asset(
     assert char1 not in storage.storage
 
 
-def test_asset_storage_remove_entity_task(
-    create_test_db, create_project, prepare_asset_storage
+def test_entity_storage_remove_entity_task(
+    create_test_db, create_project, prepare_entity_storage
 ):
-    """Test AssetStorage.remove_entity() with a Task."""
+    """Test EntityStorage.remove_entity() with a Task."""
     from stalker import Asset, Task, Version
 
     project = create_project
@@ -151,7 +151,7 @@ def test_asset_storage_remove_entity_task(
     assert v1 is not None
     assert isinstance(v1, Version)
 
-    storage = AssetStorage()
+    storage = EntityStorage()
     storage.add_entity(v1)
 
     # Remove the task
@@ -162,10 +162,10 @@ def test_asset_storage_remove_entity_task(
     assert model not in storage.storage[char1]
 
 
-def test_asset_storage_remove_entity_version(
-    create_test_db, create_project, prepare_asset_storage
+def test_entity_storage_remove_entity_version(
+    create_test_db, create_project, prepare_entity_storage
 ):
-    """Test AssetStorage.remove_entity() with a Version."""
+    """Test EntityStorage.remove_entity() with a Version."""
     from stalker import Asset, Task, Version
 
     project = create_project
@@ -180,7 +180,7 @@ def test_asset_storage_remove_entity_version(
     assert v1 is not None
     assert isinstance(v1, Version)
 
-    storage = AssetStorage()
+    storage = EntityStorage()
     storage.add_entity(v1)
 
     # Remove the task
@@ -193,10 +193,10 @@ def test_asset_storage_remove_entity_version(
     assert v1.take_name not in storage.storage[char1][model]
 
 
-def test_asset_storage_is_in_storage_asset(
-    create_test_db, create_project, prepare_asset_storage
+def test_entity_storage_is_in_storage_asset(
+    create_test_db, create_project, prepare_entity_storage
 ):
-    """Test AssetStorage.is_in_storage() with an Asset."""
+    """Test EntityStorage.is_in_storage() with an Asset."""
     from stalker import Asset, Task, Version
 
     project = create_project
@@ -214,7 +214,7 @@ def test_asset_storage_is_in_storage_asset(
     assert v2 is not None
     assert v3 is not None
 
-    storage = AssetStorage()
+    storage = EntityStorage()
     storage.add_entity(v1)
 
     assert storage.is_in_storage(char1) is True

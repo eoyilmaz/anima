@@ -59,11 +59,11 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, AssetMigrationToolDialog, **kwargs)
 
 
-class AssetStorage(object):
-    """Generic storage for assets.
+class EntityStorage(object):
+    """Generic storage for tasks.
 
     This is created as a central storage for the AssetMigrationDialog. So all
-    the assets are going to be stored in this class and be consumed by the UI
+    the tasks are going to be stored in this class and be consumed by the UI
     elements, so that all the UI elements no matter how deep they are will be
     able to reach the data.
     """
@@ -107,7 +107,7 @@ class AssetStorage(object):
 
     @classmethod
     def add_entities(cls, entities):
-        """Add the given list of assets to the storage."""
+        """Add the given list of tasks to the storage."""
         for entity in entities:
             cls.add_entity(entity)
 
@@ -171,220 +171,6 @@ class AssetStorage(object):
         cls.storage = {}
 
 
-class AssetWidget(QtWidgets.QGroupBox):
-    """A QGroupBox variant to hold stalker.Asset related data."""
-
-    add_assets = QtCore.Signal(object)
-    remove_asset = QtCore.Signal(object)
-    version_updated = QtCore.Signal()
-
-    def __init__(self, parent=None, asset=None):
-        super(AssetWidget, self).__init__(parent=parent)
-        self._asset = None
-        self.main_layout = None
-        self.remove_button = None
-        self.pick_new_parent_button = None
-        self.tasks_layout = None
-        self.task_widgets = []
-        self._new_parent = None
-        self.new_parent_label = None
-        self.setup_ui()
-        self.asset = asset
-
-    def setup_ui(self):
-        """Create UI widgets."""
-        self.main_layout = QtWidgets.QVBoxLayout(self)
-
-        # Buttons layout
-        buttons_layout = QtWidgets.QHBoxLayout()
-        self.main_layout.addLayout(buttons_layout)
-
-        # Remove Asset
-        self.remove_button = QtWidgets.QPushButton(self)
-        self.remove_button.setText("Remove Asset")
-        self.remove_button.setToolTip("Removes the asset from the list.")
-        self.remove_button.clicked.connect(self.remove)
-        buttons_layout.addWidget(self.remove_button)
-
-        # Pick New Parent
-        self.pick_new_parent_button = QtWidgets.QPushButton(self)
-        self.pick_new_parent_button.setText("Pick New Parent...")
-        self.pick_new_parent_button.setToolTip("Select the new parent...")
-        self.pick_new_parent_button.clicked.connect(self.pick_new_parent)
-        buttons_layout.addWidget(self.pick_new_parent_button)
-
-        # New Parent Label
-        self.new_parent_label = QtWidgets.QLabel(self)
-        buttons_layout.addWidget(self.new_parent_label)
-
-        # Spacer for buttons
-        buttons_layout.addSpacerItem(
-            QtWidgets.QSpacerItem(
-                20, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
-            )
-        )
-
-        self.tasks_layout = QtWidgets.QVBoxLayout()
-        self.main_layout.addLayout(self.tasks_layout)
-
-        self.setStyleSheet(
-            "QGroupBox {{ background-color: {}; color: {}}}".format(
-                COLORS["asset"]["bg"], COLORS["asset"]["fg"]
-            )
-        )
-
-    def remove(self):
-        """Remove self from parent."""
-        self.remove_asset.emit(self)
-
-    def pick_new_parent(self):
-        """Show a TaskPickerDialog to let the user select a new parent."""
-        dialog = task_picker_dialog.MainDialog(
-            parent=self, project=None, allow_multi_selection=False
-        )
-        if self.new_parent:
-            # start with the currently selected new_parent
-            dialog.tasks_tree_view.find_and_select_entity_item(self.new_parent)
-        dialog.exec()
-
-        try:
-            # PySide and PySide2
-            accepted = QtWidgets.QDialog.DialogCode.Accepted
-        except AttributeError:
-            # PyQt4
-            accepted = QtWidgets.QDialog.Accepted
-        if dialog.result() == accepted:
-            selected_tasks = dialog.tasks_tree_view.get_selected_tasks()
-            dialog.deleteLater()
-
-            if not selected_tasks:
-                return
-
-            new_parent = selected_tasks[0]
-            assert isinstance(new_parent, Task)
-
-            # don't allow a child to be a parent
-            if self.asset in new_parent.parents:
-                QtWidgets.QMessageBox.critical(
-                    self,
-                    "Invalid Parent!",
-                    "Selected parent is one of the child of the Asset!!!",
-                )
-                return
-
-            # don't allow the same parent
-            if new_parent == self.asset.parent:
-                QtWidgets.QMessageBox.critical(
-                    self,
-                    "Invalid Parent!",
-                    "Selected parent is already the current parent!!!",
-                )
-                return
-
-            # selecting a Project to be the new parent is okay
-            self.new_parent = new_parent
-            self.validate()
-
-    @property
-    def new_parent(self):
-        """Return the new_parent attribute value.
-
-        Returns:
-            stalker.Task: The new_parent value.
-        """
-        return self._new_parent
-
-    @new_parent.setter
-    def new_parent(self, new_parent):
-        """Set new parent."""
-        self._new_parent = new_parent
-        self.update_new_parent_label()
-        self.validate()
-
-    def update_new_parent_label(self):
-        """Update the new parent label."""
-        new_parent_hierarchy_name = "-- No New Parent Selected --"
-        if self.new_parent:
-            new_parent_hierarchy_name = get_task_hierarchy_name(self.new_parent)
-        self.new_parent_label.setText(
-            "New Parent: {}".format(new_parent_hierarchy_name)
-        )
-
-    @property
-    def asset(self):
-        """Return the asset.
-
-        Returns:
-            stalker.Asset: The stalker.Asset stored in this widget.
-        """
-        return self._asset
-
-    @asset.setter
-    def asset(self, asset):
-        """Set the asset property.
-
-        Args:
-            asset (stalker.Asset):
-        """
-        if asset is None:
-            return
-        self._asset = asset
-        self.setTitle(get_task_hierarchy_name(asset))
-        # add all the child tasks as TaskGroupBoxes
-        for child_task in sorted(asset.children, key=lambda x: x.name):
-            if len(child_task.children):
-                # this task has other child tasks
-                # don't append it
-                continue
-            task_widget = TaskWidget(parent=self, task=child_task)
-            task_widget.add_assets.connect(self.add_assets)
-            task_widget.version_updated.connect(self.version_updated)
-            self.task_widgets.append(task_widget)
-            self.tasks_layout.addWidget(task_widget)
-
-    def validate(self):
-        """Validate the data."""
-        # Check if there is a new parent
-        if self.new_parent and all(
-            task_widget.validate() for task_widget in self.task_widgets
-        ):
-            self.setStyleSheet(
-                "QGroupBox {{ background-color: {}; color:{}}}".format(
-                    COLORS["asset"]["bg"],
-                    COLORS["asset"]["fg"],
-                )
-            )
-            return True
-        else:
-            self.setStyleSheet(
-                "QGroupBox {{ background-color: {}; color: {}}}".format(
-                    COLORS["invalid_asset"]["bg"],
-                    COLORS["invalid_asset"]["fg"],
-                )
-            )
-            return False
-
-    def check_versions(self):
-        """Trigger a version check in all the child tasks widgets."""
-        for task_widget in self.task_widgets:
-            task_widget.check_versions()
-
-    def to_dict(self):
-        """Return a dictionary representing the migration data.
-
-        Returns:
-            dict: The migration data.
-        """
-        return {
-            "new_parent_id": self.new_parent.id,
-            "selected_takes": dict(
-                (task_widget.task.id, task_widget.to_dict())
-                for task_widget in self.task_widgets
-                if task_widget.is_enabled()
-            )
-        }
-
-
 class ProjectWidget(QtWidgets.QGroupBox):
     """A QGroupBox variant to hold stalker.Project related data."""
 
@@ -394,16 +180,16 @@ class ProjectWidget(QtWidgets.QGroupBox):
         super(ProjectWidget, self).__init__(parent=parent)
         self._project = None
         self.main_layout = None
-        self.assets_layout = None
-        self.asset_widgets = []
+        self.tasks_layout = None
+        self.task_widgets = []
         self.setup_ui()
         self.project = project
 
     def setup_ui(self):
         """Create UI widgets."""
         self.main_layout = QtWidgets.QVBoxLayout(self)
-        self.assets_layout = QtWidgets.QVBoxLayout()
-        self.main_layout.addLayout(self.assets_layout)
+        self.tasks_layout = QtWidgets.QVBoxLayout()
+        self.main_layout.addLayout(self.tasks_layout)
         self.setStyleSheet(
             "QGroupBox {{ background-color: {}; color: {}}}".format(
                 COLORS["project"]["bg"],
@@ -436,111 +222,113 @@ class ProjectWidget(QtWidgets.QGroupBox):
         """Update title with the known information"""
         # update UI items.
         self.setTitle(
-            "{} ({} Assets)".format(self._project.name, len(self.asset_widgets))
+            "{} ({} Assets)".format(self._project.name, len(self.task_widgets))
         )
 
-    def add_assets(self, assets, silent=True):
-        """Add the given assets as a AssetWidget.
+    def add_tasks(self, tasks, silent=True):
+        """Add the given assets as a TaskWidget.
 
         Args:
-            assets ([stalker.Asset]): List of stalker.Asset instances.
+            tasks ([stalker.Asset]): List of stalker.Asset instances.
             silent (bool): Do not show info dialog when set to False.
         """
-        assets_added = []
-        assets_not_added = []
-        for asset in assets:
-            if not isinstance(asset, Asset):
-                # skip non asset entities
+        tasks_added = []
+        tasks_not_added = []
+        for task in tasks:
+            if not isinstance(task, Asset):
+                # skip non task entities
                 continue
 
-            if asset not in [asset_widget.asset for asset_widget in self.asset_widgets]:
-                asset_widget = AssetWidget(parent=self)
-                self.asset_widgets.append(asset_widget)
-                self.assets_layout.addWidget(asset_widget)
-                asset_widget.asset = asset
+            if task not in [task_widget.task for task_widget in self.task_widgets]:
+                task_widget = TaskWidget(parent=self)
+                self.task_widgets.append(task_widget)
+                self.tasks_layout.addWidget(task_widget)
+                task_widget.task = task
                 # connect signals
-                asset_widget.remove_asset.connect(self.remove_asset)
-                asset_widget.version_updated.connect(self.check_versions)
-                asset_widget.add_assets.connect(
-                    lambda x: self.add_assets(x, silent=False)
+                task_widget.remove_task.connect(self.remove_task)
+                task_widget.version_updated.connect(self.check_versions)
+                task_widget.add_task.connect(
+                    lambda x: self.add_tasks(x, silent=False)
                 )
-                assets_added.append(asset)
+                tasks_added.append(task)
 
-                # also store the assets in the asset storage
-                AssetStorage.add_entity(asset)
+                # also store the tasks in the task storage
+                EntityStorage.add_entity(task)
             else:
-                assets_not_added.append(asset)
+                tasks_not_added.append(task)
         self.update_title()
 
         if not silent:
-            if assets_added:
+            if tasks_added:
                 QtWidgets.QMessageBox.information(
                     self,
-                    "{} Assets added!".format(len(assets_added)),
+                    "{} Assets added!".format(len(tasks_added)),
                     "The following Assets are added:\n\n{}".format(
                         "\n".join(
-                            [get_task_hierarchy_name(asset) for asset in assets_added]
+                            [get_task_hierarchy_name(asset) for asset in tasks_added]
                         )
                     ),
                 )
             else:
                 QtWidgets.QMessageBox.critical(
                     self,
-                    "{} Assets NOT added!".format(len(assets_not_added)),
+                    "{} Assets NOT added!".format(len(tasks_not_added)),
                     "The following Assets are NOT added:\n\n{}".format(
                         "\n".join(
                             [
                                 get_task_hierarchy_name(asset)
-                                for asset in assets_not_added
+                                for asset in tasks_not_added
                             ]
                         )
                     ),
                 )
 
-    def remove_asset(self, asset_widget):
-        """Remove the given asset."""
-        for i, a_widget in enumerate(self.asset_widgets):
-            if a_widget == asset_widget:
-                self.assets_layout.removeWidget(a_widget)
-                self.asset_widgets.pop(i)
-                a_widget.deleteLater()
-                break
+    def remove_task(self, task_widget):
+        """Remove the given asset.
+        """
+        # also remove the asset from the EntityStorage
+        EntityStorage.remove_entity(task_widget.task)
 
-        # also remove the asset from the AssetStorage
-        AssetStorage.remove_entity(a_widget.asset)
+        for i, t_widget in enumerate(self.task_widgets):
+            if t_widget == task_widget:
+                self.tasks_layout.removeWidget(t_widget)
+                self.task_widgets.pop(i)
+                break
+        task_widget.deleteLater()
 
         # Update Title
         self.update_title()
 
         # if no widget left, emit remove_project signal
-        if not self.asset_widgets:
+        if not self.task_widgets:
             self.remove_project.emit(self)
         else:
             self.check_versions()
 
     def check_versions(self):
-        """Trigger a version check in all the child asset."""
-        for asset_widget in self.asset_widgets:
-            asset_widget.check_versions()
+        """Trigger a version check in all the child tasks."""
+        for task_widget in self.task_widgets:
+            task_widget.check_versions()
 
     def validate(self):
-        """Validate the Assets.
+        """Validate the Tasks.
 
         Returns:
             bool: True for valid, False otherwise.
         """
-        return all([asset_widget.validate() for asset_widget in self.asset_widgets])
+        return all([task_widget.validate() for task_widget in self.task_widgets])
 
-    def to_dict(self):
+    def to_dict(self, dict_in=None):
         """Return a dictionary representing the migration data.
 
         Returns:
             dict: The migration data.
         """
-        return dict(
-            (asset_widget.asset.id, asset_widget.to_dict())
-            for asset_widget in self.asset_widgets
-        )
+        dict_out = dict_in if dict_in is not None else {}
+        for task_widget in self.task_widgets:
+            assert isinstance(task_widget, TaskWidget)
+            task_widget.to_dict(dict_in=dict_out)
+        return dict_out
 
 
 class StatusIcon(QtWidgets.QLabel):
@@ -673,7 +461,7 @@ class TakeWidget(QtWidgets.QWidget):
         self.check_references_button.setEnabled(False)
         self.check_references_button.setVisible(False)
         self.check_references_button.setToolTip(
-            "Check references to other assets\n"
+            "Check references to other tasks\n"
             "in this version and add them to the list..."
         )
         self.check_references_button.clicked.connect(self.pick_references)
@@ -721,7 +509,7 @@ class TakeWidget(QtWidgets.QWidget):
         """Set the take property.
 
         Args:
-            take (stalker.Asset):
+            take (str):
         """
         if take is None:
             return
@@ -820,11 +608,11 @@ class TakeWidget(QtWidgets.QWidget):
             missing_versions = []
             for other_v in version.inputs:
                 other_asset = get_related_asset(other_v.task)
-                # Filter all the assets that are already in the AssetStorage
-                if not AssetStorage.is_in_storage(other_asset):
+                # Filter all the tasks that are already in the EntityStorage
+                if not EntityStorage.is_in_storage(other_asset):
                     missing_assets.append(other_asset)
                     missing_versions.append(other_v)
-                elif not AssetStorage.is_in_storage(other_v):
+                elif not EntityStorage.is_in_storage(other_v):
                     # The asset is moving but not this version
                     missing_versions.append(other_v)
 
@@ -868,7 +656,7 @@ class TakeWidget(QtWidgets.QWidget):
     def pick_references(self):
         """Pick references of the selected takes.
 
-        Add the referenced assets to the end of the list.
+        Add the referenced tasks to the end of the list.
         """
         version = self.versions_combo_box.currentData()
         referenced_assets_dialog = ReferencedAssetTasksDialog(parent=self)
@@ -891,7 +679,7 @@ class TakeWidget(QtWidgets.QWidget):
         if not referenced_assets_dialog.result() == accepted:
             return
 
-        # get the selected assets
+        # get the selected tasks
         assets = referenced_assets_dialog.get_selected_assets()
         if assets:
             self.add_references.emit(assets)
@@ -915,15 +703,15 @@ class TakeWidget(QtWidgets.QWidget):
             self.take_new_name_line_edit.set_valid()
             self.validate()
 
-            # remove the version from the AssetStorage
-            AssetStorage.remove_entity(version)
+            # remove the version from the EntityStorage
+            EntityStorage.remove_entity(version)
         else:
             # this take is re-enabled, re-validate the new take name
             self.migrate_status_icon.setVisible(True)
             self.validate()
 
-            # add the version to the AssetStorage
-            AssetStorage.add_entity(version)
+            # add the version to the EntityStorage
+            EntityStorage.add_entity(version)
 
         # trigger an version check update
         self.version_updated.emit()
@@ -944,14 +732,15 @@ class TakeWidget(QtWidgets.QWidget):
         """
         return {
             "new_take_name": self.get_new_take_name(),
-            "versions": [self.get_current_version().version_number],
+            "versions": [self.get_current_version()],
         }
 
 
 class TaskWidget(QtWidgets.QGroupBox):
     """A QGroupBox variant to hold stalker.Task related data."""
 
-    add_assets = QtCore.Signal(object)
+    add_task = QtCore.Signal(object)
+    remove_task = QtCore.Signal(object)
     version_updated = QtCore.Signal()
 
     def __init__(self, parent=None, task=None):
@@ -959,27 +748,131 @@ class TaskWidget(QtWidgets.QGroupBox):
         self._task = None
         self.main_layout = None
         self.no_versions_place_holder = None
-        self.takes_layout = None
+        self.remove_button = None
+        self.pick_new_parent_button = None
+        self.child_widgets_layout = None
         self.take_widgets = []
+        self.task_widgets = []
+        self._new_parent = None
+        self.new_parent_label = None
         self.setup_ui()
         self.task = task
 
     def setup_ui(self):
         """Create UI widgets."""
         self.main_layout = QtWidgets.QVBoxLayout(self)
-        self.main_layout.setContentsMargins(12, 0, 12, 0)
-        self.takes_layout = QtWidgets.QVBoxLayout()
-        self.takes_layout.setContentsMargins(12, 0, 12, 0)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Buttons layout
+        buttons_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addLayout(buttons_layout)
+
+        # Remove Task
+        self.remove_button = QtWidgets.QPushButton(self)
+        self.remove_button.setText("Remove Asset")
+        self.remove_button.setToolTip("Removes the asset from the list.")
+        self.remove_button.clicked.connect(self.remove)
+        buttons_layout.addWidget(self.remove_button)
+
+        # Pick New Parent
+        self.pick_new_parent_button = QtWidgets.QPushButton(self)
+        self.pick_new_parent_button.setText("Pick New Parent...")
+        self.pick_new_parent_button.setToolTip("Select the new parent...")
+        self.pick_new_parent_button.clicked.connect(self.pick_new_parent)
+        buttons_layout.addWidget(self.pick_new_parent_button)
+
+        # New Parent Label
+        self.new_parent_label = QtWidgets.QLabel(self)
+        buttons_layout.addWidget(self.new_parent_label)
+
+        # Spacer for buttons
+        buttons_layout.addSpacerItem(
+            QtWidgets.QSpacerItem(
+                20, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+            )
+        )
+
+        self.child_widgets_layout = QtWidgets.QVBoxLayout()
+        self.child_widgets_layout.setContentsMargins(12, 0, 12, 0)
         self.no_versions_place_holder = QtWidgets.QLabel(self)
         self.no_versions_place_holder.setText("--- No Versions ---")
         self.no_versions_place_holder.setDisabled(True)
-        self.takes_layout.addWidget(self.no_versions_place_holder)
-        self.main_layout.addLayout(self.takes_layout)
-        self.setStyleSheet(
-            "QGroupBox {{ background-color: {}; color: {}}}".format(
-                COLORS["task"]["bg"],
-                COLORS["task"]["fg"],
-            )
+        self.child_widgets_layout.addWidget(self.no_versions_place_holder)
+        self.main_layout.addLayout(self.child_widgets_layout)
+
+    def remove(self):
+        """Remove self from parent."""
+        self.remove_task.emit(self)
+
+    def pick_new_parent(self):
+        """Show a TaskPickerDialog to let the user select a new parent."""
+        dialog = task_picker_dialog.MainDialog(
+            parent=self, project=None, allow_multi_selection=False
+        )
+        if self.new_parent:
+            # start with the currently selected new_parent
+            dialog.tasks_tree_view.find_and_select_entity_item(self.new_parent)
+        dialog.exec()
+
+        try:
+            # PySide and PySide2
+            accepted = QtWidgets.QDialog.DialogCode.Accepted
+        except AttributeError:
+            # PyQt4
+            accepted = QtWidgets.QDialog.Accepted
+        if dialog.result() == accepted:
+            selected_tasks = dialog.tasks_tree_view.get_selected_tasks()
+            dialog.deleteLater()
+
+            if not selected_tasks:
+                return
+
+            new_parent = selected_tasks[0]
+            # don't allow a child to be a parent
+            if self.task in new_parent.parents:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    "Invalid Parent!",
+                    "Selected parent is one of the child of the Asset!!!",
+                )
+                return
+
+            # don't allow the same parent
+            if new_parent == self.task.parent:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    "Invalid Parent!",
+                    "Selected parent is already the current parent!!!",
+                )
+                return
+
+            # selecting a Project to be the new parent is okay
+            self.new_parent = new_parent
+            self.validate()
+
+    @property
+    def new_parent(self):
+        """Return the new_parent attribute value.
+
+        Returns:
+            stalker.Task: The new_parent value.
+        """
+        return self._new_parent
+
+    @new_parent.setter
+    def new_parent(self, new_parent):
+        """Set new parent."""
+        self._new_parent = new_parent
+        self.update_new_parent_label()
+        self.validate()
+
+    def update_new_parent_label(self):
+        """Update the new parent label."""
+        new_parent_hierarchy_name = "-- No New Parent Selected --"
+        if self.new_parent:
+            new_parent_hierarchy_name = get_task_hierarchy_name(self.new_parent)
+        self.new_parent_label.setText(
+            "New Parent: {}".format(new_parent_hierarchy_name)
         )
 
     @property
@@ -1002,22 +895,49 @@ class TaskWidget(QtWidgets.QGroupBox):
             return
         self._task = task
         self.setTitle(task.name)
+        EntityStorage.add_entity(self._task)
+
+        # Update Remove Button text
+        self.remove_button.setText("Remove {}".format(self._task.entity_type))
+
+        self.setStyleSheet(
+            "QGroupBox {{ background-color: {}; color: {}}}".format(
+                COLORS[self._task.entity_type.lower()]["bg"],
+                COLORS[self._task.entity_type.lower()]["fg"],
+            )
+        )
         # add all the takes of this task as a TakeWidget
 
         take_names = get_unique_take_names(self._task.id)
         for take in take_names:
             take_widget = TakeWidget(parent=self, task=self._task, take=take)
-            self.takes_layout.addWidget(take_widget)
-            take_widget.add_references.connect(self.add_assets)
-            take_widget.version_updated.connect(self.version_updated)
+            self.child_widgets_layout.addWidget(take_widget)
+            take_widget.add_references.connect(self.add_task)
+            take_widget.version_updated.connect(self.version_updated.emit)
             self.take_widgets.append(take_widget)
         if take_names:
             self.no_versions_place_holder.setVisible(False)
 
+        task_children = sorted(task.children, key=lambda x: x.name)
+        for child_task in task_children:
+            task_widget = TaskWidget(parent=self, task=child_task)
+            task_widget.add_task.connect(self.add_task)
+            task_widget.remove_task.connect(self.remove_task)
+            task_widget.version_updated.connect(self.version_updated.emit)
+            task_widget.add_task.connect(self.add_task)
+            task_widget.new_parent = self._task
+            self.task_widgets.append(task_widget)
+            self.child_widgets_layout.addWidget(task_widget)
+        if task_children:
+            self.no_versions_place_holder.setVisible(False)
+
     def check_versions(self):
-        """Trigger a version check in all the child takes."""
+        """Trigger a version check in all the child takes and task widgets."""
         for take_widget in self.take_widgets:
             take_widget.validate()
+
+        for task_widget in self.task_widgets:
+            task_widget.check_versions()
 
     def is_enabled(self):
         """Return True if all takes are enabled.
@@ -1033,25 +953,56 @@ class TaskWidget(QtWidgets.QGroupBox):
         Returns:
             bool: True if all TaskWidgets are valid, False otherwise.
         """
-        return all([take_widget.validate() for take_widget in self.take_widgets])
+        is_valid = self.new_parent and \
+               all([take_widget.validate() for take_widget in self.take_widgets]) and \
+               all(task_widget.validate() for task_widget in self.task_widgets)
 
-    def to_dict(self):
+        if is_valid:
+            self.setStyleSheet(
+                "QGroupBox {{ background-color: {}; color:{}}}".format(
+                    COLORS[self._task.entity_type.lower()]["bg"],
+                    COLORS[self._task.entity_type.lower()]["fg"],
+                )
+            )
+        else:
+            self.setStyleSheet(
+                "QGroupBox {{ background-color: {}; color: {}}}".format(
+                    COLORS["invalid_asset"]["bg"],
+                    COLORS["invalid_asset"]["fg"],
+                )
+            )
+
+        return is_valid
+
+    def to_dict(self, dict_in=None):
         """Return a dictionary representing the migration data.
 
         Returns:
             dict: The migration data.
         """
-        return dict(
+        dict_out = dict_in if dict_in is not None else dict()
+        # New Parent ID
+        dict_out[self.task.id] = {}
+        if self.new_parent:
+            dict_out[self.task.id]["new_parent_id"] = self.new_parent.id
+
+        # Takes
+        dict_out[self.task.id]["takes"] = dict(
             (take_widget.take, take_widget.to_dict())
             for take_widget in self.take_widgets
             if take_widget.is_enabled()
         )
 
+        # child tasks
+        for task_widget in self.task_widgets:
+            task_widget.to_dict(dict_in=dict_out)
+        return dict_out
+
 
 class AssetMigrationToolDialog(QtWidgets.QDialog):
     """Asset Migration Tool Dialog.
 
-    This is a UI to help migrating assets (and all the referenced files, including DCC
+    This is a UI to help migrating tasks (and all the referenced files, including DCC
     scripts, texture and audio files etc.) to a new project.
     """
 
@@ -1069,7 +1020,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
     def setup_ui(self):
         """Create UI elements."""
         self.setWindowTitle("Asset Migration Tool")
-        self.resize(900, 1000)
+        self.resize(1100, 1000)
         self.main_layout = QtWidgets.QVBoxLayout(self)
 
         # Dialog Label
@@ -1153,19 +1104,10 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
                     )
                     project_widget.project = asset.project
 
-                project_widget.add_assets([asset], silent=True)
+                project_widget.add_tasks([asset], silent=True)
                 # If a TaskTreeView is used, use the following to add the tasks
                 # self.task_tree_view.tasks += [asset]
                 assets_added.append(asset)
-                # also walk through child tasks of this asset and try to find
-                # more assets
-                child_tasks = [task for task in asset.children]
-                while child_tasks:
-                    child_task = child_tasks.pop(0)
-                    if isinstance(child_task, Asset):
-                        assets.append(child_task)
-                    else:
-                        child_tasks += [task for task in child_task.children]
 
                 # connect the signal
                 project_widget.remove_project.connect(self.remove_project)
@@ -1195,7 +1137,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
                 break
 
     def validate(self):
-        """Validates the selected assets and versions.
+        """Validates the selected tasks and versions.
 
         Returns:
             bool: A bool result showing True for valid, False for invalid result.
@@ -1212,17 +1154,17 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
         """
         empty_dict = {}
         for project_widget in self.project_widgets:
-            empty_dict.update(project_widget.to_dict())
+            project_widget.to_dict(dict_in=empty_dict)
         return empty_dict
 
     def migrate(self):
-        """Migrate assets."""
-        # validate assets
+        """Migrate tasks."""
+        # validate tasks
         if not self.validate():
             QtWidgets.QMessageBox.critical(
                 self,
                 "Invalid Assets!",
-                "There are invalid assets (marked with red).\n\nPlease fix them!",
+                "There are invalid tasks (marked with red).\n\nPlease fix them!",
             )
             return
 
@@ -1285,7 +1227,7 @@ class ReferencedAssetTasksDialog(QtWidgets.QDialog):
         asset_item_model.add_asset(asset)
 
     def get_selected_assets(self):
-        """Get selected assets."""
+        """Get selected tasks."""
         return self.assets_list_view.get_selected_assets()
 
 
@@ -1362,8 +1304,8 @@ class AssetItemModel(QtGui.QStandardItemModel):
 
         if not found_item:
             asset_item = AssetItem(asset=asset)
-            # disable this item if this is already in the AssetStorage
-            if AssetStorage.is_in_storage(asset):
+            # disable this item if this is already in the EntityStorage
+            if EntityStorage.is_in_storage(asset):
                 asset_item.setFlags(
                     asset_item.flags()
                     & ~QtCore.Qt.ItemIsSelectable

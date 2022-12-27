@@ -64,20 +64,20 @@ class AssetMigrationTool(object):
         self.source_data = {}
         self.version_lut = {}
 
-    def add_asset(self, asset):
-        """Add the given asset.
+    def add_task(self, task):
+        """Add the given task.
 
         Args:
-            asset (stalker.Asset): The stalker.Asset instance to add in to the list of
-                assets in to the data list.
+            task (stalker.Task): The stalker.Task instance to add in to the list of
+                tasks in to the data list.
         """
         raise NotImplementedError("Not implemented yet!")
 
-    def set_target_parent(self, asset, new_parent):
+    def set_target_parent(self, task, new_parent):
         """Set target parent.
 
         Args:
-            asset (stalker.Asset): A stalker.Asset instance.
+            task (stalker.Task): A stalker.Task instance.
             new_parent (stalker.Task): A stalker.Task instance to set as the new parent.
         """
         raise NotImplementedError("Not implemented yet!")
@@ -98,7 +98,7 @@ class AssetMigrationTool(object):
         """Add an alternative to the given source_version.
 
         This is used for augmenting the self.versions_lut dictionary and allowing
-        previously moved assets to be replaced on referencing scenes.
+        previously moved tasks to be replaced on referencing scenes.
 
         Args:
             source_version (stalker.Version): The source version.
