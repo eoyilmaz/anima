@@ -138,6 +138,24 @@ def migration_test_data(create_test_data, create_pymel, create_maya_env):
     yield data
 
 
+def test_get_intermediate_tasks(migration_test_data):
+    """Test get_intermediate_tasks() function."""
+    data = migration_test_data
+    from anima.ui.dialogs import asset_migration_tool_dialog
+    result = asset_migration_tool_dialog.get_intermediate_tasks(
+        data["environments"], data["building1_yapi_look_dev"]
+    )
+    expected = [
+        data["exteriors"],
+        data["ext1"],
+        data["building1"],
+        data["building1_props"],
+        data["building1_yapi"],
+        data["building1_yapi_look_dev"]
+    ]
+    assert result == expected
+
+
 def test_asset_migration_tool_initialization(migration_test_data):
     """Test AssetMigrationTool initialization."""
     from anima.dcc.mayaEnv.asset_migration_tool import AssetMigrationTool

@@ -41,11 +41,49 @@ COLORS = {
 
 
 def get_related_asset(task):
-    """Return related Asset to the given task."""
+    """Return related Asset to the given task.
+
+    Args:
+        task (stalker.Task): stalker.Task instance.
+
+    Returns:
+        Union[None, stalker.Asset]: The related Asset or None.
+    """
     for parent in reversed(task.parents):
         if isinstance(parent, Asset):
             return parent
     return None
+
+
+def get_intermediate_tasks(task1, task2):
+    """Calculate the intermediate tasks between the given tasks.
+
+    Args:
+        task1 (stalker.Task): parent task.
+        task2 (stalker.Task): child task.
+
+    Returns:
+        List[stalker.Task]: The intermediate tasks, also contains the second task,
+          if the tasks are not hierarchically connected an empty list will be returned.
+    """
+    # create a list of tasks hierarchically in between the two tasks
+    # A
+    #  B
+    #   C
+    #    D
+    # get_intermediate_tasks(A, D) --> [B, C, D]
+    intermediate_tasks = []
+    found_orig_task = False
+    for parent in reversed(task2.parents + [task2]):
+        if parent != task1:
+            intermediate_tasks.append(parent)
+        else:
+            found_orig_task = True
+            break
+    if found_orig_task:
+        return list(reversed(intermediate_tasks))
+    else:
+        return []
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -232,61 +270,111 @@ class ProjectWidget(QtWidgets.QGroupBox):
             "{} ({} Assets)".format(self._project.name, len(self.task_widgets))
         )
 
-    def add_tasks(self, tasks, silent=True):
+    def add_assets(self, assets, silent=True):
         """Add the given assets as a TaskWidget.
 
         Args:
-            tasks ([stalker.Asset]): List of stalker.Asset instances.
+            assets ([stalker.Asset]): List of stalker.Asset instances.
             silent (bool): Do not show info dialog when set to False.
         """
-        tasks_added = []
-        tasks_not_added = []
-        for task in tasks:
-            if not isinstance(task, Asset):
-                # skip non task entities
-                task = get_related_asset(task)
+        assets_added = []
+        assets_not_added = []
+        for asset in assets:
+            if not isinstance(asset, Asset):
+                # skip non asset entities
+                continue
 
-            if task not in [task_widget.task for task_widget in self.task_widgets]:
+            if asset not in [task_widget.task for task_widget in self.task_widgets]:
                 task_widget = TaskWidget(parent=self)
                 self.task_widgets.append(task_widget)
                 self.tasks_layout.addWidget(task_widget)
-                task_widget.task = task
+                task_widget.task = asset
                 # connect signals
                 task_widget.remove_task.connect(self.remove_task)
                 task_widget.version_updated.connect(self.check_versions)
-                task_widget.add_task.connect(lambda x: self.add_tasks(x, silent=False))
-                tasks_added.append(task)
+                task_widget.add_task.connect(self.add_tasks)
+                assets_added.append(asset)
 
-                # also store the tasks in the task storage
-                EntityStorage.add_entity(task)
+                # store the tasks in the task storage
+                EntityStorage.add_entity(asset)
+
+                # add all the immediate child tasks that has a version to the list
+                task_widget.add_child_tasks(
+                    [child_task for child_task in asset.children if child_task.versions]
+                )
+
             else:
-                tasks_not_added.append(task)
+                assets_not_added.append(asset)
         self.update_title()
 
         if not silent:
-            if tasks_added:
+            if assets_added:
                 QtWidgets.QMessageBox.information(
                     self,
-                    "{} Assets added!".format(len(tasks_added)),
+                    "{} Assets added!".format(len(assets_added)),
                     "The following Assets are added:\n\n{}".format(
                         "\n".join(
-                            [get_task_hierarchy_name(asset) for asset in tasks_added]
+                            [get_task_hierarchy_name(asset) for asset in assets_added]
                         )
                     ),
                 )
             else:
                 QtWidgets.QMessageBox.critical(
                     self,
-                    "{} Assets NOT added!".format(len(tasks_not_added)),
+                    "{} Assets NOT added!".format(len(assets_not_added)),
                     "The following Assets are NOT added:\n\n{}".format(
                         "\n".join(
                             [
                                 get_task_hierarchy_name(asset)
-                                for asset in tasks_not_added
+                                for asset in assets_not_added
                             ]
                         )
                     ),
                 )
+
+    def add_tasks(self, tasks):
+        """Add the given tasks as a TaskWidget.
+
+        Args:
+            tasks ([stalker.Task]): List of stalker.Task instances.
+        """
+        # this is a Project widget
+        # now, for each task
+        for task in tasks:
+            found_task_widget = None
+            rest_of_the_tasks = None
+            all_parents = copy.copy(task.parents) + [task]
+            # iterate over parents,
+            for i, parent in enumerate(all_parents):
+                # try to find a child widget,
+                # that has one of the parents of that particular task
+                for task_widget in self.task_widgets:
+                    if parent == task_widget.task:
+                        # okay, we found a child widget that has one of the parents
+                        # give the rest of the tasks to that widget,
+                        # so that it can add them as child widgets.
+                        rest_of_the_tasks = all_parents[i + 1:]
+                        found_task_widget = task_widget
+                        break
+                if found_task_widget and rest_of_the_tasks:
+                    break
+            if found_task_widget and rest_of_the_tasks:
+                # if we found a widget,
+                # give the rest of the tasks to that widget, so that it
+                # adds them appropriately
+                assert isinstance(found_task_widget, TaskWidget)
+                found_task_widget.add_child_tasks(rest_of_the_tasks)
+            else:
+                # If we couldn't find a proper task widget that has any of the parents,
+                # get list of parents related to the asset,
+                # and add all immediate children tasks as a new TaskWidget.
+
+                # okay we couldn't find an appropriate TaskWidget
+                # add this as an asset
+                asset = get_related_asset(task)
+                self.add_assets([asset])
+        # trigger a version check
+        self.check_versions()
 
     def remove_task(self, task_widget):
         """Remove the given asset."""
@@ -966,21 +1054,17 @@ class TaskWidget(QtWidgets.QGroupBox):
             )
         )
         # add all the takes of this task as a TakeWidget
-
         take_names = get_unique_take_names(self._task.id)
         for take in take_names:
             take_widget = TakeWidget(parent=self, task=self._task, take=take)
             self.child_widgets_layout.addWidget(take_widget)
-            take_widget.add_references.connect(self.add_child_tasks)
-            take_widget.version_updated.connect(self.version_updated.emit)
+            take_widget.add_references.connect(self.add_task)
+            take_widget.version_updated.connect(self.version_updated)
             self.take_widgets.append(take_widget)
         if take_names:
             self.no_versions_place_holder.setVisible(False)
 
-        task_children = sorted(task.children, key=lambda x: x.name)
-        self.add_child_tasks(task_children)
-
-        if task_children:
+        if task.children:
             self.no_versions_place_holder.setVisible(False)
 
     def add_child_tasks(self, child_tasks):
@@ -998,26 +1082,36 @@ class TaskWidget(QtWidgets.QGroupBox):
             # otherwise this will go up to the ProjectWidget
             # and will be added to the end of the list as a separate entity
             # this way, we can prevent that
-            temp_entity_list = copy.copy(child_task.parents)
-            temp_entity_list.append(child_task)
+            intermediate_tasks = get_intermediate_tasks(self.task, child_task)
             task_added = None
-            for parent in reversed(temp_entity_list):
-                if parent in self.task.children:
-                    # we should add a new widget
-                    task_widget = TaskWidget(parent=self, task=parent)
-                    task_widget.remove_task.connect(self.remove_child_task)
-                    task_widget.version_updated.connect(self.version_updated.emit)
-                    task_widget.add_task.connect(self.add_child_tasks)
-                    task_widget.new_parent = self._task
-                    self.task_widgets.append(task_widget)
-                    self.child_widgets_layout.addWidget(task_widget)
-                    tasks_added.append(parent)
-                    task_added = parent
-                    break
+            child_task_widget_tasks = [
+                child_task_widget.task
+                for child_task_widget in self.task_widgets
+            ]
+            for i, task in enumerate(intermediate_tasks):
+                if task in self.task.children:
+                    if task not in child_task_widget_tasks:
+                        # we should add a new widget
+                        task_widget = TaskWidget(parent=self, task=task)
+                        task_widget.remove_task.connect(self.remove_child_task)
+                        task_widget.version_updated.connect(self.version_updated.emit)
+                        task_widget.add_task.connect(self.add_task)
+                        task_widget.new_parent = self.task
+                        self.task_widgets.append(task_widget)
+                        self.child_widgets_layout.addWidget(task_widget)
+                        tasks_added.append(task)
+                        task_added = task
 
-            if not task_added:
-                # propagate the given child_task to our parents
-                self.add_task.emit([child_task])
+                        # give the rest of the tasks to this widget
+                        task_widget.add_child_tasks(intermediate_tasks[i + 1:])
+                        break
+                    else:
+                        # oh okay so this task is already in a task_widget
+                        for task_widget in self.task_widgets:
+                            if task_widget.task == task:
+                                # give the rest of the tasks to that task widget
+                                task_widget.add_child_tasks(intermediate_tasks[i + 1:])
+                                break
 
         if tasks_added:
             # some tasks are added
@@ -1214,7 +1308,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
                     )
                     project_widget.project = asset.project
 
-                project_widget.add_tasks([asset], silent=True)
+                project_widget.add_assets([asset], silent=True)
                 # If a TaskTreeView is used, use the following to add the tasks
                 # self.task_tree_view.tasks += [asset]
                 assets_added.append(asset)
