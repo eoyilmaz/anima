@@ -752,13 +752,11 @@ class TakeWidget(QtWidgets.QWidget):
         Add the referenced tasks to the end of the list.
         """
         version = self.get_current_version()
-        referenced_tasks_dialog = ReferencedTasksDialog(parent=self)
-        tasks = set()
-        for other_v in version.inputs:
-            tasks.add(other_v.task)
+        referenced_tasks_dialog = ReferencedEntityDialog(parent=self)
+        versions = version.inputs
 
-        for task in tasks:
-            referenced_tasks_dialog.add_task(task)
+        for version in versions:
+            referenced_tasks_dialog.add_entity(version)
 
         referenced_tasks_dialog.exec()
         # and refresh the TaskTreeView
@@ -1083,10 +1081,8 @@ class TaskWidget(QtWidgets.QGroupBox):
             # and will be added to the end of the list as a separate entity
             # this way, we can prevent that
             intermediate_tasks = get_intermediate_tasks(self.task, child_task)
-            task_added = None
             child_task_widget_tasks = [
-                child_task_widget.task
-                for child_task_widget in self.task_widgets
+                child_task_widget.task for child_task_widget in self.task_widgets
             ]
             for i, task in enumerate(intermediate_tasks):
                 if task in self.task.children:
@@ -1387,13 +1383,13 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
         pprint.pprint(self.to_dict(), indent=4)
 
 
-class ReferencedTasksDialog(QtWidgets.QDialog):
-    """Show a list of Tasks referenced to another scene."""
+class ReferencedEntityDialog(QtWidgets.QDialog):
+    """Show a list of Entities (Tasks, Versions etc.) referenced to another scene."""
 
     def __init__(self, parent=None, *args, **kwargs):
-        super(ReferencedTasksDialog, self).__init__(parent=parent)
+        super(ReferencedEntityDialog, self).__init__(parent=parent)
         self.main_layout = None
-        self.tasks_list_view = None
+        self.entity_list_view = None
         self.add_selected_tasks_button = None
         self.setup_ui()
 
@@ -1408,30 +1404,29 @@ class ReferencedTasksDialog(QtWidgets.QDialog):
         )
         self.main_layout.addWidget(info_label)
 
-        # Tasks List Widget
-        self.tasks_list_view = TasksListView(parent=self)
-        self.tasks_list_view.setModel(TaskItemModel())
-        self.main_layout.addWidget(self.tasks_list_view)
+        # Entity List Widget
+        self.entity_list_view = VersionsListView(parent=self)
+        self.entity_list_view.setModel(VersionItemModel())
+        self.main_layout.addWidget(self.entity_list_view)
 
         # Add Selected Asset button
         self.add_selected_tasks_button = QtWidgets.QPushButton(self)
-        self.add_selected_tasks_button.setText("Add Selected Assets")
+        self.add_selected_tasks_button.setText("Add Selected Entities")
         self.add_selected_tasks_button.clicked.connect(self.accept)
         self.main_layout.addWidget(self.add_selected_tasks_button)
 
-    def add_task(self, task):
-        """Add the given task.
+    def add_entity(self, version):
+        """Add the given version.
 
         Args:
-            task (stalker.Task): A stalker Task instance.
+            version (stalker.Version): A stalker.Version instance.
         """
-        task_item_model = self.tasks_list_view.model()
-        assert isinstance(task_item_model, TaskItemModel)
-        task_item_model.add_task(task)
+        version_item_model = self.entity_list_view.model()
+        version_item_model.add_version(version)
 
     def get_selected_tasks(self):
         """Get selected tasks."""
-        return self.tasks_list_view.get_selected_tasks()
+        return self.entity_list_view.get_selected_tasks()
 
 
 class TasksListView(QtWidgets.QListView):
@@ -1468,6 +1463,53 @@ class TasksListView(QtWidgets.QListView):
         for task_item in self.get_selected_items():
             tasks.append(task_item.task)
         return tasks
+
+
+class VersionsListView(QtWidgets.QListView):
+    """Version specific list view derivative."""
+
+    def __init__(self, parent=None, *args, **kwargs):
+        super(VersionsListView, self).__init__(parent=parent, *args, *kwargs)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+
+    def get_selected_items(self):
+        """Return selected VersionItems.
+
+        Returns:
+            list: List of VersionItem instances.
+        """
+        selection_model = self.selectionModel()
+        indexes = selection_model.selectedIndexes()
+        version_items = []
+        if indexes:
+            item_model = self.model()
+            for index in indexes:
+                current_item = item_model.itemFromIndex(index)
+                if current_item and isinstance(current_item, VersionItem):
+                    version_items.append(current_item)
+        return version_items
+
+    def get_selected_tasks(self):
+        """Return selected Tasks.
+
+        Returns:
+            list: List of stalker.Task instances.
+        """
+        tasks = []
+        for version_item in self.get_selected_items():
+            tasks.append(version_item.version.task)
+        return tasks
+
+    def get_selected_versions(self):
+        """Return selected Versions.
+
+        Returns:
+            list: List of stalker.Version instances.
+        """
+        versions = []
+        for version_item in self.get_selected_items():
+            versions.append(version_item.version)
+        return versions
 
 
 class TaskItemModel(QtGui.QStandardItemModel):
@@ -1517,8 +1559,55 @@ class TaskItemModel(QtGui.QStandardItemModel):
             self.appendRow(task_item)
 
 
+class VersionItemModel(QtGui.QStandardItemModel):
+    """Version item model."""
+
+    def __init__(self):
+        super(VersionItemModel, self).__init__()
+
+    def flags(self, model_index):
+        """Return model flags.
+
+        Args:
+            model_index: The item models index.
+
+        Returns:
+            int: Combined enum data of model flags.
+        """
+        default_flags = QtCore.Qt.ItemIsEnabled
+        if model_index.isValid():
+            item = self.itemFromIndex(model_index)
+            return item.flags()
+        return default_flags
+
+    def add_version(self, version):
+        """Add the given version.
+
+        Args:
+            version (stalker.Version): A stalker.Version instance.
+        """
+        # add this version as it is not in the list
+        found_item = None
+        for i in range(self.rowCount()):
+            item = self.item(i, 0)
+            if isinstance(item, VersionItem) and item.version == version:
+                found_item = item
+                break
+
+        if not found_item:
+            version_item = VersionItem(version=version)
+            # disable this item if this is already in the EntityStorage
+            if EntityStorage.is_in_storage(version):
+                version_item.setFlags(
+                    version_item.flags()
+                    & ~QtCore.Qt.ItemIsSelectable
+                    & ~QtCore.Qt.ItemIsEnabled
+                )
+            self.appendRow(version_item)
+
+
 class TaskItem(QtGui.QStandardItem):
-    """Asset item."""
+    """Task item."""
 
     def __init__(self, task=None, *args, **kwargs):
         super(TaskItem, self).__init__(*args, **kwargs)
@@ -1530,7 +1619,7 @@ class TaskItem(QtGui.QStandardItem):
         """Return the task.
 
         Returns:
-            stalker.Asset: The stalker.Asset instance stored in this item.
+            stalker.Task: The stalker.Task instance stored in this item.
         """
         return self._task
 
@@ -1548,4 +1637,43 @@ class TaskItem(QtGui.QStandardItem):
             self._task = task
             self.setData(
                 get_task_hierarchy_name(task), QtCore.Qt.ItemDataRole.DisplayRole
+            )
+
+
+class VersionItem(QtGui.QStandardItem):
+    """Version item."""
+
+    def __init__(self, version=None, *args, **kwargs):
+        super(VersionItem, self).__init__(*args, **kwargs)
+        self._version = None
+        self.version = version
+
+    @property
+    def version(self):
+        """Return the version.
+
+        Returns:
+            stalker.Version: The stalker.Version instance stored in this item.
+        """
+        return self._version
+
+    @version.setter
+    def version(self, version):
+        """Set the version attribute.
+
+        Args:
+            version (stalker.Version): A stalker Version instance.
+        """
+        if version is None:
+            # This is not an asset related version
+            RuntimeError("Not a Version is given.")
+        else:
+            self._version = version
+            self.setData(
+                "{} --- {}_v{:03d}".format(
+                    get_task_hierarchy_name(version.task),
+                    version.nice_name,
+                    version.version_number
+                ),
+                QtCore.Qt.ItemDataRole.DisplayRole,
             )
