@@ -3,9 +3,12 @@
 import glob
 import os
 import re
+import shutil
 
 from anima import logger
 from anima.utils.archive import ArchiverBase
+
+from stalker import Project, Task, Version
 
 
 class Archiver(ArchiverBase):
@@ -117,9 +120,6 @@ sourceimages/3dPaintTextures"""
 
         :return:
         """
-        import os
-        import re
-
         path_regex = r"\$REPO[\w\d\/_\.@\<\>]+"
         # so we have all the data
         # extract references
@@ -153,9 +153,6 @@ sourceimages/3dPaintTextures"""
         :param str refs_folder: The references folder to replace reference paths with.
         :return list: returns a list of paths
         """
-        import os
-        import shutil
-
         # fix any env vars
         logger.debug("========================")
         logger.debug("path: {}".format(path))
@@ -324,40 +321,52 @@ sourceimages/3dPaintTextures"""
         # TODO: This will not fix the sound or texture files, that is anything
         #       other than a maya scene file.
         # get all reference paths
-        with open(path) as f:
+        with open(path, "rb") as f:
             data = f.read()
+
+        # replace any non utf-8 compatible characters
+        char_lut = {
+            # ANSI Turkish Characters read as utf-8
+            b"\xe7": b"c",
+            b"\xc7": b"C",
+            b"\xf0": b"g",
+            b"\xd0": b"G",
+            b"\xfd": b"i",
+            b"\xdd": b"I",
+            b"\xf6": b"o",
+            b"\xd6": b"O",
+            b"\xfe": b"s",
+            b"\xde": b"S",
+            b"\xfc": b"u",
+            b"\xdc": b"U",
+        }
+        for char in char_lut:
+            data = data.replace(char, char_lut[char])
+
+        # now encode the data to utf-8
+        data = data.decode("utf-8")
 
         unknown_references = []
         ref_paths = cls._extract_local_references(data)
         for ref_path in ref_paths:
             ref_file_name = os.path.basename(ref_path)
+            logger.debug(f"ref_file_name: {ref_file_name}")
 
             # try to find a corresponding Stalker Version instance with it
-            from stalker import Project, Task, Version
-
+            versions = []
             if project is not None:
                 # use the given project
                 versions = (
-                    Version.query.join(Task)
-                    .filter(Version.full_path.endswith(ref_file_name))
+                    Version.query.join(Task, Version.task_id == Task.id)
                     .filter(Task.project == project)
+                    .filter(Version.full_path.endswith(ref_file_name))
                     .all()
                 )
-                print("versions: {}".format(versions))
-                if not versions:
-                    print("no version found in the same project, "
-                          "looking in to other projects")
-                    # try to look all the projects
-                    versions = (
-                        Version.query.join(Task, Version.task_id == Task.id)
-                        .join(Project, Task.project_id == Project.id)
-                        .filter(Version.full_path.endswith(ref_file_name))
-                        .order_by(Project.date_created)
-                        .all()
-                    )
 
-            else:
-                # search on all projects
+            if not versions:
+                print("no version found in the same project, "
+                      "looking in to other projects")
+                # try to look in to all projects, order by Project.date_created
                 versions = (
                     Version.query.join(Task, Version.task_id == Task.id)
                     .join(Project, Task.project_id == Project.id)
