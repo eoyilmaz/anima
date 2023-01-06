@@ -29,13 +29,13 @@ COLORS = {
         "fg": "#000000",
         "bg": "#c3e6a1",
     },
-    "invalid_asset": {
-        "fg": "#000000",
-        "bg": "#f24949",
-    },
     "task": {
         "fg": "#000000",
         "bg": "#acd2e5",
+    },
+    "invalid": {
+        "fg": "#000000",
+        "bg": "#d492f2",
     },
 }
 
@@ -267,7 +267,8 @@ class ProjectWidget(QtWidgets.QGroupBox):
         """Update title with the known information"""
         # update UI items.
         self.setTitle(
-            "{} ({} Assets)".format(self._project.name, len(self.task_widgets))
+            # "{} ({} Assets)".format(self._project.name, len(self.task_widgets))
+            "{}".format(self._project.name)
         )
 
     def add_assets(self, assets, silent=True):
@@ -1152,8 +1153,8 @@ class TaskWidget(QtWidgets.QGroupBox):
         else:
             self.setStyleSheet(
                 "QGroupBox {{ background-color: {}; color: {}}}".format(
-                    COLORS["invalid_asset"]["bg"],
-                    COLORS["invalid_asset"]["fg"],
+                    COLORS["invalid"]["bg"],
+                    COLORS["invalid"]["fg"],
                 )
             )
 
@@ -1226,6 +1227,27 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
         self.pick_assets_button.setText("Pick Assets...")
         self.pick_assets_button.clicked.connect(self.pick_assets)
         self.main_layout.addWidget(self.pick_assets_button)
+
+        # Legend Labels
+        legend_layout = QtWidgets.QHBoxLayout()
+        legend_layout.addSpacerItem(
+            QtWidgets.QSpacerItem(
+                20, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+            )
+        )
+        self.main_layout.addLayout(legend_layout)
+
+        for entity in COLORS:
+            legend_box = QtWidgets.QLabel(self)
+            legend_box.setStyleSheet(
+                "background-color: {};".format(COLORS[entity.lower()]["bg"])
+            )
+            legend_box.setFixedSize(20, 20)
+            legend_layout.addWidget(legend_box)
+
+            legend_text = QtWidgets.QLabel(self)
+            legend_text.setText(entity.title())
+            legend_layout.addWidget(legend_text)
 
         self.projects_scroll_area = QtWidgets.QScrollArea(self)
         self.projects_scroll_area.setWidgetResizable(True)
