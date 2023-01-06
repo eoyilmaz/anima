@@ -29,11 +29,11 @@ class AssetMigrationTool(object):
                 "takes": {  # Take data
                     {old_take_name_1}: {  # Version data
                         "new_take_name": {new_take_name},  # Optional
-                        "versions": [version1, version2]
+                        "versions": [version1.version_number, version2.version_number]
                     },
                     {old_take_name_2}: {  # Version data
                         "new_take_name": {new_take_name},  # Optional
-                        "versions": [version1, version2]
+                        "versions": [version1.version_number, version2.version_number]
                     }
                 }
             }
@@ -119,7 +119,18 @@ class AssetMigrationTool(object):
             takes = self.migration_recipe[task_id].get("takes", {})
             for take_name in takes:
                 versions = takes[take_name].get("versions", [])
-                for v in versions:
+                for i, version_number in enumerate(versions):
+                    v = (
+                        Version.query
+                        .filter(Version.task_id == task_id)
+                        .filter(Version.take_name == take_name)
+                        .filter(Version.version_number == version_number)
+                        .first()
+                    )
+                    if not v:
+                        continue
+                    # store the version in the migration_recipe for later use
+                    takes[take_name]["versions"][i] = v
                     inordered_list_of_versions_to_move.append(v)
 
         # fill new_parent_id for all items
@@ -191,7 +202,7 @@ class AssetMigrationTool(object):
             takes = self.migration_recipe[source_entity_id].get("takes", {})
             for take_name in takes:
                 versions = takes[take_name].get("versions", [])
-                for v in versions:
+                for v in versions:  # at this point we should have normal versions
                     # check if something referencing this v has already moved this v
                     # to the ordered list.
                     order_index = 0

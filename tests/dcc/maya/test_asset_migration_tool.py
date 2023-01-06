@@ -180,7 +180,7 @@ def test_migrating_simple_asset_1(migration_test_data):
             "takes": {
                 "Main": {
                     "new_take_name": "Main",
-                    "versions": [data["asset2_model_main_v003"]],
+                    "versions": [data["asset2_model_main_v003"].version_number],
                 }
             },
         },
@@ -229,7 +229,7 @@ def test_migrating_simple_asset_2(migration_test_data, create_pymel, create_maya
             "takes": {
                 "Main": {
                     "new_take_name": "Main",
-                    "versions": [data["asset2_model_main_v003"]],
+                    "versions": [data["asset2_model_main_v003"].version_number],
                 }
             },
         },
@@ -277,11 +277,11 @@ def test_migrating_simple_asset_3(migration_test_data, create_pymel, create_maya
             "takes": {
                 "Main": {
                     "new_take_name": "Main",
-                    "versions": [data["asset2_model_main_v003"]],
+                    "versions": [data["asset2_model_main_v003"].version_number],
                 },
                 "Take1": {
                     "new_take_name": "Take1",
-                    "versions": [data["asset2_model_take1_v003"]],
+                    "versions": [data["asset2_model_take1_v003"].version_number],
                 },
             },
         },
@@ -341,11 +341,11 @@ def test_migrating_simple_asset_4(migration_test_data, create_pymel, create_maya
             "takes": {
                 "Main": {
                     "new_take_name": "Main",
-                    "versions": [data["asset2_model_main_v003"]],
+                    "versions": [data["asset2_model_main_v003"].version_number],
                 },
                 "Take1": {
                     "new_take_name": "Take1",
-                    "versions": [data["asset2_model_take1_v003"]],
+                    "versions": [data["asset2_model_take1_v003"].version_number],
                 },
             },
         },
@@ -418,13 +418,13 @@ def test_migrating_simple_env_asset_1(
         data["ext2_layout"].id: {  # tricky part, this needs to be moved after look dev
             "new_parent_id": data["ext2"].id,
             "takes": {
-                "Main": {"versions": [data["ext2_layout_main_v003"]]},
+                "Main": {"versions": [data["ext2_layout_main_v003"].version_number]},
             },
         },
         data["ext2_look_dev"].id: {
             "new_parent_id": data["ext2"].id,
             "takes": {
-                "Main": {"versions": [data["ext2_look_dev_main_v003"]]},
+                "Main": {"versions": [data["ext2_look_dev_main_v003"].version_number]},
             },
         },
     }
@@ -497,13 +497,13 @@ def test_migrating_simple_env_asset_2(
         data["ext2_layout"].id: {  # tricky part, this needs to be moved after look dev
             "new_parent_id": data["ext2"].id,
             "takes": {
-                "Main": {"versions": [data["ext2_layout_main_v003"]]},
+                "Main": {"versions": [data["ext2_layout_main_v003"].version_number]},
             },
         },
         data["ext2_look_dev"].id: {
             "new_parent_id": data["ext2"].id,
             "takes": {
-                "Main": {"versions": [data["ext2_look_dev_main_v003"]]},
+                "Main": {"versions": [data["ext2_look_dev_main_v003"].version_number]},
             },
         },
     }
@@ -612,68 +612,68 @@ def test_migrating_complex_env_asset_1(
         data["ext1_layout"].id: {
             "takes": {
                 # tricky part, this needs to be moved after look dev
-                "Main": {"versions": [data["ext1_layout_main_v003"]]},
+                "Main": {"versions": [data["ext1_layout_main_v003"].version_number]},
             },
         },
         data["ext1_look_dev"].id: {
             "takes": {
-                "Main": {"versions": [data["ext1_look_dev_main_v003"]]},
+                "Main": {"versions": [data["ext1_look_dev_main_v003"].version_number]},
             },
         },
         data["building1"].id: {},
         data["building1_layout"].id: {
             "takes": {
-                "Main": {"versions": [data["building1_layout_main_v003"]]},
+                "Main": {"versions": [data["building1_layout_main_v003"].version_number]},
             },
         },
         data["building1_look_dev"].id: {
             "takes": {
-                "Main": {"versions": [data["building1_look_dev_main_v003"]]},
+                "Main": {"versions": [data["building1_look_dev_main_v003"].version_number]},
             },
         },
         data["building1_props"].id: {},
         data["building1_yapi"].id: {},
         data["building1_yapi_model"].id: {
-            "takes": {"Main": {"versions": [data["building1_yapi_model_main_v003"]]}}
+            "takes": {"Main": {"versions": [data["building1_yapi_model_main_v003"].version_number]}}
         },
         data["building1_yapi_look_dev"].id: {
-            "takes": {"Main": {"versions": [data["building1_yapi_look_dev_main_v003"]]}}
+            "takes": {"Main": {"versions": [data["building1_yapi_look_dev_main_v003"].version_number]}}
         },
         data["building2"].id: {},
         data["building2_layout"].id: {
             "takes": {
-                "Main": {"versions": [data["building2_layout_main_v003"]]},
+                "Main": {"versions": [data["building2_layout_main_v003"].version_number]},
             },
         },
         data["building2_look_dev"].id: {
             "takes": {
-                "Main": {"versions": [data["building2_look_dev_main_v003"]]},
+                "Main": {"versions": [data["building2_look_dev_main_v003"].version_number]},
             },
         },
         data["building2_props"].id: {},
         data["building2_yapi"].id: {},
         data["building2_yapi_model"].id: {
-            "takes": {"Main": {"versions": [data["building2_yapi_model_main_v003"]]}}
+            "takes": {"Main": {"versions": [data["building2_yapi_model_main_v003"].version_number]}}
         },
         data["building2_yapi_look_dev"].id: {
-            "takes": {"Main": {"versions": [data["building2_yapi_look_dev_main_v003"]]}}
+            "takes": {"Main": {"versions": [data["building2_yapi_look_dev_main_v003"].version_number]}}
         },
         data["ext1_props"].id: {},
         data["prop1"].id: {},
         data["prop1_model"].id: {
             "takes": {
-                "Main": {"versions": [data["prop1_model_main_v003"]]},
-                "Kisa": {"versions": [data["prop1_model_kisa_v003"]]},
+                "Main": {"versions": [data["prop1_model_main_v003"].version_number]},
+                "Kisa": {"versions": [data["prop1_model_kisa_v003"].version_number]},
             }
         },
         data["prop1_look_dev"].id: {
             "takes": {
-                "Main": {"versions": [data["prop1_look_dev_main_v003"]]},
-                "Kisa": {"versions": [data["prop1_look_dev_kisa_v003"]]},
+                "Main": {"versions": [data["prop1_look_dev_main_v003"].version_number]},
+                "Kisa": {"versions": [data["prop1_look_dev_kisa_v003"].version_number]},
             }
         },
         data["ext1_vegetation"].id: {
-            "takes": {"Main": {"versions": [data["ext1_vegetation_main_v003"]]}}
+            "takes": {"Main": {"versions": [data["ext1_vegetation_main_v003"].version_number]}}
         },
     }
 
@@ -1048,68 +1048,68 @@ def test_migrating_complex_env_asset_2(
         data["ext1_layout"].id: {
             "takes": {
                 # tricky part, this needs to be moved after look dev
-                "Main": {"versions": [data["ext1_layout_main_v003"]]},
+                "Main": {"versions": [data["ext1_layout_main_v003"].version_number]},
             },
         },
         data["ext1_look_dev"].id: {
             "takes": {
-                "Main": {"versions": [data["ext1_look_dev_main_v003"]]},
+                "Main": {"versions": [data["ext1_look_dev_main_v003"].version_number]},
             },
         },
         data["building1"].id: {},
         data["building1_layout"].id: {
             "takes": {
-                "Main": {"versions": [data["building1_layout_main_v003"]]},
+                "Main": {"versions": [data["building1_layout_main_v003"].version_number]},
             },
         },
         data["building1_look_dev"].id: {
             "takes": {
-                "Main": {"versions": [data["building1_look_dev_main_v003"]]},
+                "Main": {"versions": [data["building1_look_dev_main_v003"].version_number]},
             },
         },
         data["building1_props"].id: {},
         data["building1_yapi"].id: {},
         data["building1_yapi_model"].id: {
-            "takes": {"Main": {"versions": [data["building1_yapi_model_main_v003"]]}}
+            "takes": {"Main": {"versions": [data["building1_yapi_model_main_v003"].version_number]}}
         },
         data["building1_yapi_look_dev"].id: {
-            "takes": {"Main": {"versions": [data["building1_yapi_look_dev_main_v003"]]}}
+            "takes": {"Main": {"versions": [data["building1_yapi_look_dev_main_v003"].version_number]}}
         },
         data["building2"].id: {},
         data["building2_layout"].id: {
             "takes": {
-                "Main": {"versions": [data["building2_layout_main_v003"]]},
+                "Main": {"versions": [data["building2_layout_main_v003"].version_number]},
             },
         },
         data["building2_look_dev"].id: {
             "takes": {
-                "Main": {"versions": [data["building2_look_dev_main_v003"]]},
+                "Main": {"versions": [data["building2_look_dev_main_v003"].version_number]},
             },
         },
         data["building2_props"].id: {},
         data["building2_yapi"].id: {},
         data["building2_yapi_model"].id: {
-            "takes": {"Main": {"versions": [data["building2_yapi_model_main_v003"]]}}
+            "takes": {"Main": {"versions": [data["building2_yapi_model_main_v003"].version_number]}}
         },
         data["building2_yapi_look_dev"].id: {
-            "takes": {"Main": {"versions": [data["building2_yapi_look_dev_main_v003"]]}}
+            "takes": {"Main": {"versions": [data["building2_yapi_look_dev_main_v003"].version_number]}}
         },
         data["ext1_props"].id: {},
         data["prop1"].id: {},
         data["prop1_model"].id: {
             "takes": {
-                "Main": {"versions": [data["prop1_model_main_v003"]]},
-                "Kisa": {"versions": [data["prop1_model_kisa_v003"]]},
+                "Main": {"versions": [data["prop1_model_main_v003"].version_number]},
+                "Kisa": {"versions": [data["prop1_model_kisa_v003"].version_number]},
             }
         },
         data["prop1_look_dev"].id: {
             "takes": {
-                "Main": {"versions": [data["prop1_look_dev_main_v003"]]},
-                "Kisa": {"versions": [data["prop1_look_dev_kisa_v003"]]},
+                "Main": {"versions": [data["prop1_look_dev_main_v003"].version_number]},
+                "Kisa": {"versions": [data["prop1_look_dev_kisa_v003"].version_number]},
             }
         },
         data["ext1_vegetation"].id: {
-            "takes": {"Main": {"versions": [data["ext1_vegetation_main_v003"]]}}
+            "takes": {"Main": {"versions": [data["ext1_vegetation_main_v003"].version_number]}}
         },
     }
 
@@ -1489,7 +1489,7 @@ def test_migrating_with_alternative_versions_data_1(
         data["ext2_look_dev"].id: {
             "new_parent_id": data["ext2"].id,
             "takes": {
-                "Main": {"versions": [data["ext2_look_dev_main_v003"]]},
+                "Main": {"versions": [data["ext2_look_dev_main_v003"].version_number]},
             },
         },
     }
@@ -1542,179 +1542,179 @@ def test_migrating_with_alternative_versions_data_1(
     assert data["random_asset1_model_main_version1"] in look_dev_version.inputs  # baam!
 
 
-def test_migration_recipe_to_same_take_name(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test recipe has two different takes that moves versions to the same take name."""
-    # Asset
-    #   Model
-    #     Main  -> Main
-    #     Take1 -> Main
-    # Check Stalker data
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_add_asset_method_with_None(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.add_asset(None)."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_add_asset_method_with_non_asset(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.add_asset() with asset argument something other than an
-    Asset instance."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_add_asset_metho_with_a_proper_asset(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.add_asset() with a proper Asset instance."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_set_target_parent_asset_is_None(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.set_target_parent() with asset is None."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_set_target_parent_asset_is_not_a_asset_instance(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.set_target_parent() with asset is not an Asset
-    instance."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_set_target_parent_asset_is_a_proper_asset_instance(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.set_target_parent() with the asset argument being a
-    proper Asset instance."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_set_target_parent_new_parent_is_None(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.set_target_parent() with the new_parent argument is
-    None."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_set_target_parent_new_parent_is_not_a_task_or_project(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.set_target_parent() with the new_parent argument is not
-    a Task or Project instance."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_set_target_parent_new_parent_is_a_task(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.set_target_parent() with the new_parent argument value
-    being a Task instance."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_set_target_parent_new_parent_is_a_project(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.set_target_parent() with the new_parent argument value
-    being a Project instance."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_set_target_parent_new_parent_is_in_the_same_project(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.set_target_parent() is in the same project."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_set_target_parent_new_parent_is_a_child_of_original_asset(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.set_target_parent() is a child task of the given Asset."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_add_take_task_is_None(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.add_take() task is None."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_add_take_task_is_not_task_instance(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.add_take() task is not a Task instance."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_add_take_task_is_proper_task_instance(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.add_take() task is a proper Task instance."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_add_take_task_is_not_a_child_of_existing_assets(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.add_take() task is not a child of existing assets."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_add_take_old_take_name_is_None(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.add_take() old_take_name is None."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_add_take_old_take_name_is_not_a_str(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.add_take() old_take_name is not a string."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_add_take_old_take_name_does_not_exist(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.add_take() old_take_name doesn't exist."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_add_take_new_take_name_is_None(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.add_take() new_take_name is None."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_add_take_new_take_name_is_not_a_str(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.add_take() new_take_name is not a str."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_asset_migration_tool_add_take_new_take_name_is_a_str(
-    migration_test_data, create_pymel, create_maya_env
-):
-    """Test AssetMigrationTool.add_take() new_take_name is a str."""
-    raise NotImplementedError("Test is not implemented yet")
-
-
-def test_move_old_versions_1(migration_test_data, create_pymel, create_maya_env):
-    """Test AssetMigrationTool to move a scene with newer versions detected."""
-    raise NotImplementedError("Test is not implemented yet")
+# def test_migration_recipe_to_same_take_name(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test recipe has two different takes that moves versions to the same take name."""
+#     # Asset
+#     #   Model
+#     #     Main  -> Main
+#     #     Take1 -> Main
+#     # Check Stalker data
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_add_asset_method_with_None(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.add_asset(None)."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_add_asset_method_with_non_asset(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.add_asset() with asset argument something other than an
+#     Asset instance."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_add_asset_metho_with_a_proper_asset(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.add_asset() with a proper Asset instance."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_set_target_parent_asset_is_None(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.set_target_parent() with asset is None."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_set_target_parent_asset_is_not_a_asset_instance(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.set_target_parent() with asset is not an Asset
+#     instance."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_set_target_parent_asset_is_a_proper_asset_instance(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.set_target_parent() with the asset argument being a
+#     proper Asset instance."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_set_target_parent_new_parent_is_None(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.set_target_parent() with the new_parent argument is
+#     None."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_set_target_parent_new_parent_is_not_a_task_or_project(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.set_target_parent() with the new_parent argument is not
+#     a Task or Project instance."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_set_target_parent_new_parent_is_a_task(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.set_target_parent() with the new_parent argument value
+#     being a Task instance."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_set_target_parent_new_parent_is_a_project(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.set_target_parent() with the new_parent argument value
+#     being a Project instance."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_set_target_parent_new_parent_is_in_the_same_project(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.set_target_parent() is in the same project."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_set_target_parent_new_parent_is_a_child_of_original_asset(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.set_target_parent() is a child task of the given Asset."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_add_take_task_is_None(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.add_take() task is None."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_add_take_task_is_not_task_instance(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.add_take() task is not a Task instance."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_add_take_task_is_proper_task_instance(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.add_take() task is a proper Task instance."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_add_take_task_is_not_a_child_of_existing_assets(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.add_take() task is not a child of existing assets."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_add_take_old_take_name_is_None(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.add_take() old_take_name is None."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_add_take_old_take_name_is_not_a_str(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.add_take() old_take_name is not a string."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_add_take_old_take_name_does_not_exist(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.add_take() old_take_name doesn't exist."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_add_take_new_take_name_is_None(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.add_take() new_take_name is None."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_add_take_new_take_name_is_not_a_str(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.add_take() new_take_name is not a str."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_asset_migration_tool_add_take_new_take_name_is_a_str(
+#     migration_test_data, create_pymel, create_maya_env
+# ):
+#     """Test AssetMigrationTool.add_take() new_take_name is a str."""
+#     raise NotImplementedError("Test is not implemented yet")
+#
+#
+# def test_move_old_versions_1(migration_test_data, create_pymel, create_maya_env):
+#     """Test AssetMigrationTool to move a scene with newer versions detected."""
+#     raise NotImplementedError("Test is not implemented yet")
