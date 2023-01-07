@@ -1517,7 +1517,8 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
     def validate_wrapper(self):
         """Wrap validate functionality to display appropriate messages."""
         # validate tasks
-        if not self.validate():
+        validation_result = self.validate()
+        if not validation_result:
             QtWidgets.QMessageBox.critical(
                 self,
                 "Invalid Assets!",
@@ -1529,6 +1530,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
                 "All Assets Okay!",
                 "All Assets and Tasks are valid 👍",
             )
+        return validation_result
 
     def to_dict(self):
         """Return a dictionary representing the migration data.
@@ -1543,7 +1545,9 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
 
     def migrate(self):
         """Migrate tasks."""
-        self.validate_wrapper()
+        validation_result = self.validate_wrapper()
+        if not validation_result:
+            return
 
         # print the pprint output
         migration_recipe = self.to_dict()
@@ -1554,7 +1558,22 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
 
         amt = asset_migration_tool.AssetMigrationTool()
         amt.migration_recipe = migration_recipe
-        amt.migrate()
+
+        try:
+            amt.migrate()
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                "Error",
+                "Error during migration:\n\n{}".format(e)
+            )
+            print(e)
+        else:
+            QtWidgets.QMessageBox.information(
+                "Success",
+                "Successfully migrated assets!\n\nClose the UI now."
+            )
+            # disable the migrate button
+            self.migrate_button.setDisabled(True)
 
 
 class ReferencedEntityDialog(QtWidgets.QDialog):
