@@ -110,9 +110,6 @@ class AssetMigrationTool(object):
 
     def migrate(self):
         """Do the migration."""
-        # traverse the asset child task_ids
-        m = mayaEnv.Maya()
-
         # create an unordered list of versions to move
         inordered_list_of_versions_to_move = []
         ordered_list_of_versions_to_move = []
@@ -244,6 +241,7 @@ class AssetMigrationTool(object):
         # We now should have sorted list of source versions
         # and a corresponding version centric migration recipe
         # go over the list and create new versions,
+        dcc_env = mayaEnv.Maya()
         for v in ordered_list_of_versions_to_move:
             recipe = version_centric_migration_recipe[v]
             new_version = Version(
@@ -251,7 +249,7 @@ class AssetMigrationTool(object):
                 take_name=recipe["take_name"],
                 description=v.description,
             )
-            m.open(version=v, force=True, skip_update_check=True, prompt=False)
+            dcc_env.open(version=v, force=True, skip_update_check=True, prompt=False)
 
             # replace all top level references with the versions from version_lut
             for ref in pm.listReferences():
@@ -266,7 +264,7 @@ class AssetMigrationTool(object):
                         )
                     )
             # TODO: Before saving check external files like textures, audio etc.
-            m.save_as(version=new_version)
+            dcc_env.save_as(version=new_version)
 
             # because publish scripts may fail, set the publish status after
             # saving the file

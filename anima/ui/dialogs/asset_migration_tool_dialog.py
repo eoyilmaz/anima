@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import copy
+import pprint
 import re
 
 import qtawesome
@@ -1544,10 +1545,16 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
         """Migrate tasks."""
         self.validate_wrapper()
 
-        # display a report
-        import pprint
+        # print the pprint output
+        migration_recipe = self.to_dict()
+        pprint.pprint(migration_recipe, indent=4)
 
-        pprint.pprint(self.to_dict(), indent=4)
+        # create the AssetMigrationTool
+        from anima.dcc.mayaEnv import asset_migration_tool
+
+        amt = asset_migration_tool.AssetMigrationTool()
+        amt.migration_recipe = migration_recipe
+        amt.migrate()
 
 
 class ReferencedEntityDialog(QtWidgets.QDialog):
