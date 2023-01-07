@@ -173,13 +173,15 @@ def test_migrating_simple_asset_1(migration_test_data):
     data = migration_test_data
     migration_recipe = {
         data["asset2"].id: {
+            "new_name": "Asset 2A",
+            "new_code": "asset2a",
             "new_parent_id": data["assets_task2"].id,
         },
         data["asset2_model"].id: {
             "new_parent_id": data["asset2"].id,
             "takes": {
                 "Main": {
-                    "new_take_name": "Main",
+                    "new_name": "Main",
                     "versions": [data["asset2_model_main_v003"].version_number],
                 }
             },
@@ -198,8 +200,8 @@ def test_migrating_simple_asset_1(migration_test_data):
     assert data["assets_task2"].children != []
     new_asset = data["assets_task2"].children[0]
     assert isinstance(new_asset, Asset)
-    assert new_asset.name == data["asset2"].name
-    assert new_asset.code == data["asset2"].code
+    assert new_asset.name == "Asset 2A"
+    assert new_asset.code == "asset2a"
     assert new_asset.type == data["asset2"].type
     assert new_asset.children != []
     model_task = new_asset.children[0]
@@ -228,7 +230,7 @@ def test_migrating_simple_asset_2(migration_test_data, create_pymel, create_maya
             "new_parent_id": data["asset2"].id,
             "takes": {
                 "Main": {
-                    "new_take_name": "Main",
+                    "new_name": "Main",
                     "versions": [data["asset2_model_main_v003"].version_number],
                 }
             },
@@ -270,17 +272,19 @@ def test_migrating_simple_asset_3(migration_test_data, create_pymel, create_maya
     data = migration_test_data
     migration_recipe = {
         data["asset2"].id: {
+            "new_name": "Asset 3A",
+            "new_code": "asset3a",
             "new_parent_id": data["assets_task2"].id,
         },
         data["asset2_model"].id: {
             "new_parent_id": data["asset2"].id,
             "takes": {
                 "Main": {
-                    "new_take_name": "Main",
+                    "new_name": "Main",
                     "versions": [data["asset2_model_main_v003"].version_number],
                 },
                 "Take1": {
-                    "new_take_name": "Take1",
+                    "new_name": "Take1",
                     "versions": [data["asset2_model_take1_v003"].version_number],
                 },
             },
@@ -299,8 +303,8 @@ def test_migrating_simple_asset_3(migration_test_data, create_pymel, create_maya
     assert data["assets_task2"].children != []
     new_asset = data["assets_task2"].children[0]
     assert isinstance(new_asset, Asset)
-    assert new_asset.name == data["asset2"].name
-    assert new_asset.code == data["asset2"].code
+    assert new_asset.name == "Asset 3A"
+    assert new_asset.code == "asset3a"
     assert new_asset.type == data["asset2"].type
     assert new_asset.children != []
     model_task = new_asset.children[0]
@@ -340,11 +344,11 @@ def test_migrating_simple_asset_4(migration_test_data, create_pymel, create_maya
             "new_parent_id": data["asset2"].id,
             "takes": {
                 "Main": {
-                    "new_take_name": "Main",
+                    "new_name": "Main",
                     "versions": [data["asset2_model_main_v003"].version_number],
                 },
                 "Take1": {
-                    "new_take_name": "Take1",
+                    "new_name": "Take1",
                     "versions": [data["asset2_model_take1_v003"].version_number],
                 },
             },
@@ -413,6 +417,8 @@ def test_migrating_simple_env_asset_1(
     maya_env = create_maya_env
     migration_recipe = {
         data["ext2"].id: {
+            "new_name": "Ext2A",
+            "new_code": "ext2a",
             "new_parent_id": data["assets_task2"].id,
         },
         data["ext2_layout"].id: {  # tricky part, this needs to be moved after look dev
@@ -441,8 +447,8 @@ def test_migrating_simple_env_asset_1(
     assert data["assets_task2"].children != []
     new_asset = data["assets_task2"].children[0]
     assert isinstance(new_asset, Asset)
-    assert new_asset.name == data["ext2"].name
-    assert new_asset.code == data["ext2"].code
+    assert new_asset.name == "Ext2A"
+    assert new_asset.code == "ext2a"
     assert new_asset.type == data["ext2"].type
     assert len(new_asset.children) == 2
 
@@ -492,6 +498,8 @@ def test_migrating_simple_env_asset_2(
     maya_env = create_maya_env
     migration_recipe = {
         data["ext2"].id: {
+            "new_name": "Ext2B",
+            "new_code": "ext2b",
             "new_parent_id": data["assets_task2"].id,
         },
         data["ext2_layout"].id: {  # tricky part, this needs to be moved after look dev
@@ -520,8 +528,8 @@ def test_migrating_simple_env_asset_2(
     assert data["assets_task2"].children != []
     new_asset = data["assets_task2"].children[0]
     assert isinstance(new_asset, Asset)
-    assert new_asset.name == data["ext2"].name
-    assert new_asset.code == data["ext2"].code
+    assert new_asset.name == "Ext2B"
+    assert new_asset.code == "ext2b"
     assert new_asset.type == data["ext2"].type
     assert len(new_asset.children) == 2
 
@@ -607,6 +615,8 @@ def test_migrating_complex_env_asset_1(
     maya_env = create_maya_env
     migration_recipe = {
         data["ext1"].id: {
+            "new_name": "Ext1A",
+            "new_code": "ext1a",
             "new_parent_id": data["assets_task2"].id,
         },
         data["ext1_layout"].id: {
@@ -688,8 +698,8 @@ def test_migrating_complex_env_asset_1(
     assert len(data["assets_task2"].children) == 1
     ext1 = data["assets_task2"].children[0]
     assert isinstance(ext1, Asset)
-    assert ext1.name == data["ext1"].name
-    assert ext1.code == data["ext1"].code
+    assert ext1.name == "Ext1A"
+    assert ext1.code == "ext1a"
     assert ext1.type == data["exterior_type"]
     assert len(ext1.children) == 6
 

@@ -25,14 +25,16 @@ class AssetMigrationTool(object):
     ```python
         self.migration_recipe = {
             {task.id}: {  # Task data
+                "new_name": "New Asset Name",  # optional asset new name
+                "new_code": "New Asset Code",  # optional asset new name
                 "new_parent_id": new_parent_task.id,
                 "takes": {  # Take data
                     {old_take_name_1}: {  # Version data
-                        "new_take_name": {new_take_name},  # Optional
+                        "new_name": {new_name},  # Optional
                         "versions": [version1.version_number, version2.version_number]
                     },
                     {old_take_name_2}: {  # Version data
-                        "new_take_name": {new_take_name},  # Optional
+                        "new_name": {new_name},  # Optional
                         "versions": [version1.version_number, version2.version_number]
                     }
                 }
@@ -133,16 +135,26 @@ class AssetMigrationTool(object):
                     takes[take_name]["versions"][i] = v
                     inordered_list_of_versions_to_move.append(v)
 
-        # fill new_parent_id for all items
+        # fill new_parent_id, new_name and new_code for all items
         for task_id in self.migration_recipe:
+            task = Task.query.filter(Task.id == task_id).first()
+            if not task:
+                continue
             if "new_parent_id" not in self.migration_recipe[task_id]:
                 # use the current task.parent_id as the new_parent,
                 # hopping the parents are also getting carried over.
-                task = Task.query.filter(Task.id == task_id).first()
-                if task:
-                    self.migration_recipe[task_id]["new_parent_id"] = (
-                        task.parent.id if task.parent else None
-                    )
+                self.migration_recipe[task_id]["new_parent_id"] = (
+                    task.parent.id if task.parent else None
+                )
+            if "new_name" not in self.migration_recipe[task_id]:
+                self.migration_recipe[task_id]["new_name"] = task.name
+
+            if (
+                isinstance(task, (Asset, Shot, Sequence))
+                and "new_code" not in self.migration_recipe[task_id]
+            ):
+                # also fill the code attr
+                self.migration_recipe[task_id]["new_code"] = task.code
 
         # We need to get a proper list with a proper order,
         # so that when the tasks are processed in that order,
@@ -182,7 +194,7 @@ class AssetMigrationTool(object):
                 "Sequence": Sequence,
             }
             kwargs = {
-                "name": source_entity.name,
+                "name": self.migration_recipe[source_entity_id]["new_name"],
                 "parent": new_parent,
                 "type": source_entity.type,
                 "description": "Migrated from {} under {}".format(
@@ -190,7 +202,7 @@ class AssetMigrationTool(object):
                 ),
             }
             if source_entity.entity_type in ["Asset", "Shot", "Sequence"]:
-                kwargs["code"] = source_entity.code
+                kwargs["code"] = self.migration_recipe[source_entity_id]["new_code"]
 
             new_task = new_entity_class_lut[source_entity.entity_type](**kwargs)
             DBSession.add(new_task)
@@ -226,7 +238,7 @@ class AssetMigrationTool(object):
                     # add the version to the version centric migration recipe
                     version_centric_migration_recipe[v] = {
                         "new_task": new_task,
-                        "take_name": takes[take_name].get("new_take_name", take_name),
+                        "take_name": takes[take_name].get("new_name", take_name),
                     }
 
         # We now should have sorted list of source versions
