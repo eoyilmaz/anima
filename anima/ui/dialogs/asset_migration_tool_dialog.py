@@ -10,10 +10,9 @@ from anima.ui.dialogs import task_picker_dialog
 from anima.ui.widgets import ValidatedLineEdit
 from anima.utils import get_task_hierarchy_name, get_unique_take_names
 
-from stalker import Asset, Task, Version
+from stalker import Asset, Task, Version, Shot, Sequence
 
-
-TAKE_NAME_VALIDATOR_REGEX = re.compile("([A-Z]{1})([a-zA-Z0-9]+)")
+TAKE_NAME_VALIDATOR_REGEX = re.compile("([A-Z])([a-zA-Z0-9]+)")
 
 
 if False:
@@ -823,8 +822,8 @@ class TakeWidget(QtWidgets.QWidget):
             dict: The migration data.
         """
         return {
-            "new_take_name": self.get_new_take_name(),
-            "versions": [self.get_current_version()],
+            "new_name": self.get_new_take_name(),
+            "versions": [self.get_current_version().version_number],
         }
 
     def remove(self):
@@ -853,6 +852,12 @@ class TaskWidget(QtWidgets.QGroupBox):
         self.no_versions_place_holder = None
         self.remove_button = None
         self.pick_new_parent_button = None
+        self.asset_new_name_label = None
+        self.asset_new_name_line_edit = None
+        self.asset_new_name_validation_message_field = None
+        self.asset_new_code_label = None
+        self.asset_new_code_line_edit = None
+        self.asset_new_code_validation_message_field = None
         self.child_widgets_layout = None
         self.take_widgets = []
         self.task_widgets = []
@@ -868,6 +873,7 @@ class TaskWidget(QtWidgets.QGroupBox):
 
         # Buttons layout
         buttons_layout = QtWidgets.QHBoxLayout()
+        buttons_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.addLayout(buttons_layout)
 
         # Remove Task
@@ -897,11 +903,77 @@ class TaskWidget(QtWidgets.QGroupBox):
             )
         )
 
+        # New Asset Name
+        asset_new_name_and_code_layout = QtWidgets.QHBoxLayout()
+        asset_new_name_and_code_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.addLayout(asset_new_name_and_code_layout)
+
+        validation_hint = (
+            "First Letter : A-Z\n"
+            "Other Letters: a-z A-Z 0-9\n"
+            "No empty spaces!\n"
+            "No underscore, no dash etc.\n"
+        )
+
+        self.asset_new_name_label = QtWidgets.QLabel(self)
+        self.asset_new_name_label.setText("Asset New Name")
+        asset_new_name_and_code_layout.addWidget(self.asset_new_name_label)
+
+        asset_new_name_layout = QtWidgets.QVBoxLayout()
+        asset_new_name_layout.setContentsMargins(0, 0, 0, 0)
+        self.asset_new_name_validation_message_field = QtWidgets.QLabel(self)
+        self.asset_new_name_validation_message_field.setStyleSheet("color: red;")
+        self.asset_new_name_line_edit = ValidatedLineEdit(
+            parent=self, message_field=self.asset_new_name_validation_message_field
+        )
+        self.asset_new_name_line_edit.setToolTip(
+            "New Asset Name\n\n{}".format(validation_hint)
+        )
+        self.asset_new_name_line_edit.setFixedWidth(150)
+        self.asset_new_name_line_edit.editingFinished.connect(
+            self.validate_asset_new_name
+        )
+        asset_new_name_layout.addWidget(self.asset_new_name_line_edit)
+        asset_new_name_layout.addWidget(self.asset_new_name_validation_message_field)
+
+        asset_new_name_and_code_layout.addLayout(asset_new_name_layout)
+
+        # New Asset Code
+        self.asset_new_code_label = QtWidgets.QLabel(self)
+        self.asset_new_code_label.setText("Asset New Code")
+        asset_new_name_and_code_layout.addWidget(self.asset_new_code_label)
+
+        asset_new_code_layout = QtWidgets.QVBoxLayout()
+        asset_new_code_layout.setContentsMargins(0, 0, 0, 0)
+        self.asset_new_code_validation_message_field = QtWidgets.QLabel(self)
+        self.asset_new_code_validation_message_field.setStyleSheet("color: red;")
+        self.asset_new_code_line_edit = ValidatedLineEdit(
+            parent=self, message_field=self.asset_new_code_validation_message_field
+        )
+        self.asset_new_code_line_edit.setToolTip(
+            "New Asset Code\n\n{}".format(validation_hint)
+        )
+        self.asset_new_code_line_edit.setFixedWidth(150)
+        self.asset_new_code_line_edit.editingFinished.connect(
+            self.validate_asset_new_code
+        )
+        asset_new_code_layout.addWidget(self.asset_new_code_line_edit)
+        asset_new_code_layout.addWidget(self.asset_new_code_validation_message_field)
+
+        asset_new_name_and_code_layout.addLayout(asset_new_code_layout)
+
+        # Spacer for buttons
+        asset_new_name_and_code_layout.addSpacerItem(
+            QtWidgets.QSpacerItem(
+                20, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+            )
+        )
+
         self.child_widgets_layout = QtWidgets.QVBoxLayout()
         self.child_widgets_layout.setContentsMargins(12, 0, 12, 0)
         self.no_versions_place_holder = QtWidgets.QLabel(self)
         self.no_versions_place_holder.setText("--- No Versions ---")
-        self.no_versions_place_holder.setDisabled(True)
+        self.no_versions_place_holder.setVisible(False)
         self.child_widgets_layout.addWidget(self.no_versions_place_holder)
         self.main_layout.addLayout(self.child_widgets_layout)
 
@@ -1021,6 +1093,50 @@ class TaskWidget(QtWidgets.QGroupBox):
             "New Parent: {}".format(new_parent_hierarchy_name)
         )
 
+    def validate_asset_new_name(self):
+        """Validate asset new name.
+
+        Returns:
+            bool: True for valid, False otherwise.
+        """
+        # Only validate for Assets
+        if not isinstance(self.task, Asset):
+            self.asset_new_name_line_edit.set_valid()
+            return True
+
+        text = self.asset_new_name_line_edit.text()
+        match = TAKE_NAME_VALIDATOR_REGEX.match(text)
+        if not match or "".join(match.groups()) != text:
+            self.asset_new_name_line_edit.set_invalid(
+                "Asset name is not in correct format"
+            )
+            return False
+        else:
+            self.asset_new_name_line_edit.set_valid()
+            return True
+
+    def validate_asset_new_code(self):
+        """Validate asset new code.
+
+        Returns:
+            bool: True for valid, False otherwise.
+        """
+        # Only validate for Assets
+        if not isinstance(self.task, (Asset, Shot, Sequence)):
+            self.asset_new_code_line_edit.set_valid()
+            return True
+
+        text = self.asset_new_code_line_edit.text()
+        match = TAKE_NAME_VALIDATOR_REGEX.match(text)
+        if not match or "".join(match.groups()) != text:
+            self.asset_new_code_line_edit.set_invalid(
+                "Asset code is not in correct format"
+            )
+            return False
+        else:
+            self.asset_new_code_line_edit.set_valid()
+            return True
+
     @property
     def task(self):
         """Return the task.
@@ -1042,6 +1158,22 @@ class TaskWidget(QtWidgets.QGroupBox):
         self._task = task
         self.setTitle(get_task_hierarchy_name(task))
         EntityStorage.add_entity(self._task)
+
+        if isinstance(task, (Asset, Shot, Sequence)):
+            self.asset_new_name_line_edit.setText(task.name)
+            self.asset_new_code_line_edit.setText(task.code)
+            # self.validate_asset_new_name()
+            # self.validate_asset_new_code()
+        else:
+            # just hide the new name fields
+            self.asset_new_name_label.setVisible(False)
+            self.asset_new_name_line_edit.setVisible(False)
+
+            # just hide the new code fields
+            self.asset_new_code_validation_message_field.setVisible(False)
+            self.asset_new_code_label.setVisible(False)
+            self.asset_new_code_line_edit.setVisible(False)
+            self.asset_new_code_validation_message_field.setVisible(False)
 
         # Update Remove Button text
         self.remove_button.setText("Remove {}".format(self._task.entity_type))
@@ -1140,7 +1272,9 @@ class TaskWidget(QtWidgets.QGroupBox):
         is_valid = (
             self.new_parent
             and all([take_widget.validate() for take_widget in self.take_widgets])
-            and all(task_widget.validate() for task_widget in self.task_widgets)
+            and all([task_widget.validate() for task_widget in self.task_widgets])
+            and self.validate_asset_new_name()
+            and self.validate_asset_new_code()
         )
 
         if is_valid:
@@ -1172,12 +1306,23 @@ class TaskWidget(QtWidgets.QGroupBox):
         if self.new_parent:
             dict_out[self.task.id]["new_parent_id"] = self.new_parent.id
 
+        if isinstance(self.task, (Asset, Shot, Sequence)):
+            new_name = self.asset_new_name_line_edit.text()
+            if new_name != self.task.name:
+                dict_out[self.task.id]["new_name"] = new_name
+            new_code = self.asset_new_code_line_edit.text()
+            if new_code != self.task.code:
+                dict_out[self.task.id]["new_code"] = new_code
+
         # Takes
-        dict_out[self.task.id]["takes"] = dict(
-            (take_widget.take, take_widget.to_dict())
-            for take_widget in self.take_widgets
-            if take_widget.is_enabled()
-        )
+        if self.take_widgets and all(
+            [take_widget.is_enabled for take_widget in self.take_widgets]
+        ):
+            dict_out[self.task.id]["takes"] = dict(
+                (take_widget.take, take_widget.to_dict())
+                for take_widget in self.take_widgets
+                if take_widget.is_enabled()
+            )
 
         # child tasks
         for task_widget in self.task_widgets:
@@ -1207,7 +1352,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
     def setup_ui(self):
         """Create UI elements."""
         self.setWindowTitle("Asset Migration Tool")
-        self.resize(1100, 1000)
+        self.resize(1280, 1000)
         self.main_layout = QtWidgets.QVBoxLayout(self)
 
         # Dialog Label
@@ -1375,7 +1520,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
             QtWidgets.QMessageBox.critical(
                 self,
                 "Invalid Assets!",
-                "There are invalid tasks (marked with red).\n\nPlease fix them!",
+                "There are invalid tasks (marked with purple).\n\nPlease fix them!",
             )
         else:
             QtWidgets.QMessageBox.information(
@@ -1695,7 +1840,7 @@ class VersionItem(QtGui.QStandardItem):
                 "{} --- {}_v{:03d}".format(
                     get_task_hierarchy_name(version.task),
                     version.nice_name,
-                    version.version_number
+                    version.version_number,
                 ),
                 QtCore.Qt.ItemDataRole.DisplayRole,
             )
