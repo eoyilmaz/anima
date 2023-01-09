@@ -32,6 +32,8 @@ class TaskDetailWidget(QtWidgets.QWidget):
         self.cut_in_field = None
         self.cut_out_label = None
         self.cut_out_field = None
+        self.sequence_label = None
+        self.sequence_field = None
 
         self._setup_ui()
         self.task = task
@@ -150,6 +152,26 @@ class TaskDetailWidget(QtWidgets.QWidget):
         )
 
         # -------------------------------------------------------------
+        # Sequence
+        i += 1
+        self.sequence_label = QtWidgets.QLabel(self)
+        self.sequence_label.setText("Sequence")
+        self.sequence_label.setProperty("labelField", True)
+
+        from anima.ui.widgets.sequence import SequenceComboBox
+
+        self.sequence_field = SequenceComboBox(self)
+        self.sequence_field.currentIndexChanged.connect(
+            self.sequence_changed
+        )
+        self.form_layout.setWidget(
+            i, QtWidgets.QFormLayout.LabelRole, self.sequence_label
+        )
+        self.form_layout.setWidget(
+            i, QtWidgets.QFormLayout.FieldRole, self.sequence_field
+        )
+
+        # -------------------------------------------------------------
         # Cut In
         i += 1
         self.cut_in_label = QtWidgets.QLabel(self)
@@ -228,6 +250,12 @@ class TaskDetailWidget(QtWidgets.QWidget):
             from stalker import Shot
 
             if isinstance(task, Shot):
+                self.sequence_field.project = task.project
+                self.sequence_field.set_current_sequence(
+                    task.sequences[0] if task.sequences else None
+                )
+                self.sequence_label.setVisible(True)
+                self.sequence_field.setVisible(True)
                 self.cut_in_field.setText("%s" % task.cut_in)
                 self.cut_out_field.setText("%s" % task.cut_out)
                 self.cut_in_label.setVisible(True)
@@ -235,6 +263,8 @@ class TaskDetailWidget(QtWidgets.QWidget):
                 self.cut_out_label.setVisible(True)
                 self.cut_out_field.setVisible(True)
             else:
+                self.sequence_label.setVisible(False)
+                self.sequence_field.setVisible(False)
                 self.cut_in_label.setVisible(False)
                 self.cut_in_field.setVisible(False)
                 self.cut_out_label.setVisible(False)
@@ -291,3 +321,15 @@ class TaskDetailWidget(QtWidgets.QWidget):
             from stalker.db.session import DBSession
 
             DBSession.save(self.task)
+
+    def sequence_changed(self):
+        """Update shot sequence."""
+        from stalker import Shot
+        if self.task is None or not isinstance(self.task, Shot):
+            return
+
+        seq = self.sequence_field.get_current_sequence()
+        if seq is not None:
+            self.task.sequences = [seq]
+            from stalker.db.session import DBSession
+            DBSession.commit()

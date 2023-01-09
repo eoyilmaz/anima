@@ -17,6 +17,10 @@ class SequenceComboBox(QtWidgets.QComboBox):
     def fill_ui(self):
         """fills the ui with project instances"""
         self.clear()
+
+        # Add a no sequence item
+        self.addItem("-- No Seq --", None)
+
         if self.project is None:
             return
 
@@ -51,6 +55,18 @@ class SequenceComboBox(QtWidgets.QComboBox):
 
         self._project = project
         self.fill_ui()
+
+    def set_current_sequence(self, seq):
+        """Set the sequence.
+
+        Args:
+            seq (stalker.Sequence): A stalker.Sequence instance valid for this
+                project.
+        """
+        index = self.findData(seq)
+        if index == -1:
+            return
+        self.setCurrentIndex(index)
 
     def get_current_sequence(self):
         """returns the current sequence instance"""
