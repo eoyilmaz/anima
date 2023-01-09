@@ -14,7 +14,7 @@ from anima.utils.progress import ProgressManager
 
 FIRST_CAP_RE = re.compile("(.)([A-Z][a-z]+)")
 ALL_CAP_RE = re.compile("([a-z0-9])([A-Z])")
-VERSION_NUMBER_RE = r"([\w\d/_\:\$]+v)([0-9]+)([\w\d._]+)"
+VERSION_NUMBER_RE = r"([\w\d/_\\\:\$]+v)([0-9]+)([\w\d._]+)"
 
 
 def kill_all_torn_off_panels():
@@ -3113,7 +3113,7 @@ def auto_reference_caches(cache_type=ALEMBIC):
 
         # the directory name is also the instance name
         asset_instance_name = dir_name
-        glob_pattern = "{}/*{}*".format(dir_abs_path, asset_instance_name)
+        glob_pattern = "{}/*{}*".format(dir_abs_path, asset_instance_name).replace("\\", "/")
 
         all_cache_files = sorted(glob.glob(glob_pattern), key=extract_version_from_path)
         if not all_cache_files:
