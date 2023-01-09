@@ -1905,6 +1905,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 ):
                     task.type = asset_type
 
+                if (
+                    sequence
+                    and task.entity_type == "Shot"
+                    and sequence != MULTI_VALUE_ENUM
+                ):
+                    task.sequences = [sequence]
+
                 if schedule_timing not in [-1, 0]:
                     task.schedule_timing = schedule_timing
 
