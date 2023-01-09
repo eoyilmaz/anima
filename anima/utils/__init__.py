@@ -2794,3 +2794,23 @@ def get_unique_take_names(task_id, include_reprs=False):
         query = query.filter(~Version.take_name.contains(Representation.repr_separator))
 
     return [t[0] for t in query.distinct().order_by(Version.take_name).all()]
+
+
+def get_project_from_path(path):
+    """Find project from path.
+
+    Given a path this helper function will try to find the project from the given path.
+
+    Args:
+        path (str): A path.
+
+    Returns:
+        Union[Project, None]: If found, the stalker.Project instance, or None.
+    """
+    from stalker import Repository
+    path = Repository.to_os_independent_path(path)
+    project_code = path.split("/")[1]
+    # This is only true for the default configuration
+    # but this is 99.99% of the times okay
+    from stalker import Project
+    return Project.query.filter(Project.code == project_code).first()
