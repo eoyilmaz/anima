@@ -3169,13 +3169,13 @@ class LightingSceneBuilder(object):
             # the look dev
 
             look_dev_root_node = auxiliary.get_root_nodes(look_dev_ref_node)[0]
-            cache_root_node = auxiliary.get_root_nodes(cache_ref_node)[0]
-            if transfer_shaders:
+            cache_root_nodes = auxiliary.get_root_nodes(cache_ref_node)
+            if transfer_shaders and cache_root_nodes:
                 # transfer shaders from the look dev to the cache nodes
                 pm.select(None)
                 # look dev scenes references the model scene and the geometry is in the
                 # model scene
-                pm.select([look_dev_root_node, cache_root_node])
+                pm.select([look_dev_root_node, cache_root_nodes[0]])
                 Render.transfer_shaders()
 
             # hide all the transform nodes under the look_dev_root_node
@@ -3184,10 +3184,10 @@ class LightingSceneBuilder(object):
             # and the look dev node itself
             look_dev_root_node.v.set(0)
 
-            if transfer_uvs:
+            if transfer_uvs and cache_root_nodes:
                 from anima.dcc.mayaEnv import modeling
                 pm.select(None)
-                pm.select([look_dev_root_node, cache_root_node])
+                pm.select([look_dev_root_node, cache_root_nodes[0]])
                 modeling.Model.transfer_uvs()
 
             # hide non renderable objects
@@ -3205,7 +3205,8 @@ class LightingSceneBuilder(object):
             pm.parent(look_dev_root_node, look_devs_group)
 
             # parent the alembic under the ANIMS group
-            pm.parent(cache_root_node, anims_group)
+            if cache_root_nodes:
+                pm.parent(cache_root_nodes[0], anims_group)
 
         # animation version inputs should have been updated
         # reference any Layouts
