@@ -579,9 +579,7 @@ class Render(object):
                     if use_udim:
                         normal_file_path = normal_file_path.replace("1001", "<udim>")
 
-                    # Redshift BumpMap doesn't work properly with Substance normals
                     rs_normal_map = pm.shadingNode("RedshiftBumpMap", asUtility=1)
-                    # rs_normal_map = pm.shadingNode("RedshiftNormalMap", asUtility=1)
                     # set to tangent-space normals
                     rs_normal_map.inputType.set(1)
                     normal_file = pm.shadingNode("file", asTexture=1)
