@@ -12,7 +12,7 @@ from anima.dcc.mayaEnv.general import General
 from anima.dcc.mayaEnv.modeling import Modeling
 from anima.dcc.mayaEnv.previs import Previs
 from anima.dcc.mayaEnv.reference import Reference
-from anima.dcc.mayaEnv.render import Render
+from anima.dcc.mayaEnv.render import Render, MayaColorManagementConfigurator
 from anima.dcc.mayaEnv.rigging import Rigging
 from anima.ui.utils import ColorList
 
@@ -1164,6 +1164,13 @@ def UI():
         )
         with render_columnLayout:
             color.reset()
+            pm.button(
+                "reset_color_management_button",
+                l="Reset Color Management Preferences",
+                c=repeated_callback(MayaColorManagementConfigurator.configure),
+                ann=MayaColorManagementConfigurator.configure.__doc__,
+                bgc=color.color,
+            )
 
             color.next()
             pm.button(
