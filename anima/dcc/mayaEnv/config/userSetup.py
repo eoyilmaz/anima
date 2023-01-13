@@ -198,6 +198,7 @@ else:
 def setup_maya_color_management():
     # set color management for Maya 2022 and up
     if int(pm.about(v=1)) >= 2022:
+        logprint("Setting up Color Management Preferences.")
         # be sure the color management is not set to legacy
         from anima.dcc.mayaEnv.render import MayaColorManagementConfigurator
         MayaColorManagementConfigurator.configure()
