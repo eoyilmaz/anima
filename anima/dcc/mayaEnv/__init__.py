@@ -406,6 +406,10 @@ workspace -fr "translatorData" "Outputs/data";
         # set linear and angular units
         pm.currentUnit(l="cm", a="deg")
 
+        # set color management
+        from anima.dcc.mayaEnv import render
+        render.MayaColorManagementConfigurator.configure()
+
         # check if this is a shot related task
         shot = self.get_shot(version)
 
@@ -644,6 +648,7 @@ workspace -fr "translatorData" "Outputs/data";
         # check for unsaved changes
         logger.info("opening file: %s" % version.absolute_full_path)
 
+        # set the playblast folder
         self.set_playblast_file_name(version)
         try:
             # switch representations
@@ -699,7 +704,9 @@ workspace -fr "translatorData" "Outputs/data";
         # set linear and angular units
         pm.currentUnit(l="cm", a="deg")
 
-        # set the playblast folder
+        # set color management
+        from anima.dcc.mayaEnv import render
+        render.MayaColorManagementConfigurator.configure()
 
         # set sequence manager related data
         self.set_sequence_manager_data(version)
