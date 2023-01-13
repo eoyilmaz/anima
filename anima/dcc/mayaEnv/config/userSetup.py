@@ -194,10 +194,23 @@ else:
 # set CMD_EXTENSION for Afanasy
 # os.environ['AF_CMDEXTENSION'] = pm.about(v=1)
 
+
+def setup_maya_color_management():
+    # set color management for Maya 2022 and up
+    if int(pm.about(v=1)) >= 2022:
+        # be sure the color management is not set to legacy
+        from anima.dcc.mayaEnv.render import MayaColorManagementConfigurator
+        MayaColorManagementConfigurator.configure()
+
+
 pm.evalDeferred("from anima.dcc import mayaEnv; mayaEnv.Maya.clean_malware();")
 
 # create environment variables for each Repository
-pm.evalDeferred("from anima import utils; utils.do_db_setup();")
+pm.evalDeferred(
+    "from anima import utils; "
+    "utils.do_db_setup(); "
+    "setup_maya_color_management();"
+)
 
 user_setup_end = time.time()
 user_setup_duration = user_setup_end - user_setup_start

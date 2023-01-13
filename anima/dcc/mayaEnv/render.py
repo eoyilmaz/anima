@@ -278,7 +278,9 @@ class Render(object):
         # support both object and material selections
         nodes = pm.selected()
         accepted_materials = [
-            "aiStandardSurface", "RedshiftMaterial", "RedshiftStandardMaterial"
+            "aiStandardSurface",
+            "RedshiftMaterial",
+            "RedshiftStandardMaterial",
         ]
         for node in nodes:
             if node.type() in accepted_materials:
@@ -429,8 +431,9 @@ class Render(object):
                         use_udim = True
                     diffuse_color_file_path = diffuse_color_file_path[0]
                     if use_udim:
-                        diffuse_color_file_path = \
-                            diffuse_color_file_path.replace("1001", "<udim>")
+                        diffuse_color_file_path = diffuse_color_file_path.replace(
+                            "1001", "<udim>"
+                        )
 
                     diffuse_color_file = pm.shadingNode("file", asTexture=1)
                     connect_place2d_to_file(place2d, diffuse_color_file)
@@ -450,8 +453,9 @@ class Render(object):
                         use_udim = True
                     base_color_file_path = base_color_file_path[0]
                     if use_udim:
-                        base_color_file_path = \
-                            base_color_file_path.replace("1001", "<udim>")
+                        base_color_file_path = base_color_file_path.replace(
+                            "1001", "<udim>"
+                        )
 
                     base_color_file = pm.shadingNode("file", asTexture=1)
                     connect_place2d_to_file(place2d, base_color_file)
@@ -481,8 +485,9 @@ class Render(object):
                             use_udim = True
                         height_file_path = height_file_path[0]
                         if use_udim:
-                            height_file_path = \
-                                height_file_path.replace("1001", "<udim>")
+                            height_file_path = height_file_path.replace(
+                                "1001", "<udim>"
+                            )
 
                         # create a displacement node
                         shading_node = material.attr("outColor").outputs(
@@ -525,8 +530,9 @@ class Render(object):
                         use_udim = True
                     metalness_file_path = metalness_file_path[0]
                     if use_udim:
-                        metalness_file_path = \
-                            metalness_file_path.replace("1001", "<udim>")
+                        metalness_file_path = metalness_file_path.replace(
+                            "1001", "<udim>"
+                        )
 
                     metalness_file = pm.shadingNode("file", asTexture=1)
                     connect_place2d_to_file(place2d, metalness_file)
@@ -551,8 +557,9 @@ class Render(object):
                         use_udim = True
                     reflectivity_file_path = reflectivity_file_path[0]
                     if use_udim:
-                        reflectivity_file_path = \
-                            reflectivity_file_path.replace("1001", "<udim>")
+                        reflectivity_file_path = reflectivity_file_path.replace(
+                            "1001", "<udim>"
+                        )
 
                     reflectivity_file = pm.shadingNode("file", asTexture=1)
                     connect_place2d_to_file(place2d, reflectivity_file)
@@ -605,8 +612,9 @@ class Render(object):
                         use_udim = True
                     roughness_file_path = roughness_file_path[0]
                     if use_udim:
-                        roughness_file_path = \
-                            roughness_file_path.replace("1001", "<udim>")
+                        roughness_file_path = roughness_file_path.replace(
+                            "1001", "<udim>"
+                        )
                     roughness_file = pm.shadingNode("file", asTexture=1)
                     connect_place2d_to_file(place2d, roughness_file)
                     roughness_file.fileTextureName.set(roughness_file_path)
@@ -1182,7 +1190,7 @@ class Render(object):
             auxiliary.transfer_shaders(
                 source_node,
                 target_node,
-                allow_component_assignments=allow_component_assignments
+                allow_component_assignments=allow_component_assignments,
             )
             # also transfer render attributes
             for attr_name in attr_names:
@@ -2535,6 +2543,166 @@ class Render(object):
         pm.hyperShade(assign=surface_shader)
 
 
+class MayaColorManagementConfigurator(object):
+    """This is a helper class to manage Maya Color Management settings.
+
+    After Maya 2022, Maya color management system has been updated. This utility
+    function will help setting the color management settings properly.
+
+    - The Color Management should always be enabled not matter the Maya or Redshift
+      version.
+    - For Maya 2018:
+        - The OCIO config path should be empty, using the default.
+        - The Rendering Space should be set to "scene-linear Rec 709/sRGB"
+        - The View Transform should be sRGB gamma.
+
+    - For Maya 2022 and up, by default:
+        - Default:
+            - The OCIO config path should be set to Maya default value, which is:
+
+                "<MAYA_RESOURCES>/OCIO-configs/Maya2022-default/config.ocio"
+
+            - The Rendering Space should be ACEScg
+            - The Display should be sRGB
+            - The View should be ACES 1.0 SDR-video
+
+        - Per Project:
+            - Projects can opt to use different Rendering Space, Display and View
+              values.
+            - This could be done using the CM Preferences XML file per project.
+            - The file is located at {ProjectRoot}/References/MayaColorManagementProfile.XML"
+    """
+    DEFAULT_CONFIG_NAME = "ACEScg"
+    DEFAULT_CONFIG_FILE_NAME = "COLOR_MANAGEMENT_CONFIG"
+    CONFIG = {
+        "ACEScg": {
+            "cmEnabled": True,
+            "configFilePath": "<MAYA_RESOURCES>/OCIO-configs/Maya2022-default/config.ocio",
+            "renderingSpaceName": "ACEScg",
+            "displayName": "sRGB",
+            "outputUseViewTransform": True,
+            "viewTransformName": "ACES 1.0 SDR-video (sRGB)",
+        },
+        "scene-linear Rec.709-sRGB": {
+            "cmEnabled": True,
+            "configFilePath": "<MAYA_RESOURCES>/OCIO-configs/Maya2022-default/config.ocio",
+            "renderingSpaceName": "scene-linear Rec.709-sRGB",
+            "displayName": "sRGB",
+            "outputUseViewTransform": True,
+            "viewTransformName": "Un-tone-mapped (sRGB)"
+        },
+    }
+
+    @classmethod
+    def configure(cls, config_name=None):
+        """Configure color management to the given, default or Project settings.
+
+        Args:
+            config_name (str): If it is given as None the available Project color config
+                will be used, if a project cannot be found the default (ACEScg) will be
+                used.
+
+        """
+        if config_name is None:
+            # use default
+            config_name = cls.get_project_color_management_pref_name()
+
+        if config_name not in cls.CONFIG:
+            raise ValueError(
+                '"{config_name}" is not a valid value for ``config_name`` '
+                "argument in {class_name}.configure(), it should be one of "
+                '[{valid_values}]'.format(
+                    config_name=config_name,
+                    class_name=cls.__name__,
+                    valid_values=", ".join(['"{}"'.format(key) for key in list(cls.CONFIG.keys())])
+                )
+            )
+
+        for key, value in cls.CONFIG[config_name].items():
+            pm.colorManagementPrefs(e=1, **{key: value})
+
+    @classmethod
+    def configure_project(cls, project=None, config_name=None):
+        """Configure the given project with the given config name.
+
+        This creates a COLOR_MANAGEMENT_CONFIG file in the {project}/References folder,
+        and stores the config in it, so that the color management is persistent for that
+        project.
+        """
+        from stalker import Project
+        if not isinstance(project, Project):
+            raise TypeError(
+                "In {class_name}.configure_project() "
+                "the project argument should be a stalker Project instance, "
+                "not {value_type}".format(
+                    class_name=cls.__name__,
+                    value_type=project.__class__.__name__
+                )
+            )
+        if config_name not in cls.CONFIG:
+            raise ValueError(
+                "In {class_name}.configure_project() "
+                "the config_name argument should be one of [{valid_values}]".format(
+                    class_name=cls.__name__,
+                    valid_values=", ".join(['"{}"'.format(key) for key in list(cls.CONFIG.keys())])
+                )
+            )
+        config_file_full_path = cls.get_project_config_file_path(project)
+        # create directories
+        os.makedirs(
+            os.path.dirname(config_file_full_path),
+            exist_ok=True
+        )
+        with open(config_file_full_path, "w") as f:
+            f.write(config_name)
+
+    @classmethod
+    def get_project_color_management_pref_name(cls):
+        """Return the current project's color management profile name."""
+        from anima.dcc import mayaEnv
+        m = mayaEnv.Maya()
+        v = m.get_current_version()
+        if not v:
+            return cls.DEFAULT_CONFIG_NAME
+
+        p = v.task.project
+        config_file_full_path = cls.get_project_config_file_path(p)
+        if not os.path.exists(config_file_full_path):
+            return cls.DEFAULT_CONFIG_NAME
+
+        with open(config_file_full_path) as f:
+            config_name = f.read().strip()
+        return config_name
+
+    @classmethod
+    def get_project_config_file_path(cls, project):
+        """Return the project color config file path.
+
+        Args:
+            project (stalker.Project): A stalker.Project instance.
+
+        Returns:
+            str: The config file path.
+        """
+        from stalker import Project
+        if not isinstance(project, Project):
+            raise TypeError(
+                "In {class_name}.get_project_config_file_path() "
+                "the project argument should be a stalker Project instance, "
+                "not {value_type}".format(
+                    class_name=cls.__name__,
+                    value_type=project.__class__.__name__
+                )
+            )
+
+        return os.path.join(
+            project.repository.path,
+            project.code,
+            "References",
+            cls.DEFAULT_CONFIG_FILE_NAME
+        )
+
+
 class RenderSlicer(object):
     """A tool to help slice single frame renders in to many little parts which
     will help it to be rendered in small parts in a render farm.
@@ -2797,16 +2965,19 @@ class LightingSceneBuilder(object):
             return self.rig_to_cacheable_lut_file_path
 
         from stalker import Project
+
         if not isinstance(project, Project):
-            raise TypeError("Please supply a stalker Project instance, not {}".format(
-                project.__class__.__name__
-            ))
+            raise TypeError(
+                "Please supply a stalker Project instance, not {}".format(
+                    project.__class__.__name__
+                )
+            )
 
         self.rig_to_cacheable_lut_file_path = os.path.join(
             project.repository.path,
             project.code,
             "References",
-            self.RIG_TO_CACHEABLE_LUT_FILE_NAME
+            self.RIG_TO_CACHEABLE_LUT_FILE_NAME,
         )
         return self.rig_to_cacheable_lut_file_path
 
@@ -2820,16 +2991,19 @@ class LightingSceneBuilder(object):
             return self.rig_to_look_dev_lut_file_path
 
         from stalker import Project
+
         if not isinstance(project, Project):
-            raise TypeError("Please supply a stalker Project instance, not {}".format(
-                project.__class__.__name__
-            ))
+            raise TypeError(
+                "Please supply a stalker Project instance, not {}".format(
+                    project.__class__.__name__
+                )
+            )
 
         self.rig_to_look_dev_lut_file_path = os.path.join(
             project.repository.path,
             project.code,
             "References",
-            self.RIG_TO_LOOK_DEV_LUT_FILE_NAME
+            self.RIG_TO_LOOK_DEV_LUT_FILE_NAME,
         )
         return self.rig_to_look_dev_lut_file_path
 
@@ -2854,6 +3028,7 @@ class LightingSceneBuilder(object):
         :param Project project: The Stalker Project instance.
         """
         import json
+
         path = self.generate_rig_to_cacheable_lut_file_path(project)
         if os.path.isfile(path):
             with open(path, "r") as f:
@@ -2865,6 +3040,7 @@ class LightingSceneBuilder(object):
         :param Project project: A Stalker Project instance.
         """
         import json
+
         path = self.generate_rig_to_cacheable_lut_file_path(project)
         try:
             os.makedirs(os.path.dirname(path))
@@ -2887,6 +3063,7 @@ class LightingSceneBuilder(object):
         :param Project project: The Stalker Project instance.
         """
         import json
+
         path = self.generate_rig_to_look_dev_lut_file_path(project)
         if os.path.isfile(path):
             with open(path, "r") as f:
@@ -2899,6 +3076,7 @@ class LightingSceneBuilder(object):
         :return:
         """
         from stalker import Type, Task, Version
+
         look_dev_type = Type.query.filter(Type.name == "Look Development").first()
         if not look_dev_type:
             raise RuntimeError(
@@ -2907,6 +3085,7 @@ class LightingSceneBuilder(object):
 
         # open the animation version
         from anima.dcc import mayaEnv
+
         # get the current version
         m = mayaEnv.Maya()
         # store the current version to open later on
@@ -2916,7 +3095,7 @@ class LightingSceneBuilder(object):
             force=True,
             skip_update_check=True,
             prompt=False,
-            reference_depth=3
+            reference_depth=3,
         )
         # this version may uploaded with Stalker Pyramid, so update referenced versions
         # to get a proper version.inputs list
@@ -2924,7 +3103,7 @@ class LightingSceneBuilder(object):
 
         # there is a new bug in some animation scene
         # that causes the initialShader to be locked
-        pm.lockNode('initialShadingGroup', l=0, lockUnpublished=0)
+        pm.lockNode("initialShadingGroup", l=0, lockUnpublished=0)
 
         cacheable_to_look_dev_version_lut = {}
         references_with_no_look_dev_task = []
@@ -2948,8 +3127,9 @@ class LightingSceneBuilder(object):
             # try to use the cache file
             if rig_task_id_as_str in self.rig_to_cacheable_lut:
                 if rig_take_name in self.rig_to_cacheable_lut[rig_task_id_as_str]:
-                    cacheable_attr_value = \
-                        self.rig_to_cacheable_lut[rig_task_id_as_str][rig_take_name]
+                    cacheable_attr_value = self.rig_to_cacheable_lut[
+                        rig_task_id_as_str
+                    ][rig_take_name]
             else:
                 # load the reference
                 ref.load()
@@ -2963,8 +3143,9 @@ class LightingSceneBuilder(object):
                 if rig_task_id_as_str not in self.rig_to_cacheable_lut:
                     self.rig_to_cacheable_lut[rig_task_id_as_str] = {}
 
-                self.rig_to_cacheable_lut[rig_task_id_as_str][rig_take_name] = \
-                    cacheable_attr_value
+                self.rig_to_cacheable_lut[rig_task_id_as_str][
+                    rig_take_name
+                ] = cacheable_attr_value
 
             cacheable_attr_value_with_copy_number = "{}{}".format(
                 cacheable_attr_value, copy_number
@@ -2976,10 +3157,11 @@ class LightingSceneBuilder(object):
             if rig_task_id_as_str in self.rig_to_look_dev_lut:
                 # there is a custom mapping for this rig use it
                 if rig_take_name in self.rig_to_look_dev_lut[rig_task_id_as_str]:
-                    lut_data = \
-                        self.rig_to_look_dev_lut[rig_task_id_as_str][rig_take_name]
-                    look_dev_task_id = lut_data['look_dev_task_id']
-                    look_dev_take_name = lut_data['look_dev_take_name']
+                    lut_data = self.rig_to_look_dev_lut[rig_task_id_as_str][
+                        rig_take_name
+                    ]
+                    look_dev_task_id = lut_data["look_dev_task_id"]
+                    look_dev_take_name = lut_data["look_dev_take_name"]
                     look_dev_task = Task.query.get(look_dev_task_id)
                     if "no_render" in lut_data:
                         # there are object not to be rendered
@@ -2987,10 +3169,11 @@ class LightingSceneBuilder(object):
             else:
                 # try to get the sibling look dev task
                 look_dev_take_name = ref_version.take_name
-                look_dev_task = Task.query\
-                    .filter(Task.parent == rig_task.parent)\
-                    .filter(Task.type == look_dev_type)\
+                look_dev_task = (
+                    Task.query.filter(Task.parent == rig_task.parent)
+                    .filter(Task.type == look_dev_type)
                     .first()
+                )
 
             # no look_dev_task, we can't do anything about this asset, report it
             if not look_dev_task:
@@ -2999,19 +3182,20 @@ class LightingSceneBuilder(object):
                 continue
 
             # get the latest published look dev version for this cacheable node
-            latest_published_look_dev_version = Version.query\
-                .filter(Version.task == look_dev_task)\
-                .filter(Version.take_name == look_dev_take_name)\
-                .filter(Version.is_published == True)\
-                .order_by(Version.version_number.desc())\
+            latest_published_look_dev_version = (
+                Version.query.filter(Version.task == look_dev_task)
+                .filter(Version.take_name == look_dev_take_name)
+                .filter(Version.is_published == True)
+                .order_by(Version.version_number.desc())
                 .first()
+            )
 
             if not latest_published_look_dev_version:
                 references_with_no_look_dev_version.append(ref_version)
 
             cacheable_to_look_dev_version_lut[cacheable_attr_value_with_copy_number] = {
                 "look_dev_version": latest_published_look_dev_version,
-                "no_render": non_renderable_objects
+                "no_render": non_renderable_objects,
             }
 
         # save the self.rig_to_cacheable_lut
@@ -3022,13 +3206,20 @@ class LightingSceneBuilder(object):
 
         print("\nReferences With No Look Dev Task")
         print("================================")
-        print("\n".join([v.absolute_full_path for v in references_with_no_look_dev_task]))
+        print(
+            "\n".join([v.absolute_full_path for v in references_with_no_look_dev_task])
+        )
 
         print("\nReferences With No Look Dev Version")
         print("===================================")
-        print("\n".join([v.absolute_full_path for v in references_with_no_look_dev_version]))
+        print(
+            "\n".join(
+                [v.absolute_full_path for v in references_with_no_look_dev_version]
+            )
+        )
 
         import pprint
+
         print("\nCacheable To LookDev Version Lut")
         print("================================")
         pprint.pprint(cacheable_to_look_dev_version_lut)
@@ -3050,16 +3241,14 @@ class LightingSceneBuilder(object):
         return group
 
     def build(
-            self,
-            transfer_shaders=True,
-            transfer_uvs=False,
-            cache_type=anima.ALEMBIC
-        ):
+        self, transfer_shaders=True, transfer_uvs=False, cache_type=anima.ALEMBIC
+    ):
         """Build the lighting scene
 
         :return:
         """
         from anima.dcc import mayaEnv
+
         # get the current version
         m = mayaEnv.Maya()
         v = m.get_current_version()
@@ -3071,6 +3260,7 @@ class LightingSceneBuilder(object):
 
         # check if this is really a lighting task
         from stalker import Type
+
         lighting_task = v.task
         lighting_type = Type.query.filter(Type.name == "Lighting").first()
         if not lighting_type:
@@ -3094,26 +3284,33 @@ class LightingSceneBuilder(object):
             raise RuntimeError("No Animation task type found, please create one!")
 
         from stalker import Task
-        animation_task = Task.query.filter(Task.parent == shot)\
-            .filter(Task.type == animation_type).first()
+
+        animation_task = (
+            Task.query.filter(Task.parent == shot)
+            .filter(Task.type == animation_type)
+            .first()
+        )
 
         if not animation_task:
             raise RuntimeError("No Animation task found!")
 
         # get latest animation version
         from stalker import Version
-        animation_version = Version.query\
-            .filter(Version.task == animation_task)\
-            .filter(Version.take_name == "Main")\
-            .order_by(Version.version_number.desc())\
+
+        animation_version = (
+            Version.query.filter(Version.task == animation_task)
+            .filter(Version.take_name == "Main")
+            .order_by(Version.version_number.desc())
             .first()
+        )
 
         if not animation_version:
             raise RuntimeError("No Animation Version under Main take is found!")
 
         # get the cacheable_to_look_dev_lut
-        cacheable_to_look_dev_version_lut = \
-            self.get_cacheable_to_look_dev_version_lut(animation_version)
+        cacheable_to_look_dev_version_lut = self.get_cacheable_to_look_dev_version_lut(
+            animation_version
+        )
 
         # reference all caches
         # (we are assuming that these are all generated before)
@@ -3139,7 +3336,12 @@ class LightingSceneBuilder(object):
             cacheable_attr_value = cache_ref_node.namespace
 
             # if this is the shotCam, renderCam or the camera, just skip it
-            if any([cam.lower() in cacheable_attr_value.lower() for cam in ("shotCam", "renderCam")]):
+            if any(
+                [
+                    cam.lower() in cacheable_attr_value.lower()
+                    for cam in ("shotCam", "renderCam")
+                ]
+            ):
                 # parent it under CAMERA group
                 pm.parent(cache_ref_node.nodes()[0], camera_group)
                 # and skip the rest
@@ -3147,8 +3349,9 @@ class LightingSceneBuilder(object):
 
             # now use the cacheable_to_look_dev_version_lut to reference the look_dev
             # file
-            look_dev_version = \
-                cacheable_to_look_dev_version_lut[cacheable_attr_value]['look_dev_version']
+            look_dev_version = cacheable_to_look_dev_version_lut[cacheable_attr_value][
+                "look_dev_version"
+            ]
             if look_dev_version in look_dev_version_to_ref_node_lut:
                 # use the same ref_node
                 look_dev_ref_node = look_dev_version_to_ref_node_lut[look_dev_version]
@@ -3159,9 +3362,11 @@ class LightingSceneBuilder(object):
             else:
                 # no published look dev
                 # skip this cacheable not
-                print("Warning: No published Look Dev version found for: {}".format(
-                    cacheable_attr_value
-                ))
+                print(
+                    "Warning: No published Look Dev version found for: {}".format(
+                        cacheable_attr_value
+                    )
+                )
                 continue
             # now we should have a reference node for the cache and a reference node for
             # the look dev
@@ -3177,20 +3382,25 @@ class LightingSceneBuilder(object):
                 Render.transfer_shaders()
 
             # hide all the transform nodes under the look_dev_root_node
-            for node in pm.listRelatives(look_dev_root_node, ad=1, type=pm.nt.Transform):
+            for node in pm.listRelatives(
+                look_dev_root_node, ad=1, type=pm.nt.Transform
+            ):
                 node.v.set(0)
             # and the look dev node itself
             look_dev_root_node.v.set(0)
 
             if transfer_uvs and cache_root_nodes:
                 from anima.dcc.mayaEnv import modeling
+
                 pm.select(None)
                 pm.select([look_dev_root_node, cache_root_nodes[0]])
                 modeling.Model.transfer_uvs()
 
             # hide non renderable objects
             cache_ref_node_nodes = cache_ref_node.nodes()
-            for no_render_name in cacheable_to_look_dev_version_lut[cacheable_attr_value]["no_render"]:
+            for no_render_name in cacheable_to_look_dev_version_lut[
+                cacheable_attr_value
+            ]["no_render"]:
                 for cached_node in cache_ref_node_nodes:
                     if cached_node.stripNamespace() == no_render_name:
                         cached_node.v.set(0)
@@ -3217,12 +3427,13 @@ class LightingSceneBuilder(object):
                 rs_proxy_take_name = "{}@RS".format(
                     input_version.take_name.split("@")[0]
                 )
-                input_version = Version.query\
-                    .filter(Version.task==input_version.task)\
-                    .filter(Version.take_name==rs_proxy_take_name)\
-                    .filter(Version.is_published==True)\
-                    .order_by(Version.version_number.desc())\
+                input_version = (
+                    Version.query.filter(Version.task == input_version.task)
+                    .filter(Version.take_name == rs_proxy_take_name)
+                    .filter(Version.is_published == True)
+                    .order_by(Version.version_number.desc())
                     .first()
+                )
                 if input_version:
                     ref_node = m.reference(input_version)
                     # parent it to the LAYOUTS group
