@@ -2751,7 +2751,10 @@ class MayaColorManagementConfigurator(object):
         with open(config_file_full_path) as f:
             config_data = json.load(f)
             maya_version = pm.about(v=1)
-            config_name = config_data[maya_version].strip()
+            if maya_version in config_data:
+                config_name = config_data[maya_version].strip()
+            else:
+                config_name = maya_specific_config["default"]
         return config_name
 
     @classmethod
