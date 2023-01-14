@@ -2572,25 +2572,63 @@ class MayaColorManagementConfigurator(object):
             - This could be done using the CM Preferences XML file per project.
             - The file is located at {ProjectRoot}/References/MayaColorManagementProfile.XML"
     """
-    DEFAULT_CONFIG_NAME = "ACEScg"
     DEFAULT_CONFIG_FILE_NAME = "COLOR_MANAGEMENT_CONFIG"
+
     CONFIG = {
-        "ACEScg": {
-            "cmEnabled": True,
-            "configFilePath": "<MAYA_RESOURCES>/OCIO-configs/Maya2022-default/config.ocio",
-            "renderingSpaceName": "ACEScg",
-            "displayName": "sRGB",
-            "outputUseViewTransform": True,
-            "viewTransformName": "ACES 1.0 SDR-video (sRGB)",
+        "2018": {
+            "default": "scene-linear Rec 709/sRGB",
+            "configs": {
+                "scene-linear Rec 709/sRGB": {
+                    "cmEnabled": True,
+                    "configFilePath": "",
+                    "renderingSpaceName": "scene-linear Rec 709/sRGB",
+                    "outputUseViewTransform": True,
+                    "viewTransformName": "sRGB gamma"
+                },
+            }
         },
-        "scene-linear Rec.709-sRGB": {
-            "cmEnabled": True,
-            "configFilePath": "<MAYA_RESOURCES>/OCIO-configs/Maya2022-default/config.ocio",
-            "renderingSpaceName": "scene-linear Rec.709-sRGB",
-            "displayName": "sRGB",
-            "outputUseViewTransform": True,
-            "viewTransformName": "Un-tone-mapped (sRGB)"
+        "2022": {
+            "default": "ACEScg",
+            "configs": {
+                "ACEScg": {
+                    "cmEnabled": True,
+                    "configFilePath": "<MAYA_RESOURCES>/OCIO-configs/Maya2022-default/config.ocio",
+                    "renderingSpaceName": "ACEScg",
+                    "displayName": "sRGB",
+                    "outputUseViewTransform": True,
+                    "viewTransformName": "ACES 1.0 SDR-video (sRGB)",
+                },
+                "scene-linear Rec.709-sRGB": {
+                    "cmEnabled": True,
+                    "configFilePath": "<MAYA_RESOURCES>/OCIO-configs/Maya2022-default/config.ocio",
+                    "renderingSpaceName": "scene-linear Rec.709-sRGB",
+                    "displayName": "sRGB",
+                    "outputUseViewTransform": True,
+                    "viewTransformName": "Un-tone-mapped (sRGB)"
+                },
+            }
         },
+        "2023": {
+            "default": "ACEScg",
+            "configs": {
+                "ACEScg": {
+                    "cmEnabled": True,
+                    "configFilePath": "<MAYA_RESOURCES>/OCIO-configs/Maya2022-default/config.ocio",
+                    "renderingSpaceName": "ACEScg",
+                    "displayName": "sRGB",
+                    "outputUseViewTransform": True,
+                    "viewTransformName": "ACES 1.0 SDR-video (sRGB)",
+                },
+                "scene-linear Rec.709-sRGB": {
+                    "cmEnabled": True,
+                    "configFilePath": "<MAYA_RESOURCES>/OCIO-configs/Maya2022-default/config.ocio",
+                    "renderingSpaceName": "scene-linear Rec.709-sRGB",
+                    "displayName": "sRGB",
+                    "outputUseViewTransform": True,
+                    "viewTransformName": "Un-tone-mapped (sRGB)"
+                },
+            }
+        }
     }
 
     @classmethod
@@ -2607,7 +2645,8 @@ class MayaColorManagementConfigurator(object):
             # use default
             config_name = cls.get_project_color_management_pref_name()
 
-        if config_name not in cls.CONFIG:
+        maya_specific_config = cls.get_maya_specific_config()["configs"]
+        if config_name not in maya_specific_config:
             raise ValueError(
                 '"{config_name}" is not a valid value for ``config_name`` '
                 "argument in {class_name}.configure(), it should be one of "
@@ -2618,7 +2657,7 @@ class MayaColorManagementConfigurator(object):
                 )
             )
 
-        for key, value in cls.CONFIG[config_name].items():
+        for key, value in maya_specific_config[config_name].items():
             pm.colorManagementPrefs(e=1, **{key: value})
 
     @classmethod
@@ -2639,12 +2678,15 @@ class MayaColorManagementConfigurator(object):
                     value_type=project.__class__.__name__
                 )
             )
-        if config_name not in cls.CONFIG:
+        maya_specific_config = cls.get_maya_specific_config()["configs"]
+        if config_name not in maya_specific_config:
             raise ValueError(
                 "In {class_name}.configure_project() "
                 "the config_name argument should be one of [{valid_values}]".format(
                     class_name=cls.__name__,
-                    valid_values=", ".join(['"{}"'.format(key) for key in list(cls.CONFIG.keys())])
+                    valid_values=", ".join(
+                        ['"{}"'.format(key) for key in list(maya_specific_config.keys())]
+                    )
                 )
             )
         config_file_full_path = cls.get_project_config_file_path(project)
@@ -2657,18 +2699,35 @@ class MayaColorManagementConfigurator(object):
             f.write(config_name)
 
     @classmethod
+    def get_maya_specific_config(cls, maya_version=None):
+        """Returns the config specific to the current Maya version.
+
+        Args:
+            maya_version (str): The maya version string, if None the current version is
+                used.
+
+        Returns:
+            dict: Maya specific configuration file.
+        """
+        if maya_version is None:
+            maya_version = pm.about(v=1)
+
+        return cls.CONFIG[maya_version]
+
+    @classmethod
     def get_project_color_management_pref_name(cls):
         """Return the current project's color management profile name."""
         from anima.dcc import mayaEnv
         m = mayaEnv.Maya()
         v = m.get_current_version()
+        maya_specific_config = cls.get_maya_specific_config()
         if not v:
-            return cls.DEFAULT_CONFIG_NAME
+            return maya_specific_config["default"]
 
         p = v.task.project
         config_file_full_path = cls.get_project_config_file_path(p)
         if not os.path.exists(config_file_full_path):
-            return cls.DEFAULT_CONFIG_NAME
+            return maya_specific_config["default"]
 
         with open(config_file_full_path) as f:
             config_name = f.read().strip()
