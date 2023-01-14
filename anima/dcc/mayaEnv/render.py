@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import json
 import os
 import re
 import tempfile
@@ -2572,6 +2572,7 @@ class MayaColorManagementConfigurator(object):
             - This could be done using the CM Preferences XML file per project.
             - The file is located at {ProjectRoot}/References/MayaColorManagementProfile.XML"
     """
+
     DEFAULT_CONFIG_FILE_NAME = "COLOR_MANAGEMENT_CONFIG"
 
     CONFIG = {
@@ -2583,9 +2584,9 @@ class MayaColorManagementConfigurator(object):
                     "configFilePath": "",
                     "renderingSpaceName": "scene-linear Rec 709/sRGB",
                     "outputUseViewTransform": True,
-                    "viewTransformName": "sRGB gamma"
+                    "viewTransformName": "sRGB gamma",
                 },
-            }
+            },
         },
         "2022": {
             "default": "ACEScg",
@@ -2604,9 +2605,9 @@ class MayaColorManagementConfigurator(object):
                     "renderingSpaceName": "scene-linear Rec.709-sRGB",
                     "displayName": "sRGB",
                     "outputUseViewTransform": True,
-                    "viewTransformName": "Un-tone-mapped (sRGB)"
+                    "viewTransformName": "Un-tone-mapped (sRGB)",
                 },
-            }
+            },
         },
         "2023": {
             "default": "ACEScg",
@@ -2625,10 +2626,10 @@ class MayaColorManagementConfigurator(object):
                     "renderingSpaceName": "scene-linear Rec.709-sRGB",
                     "displayName": "sRGB",
                     "outputUseViewTransform": True,
-                    "viewTransformName": "Un-tone-mapped (sRGB)"
+                    "viewTransformName": "Un-tone-mapped (sRGB)",
                 },
-            }
-        }
+            },
+        },
     }
 
     @classmethod
@@ -2636,7 +2637,7 @@ class MayaColorManagementConfigurator(object):
         """Configure color management to the given, default or Project settings.
 
         Args:
-            config_name (str): If it is given as None the available Project color config
+            config_name (Union[str, None]): If it is given as None the available Project color config
                 will be used, if a project cannot be found the default (ACEScg) will be
                 used.
 
@@ -2650,10 +2651,15 @@ class MayaColorManagementConfigurator(object):
             raise ValueError(
                 '"{config_name}" is not a valid value for ``config_name`` '
                 "argument in {class_name}.configure(), it should be one of "
-                '[{valid_values}]'.format(
+                "[{valid_values}]".format(
                     config_name=config_name,
                     class_name=cls.__name__,
-                    valid_values=", ".join(['"{}"'.format(key) for key in list(cls.CONFIG.keys())])
+                    valid_values=", ".join(
+                        [
+                            '"{}"'.format(key)
+                            for key in list(maya_specific_config.keys())
+                        ]
+                    ),
                 )
             )
 
@@ -2669,13 +2675,13 @@ class MayaColorManagementConfigurator(object):
         project.
         """
         from stalker import Project
+
         if not isinstance(project, Project):
             raise TypeError(
                 "In {class_name}.configure_project() "
                 "the project argument should be a stalker Project instance, "
                 "not {value_type}".format(
-                    class_name=cls.__name__,
-                    value_type=project.__class__.__name__
+                    class_name=cls.__name__, value_type=project.__class__.__name__
                 )
             )
         maya_specific_config = cls.get_maya_specific_config()["configs"]
@@ -2685,18 +2691,30 @@ class MayaColorManagementConfigurator(object):
                 "the config_name argument should be one of [{valid_values}]".format(
                     class_name=cls.__name__,
                     valid_values=", ".join(
-                        ['"{}"'.format(key) for key in list(maya_specific_config.keys())]
-                    )
+                        [
+                            '"{}"'.format(key)
+                            for key in list(maya_specific_config.keys())
+                        ]
+                    ),
                 )
             )
+
         config_file_full_path = cls.get_project_config_file_path(project)
         # create directories
-        os.makedirs(
-            os.path.dirname(config_file_full_path),
-            exist_ok=True
-        )
+        os.makedirs(os.path.dirname(config_file_full_path), exist_ok=True)
+
+        # first read the existing config file
+        config_data = {}
+        if os.path.exists(config_file_full_path):
+            with open(config_file_full_path, "r") as f:
+                config_data = json.load(f)
+
+        # update the config_data
+        maya_version = pm.about(v=1)
+        config_data[maya_version] = config_name
+
         with open(config_file_full_path, "w") as f:
-            f.write(config_name)
+            json.dump(config_data, f)
 
     @classmethod
     def get_maya_specific_config(cls, maya_version=None):
@@ -2718,6 +2736,7 @@ class MayaColorManagementConfigurator(object):
     def get_project_color_management_pref_name(cls):
         """Return the current project's color management profile name."""
         from anima.dcc import mayaEnv
+
         m = mayaEnv.Maya()
         v = m.get_current_version()
         maya_specific_config = cls.get_maya_specific_config()
@@ -2730,7 +2749,9 @@ class MayaColorManagementConfigurator(object):
             return maya_specific_config["default"]
 
         with open(config_file_full_path) as f:
-            config_name = f.read().strip()
+            config_data = json.load(f)
+            maya_version = pm.about(v=1)
+            config_name = config_data[maya_version].strip()
         return config_name
 
     @classmethod
@@ -2744,13 +2765,13 @@ class MayaColorManagementConfigurator(object):
             str: The config file path.
         """
         from stalker import Project
+
         if not isinstance(project, Project):
             raise TypeError(
                 "In {class_name}.get_project_config_file_path() "
                 "the project argument should be a stalker Project instance, "
                 "not {value_type}".format(
-                    class_name=cls.__name__,
-                    value_type=project.__class__.__name__
+                    class_name=cls.__name__, value_type=project.__class__.__name__
                 )
             )
 
@@ -2758,7 +2779,7 @@ class MayaColorManagementConfigurator(object):
             project.repository.path,
             project.code,
             "References",
-            cls.DEFAULT_CONFIG_FILE_NAME
+            cls.DEFAULT_CONFIG_FILE_NAME,
         )
 
 

@@ -692,8 +692,8 @@ workspace -fr "translatorData" "Outputs/data";
                     )
         except RuntimeError as e:
             # restore the previous workspace
-            # disabled the following because it was causing the the workspace
-            # to revert back to the previous one even when the document has
+            # disabled the following because it was causing the workspace
+            # to revert to the previous one even when the document has
             # opened successfully
             # pm.workspace.open(previous_workspace_path)
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Test MayaColorManagementConfigurator."""
+import json
 import os
 import shutil
 import tempfile
@@ -25,8 +26,9 @@ def temp_project(create_project):
 
 
 @pytest.fixture(scope="function")
-def color_managed_project(temp_project):
+def color_managed_project(temp_project, create_pymel):
     """Create color management files."""
+    pm = create_pymel
     project = temp_project
     repo = project.repository
     assert isinstance(repo, Repository)
@@ -34,8 +36,11 @@ def color_managed_project(temp_project):
     cm_config_file_name = "COLOR_MANAGEMENT_CONFIG"
     cm_config_file_full_path = os.path.join(ref_folder_path, cm_config_file_name)
     os.makedirs(ref_folder_path, exist_ok=True)
+    config_data = {
+        pm.about(v=1): "scene-linear Rec.709-sRGB"
+    }
     with open(cm_config_file_full_path, "w") as f:
-        f.write("scene-linear Rec.709-sRGB")
+        json.dump(config_data, f)
 
     yield project
 
@@ -254,6 +259,7 @@ def test_configure_project_should_configure_a_project_persistently(
 ):
     """test calling configure_project with a project and a config_name should
     persistently configure the project."""
+    pm = create_pymel
     project = temp_project
     # check if there is no such COLOR_MANAGEMENT_CONFIG file in the project
     repo = project.repository
@@ -269,7 +275,8 @@ def test_configure_project_should_configure_a_project_persistently(
         project, "scene-linear Rec.709-sRGB"
     )
     with open(config_file_path, "r") as f:
-        cm_name = f.read().strip()
+        data = json.load(f)
+        cm_name = data[pm.about(v=1)].strip()
 
     assert cm_name == "scene-linear Rec.709-sRGB"
 
