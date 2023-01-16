@@ -188,6 +188,13 @@ if "ANIMA_TEST_SETUP" not in os.environ:
     mayautils.executeDeferred(__plugin_loader, "AbcImport")
     mayautils.executeDeferred(__plugin_loader, "objExport")
     mayautils.executeDeferred(__plugin_loader, "mayaUsdPlugin")
+
+    # unload bifrost plugins as they are causing render issues on farm
+    # the renders don't complete
+    mayautils.executeDeferred(__plugin_unloader, "bifmeshio")
+    mayautils.executeDeferred(__plugin_unloader, "bifrostGraph")
+    mayautils.executeDeferred(__plugin_unloader, "bifrostshellnode")
+    mayautils.executeDeferred(__plugin_unloader, "bifrostvisplugin")
 else:
     logprint("ANIMA_TEST_SETUP detected, skipping auto plugin loads!")
 
@@ -196,12 +203,11 @@ else:
 
 
 def setup_maya_color_management():
-    # set color management for Maya 2022 and up
-    if int(pm.about(v=1)) >= 2022:
-        logprint("Setting up Color Management Preferences.")
-        # be sure the color management is not set to legacy
-        from anima.dcc.mayaEnv.render import MayaColorManagementConfigurator
-        MayaColorManagementConfigurator.configure()
+    # set color management
+    logprint("Setting up Color Management Preferences.")
+    # be sure the color management is not set to legacy
+    from anima.dcc.mayaEnv.render import MayaColorManagementConfigurator
+    MayaColorManagementConfigurator.configure()
 
 
 pm.evalDeferred("from anima.dcc import mayaEnv; mayaEnv.Maya.clean_malware();")
