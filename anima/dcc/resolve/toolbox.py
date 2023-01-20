@@ -3,7 +3,6 @@
 Test code
 
 from anima.dcc.resolve import toolbox
-reload(toolbox)
 dialog = toolbox.UI()
 
 """
@@ -17,32 +16,23 @@ from anima.ui.utils import ColorList, set_widget_bg_color
 __here__ = os.path.abspath(__file__)
 
 
-def reload_lib(lib):
-    """helper function to reload a lib"""
-    import sys
-
-    if sys.version_info[0] >= 3:  # Python 3
-        import importlib
-
-        importlib.reload(lib)
-    else:
-        reload(lib)
-
-
 def UI(app_in=None, executor=None, **kwargs):
-    """
-    :param app_in: A Qt Application instance, which you can pass to let the UI
-      be attached to the given applications event process.
+    """Show the UI.
 
-    :param executor: Instead of calling app.exec_ the UI will call this given
-      function. It also passes the created app instance to this executor.
+    Args:
+        app_in: A Qt Application instance, which you can pass to let the UI be attached
+            to the given applications event process.
+        executor: Instead of calling app.exec_ the UI will call this given function. It
+            also passes the created app instance to this executor.
 
+    Returns:
+        QtWidgets.QDialog: The UI dialog/window.
     """
     return ui_caller(app_in, executor, ToolboxDialog, **kwargs)
 
 
 class ToolboxDialog(QtWidgets.QDialog):
-    """The toolbox dialog"""
+    """The toolbox dialog."""
 
     def __init__(self, *args, **kwargs):
         super(ToolboxDialog, self).__init__(*args, **kwargs)
@@ -590,20 +580,26 @@ class GenericTools(object):
         extend_start=0,
         extend_end=0,
         render_preset="",
+        padding=4,
     ):
-        """Generates render tasks for the clip with the given index
+        """Generate render tasks for the clip with the given index.
 
-        :param clip: A Resolve TimelineItem
-        :param str filename_template: Output template,
+        Args:
+            clip (TimelineItem): A Resolve TimelineItem
+            filename_template (str): Output template,
 
-          See the ``anima.dcc.resolve.template.RESOLVE_TEMPLATE_VARS`` for Resolve template variables that can be
-          directly used like.
+                See the ``anima.dcc.resolve.template.RESOLVE_TEMPLATE_VARS`` for Resolve
+                template variables that can be directly used like.
 
-          These will be passed to Resolve directly.
+                These will be passed to Resolve directly.
 
-        :param location_template: The output location template.
-        :param extend_start: Include this many frames at the start of the clip. Default is 0.
-        :param extend_end: Include this many frames at the end of the clip. Default is 0.
+            location_template (str): The output location template.
+            extend_start (int): Include this many frames at the start of the clip.
+                Default is 0.
+            extend_end (int): Include this many frames at the end of the clip. Default
+                is 0.
+            render_preset (str): The render preset to use.
+            padding (int): Padding in used in the clip number. Default is 4.
         """
 
         if filename_template == "":
@@ -643,11 +639,13 @@ class GenericTools(object):
 
         # Modify "Clip #" variable
         clip_index = -1
-        for i in range(len(clips)):
-            if clips[i + 1] == clip:
-                clip_index = i + 1
+        i = 0
+        for index in clips:
+            if clips[index].GetUniqueId() == clip.GetUniqueId():
+                clip_index = index
+                break
 
-        clip_properties["Clip #"] = clip_index
+        clip_properties["Clip #"] = f"{clip_index:0{padding}d}"
 
         # update clip variables in Python side so that we can use it in folder template
         resolve_template_vars.update(clip_properties)

@@ -1027,7 +1027,7 @@ class ShotClip(object):
         clip_index = -1
         all_clips = self.timeline.GetItemListInTrack("video", 1)
         for i, clip in enumerate(all_clips):
-            if all_clips[i].GetStart() == self.clip.GetStart():
+            if all_clips[i].GetUniqueId() == self.clip.GetUniqueId():
                 clip_index = i
                 break
 
