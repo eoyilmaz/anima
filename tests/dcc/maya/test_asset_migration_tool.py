@@ -5,7 +5,39 @@ import pytest
 from stalker import Project, Task, Asset, Version
 from stalker.db.session import DBSession
 
+from anima import publish
 from anima.dcc.mayaEnv import auxiliary
+from anima.dcc.mayaEnv.asset_migration_tool import AssetMigrationTool
+from anima.publish import PRE_PUBLISHER_TYPE, POST_PUBLISHER_TYPE
+
+
+publisher_caller_registry = {}
+
+
+@pytest.fixture(scope="function")
+def mock_publishers():
+    """Prepare publishers."""
+    temp_storage = publish.publishers
+
+    # please don't judge me with the following code...
+    global publisher_caller_registry
+    publisher_caller_registry["pre_publisher_call_count"] = 0
+    publisher_caller_registry["post_publisher_call_count"] = 0
+
+    def pre_publisher(*args, **kwargs):
+        global publisher_caller_registry
+        publisher_caller_registry["pre_publisher_call_count"] += 1
+
+    def post_publisher():
+        global publisher_caller_registry
+        publisher_caller_registry["post_publisher_call_count"] += 1
+
+    publish.publishers = {PRE_PUBLISHER_TYPE: {}, POST_PUBLISHER_TYPE: {}}
+    publish.register_publisher(pre_publisher, publisher_type=PRE_PUBLISHER_TYPE)
+    publish.register_publisher(post_publisher, publisher_type=POST_PUBLISHER_TYPE)
+    yield
+    # restore publishers
+    publish.publishers = temp_storage
 
 
 @pytest.fixture(scope="function")
@@ -158,8 +190,6 @@ def test_get_intermediate_tasks(migration_test_data):
 
 def test_asset_migration_tool_initialization(migration_test_data):
     """Test AssetMigrationTool initialization."""
-    from anima.dcc.mayaEnv.asset_migration_tool import AssetMigrationTool
-
     amt = AssetMigrationTool()
     assert isinstance(amt, AssetMigrationTool)
 
@@ -189,9 +219,6 @@ def test_migrating_simple_asset_1(migration_test_data):
     }
 
     assert data["assets_task2"].children == []
-
-    from anima.dcc.mayaEnv.asset_migration_tool import AssetMigrationTool
-
     amt = AssetMigrationTool()
     amt.migration_recipe = migration_recipe
     amt.migrate()
@@ -238,9 +265,6 @@ def test_migrating_simple_asset_2(migration_test_data, create_pymel, create_maya
     }
 
     assert data["assets_task2"].children == []
-
-    from anima.dcc.mayaEnv.asset_migration_tool import AssetMigrationTool
-
     amt = AssetMigrationTool()
     amt.migration_recipe = migration_recipe
     amt.migrate()
@@ -292,9 +316,6 @@ def test_migrating_simple_asset_3(migration_test_data, create_pymel, create_maya
     }
 
     assert data["assets_task2"].children == []
-
-    from anima.dcc.mayaEnv.asset_migration_tool import AssetMigrationTool
-
     amt = AssetMigrationTool()
     amt.migration_recipe = migration_recipe
     amt.migrate()
@@ -356,9 +377,6 @@ def test_migrating_simple_asset_4(migration_test_data, create_pymel, create_maya
     }
 
     assert data["assets_task2"].children == []
-
-    from anima.dcc.mayaEnv.asset_migration_tool import AssetMigrationTool
-
     amt = AssetMigrationTool()
     amt.migration_recipe = migration_recipe
     amt.migrate()
@@ -436,9 +454,6 @@ def test_migrating_simple_env_asset_1(
     }
 
     assert data["assets_task2"].children == []
-
-    from anima.dcc.mayaEnv.asset_migration_tool import AssetMigrationTool
-
     amt = AssetMigrationTool()
     amt.migration_recipe = migration_recipe
     amt.migrate()
@@ -517,9 +532,6 @@ def test_migrating_simple_env_asset_2(
     }
 
     assert data["assets_task2"].children == []
-
-    from anima.dcc.mayaEnv.asset_migration_tool import AssetMigrationTool
-
     amt = AssetMigrationTool()
     amt.migration_recipe = migration_recipe
     amt.migrate()
@@ -688,8 +700,6 @@ def test_migrating_complex_env_asset_1(
     }
 
     assert data["assets_task2"].children == []
-    from anima.dcc.mayaEnv.asset_migration_tool import AssetMigrationTool
-
     amt = AssetMigrationTool()
     amt.migration_recipe = migration_recipe
     amt.migrate()
@@ -1124,8 +1134,6 @@ def test_migrating_complex_env_asset_2(
     }
 
     assert data["assets_task2"].children == []
-    from anima.dcc.mayaEnv.asset_migration_tool import AssetMigrationTool
-
     amt = AssetMigrationTool()
     amt.migration_recipe = migration_recipe
     amt.migrate()
@@ -1505,9 +1513,6 @@ def test_migrating_with_alternative_versions_data_1(
     }
 
     assert data["assets_task2"].children == []
-
-    from anima.dcc.mayaEnv.asset_migration_tool import AssetMigrationTool
-
     amt = AssetMigrationTool()
     amt.migration_recipe = migration_recipe
     # inject alternative
@@ -1728,3 +1733,44 @@ def test_migrating_with_alternative_versions_data_1(
 # def test_move_old_versions_1(migration_test_data, create_pymel, create_maya_env):
 #     """Test AssetMigrationTool to move a scene with newer versions detected."""
 #     raise NotImplementedError("Test is not implemented yet")
+
+
+def test_post_publishers_are_run_1(migration_test_data, create_pymel, create_maya_env, mock_publishers):
+    """Test AssetMigrationTool run post publishers."""
+    # EnvAsset
+    #   Model (don't move)
+    #   LookDev
+    # Check Stalker data
+    data = migration_test_data
+    pm = create_pymel
+    maya_env = create_maya_env
+    migration_recipe = {
+        data["ext2"].id: {
+            "new_parent_id": data["assets_task2"].id,
+        },
+        data["ext2_look_dev"].id: {
+            "new_parent_id": data["ext2"].id,
+            "takes": {
+                "Main": {"versions": [data["ext2_look_dev_main_v003"].version_number]},
+            },
+        },
+    }
+
+    assert data["assets_task2"].children == []
+
+    amt = AssetMigrationTool()
+    amt.migration_recipe = migration_recipe
+    # inject alternative
+    amt.version_lut[data["ext2_model_main_v003"]] = data[
+        "random_asset1_model_main_version1"
+    ]
+
+    # before calling migrate check "pre" and "post" publisher call counts
+    global publisher_caller_registry
+    assert publisher_caller_registry["pre_publisher_call_count"] == 0
+    assert publisher_caller_registry["post_publisher_call_count"] == 0
+    amt.migrate()
+    # after migrate we should expect no pre publishers to be run
+    # but expect post publishers to be run
+    assert publisher_caller_registry["pre_publisher_call_count"] == 0
+    assert publisher_caller_registry["post_publisher_call_count"] > 0

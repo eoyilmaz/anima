@@ -7,6 +7,8 @@ from stalker.db.session import DBSession
 
 import pymel.core as pm
 
+from anima.publish import run_publishers, POST_PUBLISHER_TYPE
+
 
 class AssetMigrationTool(object):
     """A tool to help migrating Assets from one project to another.
@@ -242,6 +244,7 @@ class AssetMigrationTool(object):
         # and a corresponding version centric migration recipe
         # go over the list and create new versions,
         dcc_env = mayaEnv.Maya()
+        publish_errors = []
         for v in ordered_list_of_versions_to_move:
             recipe = version_centric_migration_recipe[v]
             new_version = Version(
@@ -272,5 +275,22 @@ class AssetMigrationTool(object):
             DBSession.commit()
             new_version.is_published = v.is_published
             self.version_lut[v] = new_version
+
+            if v.is_published:
+                try:
+                    # run the post publishers here
+                    type_name = ""
+                    if new_version.task.type:
+                        type_name = new_version.task.type.name
+                    run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
+                except Exception as e:
+                    # prevent any exception to cut the process in the middle
+                    publish_errors.append(e)
+
+        if publish_errors:
+            print("During migration {} errors occurred".format(len(publish_errors)))
+            print("=================================================")
+            for e in publish_errors:
+                print(e)
 
         logger.debug("Asset migrated successfully!")
