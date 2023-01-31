@@ -12,11 +12,11 @@ from stalker import Project, Task, Version
 
 
 class Archiver(ArchiverBase):
-    """Archives a Maya scene for external use.
+    """Archive a Maya scene for external use.
 
     This utility class can flatten a maya scene including all its references in
     to a default maya project folder structure and can retrieve and connect the
-    references to the original ones when the original file is returned back.
+    references to the original ones when the original file is returned.
     """
 
     default_workspace_content = """// Anima Archiver Default Project Definition

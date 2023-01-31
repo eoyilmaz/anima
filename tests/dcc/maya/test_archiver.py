@@ -130,7 +130,7 @@ def test_flatten_is_working_properly_with_no_references(create_test_data, trash_
     """
     data = create_test_data
     arch = Archiver()
-    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
+    project_path = arch.flatten([data["asset2_model_main_v001"].absolute_full_path])
     trash_bin.append(project_path)
 
     # the returned path should be a maya project directory
@@ -170,7 +170,7 @@ def test_flatten_is_working_properly_with_only_one_level_of_references(
     # create an archiver
     arch = Archiver()
 
-    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
+    project_path = arch.flatten([data["asset2_model_main_v001"].absolute_full_path])
     trash_bin.append(project_path)
 
     # now check if we have two files under the path/scenes directory
@@ -229,7 +229,7 @@ def test_flatten_is_working_properly_with_only_one_level_of_multiple_references_
     # create an archiver
     arch = Archiver()
 
-    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
+    project_path = arch.flatten([data["asset2_model_main_v001"].absolute_full_path])
     trash_bin.append(project_path)
 
     # now check if we have two files under the path/scenes directory
@@ -303,7 +303,7 @@ def test_flatten_is_working_properly_with_multiple_level_of_references(
     # create an archiver
     arch = Archiver()
 
-    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
+    project_path = arch.flatten([data["asset2_model_main_v001"].absolute_full_path])
     trash_bin.append(project_path)
 
     # now check if we have two files under the path/scenes directory
@@ -414,7 +414,7 @@ def test_flatten_is_working_properly_with_the_external_files_of_the_references(
     # create an archiver
     arch = Archiver()
 
-    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
+    project_path = arch.flatten([data["asset2_model_main_v001"].absolute_full_path])
     trash_bin.append(project_path)
 
     # now check if we have the files under the path/scenes directory
@@ -538,7 +538,7 @@ def test_flatten_is_working_properly_with_exclude_mask(
     # create an archiver
     arch = Archiver(exclude_mask=[".png", ".jpg", ".tga"])
 
-    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
+    project_path = arch.flatten([data["asset2_model_main_v001"].absolute_full_path])
     trash_bin.append(project_path)
 
     # now check if we have the files under the path/scenes directory
@@ -635,7 +635,7 @@ def test_flatten_is_working_properly_with_multiple_reference_to_the_same_file_wi
     # create an archiver
     arch = Archiver()
 
-    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
+    project_path = arch.flatten([data["asset2_model_main_v001"].absolute_full_path])
     trash_bin.append(project_path)
 
     # now check if we have two files under the path/scenes directory
@@ -764,7 +764,7 @@ def test_flatten_is_working_properly_for_external_files(
     # create an archiver
     arch = Archiver()
 
-    project_path = arch.flatten(data["version7"].absolute_full_path)
+    project_path = arch.flatten([data["version7"].absolute_full_path])
     trash_bin.append(project_path)
 
     # now check if we have the files under the path/scenes directory
@@ -803,7 +803,7 @@ def test_flatten_will_restore_the_current_workspace(
     current_workspace = pm.workspace.path
 
     arch = Archiver()
-    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
+    project_path = arch.flatten([data["asset2_model_main_v001"].absolute_full_path])
     trash_bin.append(project_path)
 
     # now check if the current workspace is intact
@@ -818,7 +818,7 @@ def test_archive_will_create_a_zip_file_from_the_given_directory(
     """
     data = create_test_data
     arch = Archiver()
-    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
+    project_path = arch.flatten([data["asset2_model_main_v001"].absolute_full_path])
     trash_bin.append(project_path)
 
     parent_path = os.path.dirname(project_path) + "/"
@@ -890,7 +890,7 @@ def test_bind_to_original_will_bind_the_references_to_their_original_counter_par
     # create an archiver
     arch = Archiver()
 
-    project_path = arch.flatten(data["asset2_model_main_v001"].absolute_full_path)
+    project_path = arch.flatten([data["asset2_model_main_v001"].absolute_full_path])
     trash_bin.append(project_path)
 
     # now check if we have two files under the path/scenes directory

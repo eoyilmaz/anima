@@ -1,10 +1,19 @@
 # -*- coding: utf-8 -*-
+"""Archiver utilities."""
+import os
+import shutil
+import tempfile
+import zipfile
 
+import anima
 from anima import logger
+from anima.utils import open_browser_in_location
+
+from stalker import Repository
 
 
 class ArchiverBase(object):
-    """The base class for Archivers"""
+    """The base class for Archivers."""
 
     default_project_structure = ""
 
@@ -16,18 +25,18 @@ class ArchiverBase(object):
 
     @classmethod
     def create_default_project(cls, path, name="DefaultProject"):
-        """Creates default project structure.
+        """Create default project structure.
 
-        :param str path: The path that the default project structure will be created.
-        :param str name: The name of the archived project.
+        Args:
+            path (str): The path that the default project structure will be created.
+            name (str): The name of the archived project.
 
-        :return:
+        Returns:
+            str: New project path.
         """
-        import os
-
         project_path = os.path.join(path, name)
 
-        # lets create the structure
+        # let's create the structure
         for dir_name in cls.default_project_structure.split("\n"):
             dir_path = os.path.join(project_path, dir_name.strip())
             try:
@@ -37,24 +46,25 @@ class ArchiverBase(object):
 
         return project_path
 
-    def flatten(self, path, project_name="DefaultProject", tempdir=None):
-        """Flattens the given scene in to a new default project.
+    def flatten(self, paths, project_name="DefaultProject", tempdir=None):
+        """Flatten the given scene in to a new default project.
 
         It will also flatten all the referenced files, textures, image planes,
         Redshift Proxy files.
 
-        :param path: The path to the file which wanted to be flattened.
-        :param project_name: The new project name.
-        :param tempdir: The temporary dir to flatten the project to, the default is ``tempfile.gettempdir()``.
-        :return:
+        Args:
+            paths (List[str]): A list of paths to the filed which wanted to be
+                flattened.
+            project_name (str): The new project name.
+            tempdir (str): The temporary dir to flatten the project to, the default is
+                ``tempfile.gettempdir()``.
+
+        Returns:
+            str: The project paths.
         """
         # create a new Default Project
-        import tempfile
-        import os
-
         if not tempdir:
             tempdir = tempfile.gettempdir()
-        from stalker import Repository
 
         all_repos = Repository.query.all()
 
@@ -64,14 +74,20 @@ class ArchiverBase(object):
 
         logger.debug("creating new default project at: %s" % default_project_path)
 
-        ref_paths = self._move_file_and_fix_references(
-            path, default_project_path, scenes_folder="scenes"
-        )
+        ref_paths = []
+        for path in paths:
+            ref_paths += self._move_file_and_fix_references(
+                path, default_project_path, scenes_folder="scenes"
+            )
+        ref_paths = list(set(ref_paths))
 
         while len(ref_paths):
             ref_path = ref_paths.pop(0)
 
-            if self.exclude_mask and os.path.splitext(ref_path)[-1] in self.exclude_mask:
+            if (
+                self.exclude_mask
+                and os.path.splitext(ref_path)[-1] in self.exclude_mask
+            ):
                 logger.debug("skipping: %s" % ref_path)
                 continue
 
@@ -94,14 +110,16 @@ class ArchiverBase(object):
     def _move_file_and_fix_references(
         self, path, project_path, scenes_folder="", refs_folder=""
     ):
-        """Moves the given file to the given project path and moves any
-        references of it too
+        """Move the file to the project path and moves any references of it too.
 
-        :param str path: The path of the scene file
-        :param str project_path: The project path
-        :param str scenes_folder: The scenes folder to store the original maya scene.
-        :param str refs_folder: The references folder to replace reference paths with.
-        :return list: returns a list of paths
+        Args:
+            path (str): The path of the scene file.
+            project_path (str): The project path.
+            scenes_folder (str): The scenes folder to store the original maya scene.
+            refs_folder (str): The references folder to replace reference paths with.
+
+        Raises:
+            NotImplementedError: This needs to be implemented in the derived class.
         """
         # This needs to be implemented by the environment
         raise NotImplementedError(
@@ -109,9 +127,10 @@ class ArchiverBase(object):
         )
 
     def _extract_references(self):
-        """returns the list of references in the given scene
+        """Return the list of references in the given scene.
 
-        :return:
+        Raises:
+            NotImplementedError: This needs to be implemented in the derived class.
         """
         raise NotImplementedError(
             "This method needs to be implemented by the derived class"
@@ -119,16 +138,16 @@ class ArchiverBase(object):
 
     @classmethod
     def archive(cls, path, tempdir=None):
-        """Creates a zip file containing the given directory.
+        """Create a zip file containing the given directory.
 
-        :param path: Path to the archived directory.
-        :param tempdir: The temporary dir to use for ZIP creation, the default value is ``tempfile.gettempdir()``.
-        :return:
+        Args:
+            path (str): Path to the archived directory.
+            tempdir (str): The temporary dir to use for ZIP creation, the default value
+                is ``tempfile.gettempdir()``.
+
+        Returns:
+            str: ZIP file path.
         """
-        import zipfile
-        import os
-        import tempfile
-
         if not tempdir:
             tempdir = tempfile.gettempdir()
 
@@ -141,27 +160,26 @@ class ArchiverBase(object):
             for current_dir_path, dir_names, file_names in os.walk(path):
                 for dir_name in dir_names:
                     dir_path = os.path.join(current_dir_path, dir_name)
-                    arch_path = dir_path[len(parent_path) :]
+                    arch_path = dir_path[len(parent_path):]
                     z.write(dir_path, arch_path)
 
                 for file_name in file_names:
                     file_path = os.path.join(current_dir_path, file_name)
-                    arch_path = file_path[len(parent_path) :]
+                    arch_path = file_path[len(parent_path):]
                     z.write(file_path, arch_path)
 
         return zip_path
 
 
 def archive_current_scene(version, archiver):
-    """Helper function for archiver
+    """Archive current scene.
 
-    :param version: A ``stalker.models.version.Version`` instance to get information about the project and etc.
-    :param archiver: The ``anima.utils.archive.ArchiverBase`` derivative properly implemented for the current DCC.
+    Args:
+        version (stalker.Version): A ``stalker.models.version.Version`` instance to get
+            information about the project etc.
+        archiver (ArchiverBase): The ``anima.utils.archive.ArchiverBase`` derivative
+            properly implemented for the current DCC.
     """
-    import os
-    import shutil
-    import tempfile
-    import anima
     from anima.ui.lib import QtWidgets
 
     # before doing anything ask it to the user
@@ -190,15 +208,10 @@ def archive_current_scene(version, archiver):
     if version:
         path = version.absolute_full_path
         task = version.task
-        if False:
-            from stalker import Version, Task
-
-            assert isinstance(version, Version)
-            assert isinstance(task, Task)
         # project_name = version.nice_name
         project_name = os.path.splitext(os.path.basename(version.absolute_full_path))[0]
         project_path = archiver.flatten(
-            path, project_name=project_name, tempdir=tempdir
+            [path], project_name=project_name, tempdir=tempdir
         )
 
         # append link file
@@ -223,6 +236,4 @@ def archive_current_scene(version, archiver):
         shutil.move(zip_path, new_zip_path)
 
         # open the zip file in browser
-        from anima.utils import open_browser_in_location
-
         open_browser_in_location(new_zip_path)
