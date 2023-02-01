@@ -1563,12 +1563,14 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
             amt.migrate()
         except Exception as e:
             QtWidgets.QMessageBox.critical(
+                self,
                 "Error",
                 "Error during migration:\n\n{}".format(e)
             )
             print(e)
         else:
             QtWidgets.QMessageBox.information(
+                self,
                 "Success",
                 "Successfully migrated assets!\n\nClose the UI now."
             )
