@@ -271,12 +271,12 @@ class AssetMigrationTool(object):
 
             # because publish scripts may fail, set the publish status after
             # saving the file
+            new_version.is_published = v.is_published
             DBSession.add(new_version)
             DBSession.commit()
-            new_version.is_published = v.is_published
             self.version_lut[v] = new_version
 
-            if v.is_published:
+            if new_version.is_published:
                 try:
                     # run the post publishers here
                     type_name = ""
@@ -285,12 +285,15 @@ class AssetMigrationTool(object):
                     run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
                 except Exception as e:
                     # prevent any exception to cut the process in the middle
-                    publish_errors.append(e)
+                    publish_errors.append((new_version, e))
 
         if publish_errors:
             print("During migration {} errors occurred".format(len(publish_errors)))
             print("=================================================")
-            for e in publish_errors:
-                print(e)
+            for version, error in publish_errors:
+                print("------")
+                print(version.full_path)
+                print(error)
+            print("=================================================")
 
         logger.debug("Asset migrated successfully!")
