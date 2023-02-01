@@ -705,8 +705,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # Open Push Button
         self.open_push_button = QtWidgets.QPushButton(self)
-        self.open_buttons_layout.addWidget(self.open_push_button)
         self.open_push_button.setText("Open")
+        self.open_buttons_layout.addWidget(self.open_push_button)
 
         # Open As New Version Push Button
         self.open_as_new_version_push_button = QtWidgets.QPushButton(self)
@@ -1453,7 +1453,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
 
         # Open the version
-        # add double clicking to previous_versions_table_widget
+        # add double-clicking to previous_versions_table_widget
         self.previous_versions_table_widget.cellDoubleClicked.connect(
             self.open_push_button_clicked,
         )
@@ -1848,7 +1848,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # same task
             current_version = environment.get_current_version()
             if current_version and current_version.task != new_version.task:
-                # ask to the user if he/she is sure about that
+                # ask the user if he/she is sure about that
                 answer = QtWidgets.QMessageBox.question(
                     self,
                     "Possible Mistake?",

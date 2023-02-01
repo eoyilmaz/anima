@@ -30,7 +30,7 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
     # and PySide2 for Maya 2017
     set_qt_lib()
 
-    from anima.ui.dialogs import version_dialog
+    from anima.ui.dialogs import version_dialog as vd
     from anima.dcc import mayaEnv
 
     m = mayaEnv.Maya()
@@ -42,7 +42,7 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
     logger.setLevel(logging_level)
 
     # set the parent object to the maya main window
-    version_dialog.UI(environment=m, parent=mayaEnv.get_maya_main_window(), mode=mode)
+    vd.UI(environment=m, parent=mayaEnv.get_maya_main_window(), mode=mode)
 
 
 def version_updater(logging_level=logging.WARNING):
@@ -55,7 +55,7 @@ def version_updater(logging_level=logging.WARNING):
     # set Qt lib
     set_qt_lib()
 
-    from anima.ui.dialogs import version_updater
+    from anima.ui.dialogs import version_updater as vu
     from anima.dcc import mayaEnv
 
     m = mayaEnv.Maya()
@@ -74,7 +74,7 @@ def version_updater(logging_level=logging.WARNING):
     #     version_updater_dialog.show()
 
     # set the parent object to the maya main window
-    version_updater.UI(environment=m, parent=mayaEnv.get_maya_main_window())
+    vu.UI(environment=m, parent=mayaEnv.get_maya_main_window())
 
 
 def version_mover():
@@ -100,7 +100,37 @@ def project_manager(logging_level=logging.WARNING):
     # and PySide2 for Maya 2017
     set_qt_lib()
 
-    from anima.ui.dialogs import project_manager
+    from anima.ui.dialogs import project_manager as projman
 
     # set the parent object to the maya main window
-    project_manager.ui_caller(None, None, project_manager.MainWindow)
+    projman.ui_caller(None, None, project_manager.MainWindow)
+
+
+def archiver_dialog(logging_level=logging.WARNING, mode=2):
+    """Archiver dialog UI for Maya."""
+    # connect to db
+    from anima.utils import do_db_setup
+
+    do_db_setup()
+
+    # use PySide for Maya 2014
+    # and PySide2 for Maya 2017
+    set_qt_lib()
+
+    from anima.dcc import mayaEnv
+    from anima.dcc.mayaEnv import archive
+    from anima.ui.base import ui_caller
+    from anima.ui.dialogs import archiver_dialog
+    import pymel
+
+    m = mayaEnv.Maya()
+    m.name = "Maya%s" % str(pymel.versions.current())[0:4]
+
+    logger.setLevel(logging_level)
+
+    # set the parent object to the maya main window
+    ui_caller(
+        None, None, archiver_dialog.MultiVersionSelectDialog,
+        environment=m, parent=mayaEnv.get_maya_main_window(),
+        archiver=archive.Archiver()
+    )

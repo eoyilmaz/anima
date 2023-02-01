@@ -447,10 +447,10 @@ class GeneralTools(object):
         """archives the current scene"""
         from anima.dcc import houdini
         from anima.dcc.houdini.archive import Archiver
-        from anima.utils.archive import archive_current_scene
+        from anima.utils.archive import archive_versions
 
         h_env = houdini.Houdini()
         version = h_env.get_current_version()
         archiver = Archiver()
 
-        archive_current_scene(version, archiver)
+        archive_versions(version, archiver)

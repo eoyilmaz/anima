@@ -171,51 +171,76 @@ class ArchiverBase(object):
         return zip_path
 
 
-def archive_current_scene(version, archiver):
-    """Archive current scene.
+def archive_versions(
+    versions, archiver, project_name=None, output_path=None, tempdir=None, prompt=True
+):
+    """Archive the given versions.
 
     Args:
-        version (stalker.Version): A ``stalker.models.version.Version`` instance to get
-            information about the project etc.
+        versions (List[stalker.Version]): A ``stalker.models.version.Version`` instance
+            to get information about the project etc.
         archiver (ArchiverBase): The ``anima.utils.archive.ArchiverBase`` derivative
             properly implemented for the current DCC.
+        project_name (Union[None, str]): The project name, if skipped a project name
+            will be generated from the first version in the versions list.
+        output_path (Union[None, str]): The output folder path, if skipped an output
+            path will be generated from the first version in the versions list.
+        tempdir (Union[None, str]): The tempdir to use. If not given a path is going to
+            be asked to the user.
+        prompt (bool): If True, a final confirmation will be asked to the user.
+
+    Returns:
+        str: The ZIP file path.
     """
+
     from anima.ui.lib import QtWidgets
 
-    # before doing anything ask it to the user
-    answer = QtWidgets.QMessageBox.question(
-        None,
-        "Do Archive?",
-        "This will create a ZIP file containing"
-        "<br>the current scene and all its references"
-        "<br>"
-        "Is that OK?",
-        QtWidgets.QMessageBox.Yes,
-        QtWidgets.QMessageBox.No,
-    )
-    if answer == QtWidgets.QMessageBox.No:
+    if False:
+        from PySide6 import QtWidgets
+
+    if not versions:
+        QtWidgets.QMessageBox.critical(None, "Error!", "No version is given!")
         return
 
-    input_dialog = QtWidgets.QInputDialog(None)
-    tempdir, ok = input_dialog.getText(
-        None,
-        "Temporary dir to use?",
-        "Please choose a temporary directory:",
-        QtWidgets.QLineEdit.Normal,
-        tempfile.gettempdir(),
-    )
+    # before doing anything ask it to the user
+    if prompt:
+        answer = QtWidgets.QMessageBox.question(
+            None,
+            "Do Archive?",
+            "This will create a ZIP file containing"
+            "<br>the current scene and all its references"
+            "<br>"
+            "Is that OK?",
+            QtWidgets.QMessageBox.Yes,
+            QtWidgets.QMessageBox.No,
+        )
+        if answer == QtWidgets.QMessageBox.No:
+            return
 
-    if version:
-        path = version.absolute_full_path
-        task = version.task
-        # project_name = version.nice_name
-        project_name = os.path.splitext(os.path.basename(version.absolute_full_path))[0]
-        project_path = archiver.flatten(
-            [path], project_name=project_name, tempdir=tempdir
+    if not tempdir or not isinstance(tempdir, str) or tempdir == "":
+        input_dialog = QtWidgets.QInputDialog(None)
+        tempdir, ok = input_dialog.getText(
+            None,
+            "Temporary dir to use?",
+            "Please choose a temporary directory:",
+            QtWidgets.QLineEdit.Normal,
+            tempfile.gettempdir(),
         )
 
-        # append link file
-        stalker_link_file_path = os.path.join(project_path, "scenes/stalker_links.txt")
+    # use the first version to determine the ZIP file path
+    if not project_name or not isinstance(project_name, str):
+        project_name = os.path.splitext(
+            os.path.basename(versions[0].absolute_full_path)
+        )[0]
+
+    if not output_path or not isinstance(output_path, str):
+        output_path = versions[0].absolute_path
+
+    paths = []
+    data_links = []
+    for version in versions:
+        task = version.task
+        paths.append(version.absolute_full_path)
         version_upload_link = "%s/tasks/%s/versions/list" % (
             anima.defaults.stalker_server_external_address,
             task.id,
@@ -224,16 +249,31 @@ def archive_current_scene(version, archiver):
             anima.defaults.stalker_server_external_address,
             task.id,
         )
-        with open(stalker_link_file_path, "w+") as f:
-            f.write(
-                "Version Upload Link: %s\n"
-                "Request Review Link: %s\n" % (version_upload_link, request_review_link)
-            )
-        zip_path = archiver.archive(project_path, tempdir=tempdir)
-        new_zip_path = os.path.join(version.absolute_path, os.path.basename(zip_path))
+        data_link = (
+            "--------------------\n"
+            "Version Upload Link: {}\n"
+            "Request Review Link: {}\n".format(version_upload_link, request_review_link)
+        )
+        data_links.append(data_link)
 
-        # move the zip right beside the original version file
-        shutil.move(zip_path, new_zip_path)
+    project_path = archiver.flatten(paths, project_name=project_name, tempdir=tempdir)
 
-        # open the zip file in browser
-        open_browser_in_location(new_zip_path)
+    # append link file
+    stalker_link_file_path = os.path.join(project_path, "scenes/stalker_links.txt")
+
+    with open(stalker_link_file_path, "w+") as f:
+        f.write("\n".join(data_links))
+
+    zip_path = archiver.archive(project_path, tempdir=tempdir)
+    new_zip_path = os.path.join(output_path, os.path.basename(zip_path))
+
+    # move the zip right beside the original version file
+    shutil.move(zip_path, new_zip_path)
+
+    # remote the temp project_path
+    shutil.rmtree(project_path, ignore_errors=True)
+
+    # open the zip file in browser
+    open_browser_in_location(new_zip_path)
+
+    return new_zip_path

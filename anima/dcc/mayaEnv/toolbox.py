@@ -440,15 +440,22 @@ def UI():
 
             color.next()
             pm.button(
-                "archive_button",
+                "archive_current_scene_button",
                 l="Archive Current Scene",
                 c=repeated_callback(Reference.archive_current_scene),
-                ann="Creates a ZIP file containing the current scene and its"
-                "references in a flat Maya default project folder "
-                "structure",
+                ann=Reference.archive_current_scene.__doc__,
                 bgc=color.color,
             )
 
+            pm.button(
+                "archive_multiple_scenes_button",
+                l="Archive Multiple Scenes",
+                c=repeated_callback(Reference.archive_multiple_scenes),
+                ann=Reference.archive_multiple_scenes.__doc__,
+                bgc=color.color,
+            )
+
+            color.next()
             pm.button(
                 "bind_to_original_button",
                 l="Bind To Original",

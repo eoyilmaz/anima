@@ -369,15 +369,23 @@ class Reference(object):
 
     @classmethod
     def archive_current_scene(cls):
-        """archives the current scene"""
+        """Create a ZIP file containing the current scene and its references in a flat
+        Maya default project folder structure.
+        """
         from anima.dcc.mayaEnv import Maya
         from anima.dcc.mayaEnv.archive import Archiver
-        from anima.utils.archive import archive_current_scene
+        from anima.utils.archive import archive_versions
 
         m_env = Maya()
         version = m_env.get_current_version()
         archiver = Archiver()
-        archive_current_scene(version, archiver)
+        archive_versions(version, archiver)
+
+    @classmethod
+    def archive_multiple_scenes(cls):
+        """Archive multiple scenes."""
+        from anima.ui.scripts import maya as maya_ui_scripts
+        maya_ui_scripts.archiver_dialog()
 
     @classmethod
     def bind_to_original(cls):
