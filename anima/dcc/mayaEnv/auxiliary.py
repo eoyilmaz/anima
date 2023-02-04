@@ -10,7 +10,7 @@ import pymel.core as pm
 
 from anima import logger, ALEMBIC, USD, CACHE_FORMAT_DATA
 import anima.utils
-from anima.utils.progress import ProgressManager
+from anima.utils.progress import ProgressManagerFactory
 
 FIRST_CAP_RE = re.compile("(.)([A-Z][a-z]+)")
 ALL_CAP_RE = re.compile("([a-z0-9])([A-Z])")
@@ -2248,7 +2248,7 @@ class Playblaster(object):
         if len(shots) <= 0:
             raise RuntimeError("There are no Shots in your Camera Sequencer.")
 
-        pdm = ProgressManager()
+        pdm = ProgressManagerFactory.get_progress_manager()
         pdm.end_progress()
 
         caller = pdm.register(len(shots), "Generating Playblasts...")
@@ -2322,7 +2322,7 @@ class Playblaster(object):
         :param list video_file_full_paths: List of file paths
         :return:
         """
-        pdm = ProgressManager()
+        pdm = ProgressManagerFactory.get_progress_manager()
         pdm.end_progress()
 
         outputs = []
@@ -2490,7 +2490,7 @@ def get_cacheable_nodes(reference_node=None):
 
     :return:
     """
-    pdm = ProgressManager()
+    pdm = ProgressManagerFactory.get_progress_manager()
     pdm.end_progress()
 
     # list all cacheable nodes
@@ -2609,7 +2609,7 @@ def export_cache_of_nodes(
                 # mayaUsdPlugin not found, skip this
                 return
 
-    pdm = ProgressManager()
+    pdm = ProgressManagerFactory.get_progress_manager()
 
     cacheable_nodes.sort(key=lambda x: x.getAttr("cacheable"))
 

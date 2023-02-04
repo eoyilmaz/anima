@@ -4,7 +4,7 @@ import os
 
 from anima import logger, log_file_handler
 from anima.recent import RecentFileManager
-from anima.utils.progress import ProgressManager
+from anima.utils.progress import ProgressManagerFactory
 
 
 class DCCBase(object):
@@ -384,7 +384,7 @@ class DCCBase(object):
         :return: dictionary
         """
         if not pdm:
-            pdm = ProgressManager()
+            pdm = ProgressManagerFactory.get_progress_manager()
 
         caller = pdm.register(
             3, "%s.check_referenced_versions() prepare data" % self.__class__.__name__

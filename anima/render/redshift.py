@@ -73,9 +73,9 @@ class RedShiftTextureProcessor(object):
         processed_files = []
 
         import subprocess
-        from anima.utils.progress import ProgressManager
+        from anima.utils.progress import ProgressManagerFactory
 
-        pdm = ProgressManager()
+        pdm = ProgressManagerFactory.get_progress_manager()
         caller = pdm.register(len(self.files_to_process), title="Converting Textures")
         for file_path in self.files_to_process:
             command = '%s "%s"' % (self.executable, file_path)

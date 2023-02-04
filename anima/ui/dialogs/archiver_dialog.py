@@ -11,7 +11,6 @@ from anima.ui.dialogs.version_dialog import MainDialog, OPEN_MODE, VersionNT
 from anima.utils import get_task_hierarchy_name
 from anima.utils.archive import archive_versions
 
-
 if False:
     from PySide6 import QtCore, QtGui, QtWidgets
 

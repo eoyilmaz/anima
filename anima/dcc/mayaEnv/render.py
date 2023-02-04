@@ -6,7 +6,7 @@ import tempfile
 
 import anima
 from anima.dcc.mayaEnv import auxiliary
-from anima.utils.progress import ProgressManager
+from anima.utils.progress import ProgressManagerFactory
 
 from maya import cmds as cmds, mel as mel
 from pymel import core as pm
@@ -811,7 +811,7 @@ class Render(object):
             override_attr_name = None
 
         # register a caller
-        pdm = ProgressManager()
+        pdm = ProgressManagerFactory.get_progress_manager()
         caller = pdm.register(len(objects), "Setting Shape Attribute")
 
         layers = pm.ls(type="renderLayer")
@@ -2374,7 +2374,7 @@ class Render(object):
         import shutil
         import glob
 
-        pdm = ProgressManager()
+        pdm = ProgressManagerFactory.get_progress_manager()
 
         selected_nodes = pm.ls(sl=1)
         caller = pdm.register(len(selected_nodes), title="Moving Cache Files")

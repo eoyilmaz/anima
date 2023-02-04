@@ -2,9 +2,6 @@
 from __future__ import print_function
 
 
-from anima.base import Singleton
-
-
 class ProgressDialogBase(object):
     """Base class for all the other ProgressDialog variants."""
 
@@ -109,10 +106,28 @@ class ProgressCaller(object):
     """A simple object to hold caller data for ProgressManager."""
 
     def __init__(self, max_steps=0, title=""):
+        self._max_steps = None
         self.max_steps = max_steps
         self.title = title
         self.current_step = 0
         self.manager = None
+
+    @property
+    def max_steps(self):
+        """Getter for the max_steps property.
+
+        Returns:
+            int: The max_steps value.
+        """
+        return self._max_steps
+
+    @max_steps.setter
+    def max_steps(self, max_steps):
+        """Setter for the max_steps property."""
+        # update the ProgresssManager total steps size
+        pm = ProgressManagerFactory.get_progress_manager()
+        pm.max_steps
+        self._max_steps = max_steps
 
     def step(self, step_size=1, message=""):
         """Shortcut for the ``ProgressManager`` ``step`` method.
@@ -126,6 +141,26 @@ class ProgressCaller(object):
     def end_progress(self):
         """Shortcut for the ``ProgressManager`` ``end_progress`` method."""
         self.manager.end_progress(self)
+
+
+class ProgressManagerFactory(object):
+    """Generate ProgressManager instances.
+
+    Instead of using hacky Singleton class, use this to get the ProgressManager
+    instance. This is much cleaner and much better to understand.
+    """
+
+    __progress_manager_instance = None
+
+    def __new__(cls, *args, **kwargs):
+        raise RuntimeError("Do not instantiate this class!")
+
+    @classmethod
+    def get_progress_manager(cls, dialog_class=None):
+        """Create a new ProgressManager instance or return the stored one."""
+        if cls.__progress_manager_instance is None:
+            cls.__progress_manager_instance = ProgressManager(dialog_class=dialog_class)
+        return cls.__progress_manager_instance
 
 
 class ProgressManager(object):
@@ -149,8 +184,6 @@ class ProgressManager(object):
     callers are completed.
     """
 
-    __metaclass__ = Singleton
-
     def __init__(self, dialog_class=None):
         self.in_progress = False
         self._dialog = None
@@ -159,8 +192,26 @@ class ProgressManager(object):
         self.dialog_class = dialog_class
         self.callers = []
         self.title = ""
+        self._max_steps = 0
         self.max_steps = 0
         self.current_step = 0
+
+    @property
+    def max_steps(self):
+        """Return max_steps value.
+
+        Returns:
+            int: The max steps registered.
+        """
+        return self._max_steps
+
+    @max_steps.setter
+    def max_steps(self, max_steps):
+        """Set the max steps value."""
+        self._max_steps = max_steps
+        # update the dialog range
+        if self._dialog:
+            self._dialog.set_range(0, self._max_steps)
 
     @property
     def dialog(self):

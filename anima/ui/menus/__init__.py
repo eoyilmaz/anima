@@ -16,7 +16,7 @@ from anima.utils import (
     task_hierarchy_io,
     upload_thumbnail,
 )
-from anima.utils.progress import ProgressManager
+from anima.utils.progress import ProgressManagerFactory
 
 from sqlalchemy import func
 
@@ -714,7 +714,9 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                         )
                         from anima.ui.dialogs.progress_dialog import ProgressDialog
 
-                        pdm = ProgressManager(dialog_class=ProgressDialog)
+                        pdm = ProgressManagerFactory.get_progress_manager(
+                            dialog_class=ProgressDialog
+                        )
                         progress_caller = pdm.register(
                             max_iteration=len(selected_files),
                             title="Importing JSON files...",

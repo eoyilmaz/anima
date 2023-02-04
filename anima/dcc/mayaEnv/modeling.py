@@ -405,9 +405,9 @@ class Modeling(object):
 
         mesh_count = len(all_meshes)
 
-        from anima.utils.progress import ProgressManager
+        from anima.utils.progress import ProgressManagerFactory
 
-        pdm = ProgressManager()
+        pdm = ProgressManagerFactory.get_progress_manager()
 
         if pm.general.about(batch=1) or not mesh_count:
             from anima.utils.progress import ProgressDialogBase

@@ -5,7 +5,7 @@ import tempfile
 
 from pymel import core as pm
 
-from anima.utils.progress import ProgressManager
+from anima.utils.progress import ProgressManagerFactory
 
 
 class General(object):
@@ -79,7 +79,7 @@ class General(object):
         ref_namespaces = [ref.namespace for ref in pm.listReferences()]
         missing_namespaces = []
 
-        pdm = ProgressManager()
+        pdm = ProgressManagerFactory.get_progress_manager()
         pdm.end_progress()
         if len(all_namespaces) > 0:
             caller = pdm.register(len(all_namespaces), "Locating Unused Namespaces...")
@@ -653,7 +653,7 @@ class UnknownPluginCleaner(object):
         self.restore(latest_backup_path)
 
     def clean(self):
-        pdm = ProgressManager()
+        pdm = ProgressManagerFactory.get_progress_manager()
         progress_caller = pdm.register(
             2, title="Cleaning %s" % os.path.basename(self.path)
         )

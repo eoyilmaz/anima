@@ -11,6 +11,8 @@ from anima.utils import open_browser_in_location
 
 from stalker import Repository
 
+from anima.utils.progress import ProgressManagerFactory
+
 
 class ArchiverBase(object):
     """The base class for Archivers."""
@@ -62,6 +64,9 @@ class ArchiverBase(object):
         Returns:
             str: The project paths.
         """
+        pm = ProgressManagerFactory.get_progress_manager()
+        progress_caller = pm.register(max_iteration=len(paths), title="Flatten Paths")
+
         # create a new Default Project
         if not tempdir:
             tempdir = tempfile.gettempdir()
@@ -79,10 +84,17 @@ class ArchiverBase(object):
             ref_paths += self._move_file_and_fix_references(
                 path, default_project_path, scenes_folder="scenes"
             )
+            progress_caller.step(message=os.path.basename(path))
+
         ref_paths = list(set(ref_paths))
+        progress_caller = pm.register(
+            max_iteration=len(ref_paths), title="Scan References"
+        )
 
         while len(ref_paths):
             ref_path = ref_paths.pop(0)
+            # report progress upfront
+            progress_caller.step(message=os.path.basename(ref_path))
 
             if (
                 self.exclude_mask
@@ -104,6 +116,8 @@ class ArchiverBase(object):
             for new_ref_path in new_ref_paths:
                 if new_ref_path not in ref_paths:
                     ref_paths.append(new_ref_path)
+                    # update progress caller step size
+                    progress_caller.max_steps += 1
 
         return default_project_path
 
@@ -156,23 +170,40 @@ class ArchiverBase(object):
 
         parent_path = os.path.dirname(path) + "/"
 
+        max_iteration = 0
+        for current_dir_path, dir_names, file_names in os.walk(path):
+            max_iteration += len(dir_names)
+            max_iteration += len(file_names)
+
+        pm = ProgressManagerFactory.get_progress_manager()
+        progress_caller = pm.register(
+            max_iteration=max_iteration, title="Create ZIP File"
+        )
+
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED, allowZip64=True) as z:
             for current_dir_path, dir_names, file_names in os.walk(path):
                 for dir_name in dir_names:
                     dir_path = os.path.join(current_dir_path, dir_name)
-                    arch_path = dir_path[len(parent_path):]
+                    arch_path = dir_path[len(parent_path) :]
                     z.write(dir_path, arch_path)
+                    progress_caller.step(message=dir_name)
 
                 for file_name in file_names:
                     file_path = os.path.join(current_dir_path, file_name)
-                    arch_path = file_path[len(parent_path):]
+                    arch_path = file_path[len(parent_path) :]
                     z.write(file_path, arch_path)
+                    progress_caller.step(message=file_name)
 
         return zip_path
 
 
 def archive_versions(
-    versions, archiver, project_name=None, output_path=None, tempdir=None, prompt=True
+    versions,
+    archiver,
+    project_name=None,
+    output_path=None,
+    tempdir=None,
+    prompt=True,
 ):
     """Archive the given versions.
 
@@ -188,6 +219,9 @@ def archive_versions(
         tempdir (Union[None, str]): The tempdir to use. If not given a path is going to
             be asked to the user.
         prompt (bool): If True, a final confirmation will be asked to the user.
+        progress_caller (ProgressCaller): A ProgessCaller instance to report the
+            progress. If given archive_version will report the progress through that
+            instance.
 
     Returns:
         str: The ZIP file path.
@@ -256,7 +290,11 @@ def archive_versions(
         )
         data_links.append(data_link)
 
-    project_path = archiver.flatten(paths, project_name=project_name, tempdir=tempdir)
+    project_path = archiver.flatten(
+        paths,
+        project_name=project_name,
+        tempdir=tempdir,
+    )
 
     # append link file
     stalker_link_file_path = os.path.join(project_path, "scenes/stalker_links.txt")

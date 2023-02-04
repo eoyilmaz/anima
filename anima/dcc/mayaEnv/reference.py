@@ -2,7 +2,7 @@
 
 from anima.utils import do_db_setup
 from pymel import core as pm
-from anima.utils.progress import ProgressManager
+from anima.utils.progress import ProgressManagerFactory
 
 
 class Reference(object):
@@ -655,7 +655,7 @@ class Reference(object):
             return
 
         # register a new caller
-        pdm = ProgressManager()
+        pdm = ProgressManagerFactory.get_progress_manager()
 
         m_env = Maya()
         source_version = m_env.get_current_version()
@@ -729,7 +729,7 @@ class Reference(object):
 
         # generate a sorted version list
         # and visit each reference only once
-        pdm = ProgressManager()
+        pdm = ProgressManagerFactory.get_progress_manager()
 
         all_refs = pm.listReferences(recursive=True)
         caller = pdm.register(len(all_refs), "List References")

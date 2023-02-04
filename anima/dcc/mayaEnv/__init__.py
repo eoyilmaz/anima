@@ -14,7 +14,7 @@ from anima.dcc.base import DCCBase
 from anima.dcc.mayaEnv import extension  # register extensions
 from anima.exc import PublishError
 from anima.representation import Representation
-from anima.utils.progress import ProgressManager, ProgressDialogBase
+from anima.utils.progress import ProgressDialogBase, ProgressManagerFactory
 
 # empty publishers first
 from anima.dcc.mayaEnv import publish as publish_scripts  # register publishers
@@ -275,7 +275,7 @@ workspace -fr "translatorData" "Outputs/data";
     def use_progress_window(self, use_progress_window):
         """Set use_progress_window attribute."""
         self._use_progress_window = use_progress_window
-        pdm = ProgressManager()
+        pdm = ProgressManagerFactory.get_progress_manager()
         if not self._use_progress_window:
             # disable progress window
             pdm.dialog_class = ProgressDialogBase
@@ -1300,7 +1300,7 @@ workspace -fr "translatorData" "Outputs/data";
         caller = None
         if len(references):
             logger.debug("register a new caller")
-            pdm = ProgressManager()
+            pdm = ProgressManagerFactory.get_progress_manager()
             caller = pdm.register(
                 ref_count,
                 "Maya.get_referenced_versions(%s) %i "
@@ -1716,7 +1716,7 @@ workspace -fr "translatorData" "Outputs/data";
 
         :return: dictionary
         """
-        pdm = ProgressManager()
+        pdm = ProgressManagerFactory.get_progress_manager()
         return super(Maya, self).check_referenced_versions(pdm=pdm)
 
     def update_versions(self, reference_resolution):
@@ -1776,7 +1776,7 @@ workspace -fr "translatorData" "Outputs/data";
         prev_vers = None
 
         # use a progress window for that
-        pdm = ProgressManager()
+        pdm = ProgressManagerFactory.get_progress_manager()
         caller = pdm.register(len(references_list), "Maya.update_versions()")
 
         # while len(references_list):
@@ -1996,7 +1996,7 @@ workspace -fr "translatorData" "Outputs/data";
             # 7- fix edits with new namespace
             # 8- apply them
 
-            pdm = ProgressManager()
+            pdm = ProgressManagerFactory.get_progress_manager()
             caller = pdm.register(
                 len(to_update_paths), "Maya.fix_reference_namespaces()"
             )

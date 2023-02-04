@@ -97,13 +97,10 @@ else:
 
 if not pm.general.about(batch=1):
     # set progress manager display type
-    from anima.utils.progress import ProgressManager
-    pdm = ProgressManager()
+    from anima.utils.progress import ProgressManagerFactory
+    pdm = ProgressManagerFactory.get_progress_manager()
 
     # load shelves
-    # DO NOT DELETE THE FOLLOWING LINE
-    from anima.dcc.mayaEnv import auxiliary
-
     custom_shelves_env_var_name = "ANIMA_MAYA_SHELVES_PATH"
     if custom_shelves_env_var_name in os.environ:
         logprint(
@@ -123,9 +120,13 @@ if not pm.general.about(batch=1):
                 logprint("loading shelf: %s" % shelf_path)
                 shelf_name = os.path.splitext(os.path.basename(shelf_path))[0][6:]
                 pm.evalDeferred(
-                    'auxiliary.delete_shelf_tab("%s", confirm=False)' % shelf_name
+                    'from anima.dcc.mayaEnv import auxiliary; '
+                    'auxiliary.delete_shelf_tab("%s", confirm=False);' % shelf_name
                 )
-                pm.evalDeferred('auxiliary.load_shelf_tab("%s")' % shelf_path)
+                pm.evalDeferred(
+                    'from anima.dcc.mayaEnv import auxiliary; '
+                    'auxiliary.load_shelf_tab("%s");' % shelf_path
+                )
     else:
         logprint("no **%s** env var for shelves" % custom_shelves_env_var_name)
 
