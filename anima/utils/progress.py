@@ -156,10 +156,10 @@ class ProgressManagerFactory(object):
         raise RuntimeError("Do not instantiate this class!")
 
     @classmethod
-    def get_progress_manager(cls, dialog_class=None):
+    def get_progress_manager(cls, *args, **kwargs):
         """Create a new ProgressManager instance or return the stored one."""
         if cls.__progress_manager_instance is None:
-            cls.__progress_manager_instance = ProgressManager(dialog_class=dialog_class)
+            cls.__progress_manager_instance = ProgressManager(*args, **kwargs)
         return cls.__progress_manager_instance
 
 
