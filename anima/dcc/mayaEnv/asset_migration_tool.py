@@ -8,6 +8,9 @@ from stalker.db.session import DBSession
 import pymel.core as pm
 
 from anima.publish import run_publishers, POST_PUBLISHER_TYPE
+from anima.ui.dialogs import progress_dialog
+from anima.utils import get_task_hierarchy_name
+from anima.utils.progress import ProgressManagerFactory
 
 
 class AssetMigrationTool(object):
@@ -116,14 +119,36 @@ class AssetMigrationTool(object):
         inordered_list_of_versions_to_move = []
         ordered_list_of_versions_to_move = []
         version_centric_migration_recipe = {}
+
+        progress_count = 0
+        for task_id in self.migration_recipe:
+            progress_count += 1
+            takes = self.migration_recipe[task_id].get("takes", {})
+            for take_name in takes:
+                versions = takes[take_name].get("versions", [])
+                for i, version_number in enumerate(versions):
+                    progress_count += 1
+
+        progress_manager = ProgressManagerFactory.get_progress_manager()
+        progress_manager._dialog = None
+        progress_manager.dialog_class = progress_dialog.ProgressDialog
+        progress_caller = progress_manager.register(progress_count, "Migrate Versions")
+
         for task_id in self.migration_recipe:
             takes = self.migration_recipe[task_id].get("takes", {})
             for take_name in takes:
                 versions = takes[take_name].get("versions", [])
                 for i, version_number in enumerate(versions):
+                    progress_caller.step(
+                        message="Sort versions: {task_id}-{take_name}-"
+                        "v{version_number:03d}".format(
+                            task_id=task_id,
+                            take_name=take_name,
+                            version_number=version_number,
+                        )
+                    )
                     v = (
-                        Version.query
-                        .filter(Version.task_id == task_id)
+                        Version.query.filter(Version.task_id == task_id)
                         .filter(Version.take_name == take_name)
                         .filter(Version.version_number == version_number)
                         .first()
@@ -137,6 +162,9 @@ class AssetMigrationTool(object):
         # fill new_parent_id, new_name and new_code for all items
         for task_id in self.migration_recipe:
             task = Task.query.filter(Task.id == task_id).first()
+            progress_caller.step(
+                message="Generate args for {task_name}".format(task_name=task.name)
+            )
             if not task:
                 continue
             if "new_parent_id" not in self.migration_recipe[task_id]:
@@ -159,6 +187,13 @@ class AssetMigrationTool(object):
         # so that when the tasks are processed in that order,
         entity_ids_to_carry_over = list(self.migration_recipe.keys())
         new_tasks_lut = {}
+
+        progress_caller2 = progress_manager.register(
+            max_iteration=len(entity_ids_to_carry_over),
+            title="Generate Ordered Versions",
+        )
+        progress_caller.end_progress()
+
         while entity_ids_to_carry_over:
             source_entity_id = entity_ids_to_carry_over.pop(0)
             # check if the new_parent_id is one of the tasks
@@ -186,6 +221,7 @@ class AssetMigrationTool(object):
 
             new_parent = Task.query.filter(Task.id == new_parent_id).first()
             source_entity = Task.query.filter(Task.id == source_entity_id).first()
+            progress_caller2.step(message="Sort Versions {}".format(source_entity.name))
             new_entity_class_lut = {
                 "Task": Task,
                 "Asset": Asset,
@@ -240,6 +276,11 @@ class AssetMigrationTool(object):
                         "take_name": takes[take_name].get("new_name", take_name),
                     }
 
+        progress_caller3 = progress_manager.register(
+            max_iteration=len(ordered_list_of_versions_to_move)
+        )
+        progress_caller2.end_progress()
+
         # We now should have sorted list of source versions
         # and a corresponding version centric migration recipe
         # go over the list and create new versions,
@@ -269,7 +310,7 @@ class AssetMigrationTool(object):
             # TODO: Before saving check external files like textures, audio etc.
             dcc_env.save_as(version=new_version)
 
-            # because publish scripts may fail, set the publish status after
+            # because publish scripts may fail, set the "publish" status after
             # saving the file
             new_version.is_published = v.is_published
             DBSession.add(new_version)
@@ -286,6 +327,16 @@ class AssetMigrationTool(object):
                 except Exception as e:
                     # prevent any exception to cut the process in the middle
                     publish_errors.append((new_version, e))
+            progress_caller3.step(
+                message="Moved {}_v{:03d}".format(
+                    get_task_hierarchy_name(new_version.task),
+                    new_version.version_number,
+                )
+            )
+
+        progress_caller3.end_progress()
+        progress_manager.end_progress()
+        pm.newFile(force=True)
 
         if publish_errors:
             print("During migration {} errors occurred".format(len(publish_errors)))
