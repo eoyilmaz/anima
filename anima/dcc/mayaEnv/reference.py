@@ -192,7 +192,7 @@ class Reference(object):
         take_name = defaults.version_take_name
         if not previous_look_dev_version:
             # do the trick
-            pm.newFile(f=1)
+            pm.newFile(force=True)
 
             # create a new version
             new_version = Version(

@@ -688,6 +688,7 @@ class UnknownPluginCleaner(object):
             progress_caller.step()
 
         progress_caller.end_progress()
+        pdm.end_progress()
         return dirty
 
 
