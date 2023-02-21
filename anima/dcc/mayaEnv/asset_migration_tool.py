@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import shutil
+
 from anima import logger
 from anima.dcc import mayaEnv
 
@@ -293,22 +295,28 @@ class AssetMigrationTool(object):
                 take_name=recipe["take_name"],
                 description=v.description,
             )
-            dcc_env.open(version=v, force=True, skip_update_check=True, prompt=False)
-
-            # replace all top level references with the versions from version_lut
-            for ref in pm.listReferences():
-                # all refs must be base version
-                if not ref.is_base():
-                    ref.to_base()
-                ref_version = ref.version
-                if ref_version in self.version_lut:
-                    ref.replaceWith(
-                        Repository.to_os_independent_path(
-                            self.version_lut[ref_version].absolute_full_path
+            if "maya" in v.created_with.lower():
+                dcc_env.open(version=v, force=True, skip_update_check=True, prompt=False)
+                # replace all top level references with the versions from version_lut
+                for ref in pm.listReferences():
+                    # all refs must be base version
+                    if not ref.is_base():
+                        ref.to_base()
+                    ref_version = ref.version
+                    if ref_version in self.version_lut:
+                        ref.replaceWith(
+                            Repository.to_os_independent_path(
+                                self.version_lut[ref_version].absolute_full_path
+                            )
                         )
-                    )
-            # TODO: Before saving check external files like textures, audio etc.
-            dcc_env.save_as(version=new_version)
+                # TODO: Before saving check external files like textures, audio etc.
+                dcc_env.save_as(version=new_version)
+            else:
+                # this file is not created with Maya,
+                # copy it over to the new place directly
+                new_version.extension = v.extension
+                new_version.created_with = v.created_with
+                shutil.copy2(v.absolute_full_path, new_version.absolute_full_path)
 
             # because publish scripts may fail, set the "publish" status after
             # saving the file
@@ -317,7 +325,7 @@ class AssetMigrationTool(object):
             DBSession.commit()
             self.version_lut[v] = new_version
 
-            if new_version.is_published:
+            if new_version.is_published and "maya" in v.created_with.lower():
                 try:
                     # run the post publishers here
                     type_name = ""
