@@ -2781,7 +2781,7 @@ class MayaColorManagementConfigurator(object):
         return os.path.join(
             project.repository.path,
             project.code,
-            "References",
+            "Config",
             cls.DEFAULT_CONFIG_FILE_NAME,
         )
 
