@@ -2570,7 +2570,7 @@ class MayaColorManagementConfigurator(object):
             - Projects can opt to use different Rendering Space, Display and View
               values.
             - This could be done using the CM Preferences XML file per project.
-            - The file is located at {ProjectRoot}/References/MayaColorManagementProfile.XML"
+            - The file is located at {ProjectRoot}/Config/MayaColorManagementProfile.XML"
     """
 
     DEFAULT_CONFIG_FILE_NAME = "COLOR_MANAGEMENT_CONFIG"
@@ -2670,7 +2670,7 @@ class MayaColorManagementConfigurator(object):
     def configure_project(cls, project=None, config_name=None):
         """Configure the given project with the given config name.
 
-        This creates a COLOR_MANAGEMENT_CONFIG file in the {project}/References folder,
+        This creates a COLOR_MANAGEMENT_CONFIG file in the {project}/Config folder,
         and stores the config in it, so that the color management is persistent for that
         project.
         """
@@ -3059,7 +3059,7 @@ class LightingSceneBuilder(object):
         self.rig_to_cacheable_lut_file_path = os.path.join(
             project.repository.path,
             project.code,
-            "References",
+            "Config",
             self.RIG_TO_CACHEABLE_LUT_FILE_NAME,
         )
         return self.rig_to_cacheable_lut_file_path
@@ -3085,7 +3085,7 @@ class LightingSceneBuilder(object):
         self.rig_to_look_dev_lut_file_path = os.path.join(
             project.repository.path,
             project.code,
-            "References",
+            "Config",
             self.RIG_TO_LOOK_DEV_LUT_FILE_NAME,
         )
         return self.rig_to_look_dev_lut_file_path
