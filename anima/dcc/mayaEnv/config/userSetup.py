@@ -60,9 +60,9 @@ logprint("pymel loaded in %0.3f sec" % duration)
 
 
 def __plugin_loader(plugin_name):
+    logprint("loading {}!".format(plugin_name))
     if not pm.pluginInfo(plugin_name, q=1, loaded=1):
         start_time = time.time()
-        logprint("loading %s!" % plugin_name)
         try:
             pm.loadPlugin(plugin_name)
         except RuntimeError:
@@ -72,13 +72,17 @@ def __plugin_loader(plugin_name):
             end_time = time.time()
             duration = end_time - start_time
             logprint("%s loaded! in %0.3f sec" % (plugin_name, duration))
+    else:
+        logprint("Plugin already loaded: {}".format(plugin_name))
 
 
 def __plugin_unloader(plugin_name):
+    logprint("unloading {}!".format(plugin_name))
     if not pm.pluginInfo(plugin_name, q=1, loaded=1):
-        logprint("unloading %s!" % plugin_name)
         pm.unloadPlugin(plugin_name)
-        logprint("%s unloaded!" % plugin_name)
+        logprint("{} unloaded!".format(plugin_name))
+    else:
+        logprint("plugin not loaded: {}".format(plugin_name))
 
 
 # set ui to PySide2 for maya2017 and up
@@ -192,10 +196,15 @@ if "ANIMA_TEST_SETUP" not in os.environ:
 
     # unload bifrost plugins as they are causing render issues on farm
     # the renders don't complete
-    mayautils.executeDeferred(__plugin_unloader, "bifmeshio")
-    mayautils.executeDeferred(__plugin_unloader, "bifrostGraph")
-    mayautils.executeDeferred(__plugin_unloader, "bifrostshellnode")
-    mayautils.executeDeferred(__plugin_unloader, "bifrostvisplugin")
+    def unload_bifrost():
+        __plugin_unloader("bifmeshio")
+        __plugin_unloader("bifrostGraph")
+        __plugin_unloader("bifrostshellnode")
+        __plugin_unloader("bifrostvisplugin")
+        __plugin_unloader("ArubaTessellator")
+        __plugin_unloader("OneClick")
+
+    mayautils.executeDeferred(unload_bifrost)
 else:
     logprint("ANIMA_TEST_SETUP detected, skipping auto plugin loads!")
 
