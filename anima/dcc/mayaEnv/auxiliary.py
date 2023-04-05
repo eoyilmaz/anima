@@ -1275,10 +1275,10 @@ def ask_playblast_view_options():
             use_defaults_button.setText("Use Defaults")
             vertical_layout.addWidget(use_defaults_button)
 
-            horizontal_layout = QtWidgets.QHBoxLayout(self)
+            horizontal_layout = QtWidgets.QHBoxLayout()
             vertical_layout.addLayout(horizontal_layout)
 
-            current_vertical_layout = QtWidgets.QVBoxLayout(self)
+            current_vertical_layout = QtWidgets.QVBoxLayout()
             horizontal_layout.addLayout(current_vertical_layout)
 
             vertical_button_count = 10
@@ -1295,7 +1295,7 @@ def ask_playblast_view_options():
 
                 if i % vertical_button_count == 0:
                     # create a new vertical layout
-                    current_vertical_layout = QtWidgets.QVBoxLayout(self)
+                    current_vertical_layout = QtWidgets.QVBoxLayout()
                     horizontal_layout.addLayout(current_vertical_layout)
 
             # add a spacer to the last column layout
