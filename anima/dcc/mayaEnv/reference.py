@@ -439,7 +439,7 @@ class Reference(object):
 
     @classmethod
     def unload_selected_references(cls):
-        """unloads the highest parent references that is related to the selected objects"""
+        """Unload the top-most references that is related to the selected objects."""
         refs_to_unload = []
 
         # store selected references

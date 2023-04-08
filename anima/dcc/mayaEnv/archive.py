@@ -145,7 +145,7 @@ sourceimages/3dPaintTextures"""
     def _move_file_and_fix_references(
         self, path, project_path, scenes_folder="", refs_folder=""
     ):
-        """Moves the given file to the given project path and moves any references of it too
+        """Move the file to the project path and move any references of it too.
 
         :param str path: The path of the scene file
         :param str project_path: The project path

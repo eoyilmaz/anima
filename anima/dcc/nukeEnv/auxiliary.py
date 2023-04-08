@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+import os
+import platform
+import subprocess
+import threading
+
 from anima import logger
 
 
@@ -18,7 +23,6 @@ def update_outputs():
 
 def output_to_h264(write_node=None):
     """an after render function which converts the input to h264"""
-    import os
     import nuke
 
     # get the file name
@@ -42,8 +46,6 @@ def output_to_h264(write_node=None):
     #       links to each frame and then use the sequence format in ffmpeg
 
     # run ffmpeg in a separate thread
-    import threading
-
     t = threading.Timer(1.0, convert_to_h264, args=[file_full_path, output_full_path])
     t.start()
 
@@ -86,9 +88,6 @@ def ffmpeg(**kwargs):
     args.append(output)
 
     logger.debug("calling real ffmpeg with args: %s" % args)
-
-    import subprocess
-
     process = subprocess.Popen(args, stderr=subprocess.PIPE)
 
     # loop until process finishes and capture stderr output
@@ -114,12 +113,7 @@ def ffmpeg(**kwargs):
 
 def open_in_file_browser(path):
     """opens the file browser with the given path"""
-    import platform
-
     system = platform.system()
-
-    import subprocess
-
     if system == "Windows":
         subprocess.Popen(["explorer", "/select,", path.replace("/", "\\")])
     elif system == "Darwin":

@@ -493,7 +493,7 @@ def convert_old_object_smoothing_to_renderer_time_smoothing(progress_controller=
 def check_local_references(progress_controller=None):
     """Legitimate references
 
-    check if all of the references are legit
+    check if all the references are legit
     """
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
