@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import pprint
 import os
 import re
 import tempfile
@@ -3208,6 +3209,7 @@ class LightingSceneBuilder(object):
 
             cacheable_attr_value = None
             # try to use the cache file
+            print("rig_task_id_as_str: {}".format(rig_task_id_as_str))
             if rig_task_id_as_str in self.rig_to_cacheable_lut:
                 if rig_take_name in self.rig_to_cacheable_lut[rig_task_id_as_str]:
                     cacheable_attr_value = self.rig_to_cacheable_lut[
@@ -3233,6 +3235,9 @@ class LightingSceneBuilder(object):
             cacheable_attr_value_with_copy_number = "{}{}".format(
                 cacheable_attr_value, copy_number
             )
+            print("cacheable_attr_value_with_copy_number: {}".format(
+                cacheable_attr_value_with_copy_number
+            ))
 
             non_renderable_objects = []
             look_dev_take_name = None
@@ -3301,11 +3306,13 @@ class LightingSceneBuilder(object):
             )
         )
 
-        import pprint
-
         print("\nCacheable To LookDev Version Lut")
         print("================================")
         pprint.pprint(cacheable_to_look_dev_version_lut)
+
+        print("\nRig To Cacheable Lut")
+        print("======================")
+        pprint.pprint(self.rig_to_cacheable_lut)
 
         return cacheable_to_look_dev_version_lut
 
