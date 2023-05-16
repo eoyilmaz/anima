@@ -3210,12 +3210,19 @@ class LightingSceneBuilder(object):
             cacheable_attr_value = None
             # try to use the cache file
             print("rig_task_id_as_str: {}".format(rig_task_id_as_str))
+            found_cacheable_attr_value = False
             if rig_task_id_as_str in self.rig_to_cacheable_lut:
+                print("rig_task_id_as_str in self.rig_to_cacheable_lut")
                 if rig_take_name in self.rig_to_cacheable_lut[rig_task_id_as_str]:
                     cacheable_attr_value = self.rig_to_cacheable_lut[
                         rig_task_id_as_str
                     ][rig_take_name]
-            else:
+                    found_cacheable_attr_value = True
+                else:
+                    print("rig_take_name not in self.rig_to_cacheable_lut[rig_task_id_as_str] !!!!!")
+
+            if not found_cacheable_attr_value:
+                print("not found_cacheable_attr_value")
                 # load the reference
                 ref.load()
                 cacheable_nodes = auxiliary.get_cacheable_nodes(ref)
