@@ -9,6 +9,7 @@ def onCreateInterface():
     from anima.dcc.houdini import toolbox
     return toolbox.ui()
 """
+import traceback
 
 from anima.ui.lib import QtCore, QtWidgets
 
@@ -97,7 +98,9 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
                 GeneralTools.export_rsproxy_data_as_json()
             except (BaseException, hou.OperationFailed) as e:
                 QtWidgets.QMessageBox.critical(
-                    main_tab_widget, "Export", "Error!<br><br>%s" % e
+                    main_tab_widget, "Export", "Error!<br><br>{}".format(
+                        traceback.format_exc()
+                    )
                 )
             else:
                 QtWidgets.QMessageBox.information(
@@ -291,7 +294,7 @@ class GeneralTools(object):
 
         pos_data = []
         rot_data = []
-        for i in range(len(pos) / 3):
+        for i in range(int(len(pos) / 3)):
             pos_data.append((pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]))
             rot_data.append((rot[i * 3], rot[i * 3 + 1], rot[i * 3 + 2]))
 

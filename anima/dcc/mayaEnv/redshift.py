@@ -82,7 +82,7 @@ class RSProxyDataObject(object):
         import pymel.core as pm
 
         self.parent_node = self.get_parent()
-        self.shape_node = pm.nt.Mesh(name="%sShape" % self.node_name)
+        self.shape_node = pm.createNode("mesh", name="%sShape" % self.node_name)
         self.transform_node = self.shape_node.getParent()
         self.transform_node.rename(self.node_name)
 
@@ -90,12 +90,12 @@ class RSProxyDataObject(object):
         self.rs_proxy_node.outMesh >> self.shape_node.inMesh
         self.rs_proxy_node.fileName.set(self.instance_file)
 
-        # self.transform_node.t.set(self.pos)
-        # self.transform_node.r.set(self.rot)
-        # self.transform_node.s.set([self.sca, self.sca, self.sca])
-        self.parent_node.t.set(self.pos)
-        self.parent_node.r.set(self.rot)
-        self.parent_node.s.set([self.sca, self.sca, self.sca])
+        self.transform_node.t.set(self.pos)
+        self.transform_node.r.set(self.rot)
+        self.transform_node.s.set([self.sca, self.sca, self.sca])
+        # self.parent_node.t.set(self.pos)
+        # self.parent_node.r.set(self.rot)
+        # self.parent_node.s.set([self.sca, self.sca, self.sca])
 
         # assign default shader
         lambert1 = pm.ls("lambert1")[0]
