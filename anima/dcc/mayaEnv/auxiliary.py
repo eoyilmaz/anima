@@ -3596,9 +3596,13 @@ def match_hierarchy(source, target, node_types=None, use_long_names=False):
         try:
             tmp_target_node_name = target_node_name
             # replace only the first occurrence of "Deformed"
-            if target_node_name.endswith("Deformed"):
-                tmp_target_node_name = target_node_name.replace("Deformed", "", 1)
-            index = source_node_names.index(tmp_target_node_name)
+            try:
+                index = source_node_names.index(tmp_target_node_name)
+            except ValueError:
+                # try removing the "Deformed" part
+                if target_node_name.endswith("Deformed"):
+                    tmp_target_node_name = target_node_name.replace("Deformed", "", 1)
+                index = source_node_names.index(tmp_target_node_name)
         except ValueError:
             lut["no_match"].append(target_node)
         else:
