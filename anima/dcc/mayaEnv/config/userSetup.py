@@ -205,6 +205,8 @@ if "ANIMA_TEST_SETUP" not in os.environ:
         __plugin_unloader("OneClick")
 
     mayautils.executeDeferred(unload_bifrost)
+    mayautils.executeDeferred(__plugin_unloader, "ATFPlugin")
+    mayautils.executeDeferred(__plugin_unloader, "stereoCamera")
 else:
     logprint("ANIMA_TEST_SETUP detected, skipping auto plugin loads!")
 
