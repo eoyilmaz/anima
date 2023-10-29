@@ -322,13 +322,13 @@ def load_font(font_filename):
             os.path.expanduser(os.path.join(defaults.local_cache_folder, "fonts"))
         )
         local_font_full_path = os.path.join(local_font_cache_path, font_filename)
-        logger.debug("local_font_full_path: %s" % local_font_full_path)
+        logger.debug("local_font_full_path: {}".format(local_font_full_path))
         if not os.path.exists(local_font_full_path):
-            logger.debug("local font cache not found: %s" % font_filename)
+            logger.debug("local font cache not found: {}".format(font_filename))
             logger.debug("retrieving font from library!")
             here = os.path.dirname(os.path.realpath(__file__))
             font_full_path = os.path.join(here, "fonts", font_filename)
-            logger.debug("font_full_path: %s" % font_full_path)
+            logger.debug("font_full_path: {}".format(font_full_path))
 
             # copy to local cache folder
             try:
@@ -459,8 +459,9 @@ def set_widget_bg_color(widget, color):
 def set_widget_style(widget, dark_theme=False):
     """Set the application style.
 
-    :param widget: A QtWidgets.QWidget instance.
-    :param dark_theme: Set it True for a darker theme.
+    Args:
+        widget (QWidget): A QtWidgets.QWidget instance.
+        dark_theme (bool): Set it True for a darker theme.
     """
     # Force the style to be the same on all OSs:
     # widget.setStyle("Fusion")

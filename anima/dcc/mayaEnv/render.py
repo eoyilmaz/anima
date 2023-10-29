@@ -3181,8 +3181,8 @@ class LightingSceneBuilder(object):
             prompt=False,
             reference_depth=3,
         )
-        # this version may uploaded with Stalker Pyramid, so update referenced versions
-        # to get a proper version.inputs list
+        # this version is maybe uploaded with Stalker Pyramid, so update referenced
+        # versions to get a proper version.inputs list
         m.update_version_inputs()
 
         # there is a new bug in some animation scene
