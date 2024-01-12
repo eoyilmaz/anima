@@ -1273,7 +1273,7 @@ class RepresentationGenerator(object):
                     nodes_to_ass_files[child_node_full_path] = (
                         "%s.gz" % output_full_path
                     )
-                    # print('%s -> %s' % (
+                    # print("{} -> {}".format(
                     #     child_node_full_path,
                     #     output_full_path)
                     # )
@@ -1367,7 +1367,7 @@ class RepresentationGenerator(object):
 
             for node in pfx_polygons_node.getChildren():
                 for child_node in node.getChildren():
-                    # print('processing %s' % child_node.name())
+                    # print("processing {}".format(child_node.name()))
                     child_node_name = child_node.name().split("___")[-1]
 
                     pm.select(child_node)
@@ -1657,7 +1657,7 @@ class RepresentationGenerator(object):
             # for node in pm.ls(type=RENDER_RELATED_NODE_TYPES):
             #     if node.referenceFile() is None and \
             #        node.name() not in READ_ONLY_NODE_NAMES:
-            #         node.rename('%s_%s' % (node.name(), uuid.uuid4().hex))
+            #         node.rename("{}_{}".format(node.name(), uuid.uuid4().hex))
 
             nodes_to_rs_files = {}
 
@@ -1783,7 +1783,7 @@ class RepresentationGenerator(object):
             # for node in all_render_related_nodes:
             #     if node.referenceFile() is None and \
             #        node.name() not in READ_ONLY_NODE_NAMES:
-            #         node.rename('%s_%s' % (node.name(), uuid.uuid4().hex))
+            #         node.rename("{}_{}".format(node.name(), uuid.uuid4().hex))
 
             # find the _pfxPolygons node
             try:
@@ -1794,7 +1794,7 @@ class RepresentationGenerator(object):
 
             for node in pfx_polygons_node_children:
                 for child_node in node.getChildren():
-                    # print('processing %s' % child_node.name())
+                    # print("processing {}".format(child_node.name()))
                     child_node_name = child_node.name().split("___")[-1]
 
                     pm.select(child_node)

@@ -2182,7 +2182,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not self.check_version_file_exists(previous_version):
             return
 
-        # logger.debug("importing version %s" % previous_version)
+        # logger.debug("importing version {}".format(previous_version))
 
         # call the environments import_ method
         if self.dcc is not None:
@@ -2196,7 +2196,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 QtWidgets.QMessageBox.information(
                     self,
                     "Import",
-                    "%s\n\n has been imported correctly!" % previous_version.filename,
+                    "{}\n\n has been imported correctly!".format(
+                        previous_version.filename
+                    ),
                     QtWidgets.QMessageBox.Ok,
                 )
 
@@ -2350,7 +2352,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     #     if not text:
     #         return
     #     tasks = Task.query.filter(Task.name.contains(text)).all()
-    #     logger.debug("tasks with text: "%s" are : %s" % (text, tasks))
+    #     logger.debug("tasks with text: "{}" are : {}".format(text, tasks))
     #     # load all the tasks and their parents so we are going to be able to
     #     # find them later on
     #     # for task in tasks:
@@ -2359,16 +2361,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     #     # # now get the indices
     #     # indices = self.get_item_indices_containing_text(text,
     #     #                                                 self.tasks_tree_view)
-    #     # logger.debug("indices containing the given text are : %s" % indices)
+    #     # logger.debug("indices containing the given text are : {}".format(indices))
     #
     #     # self.search_task_comboBox.addItems(
     #     #     [
-    #     #         (task.name + " (%s)" % map(lambda x: "|".join([parent.name for parent in x.parents]), task)) for task in tasks
+    #     #         (task.name + " ({})".format(map(lambda x: "|".join([parent.name for parent in x.parents]), task))) for task in tasks
     #     #     ]
     #     # )
     #     items = []
     #     for task in tasks:
-    #         hierarchy_name = task.name + "(" + "|".join(map(lambda x: x.name, task.parents)) + ")"
+    #         hierarchy_name = "{}({})".format(task.name, "|".join(map(lambda x: x.name, task.parents)))
     #         items.append(hierarchy_name)
     #     self.search_task_comboBox.addItems(items)
     #

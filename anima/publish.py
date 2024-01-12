@@ -25,7 +25,7 @@ def register_publisher(callable_, type_name="", publisher_type=PRE_PUBLISHER_TYP
     """
 
     if not callable(callable_):
-        raise TypeError("%s is not callable" % callable_.__class__.__name__)
+        raise TypeError("{} is not callable".format(callable_.__class__.__name__))
 
     def register_one(t_name, p_type):
         t_name = t_name.lower()

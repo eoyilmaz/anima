@@ -802,7 +802,7 @@ class StalkerShotAddCompOutputOperator(bpy.types.Operator):
 #         row.label(text="Hello world!", icon='WORLD_DATA')
 #
 #         row = layout.row()
-#         row.label(text="Active sequence is: %s" % selected_sequence_names)
+#         row.label(text="Active sequence is: {}".format(selected_sequence_names))
 #
 #         #row = layout.row()
 #         #row.prop(selected_sequences, "name")

@@ -5,7 +5,7 @@ import webbrowser
 from functools import partial
 
 from anima import defaults, logger
-from anima.ui.lib import QtCore, QtGui, QtWidgets
+from anima.ui.lib import QtCore, QtWidgets
 from anima.ui.utils import choose_thumbnail, get_cached_icon
 from anima.utils import (
     create_structure,
@@ -149,7 +149,7 @@ class ContextMenuHandlerBase(object):
         self.parent = parent
 
     def show_context_menu(self, position):
-        """Shot the context menu.
+        """Show the context menu.
 
         Args:
             position (QPoint): Menu position.
@@ -164,7 +164,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
     """Context menu for Task related views."""
 
     def show_context_menu(self, position):
-        """Shot custom context menu.
+        """Show custom context menu.
 
         Args:
             position (QPoint): The menu display position.

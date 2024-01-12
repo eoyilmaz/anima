@@ -337,7 +337,7 @@ class Render(object):
 
                 # *********************************************
                 # Height
-                # height_file_path = glob.glob("%s/%s_Height*" % (texture_path, material_name))
+                # height_file_path = glob.glob("{}/{}_Height*".format(texture_path, material_name))
                 height_channel_names = [
                     "Height",
                     "DisplaceHeightField",

@@ -193,7 +193,7 @@ class DCCBase(object):
         from stalker import Repository
 
         os_independent_path = Repository.to_os_independent_path(path)
-        logger.debug("os_independent_path: %s" % os_independent_path)
+        logger.debug("os_independent_path: {}".format(os_independent_path))
 
         from stalker import Version
         from stalker.db.session import DBSession
@@ -223,7 +223,7 @@ class DCCBase(object):
         if full_path is None or full_path == "":
             return
 
-        logger.debug("full_path: %s" % full_path)
+        logger.debug("full_path: {}".format(full_path))
         # convert '\\' to '/'
         full_path = os.path.normpath(os.path.expandvars(full_path)).replace("\\", "/")
 

@@ -229,7 +229,7 @@ class Sequence(EditBase, NameMixin, DurationMixin):
                 from timecode import Timecode
 
                 # get the last timecode like 23:59:59:xx
-                tc_24_hours = Timecode(edl_list.fps, "23:59:59:%s" % edl_list.fps)
+                tc_24_hours = Timecode(edl_list.fps, "23:59:59:{}".format(edl_list.fps))
                 clip.start -= tc_24_hours.frame_number  # + 1
 
             if clip.start < sequence_start:
@@ -248,7 +248,7 @@ class Sequence(EditBase, NameMixin, DurationMixin):
             # but we may not be able to reach the media itself
             f.duration = e.src_end_tc.frame_number
 
-            f.pathurl = "file://%s" % e.source_file
+            f.pathurl = "file://{}".format(e.source_file)
 
             clip.file = f
 
@@ -313,8 +313,8 @@ class Sequence(EditBase, NameMixin, DurationMixin):
 
                     e.comments.extend(
                         [
-                            "* FROM CLIP NAME: %s" % clip.name,
-                            "* SOURCE FILE: %s" % source_file,
+                            "* FROM CLIP NAME: {}".format(clip.name),
+                            "* SOURCE FILE: {}".format(source_file),
                         ]
                     )
 
@@ -381,7 +381,9 @@ class Sequence(EditBase, NameMixin, DurationMixin):
             for track in video.tracks:
                 for clip in track.clips:
                     raw_file_path = clip.file.pathurl.replace("file://localhost", "")
-                    raw_mxf_path = "%s%s" % (os.path.splitext(raw_file_path)[0], ".mxf")
+                    raw_mxf_path = "{}{}".format(
+                        os.path.splitext(raw_file_path)[0], ".mxf"
+                    )
 
                     kwargs = {
                         "file_pathurl": os.path.normpath(
@@ -521,10 +523,13 @@ class Track(EditBase):
                     random_part = clip.id.split(" ")[-1]
                     if random_part != clip.id:
                         random_id = int(random_part) + 1
-                        compare_clip.id = "%s %s" % (clip.id.split(" ")[0], random_id)
+                        compare_clip.id = "{} {}".format(
+                            clip.id.split(" ")[0],
+                            random_id
+                        )
                     else:
                         random_id = 2
-                        compare_clip.id = "%s %s" % (clip.id, random_id)
+                        compare_clip.id = "{} {}".format(clip.id, random_id)
 
     def from_xml(self, xml_node):
         """Fills attributes with the given XML node
@@ -672,9 +677,9 @@ class Clip(EditBase, NameMixin, DurationMixin):
 
         rate_xml = ""
         if self.rate:
-            rate_xml = "\n%s" % self.rate.to_xml(
+            rate_xml = "\n{}".format(self.rate.to_xml(
                 indentation=indentation, pre_indent=pre_indent + indentation
-            )
+            ))
 
         return template % {
             "id": self.id,
@@ -739,8 +744,10 @@ class File(EditBase, NameMixin, DurationMixin):
             else:
                 split_from = "file://"
 
-            pathurl = "file://localhost/%s" % os.path.normpath(
-                os.path.expandvars(pathurl.split(split_from)[-1])
+            pathurl = "file://localhost/{}".format(
+                os.path.normpath(
+                    os.path.expandvars(pathurl.split(split_from)[-1])
+                )
             ).replace("\\", "/")
 
             # remove double slashes after "localhost"

@@ -54,7 +54,7 @@ class Compiler(object):
 
     def get_py_file_name(self, ui_file_name):
         """returns the corresponding py file name from ui_file_name"""
-        return "%s%s" % (
+        return "{}{}".format(
             os.path.splitext(os.path.basename(ui_file_name))[0],
             self.postfix,
         )
@@ -137,8 +137,8 @@ class UIFile(object):
             logger.debug("checking md5 file")
             with open(self.md5_file_full_path) as f:
                 md5 = f.readline()
-            logger.debug("md5     : %s" % md5)
-            logger.debug("self.md5: %s" % self.md5)
+            logger.debug("md5     : {}".format(md5))
+            logger.debug("self.md5: {}".format(self.md5))
             return md5 != self.md5
         except IOError:
             logger.debug("no md5 file")
@@ -196,7 +196,7 @@ def main():
 
     for ui_file in ui_files:
         print("--------------------------")
-        print("ui_file: %s" % ui_file.filename)
+        print("ui_file: {}".format(ui_file.filename))
         # if there are already files compare the md5 checksum
         # and decide if it needs to be compiled again
         assert isinstance(ui_file, UIFile)
@@ -205,10 +205,10 @@ def main():
         py_file_pyside2 = compiler_pyside2.get_py_file(ui_file, output_path)
 
         renew_md5 = False
-        print("ui_file.is_new()        : %s" % ui_file.is_new())
-        print("py_file_pyqt4.exists()  : %s" % py_file_pyqt4.exists())
-        print("py_file_pyside.exists() : %s" % py_file_pyside.exists())
-        print("py_file_pyside2.exists(): %s" % py_file_pyside2.exists())
+        print("ui_file.is_new()        : {}".format(ui_file.is_new()))
+        print("py_file_pyqt4.exists()  : {}".format(py_file_pyqt4.exists()))
+        print("py_file_pyside.exists() : {}".format(py_file_pyside.exists()))
+        print("py_file_pyside2.exists(): {}".format(py_file_pyside2.exists()))
 
         if ui_file.is_new() or not py_file_pyqt4.exists():
             print("re-compiling PyQt4 version")

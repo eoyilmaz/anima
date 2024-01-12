@@ -22,7 +22,7 @@ def measure_time(f_name):
             global tab_stop
 
             start = time.time()
-            print("%s%11s start" % (" " * indentation, f_inner_name))
+            print("{}{:11s} start".format(" " * indentation, f_inner_name))
             indentation += tab_stop
             try:
                 return_data = f(*args, **kwargs)
@@ -33,8 +33,9 @@ def measure_time(f_name):
                 indentation -= tab_stop
 
                 print(
-                    "%s%11s: %0.3f sec"
-                    % (" " * indentation, f_inner_name, (end - start))
+                    "{}{:11s}: {:0.3f} sec".format(
+                        " " * indentation, f_inner_name, (end - start)
+                    )
                 )
 
             return return_data
@@ -78,7 +79,7 @@ class TimeReporter(object):
     @title.setter
     def title(self, title):
         self._title = title
-        self.report_text = "%s: %s" % (self.time_format, self.title)
+        self.report_text = "{}: {}".format(self.time_format, self.title)
 
     def start(self, title):
         self.title = title

@@ -256,10 +256,12 @@ polymesh
     #     combined_vertex_normals.append(' '.join(map(str, vertex_normals)))
 
     # # encode uvs
-    # encoded_vertex_uvs = '%s' % base85.arnold_b85_encode(
-    #     struct.pack(
-    #         '<%sd' % len(vertex_uvs),
-    #         *vertex_uvs
+    # encoded_vertex_uvs = '{}'.format(
+    #     base85.arnold_b85_encode(
+    #         struct.pack(
+    #             '<{}d'.format(len(vertex_uvs)),
+    #             *vertex_uvs
+    #         )
     #     )
     # )
     # splitted_vertex_uvs = split_data(encoded_vertex_uvs, 500)
@@ -289,15 +291,17 @@ polymesh
     # Number Of Points Per Primitive
     #
     encode_start = time.time()
-    # encoded_number_of_points_per_primitive = 'B%s' % base85.arnold_b85_encode(
-    #     struct.pack(
-    #         '>%sB' % len(number_of_points_per_primitive),
-    #         *number_of_points_per_primitive
+    # encoded_number_of_points_per_primitive = 'B{}'.format(
+    #     base85.arnold_b85_encode(
+    #         struct.pack(
+    #             '>{}B'.format(len(number_of_points_per_primitive)),
+    #             *number_of_points_per_primitive
+    #         )
     #     )
     # )
     encoded_number_of_points_per_primitive = '\n'.join(combined_number_of_points_per_primitive)
     encode_end = time.time()
-    print('Encoding Number of Points  : %3.3f' % (encode_end - encode_start))
+    print('Encoding Number of Points  : {:3.3f}'.format(encode_end - encode_start))
 
     split_start = time.time()
     # splitted_number_of_points_per_primitive = \
@@ -368,24 +372,26 @@ polymesh
     # Vertex Ids
     #
     encode_start = time.time()
-    #encoded_vertex_ids = 'B%s' % base85.arnold_b85_encode(
-    #    struct.pack(
-    #        '>%sB' % len(vertex_ids),
-    #        *vertex_ids
-    #    )
-    #)
+    # encoded_vertex_ids = 'B{}'.format(
+    #     base85.arnold_b85_encode(
+    #         struct.pack(
+    #             '>{}B'.format(len(vertex_ids)),
+    #             *vertex_ids
+    #         )
+    #     )
+    # )
     encoded_vertex_ids = '\n'.join(combined_vertex_ids)
     encode_end = time.time()
     print('Encoding Vertex Ids        : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
-    #splitted_vertex_ids = re.sub(
-    #    "(.{500})", "\\1\n",
-    #    #' '.join(vertex_ids),
-    #    encoded_vertex_ids,
-    #    0
-    #)
-    #splitted_vertex_ids = ' '.join(encoded_vertex_ids)
+    # splitted_vertex_ids = re.sub(
+    #     "(.{500})", "\\1\n",
+    #     #' '.join(vertex_ids),
+    #     encoded_vertex_ids,
+    #     0
+    # )
+    # splitted_vertex_ids = ' '.join(encoded_vertex_ids)
     splitted_vertex_ids = encoded_vertex_ids
     split_end = time.time()
     print('Splitting Vertex Ids       : %3.3f' % (split_end - split_start))

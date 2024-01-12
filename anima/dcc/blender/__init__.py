@@ -489,11 +489,11 @@ def render_variables_init(scene):
     global RENDER_FILE_PATH_STORAGE
     RENDER_FILE_PATH_STORAGE = scene.render.filepath
 
-    # print("bpy.context.view_layer.name: %s" % bpy.context.view_layer.name)
+    # print("bpy.context.view_layer.name: {}".format(bpy.context.view_layer.name))
     bpy.context.view_layer.update()
 
-    # print("bpy.context.view_layer.name: %s" % bpy.context.view_layer.name)
-    # print("bpy.context.window.view_layer.name: %s" % bpy.context.view_layer.name)
+    # print("bpy.context.view_layer.name: {}".format(bpy.context.view_layer.name))
+    # print("bpy.context.window.view_layer.name: {}".format(bpy.context.view_layer.name))
 
     # now replace the
     scene.render.filepath = RENDER_FILE_PATH_STORAGE.format(
@@ -505,8 +505,8 @@ def render_variables_init(scene):
 
     # create the render path
     render_dir_name = os.path.dirname(bpy.path.abspath(scene.render.filepath))
-    print("creating render dir: %s" % render_dir_name)
-    logger.debug("creating render dir: %s" % render_dir_name)
+    print("creating render dir: {}".format(render_dir_name))
+    logger.debug("creating render dir: {}".format(render_dir_name))
     os.makedirs(render_dir_name, exist_ok=True)
 
     print("replacing render variables, DONE!")

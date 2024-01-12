@@ -184,12 +184,12 @@ class FitStencilToView(Operator):
         # center the image vertically to the region
         stencil_pos.y = region.height * 0.5
 
-        # print("context.region.height                 : %s" % region.height)
-        # print("context.region.width                  : %s" % region.width)
-        # print("stencil_pos.x                         : %s" % stencil_pos.x)
-        # print("stencil_pos.y                         : %s" % stencil_pos.y)
-        # print("stencil_dimension.x                   : %s" % stencil_dimension.x)
-        # print("stencil_dimension.y                   : %s" % stencil_dimension.y)
+        # print("context.region.height                : {}".format(region.height))
+        # print("context.region.width                 : {}".format(region.width))
+        # print("stencil_pos.x                        : {}".format(stencil_pos.x))
+        # print("stencil_pos.y                        : {}".format(stencil_pos.y))
+        # print("stencil_dimension.x                  : {}".format(stencil_dimension.x))
+        # print("stencil_dimension.y                  : {}".format(stencil_dimension.y))
 
         return {"FINISHED"}
 

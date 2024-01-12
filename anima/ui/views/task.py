@@ -17,8 +17,7 @@ class TaskTreeView(QtWidgets.QTreeView):
     """A custom tree view to display Tasks info.
 
     Args:
-        tasks (list): A list of :obj:``rbl_pipe_ui.models.TaskBase`` instances or
-            derivative.
+        tasks (list): A list of :obj:`stalker.models.Task` instances or derivative.
         allow_multi_selection (bool): If set to True allows multiple selection. The
             default value is False.
         allow_editing (bool): If set to True, allows editing of items. The default value
@@ -31,8 +30,8 @@ class TaskTreeView(QtWidgets.QTreeView):
             for each Asset and Shot. The default value is True.
         show_takes (bool): If set to True, shows another level in the
             tree of takes information for the child task of an Asset.
-        context_menu_handler_class (:obj:``rbl_pipe_ui.menus.BaseContextMenuHandler``):
-            A :obj:``rbl_pipe_ui.menus.BaseContextMenuHandler`` variant to handle the
+        context_menu_handler_class (:obj:``ui.menus.BaseContextMenuHandler``):
+            A :obj:``ui.menus.BaseContextMenuHandler`` variant to handle the
             context menus. This allows to show different context menus for different
             setups.
     """
@@ -69,6 +68,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         self.setUniformRowHeights(True)
         self.header().setCascadingSectionResizes(True)
 
+        self._allow_multi_selection = False
         self.allow_multi_selection = allow_multi_selection
         self.allow_editing = allow_editing
         self._allow_drag = False
@@ -113,7 +113,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         """Getter for the allow_multi_selection property.
 
         Returns:
-            bool: Returns True if multi selection is allowed.
+            bool: True if multi selection is allowed.
         """
         return self._allow_multi_selection
 
@@ -158,7 +158,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         return self
 
     def auto_fit_column(self):
-        """fits columns to content"""
+        """Fit columns to content."""
         self.resizeColumnToContents(0)
 
     @property
@@ -176,7 +176,11 @@ class TaskTreeView(QtWidgets.QTreeView):
         self.fill_ui(self.horizontal_labels)
 
     def fill_ui(self, horizontal_labels=None):
-        """fills the tree view with data"""
+        """Fill the tree view with data.
+
+        Args:
+            horizontal_labels (List[str]): List of labels.
+        """
         logger.debug("start filling tasks_treeView")
         logger.debug("creating a new model")
 
@@ -227,7 +231,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         if item.hasChildren():
             return
 
-        logger.debug("item : %s" % item)
+        logger.debug("item : {}".format(item))
         task_id = None
         entity = None
 
@@ -299,9 +303,10 @@ class TaskTreeView(QtWidgets.QTreeView):
         return items
 
     def load_task_item_hierarchy(self, task, tree_view):
-        """loads the TaskItem related to the given task in the given tree_view
+        """Load the TaskItem related to the given task in the given tree_view.
 
-        :return: TaskItem instance
+        Returns:
+            TaskItem: TaskItem instance.
         """
         if not task:
             return
@@ -340,8 +345,14 @@ class TaskTreeView(QtWidgets.QTreeView):
         return item
 
     def find_entity_item(self, entity, tree_view=None):
-        """finds the item related to the stalker entity in the given
-        QtTreeView
+        """Find the item related to the stalker entity in the given QTreeView.
+
+        Args:
+            entity (Entity): Entity instances.
+            tree_view (QTreeView): QTreeView derivative.
+
+        Returns:
+            TaskItem: The TaskItem that is the related entity.
         """
         if not entity:
             return None
@@ -367,7 +378,11 @@ class TaskTreeView(QtWidgets.QTreeView):
         return model.match(model.index(0, 0), 0, text, -1, QtCore.Qt.MatchRecursive)
 
     def get_selected_items(self):
-        """returns the selected TaskItems"""
+        """Return the selected TaskItems.
+
+        Returns:
+            List[TaskItem]: List of selected TaskItem instances.
+        """
         from anima.ui.models.task import TaskItem
 
         selection_model = self.selectionModel()

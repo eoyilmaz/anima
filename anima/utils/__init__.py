@@ -923,7 +923,7 @@ class MediaManager(object):
 
         #     num_of_threads = multiprocessing.cpu_count()
         #     args.append("-threads")
-        #     args.append("%s" % num_of_threads)
+        #     args.append("{}".format(num_of_threads))
 
         # overwrite any file
         args.append("-y")

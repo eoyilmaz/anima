@@ -643,8 +643,8 @@ class NetflixReporter(object):
         status_index = children_to_parent_statuses_lut[binary_status]
         status = parent_statuses_lut[status_index]
 
-        # logger.debug('binary statuses value : %s' % binary_status)
-        # logger.debug('setting status to : %s' % status.code)
+        # logger.debug("binary statuses value : {}".format(binary_status))
+        # logger.debug("setting status to : {}".format(status.code))
 
         return status
 

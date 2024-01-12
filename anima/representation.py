@@ -101,7 +101,7 @@ class Representation(object):
         base_take_name = self.get_base_take_name(self.version)
 
         if repr_name != self.base_repr_name and repr_name != base_take_name:
-            resolved_repr_name = "%s%s%s" % (
+            resolved_repr_name = "{}{}{}".format(
                 base_take_name,
                 self.repr_separator,
                 repr_name,
@@ -175,7 +175,7 @@ class Representation(object):
         if repr_name == self.base_repr_name:
             take_name = base_take_name
         else:
-            take_name = "%s%s%s" % (base_take_name, self.repr_separator, repr_name)
+            take_name = "{}{}{}".format(base_take_name, self.repr_separator, repr_name)
 
         from stalker import Version
 

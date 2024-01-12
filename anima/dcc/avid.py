@@ -48,7 +48,7 @@ class Avid2Resolve(object):
 
         shot_number = parts[3]
 
-        shot_name = "%s_%s_%s_%s" % (seq_name, scene_number, env_code, shot_number)
+        shot_name = "{}_{}_{}_{}".format(seq_name, scene_number, env_code, shot_number)
 
         return shot_name
 
@@ -66,7 +66,7 @@ class Avid2Resolve(object):
         # project structure
         if task:
             # get the task folder
-            output_path = "%s/Outputs/Main" % task.absolute_path
+            output_path = "{}/Outputs/Main".format(task.absolute_path)
 
             import os
             import glob
@@ -78,14 +78,14 @@ class Avid2Resolve(object):
             )
             for version_folder in version_folders:
                 # check if the current version folder has exr files
-                exr_path = ("%s/exr/*.exr" % version_folder).replace("\\", "/")
-                png_path = ("%s/png/*.png" % version_folder).replace("\\", "/")
+                exr_path = ("{}/exr/*.exr".format(version_folder)).replace("\\", "/")
+                png_path = ("{}/png/*.png".format(version_folder)).replace("\\", "/")
                 seqs = pyseq.getSequences(exr_path)
 
                 # and if not go to a previous version
                 # until you check all the version paths
                 if seqs:
-                    return "localhost/%s/%s" % (
+                    return "localhost/{}/{}".format(
                         os.path.normpath(os.path.split(seqs[0].path())[0]).replace(
                             "\\", "/"
                         ),
@@ -96,8 +96,9 @@ class Avid2Resolve(object):
                     png_seqs = pyseq.getSequences(png_path)
                     if png_seqs:
                         print(
-                            "%s %s has PNG but no EXR"
-                            % (shot.name, version_folder.split("/")[-1])
+                            "{} {} has PNG but no EXR".format(
+                                shot.name, version_folder.split("/")[-1]
+                            )
                         )
 
             return ""

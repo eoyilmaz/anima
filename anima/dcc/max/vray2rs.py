@@ -1072,8 +1072,8 @@ class ConversionManager(ConversionManagerBase):
                                     #
                                     # # Then execute the connection script
                                     # exec(
-                                    #     'parent_pymxs.%s[%i] = '
-                                    #     'new_node_pymxs' % (param.GetName(), i)
+                                    #     'parent_pymxs.{}[{}] = '
+                                    #     'new_node_pymxs'.format(param.GetName(), i)
                                     # )
                                     # # This should've worked!
 

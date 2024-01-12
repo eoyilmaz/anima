@@ -42,7 +42,7 @@ def maximize_first_model_panel():
     pane_config = pm.paneLayout(g_main_pane, q=1, configuration=1)
     if pane_config != "single":
         # call mel here
-        pm.mel.eval('doSwitchPanes(1, { "single", "%s"})' % panel_list[0])
+        pm.mel.eval('doSwitchPanes(1, {{ "single", "{}"}})'.format(panel_list[0]))
         pm.mel.eval("updateToolbox();")
 
 
@@ -51,7 +51,7 @@ def get_valid_dag_node(node):
     try:
         dag_node = pm.nodetypes.DagNode(node)
     except pm.MayaNodeError:
-        print("Error: no node named : %s" % node)
+        print("Error: no node named : {}".format(node))
         return None
 
     return dag_node
@@ -62,7 +62,7 @@ def get_valid_node(node):
     try:
         PyNode = pm.PyNode(node)
     except pm.MayaNodeError:
-        print("Error: no node named : %s" % node)
+        print("Error: no node named : {}".format(node))
         return None
 
     return PyNode
@@ -528,15 +528,15 @@ def export_blend_connections():
 
             con = pm.listConnections(main_shape, t="blendShape", c=1, s=1, p=1)
 
-            cmd = "connectAttr -f %s.worldMesh[0] %s;" % (
+            cmd = "connectAttr -f {}.worldMesh[0] {};".format(
                 "".join(map(str, main_shape)),
                 "".join(map(str, con[0].name())),
             )
-            print("%s\n" % cmd)
-            fileId.write("%s\n" % cmd)
+            print("{}\n".format(cmd))
+            fileId.write("{}\n".format(cmd))
 
     print("\n------------------------------------------------------\n")
-    print("filename: %s     ...done\n" % filename)
+    print("filename: {}     ...done\n".format(filename))
 
 
 def transfer_shaders(source, target, allow_component_assignments=False):
@@ -578,9 +578,9 @@ def transfer_shaders(source, target, allow_component_assignments=False):
                 # also assign instances to the same shader
                 if target.instanceCount() > 1:
                     for i in range(1, target.instanceCount()):
-                        target.attr("instObjGroups[%s]" % i).disconnect()
+                        target.attr("instObjGroups[{}]".format(i)).disconnect()
                         (
-                            target.attr("instObjGroups[%s]" % i)
+                            target.attr("instObjGroups[{}]".format(i))
                             >> shading_engine.attr("dagSetMembers").next_available
                         )
 

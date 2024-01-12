@@ -247,14 +247,14 @@ class TDE4PointImporter(object):
 
         float_x_res = float(self.xres)
         float_y_res = float(self.yres)
-        # print("float_x_res: %s" % float_x_res)
-        # print("float_y_res: %s" % float_y_res)
+        # print("float_x_res: {}".format(float_x_res))
+        # print("float_y_res: {}".format(float_y_res))
 
         for point in pm.points:
             assert isinstance(point, tde4.TDE4Point)
             for frame in sorted(point.data):
                 pos_data = point.data[frame]
-                # print("pos_data: %s" % pos_data)
+                # print("pos_data: {}".format(pos_data))
 
                 x_keyframe_data.append(
                     keyframe_template.format(
@@ -272,7 +272,7 @@ class TDE4PointImporter(object):
             y_keyframe_data=",\n".join(y_keyframe_data),
         )
 
-        # print("rendered_data: %s" % rendered_data)
+        # print("rendered_data: {}".format(rendered_data))
         # print(f.fusion.SetClipboard([rendered_data]))
         # from anima.dcc import blackmagic as bmd
         # bmf = bmd.get_bmd()

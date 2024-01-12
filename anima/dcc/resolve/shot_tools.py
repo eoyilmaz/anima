@@ -2004,9 +2004,9 @@ class ReviewManagerUI(object):
             # create slate for this clip
             duration = clip.GetDuration()
             if duration == 1:
-                # print("found %s slate clips" % len(slate_clips))
+                # print("found {} slate clips".format(len(slate_clips)))
                 print("==========")
-                print("slate_clip: %s" % clip)
+                print("slate_clip: {}".format(clip))
                 shot = ShotClip(clip=clip, timeline=timeline)
                 shot.create_slate(
                     submitting_for=submitting_for, submission_note=submission_note

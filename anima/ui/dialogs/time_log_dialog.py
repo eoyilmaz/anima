@@ -970,10 +970,10 @@ order by cast("TimeLogs".start as date)
         utc_end_date = local_to_utc(end_date)
 
         # create a TimeLog
-        # print('Task          : %s' % task.name)
-        # print('Resource      : %s' % resource.name)
-        # print('utc_start_date: %s' % utc_start_date)
-        # print('utc_end_date  : %s' % utc_end_date)
+        # print('Task          : {}'.format(task.name))
+        # print('Resource      : {}'.format(resource.name))
+        # print('utc_start_date: {}'.format(utc_start_date))
+        # print('utc_end_date  : {}'.format(utc_end_date))
 
         # now if we are not using extra time just create the TimeLog
         utc_now = local_to_utc(datetime.datetime.now())
