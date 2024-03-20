@@ -233,7 +233,13 @@ def update_graphics_view_with_image_file(image_full_path, graphics_view):
 
 
 def choose_thumbnail(parent, start_path=None, dialog_title="Choose Thumbnail"):
-    """shows a dialog for thumbnail upload"""
+    """Show a dialog for thumbnail upload.
+
+    Args:
+        parent (QWidget): The parent QWidget.
+        start_path (Union[str, None]): The start path.
+        dialog_title (str): The dialog title.
+    """
 
     if start_path is None:
         start_path = os.path.expanduser("~")
