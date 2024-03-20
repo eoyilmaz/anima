@@ -661,98 +661,104 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                     dialog = QtWidgets.QFileDialog(self.parent, "Choose file")
                     dialog.setNameFilter("JSON Files (*.json)")
                     dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-                    if dialog.exec_():
-                        file_path = dialog.selectedFiles()[0]
-                        if file_path:
-                            # check file extension
-                            parts = os.path.splitext(file_path)
+                    if not dialog.exec_():
+                        return
 
-                            if not parts[1]:
-                                file_path = "%s%s" % (parts[0], ".json")
+                    file_path = dialog.selectedFiles()[0]
+                    if not file_path:
+                        return
 
-                            data = json.dumps(
-                                entity,
-                                cls=task_hierarchy_io.StalkerEntityEncoder,
-                                check_circular=False,
-                                indent=4,
-                            )
-                            try:
-                                with open(file_path, "w") as f:
-                                    f.write(data)
-                            except Exception:
-                                pass
-                            finally:
-                                QtWidgets.QMessageBox.information(
-                                    self.parent,
-                                    "Task data Export to JSON!",
-                                    "Task data Export to JSON!",
-                                )
+                    # check file extension
+                    parts = os.path.splitext(file_path)
+
+                    if not parts[1]:
+                        file_path = "{}{}".format(parts[0], ".json")
+
+                    data = json.dumps(
+                        entity,
+                        cls=task_hierarchy_io.StalkerEntityEncoder,
+                        check_circular=False,
+                        indent=4,
+                    )
+                    try:
+                        with open(file_path, "w") as f:
+                            f.write(data)
+                    except Exception:
+                        pass
+                    finally:
+                        QtWidgets.QMessageBox.information(
+                            self.parent,
+                            "Task data Export to JSON!",
+                            "Task data Export to JSON!",
+                        )
 
                 elif selected_action is import_from_json_action:
                     # show a file browser
                     dialog = QtWidgets.QFileDialog(self.parent, "Choose file or files")
                     dialog.setNameFilter("JSON Files (*.json)")
                     dialog.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
-                    if dialog.exec_():
-                        items_to_reload = set()
-                        imported_json_file_names = []
-                        selected_files = dialog.selectedFiles()
-                        if not selected_files:
-                            return
+                    if not dialog.exec_():
+                        return
 
-                        if isinstance(entity, Task):
-                            project = entity.project
-                        elif isinstance(entity, Project):
-                            project = entity
+                    items_to_reload = set()
+                    imported_json_file_names = []
+                    selected_files = dialog.selectedFiles()
+                    if not selected_files:
+                        return
 
-                        parent = None
-                        if isinstance(entity, Task):
-                            parent = entity
+                    if isinstance(entity, Task):
+                        project = entity.project
+                    elif isinstance(entity, Project):
+                        project = entity
 
-                        decoder = task_hierarchy_io.StalkerEntityDecoder(
-                            project=project
-                        )
-                        from anima.ui.dialogs.progress_dialog import ProgressDialog
+                    parent = None
+                    if isinstance(entity, Task):
+                        parent = entity
 
-                        pdm = ProgressManagerFactory.get_progress_manager(
-                            dialog_class=ProgressDialog
-                        )
-                        progress_caller = pdm.register(
-                            max_iteration=len(selected_files),
-                            title="Importing JSON files...",
-                        )
-                        for file_path in selected_files:
-                            imported_json_file_name = os.path.basename(file_path)
-                            with open(file_path) as f:
-                                data = json.load(f)
-                            loaded_entity = decoder.loads(data, parent=parent)
+                    decoder = task_hierarchy_io.StalkerEntityDecoder(
+                        project=project
+                    )
+                    from anima.ui.dialogs.progress_dialog import ProgressDialog
 
-                            try:
-                                DBSession.add(loaded_entity)
-                                DBSession.commit()
-                            except Exception as e:
-                                DBSession.rollback()
-                                QtWidgets.QMessageBox.critical(
-                                    self.parent,
-                                    "Error!",
-                                    "%s" % e,
-                                    QtWidgets.QMessageBox.Ok,
-                                )
-                            else:
-                                items_to_reload.add(item)
-                                imported_json_file_names.append(imported_json_file_name)
-                            progress_caller.step(message=imported_json_file_name)
-                        progress_caller.end_progress()
+                    pdm = ProgressManagerFactory.get_progress_manager(
+                        dialog_class=ProgressDialog
+                    )
+                    progress_caller = pdm.register(
+                        max_iteration=len(selected_files),
+                        title="Importing JSON files...",
+                    )
+                    for file_path in selected_files:
+                        imported_json_file_name = os.path.basename(file_path)
+                        with open(file_path) as f:
+                            data = json.load(f)
+                        loaded_entity = decoder.loads(data, parent=parent)
 
-                        for item in items_to_reload:
-                            item.reload()
-                        QtWidgets.QMessageBox.information(
-                            self.parent,
-                            "New Tasks are created!",
-                            "New Tasks are imported from:<br><br>{}".format(
-                                "<br>".join(imported_json_file_names[:40])
-                            ),
-                        )
+                        try:
+                            DBSession.add(loaded_entity)
+                            DBSession.commit()
+                        except Exception as e:
+                            DBSession.rollback()
+                            QtWidgets.QMessageBox.critical(
+                                self.parent,
+                                "Error!",
+                                "%s" % e,
+                                QtWidgets.QMessageBox.Ok,
+                            )
+                        else:
+                            items_to_reload.add(item)
+                            imported_json_file_names.append(imported_json_file_name)
+                        progress_caller.step(message=imported_json_file_name)
+                    progress_caller.end_progress()
+
+                    for item in items_to_reload:
+                        item.reload()
+                    QtWidgets.QMessageBox.information(
+                        self.parent,
+                        "New Tasks are created!",
+                        "New Tasks are imported from:<br><br>{}".format(
+                            "<br>".join(imported_json_file_names[:40])
+                        ),
+                    )
 
                 elif selected_action is create_project_structure_action:
                     answer = QtWidgets.QMessageBox.question(
