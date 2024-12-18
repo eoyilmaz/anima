@@ -10,7 +10,11 @@ uuid = "e412cb9626164151b088f2bf4a66fe31"
 
 description = "Houdini package"
 
-requires = [".python-3.11", "qLib"]
+requires = [
+    ".python-3.11",
+    "qLib",
+    "ocio-2.3",
+]
 
 
 build_command = "python3 {root}/../build.py {install}"
