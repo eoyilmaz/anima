@@ -12,6 +12,7 @@ description = "Anima Pipeline Package"
 
 requires = [
     "stalker",
+    "exifread",
 ]
 
 variants = [
@@ -20,7 +21,7 @@ variants = [
     ["fusion"],
     ["houdini"],
     ["maya"],
-    ["3de4"],
+    # ["3de4"],
 ]
 
 build_command = "python3 {root}/build.py {install}"
