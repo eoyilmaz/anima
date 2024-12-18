@@ -22,3 +22,6 @@ build_command = "python3 {root}/../build.py {install}"
 def commands():
     # env.PYTHONPATH.append("{root}/python")
     env.PATH.prepend("{root}/bin")
+
+    # set Qt API
+    env.QT_API = "pyside2"
