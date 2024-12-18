@@ -67,13 +67,13 @@ def commands():
         env.PATH.append("{}/bin".format(env.REDSHIFT_COREDATAPATH))
 
         # create a link under /Applications to redshift
-        import os
+        # import os
 
-        try:
-            os.remove("/Applications/redshift")
-        except FileNotFoundError:
-            pass
-        os.symlink(str(env.REDSHIFT_LOCATION), "/Applications/redshift")
+        # try:
+        #     os.remove("/Applications/redshift.app")
+        # except FileNotFoundError:
+        #     pass
+        # os.symlink(str(env.REDSHIFT_LOCATION), "/Applications/redshift.app")
 
     if "houdini" in this.root:
         env.HOUDINI_DSO_ERROR = 2
