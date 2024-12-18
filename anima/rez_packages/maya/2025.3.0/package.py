@@ -10,7 +10,11 @@ uuid = "926ca70831554917977883498363a94e"
 
 description = "Maya package"
 
-requires = [".python-3.11", "pymel-1.5.0"]
+requires = [
+    ".python-3.11",
+    "pymel-1.5.0",
+    "ocio-2.3",
+]
 
 build_command = "python3 {root}/../build.py {install}"
 
