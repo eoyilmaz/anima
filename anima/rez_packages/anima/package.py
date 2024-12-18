@@ -13,6 +13,8 @@ description = "Anima Pipeline Package"
 requires = [
     "stalker",
     "exifread",
+    "qtawesome",
+    "qtpy",
 ]
 
 variants = [
