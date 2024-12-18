@@ -13,7 +13,6 @@ description = "Anima Pipeline Package"
 requires = [
     "stalker",
     "exifread",
-    "aces-1.3",
 ]
 
 variants = [
