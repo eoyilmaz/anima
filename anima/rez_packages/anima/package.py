@@ -35,6 +35,9 @@ def commands():
 
     import os
 
+    # set stalker config path
+    env.STALKER_PATH = "$HOME/Stalker_Config"
+
     # find python major and minor version
     python_major = -1
     python_minor = 0
