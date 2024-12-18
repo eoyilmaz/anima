@@ -11,6 +11,7 @@ uuid = "edf2e1216f1744e286dbfc5becd985e5"
 description = "Blender Package"
 
 requires = [
+    "ocio-2",
     "aces",
     ".python-3.10",
 ]
