@@ -16,9 +16,12 @@ build_command = "python3 {root}/../build.py {install}"
 def commands():
     # env.PYTHONPATH.append("{root}/python")
     # env.PATH.append("{root}/bin")
+
     env.OCIO.append(
-        "$HOME/Documents/development/OpenColorIO-Configs/aces_{}.{}/config.ocio".format(
-            env.REZ_ACES_MAJOR_VERSION,
-            env.REZ_ACES_MINOR_VERSION,
-        )
+        "$HOME/Documents/development/"
+        "OpenColorIO-Config-ACES-build/"
+        "cg-config-v2.2.0_"
+        f"aces-v{env.REZ_ACES_MAJOR_VERSION}.{env.REZ_ACES_MINOR_VERSION}_"
+        f"ocio-v{env.REZ_OCIO_MAJOR_VERSION}.{env.REZ_OCIO_MINOR_VERSION}"
+        ".ocio"
     )
