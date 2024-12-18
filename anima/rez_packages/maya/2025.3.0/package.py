@@ -37,3 +37,6 @@ def commands():
 
     env.MAYA_DISABLE_CIP = 1
     env.MAYA_DISABLE_CER = 1
+
+    # set Qt library
+    env.QT_API = "pyside6"
