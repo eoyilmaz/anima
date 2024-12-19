@@ -7,6 +7,7 @@
 .pytest_cache
 .tox/
 .venv/
+.venv*/
 .vscode/
 *.code-workspace
 *.egg-info
