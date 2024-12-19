@@ -1,45 +1,37 @@
 # -*- coding: utf-8 -*-
-import sys
-import shutil
-import tempfile
-import logging
 
+import logging
+import shutil
+import sys
+import tempfile
 import unittest
+
 from anima.dcc.testing import TestEnvironment
 
+from qtpy.QtTest import QTest
+from qtpy.QtCore import Qt
+
+
+from stalker import (
+    db,
+    Group,
+    Project,
+    Repository,
+    Status,
+    StatusList,
+    Structure,
+    Task,
+    User,
+    Version
+)
+from stalker.db.session import DBSession
+from stalker.models.auth import LocalSession
+
+from anima.ui.dialogs import version_dialog
+from anima.ui.lib import QtCore, QtGui
 
 logger = logging.getLogger('anima.ui.version_dialog')
 logger.setLevel(logging.DEBUG)
-
-from stalker import (db, User, Project, Repository, Structure,
-                     Status, StatusList, Task, Group, Version)
-from stalker.db.session import DBSession
-from stalker.models.auth import LocalSession
-from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4, SET_PYSIDE
-from anima.ui.dialogs import version_dialog
-
-SET_PYSIDE()
-
-if IS_PYSIDE():
-    logger.debug('environment is set to pyside, importing pyside')
-    from PySide import QtCore, QtGui
-    from PySide.QtTest import QTest
-    from PySide.QtCore import Qt
-    QtWidgets = QtGui
-if IS_PYSIDE2():
-    logger.debug('environment is set to pyside, importing pyside')
-    from PySide2 import QtCore, QtGui
-    from PySide2.QtTest import QTest
-    from PySide2.QtCore import Qt
-elif IS_PYQT4():
-    logger.debug('environment is set to pyqt4, importing pyqt4')
-    import sip
-    sip.setapi('QString', 2)
-    sip.setapi('QVariant', 2)
-    from PyQt4 import QtCore, QtGui
-    from PyQt4.QtTest import QTest
-    from PyQt4.QtCore import Qt
-    QtWidgets = QtGui
 
 
 class VersionCreatorTester(unittest.TestCase):

@@ -25,11 +25,6 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
 
     do_db_setup()
 
-    # use PySide2
-    from anima import ui
-
-    ui.SET_PYSIDE2()
-
     from anima.ui.dialogs import version_dialog
     from anima.dcc import blender as blender_dcc
 
@@ -47,11 +42,6 @@ def version_updater(logging_level=logging.WARNING):
     from anima.utils import do_db_setup
 
     do_db_setup()
-
-    # use PySide2
-    from anima import ui
-
-    ui.SET_PYSIDE2()
 
     from anima.ui.dialogs import version_updater
     from anima.dcc import blender

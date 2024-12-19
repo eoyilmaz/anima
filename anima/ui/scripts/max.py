@@ -25,10 +25,6 @@ def version_dialog():
 
     do_db_setup()
 
-    from anima import ui
-
-    ui.SET_PYSIDE()
-
     from anima.ui.dialogs import version_dialog
     from anima.dcc import max as max_env
 
@@ -46,10 +42,6 @@ def version_updater():
     from anima.utils import do_db_setup
 
     do_db_setup()
-
-    from anima import ui
-
-    ui.SET_PYSIDE()
 
     from anima.ui.dialogs import version_updater
     from anima.dcc import max as max_env

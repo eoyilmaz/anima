@@ -1,41 +1,39 @@
 # -*- coding: utf-8 -*-
+import logging
 import sys
 import shutil
 import tempfile
 import os
-import logging
-
 import unittest
 
-from anima.dcc.testing import TestEnvironment
+from qtpy.QtTest import QTest
+from qtpy.QtCore import Qt
 
+from stalker import (
+    db,
+    Asset,
+    FilenameTemplate,
+    ImageFormat,
+    Project,
+    Repository,
+    Sequence,
+    Shot,
+    Status,
+    StatusList,
+    Structure,
+    Task,
+    Type,
+    User,
+    Version,
+)
+from stalker.db.session import DBSession
+
+from anima.dcc.testing import TestEnvironment
+from anima.ui.dialogs import version_updater
+from anima.ui.lib import QtCore, QtGui
 
 logger = logging.getLogger('anima.ui.version_updater')
 logger.setLevel(logging.WARNING)
-
-from anima.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE
-from anima.ui.dialogs import version_updater
-
-SET_PYSIDE()
-
-if IS_PYSIDE():
-    logger.debug('environment is set to pyside, importing pyside')
-    from PySide import QtCore, QtGui
-    from PySide.QtTest import QTest
-    from PySide.QtCore import Qt
-elif IS_PYQT4():
-    logger.debug('environment is set to pyqt4, importing pyqt4')
-    import sip
-    sip.setapi('QString', 2)
-    sip.setapi('QVariant', 2)
-    from PyQt4 import QtCore, QtGui
-    from PyQt4.QtTest import QTest
-    from PyQt4.QtCore import Qt
-
-from stalker import (db, User, Project, Repository, Structure, Status,
-                     StatusList, Task, Version, FilenameTemplate,
-                     ImageFormat, Type, Asset, Sequence, Shot)
-from stalker.db.session import DBSession
 
 
 # exceptions for test purposes

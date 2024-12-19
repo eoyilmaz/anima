@@ -20,13 +20,6 @@ def version_dialog(lib="PySide", logging_level=logging.WARNING, parent=None):
 
     do_db_setup()
 
-    from anima.ui import SET_PYSIDE, SET_PYQT4
-
-    if lib == "PySide":
-        SET_PYSIDE()
-    elif lib == "PyQt4":
-        SET_PYQT4()
-
     from anima.dcc import fusion
 
     fusion_env = fusion.Fusion()

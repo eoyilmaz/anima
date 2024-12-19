@@ -1,24 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import unittest
 import sys
+import unittest
 
-from anima.ui import IS_PYSIDE, IS_PYQT4
 from anima.ui.dialogs import reference_editor
 
 logger = logging.getLogger('anima.ui.reference_editor')
-
-
-if IS_PYSIDE():
-    logger.debug('environment is set to pyside, importing pyside')
-    from PySide import QtCore, QtGui
-elif IS_PYQT4():
-    logger.debug('environment is set to pyqt4, importing pyqt4')
-    import sip
-    sip.setapi('QString', 2)
-    sip.setapi('QVariant', 2)
-    from PyQt4 import QtCore, QtGui
 
 
 class ReferenceEditorTestCase(unittest.TestCase):

@@ -85,20 +85,6 @@ def __plugin_unloader(plugin_name):
         logprint("plugin not loaded: {}".format(plugin_name))
 
 
-# set ui to PySide2 for maya2017 and up
-if pymel.versions.current() > 201651:
-    logprint("setting QtLib to PySide2 inside userSetup.py")
-    from anima import ui
-
-    ui.SET_PYSIDE2()
-    logprint("successfully set QtLib to PySide2 inside userSetup.py")
-else:
-    logprint("setting QtLib to PySide inside userSetup.py")
-    from anima import ui
-
-    ui.SET_PYSIDE()
-    logprint("successfully QtLib to PySide inside userSetup.py")
-
 if not pm.general.about(batch=1):
     # set progress manager display type
     from anima.utils.progress import ProgressManagerFactory

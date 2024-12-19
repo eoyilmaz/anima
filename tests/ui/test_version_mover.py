@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-import os
-import sys
-import tempfile
-import unittest
 import logging
-from sqlalchemy import distinct
+import os
+import tempfile
+import sys
+import unittest
 
-from anima.ui import SET_PYSIDE, IS_PYSIDE, IS_PYQT4
+from sqlalchemy import distinct
 
 from anima.ui.dialogs.version_mover import VersionMover
 from anima.ui.testing import PatchedMessageBox
@@ -14,24 +13,22 @@ from anima.ui.testing import PatchedMessageBox
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-SET_PYSIDE()
+from anima.ui.lib import QtCore, QtGui
+from qtpy.QtTest import QTest
+from qtpy.QtCore import Qt
 
-if IS_PYSIDE():
-    logger.debug('environment is set to pyside, importing pyside')
-    from PySide import QtCore, QtGui
-    from PySide.QtTest import QTest
-    from PySide.QtCore import Qt
-elif IS_PYQT4():
-    logger.debug('environment is set to pyqt4, importing pyqt4')
-    import sip
-    sip.setapi('QString', 2)
-    sip.setapi('QVariant', 2)
-    from PyQt4 import QtCore, QtGui
-    from PyQt4.QtTest import QTest
-    from PyQt4.QtCore import Qt
 
-from stalker import db, Task, Version, Project, Repository, Structure, \
-    FilenameTemplate, StatusList, Status
+from stalker import (
+    db,
+    FilenameTemplate,
+    Project,
+    Repository,
+    Status,
+    StatusList,
+    Structure,
+    Task,
+    Version,
+)
 from stalker.db.session import DBSession
 
 
@@ -80,21 +77,18 @@ class VersionMoverTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """set up once
-        """
+        """Set up once."""
         # patch QMessageBox
         cls.original_message_box = QtGui.QMessageBox
         QtGui.QMessageBox = PatchedMessageBox
 
     @classmethod
     def tearDownClass(cls):
-        """clean up once
-        """
+        """Clean up once."""
         QtGui.QMessageBox = cls.original_message_box
 
     def setUp(self):
-        """sets up the test
-        """
+        """Set up the test."""
         db.setup()
         db.init()
 
@@ -350,14 +344,11 @@ class VersionMoverTestCase(unittest.TestCase):
         self.dialog = VersionMover()
 
     def tearDown(self):
-        """clean up every time
-        """
+        """Clean up every time."""
         PatchedMessageBox.tear_down()
 
     def test_copy_button_clicked_with_no_selection_on_from_task_tree_view(self):
-        """testing if a QMessageDialog will be displayed when the copy button
-        selected and no selection is made in from_task_tree_view
-        """
+        """A QMessageDialog is displayed when the copy button selected and no selection is made in from_task_tree_view."""
         self.assertEqual(PatchedMessageBox.called_function, '')
 
         # now try to copy it
@@ -365,13 +356,13 @@ class VersionMoverTestCase(unittest.TestCase):
 
         self.assertEqual(PatchedMessageBox.called_function, 'critical')
         self.assertEqual(PatchedMessageBox.title, 'Error')
-        self.assertEqual(PatchedMessageBox.message,
-                         'Please select a task from <b>From Task</b> list')
+        self.assertEqual(
+            PatchedMessageBox.message,
+            'Please select a task from <b>From Task</b> list'
+        )
 
     def test_copy_button_clicked_with_no_selection_on_to_task_tree_view(self):
-        """testing if a QMessageDialog will be displayed when the copy button
-        selected and no selection is made in to_task_tree_vie
-        """
+        """A QMessageDialog will be displayed when the copy button selected and no selection is made in to_task_tree_view."""
         # select one task in from_task_tree_view
 
         # Select Task4 in from_task_tree_view
