@@ -54,6 +54,7 @@ clean-all: clean
 	-rm -f use-distutils
 	-rm -Rf src/$(PACKAGE_NAME).egg-info
 	-rm -Rf $(VIRTUALENV_DIR)
+	-rm -Rf $(VIRTUALENV_DIR)_maya
 
 html:
 	./setup.py readme
@@ -83,6 +84,11 @@ tests:
 	source ./$(VIRTUALENV_DIR)/bin/activate; \
 	echo -e "\n\033[36m--- $@: Using python interpreter '`which python`' ---\033[0m\n"; \
 	PYTHONPATH=src pytest -n auto -W ignore -W always::DeprecationWarning --color=yes --cov=src --cov-report term --cov-report html --cov-append --cov-fail-under 99 tests;
+
+maya-tests:
+	#printf "\n\033[36m--- $@: Running Maya Tests ---\033[0m\n"
+	source ./$(VIRTUALENV_DIR)/bin/activate; \
+	rez-env anima maya redshift -c "export PYTHONPATH=src; mayapy -m venv $(VIRTUALENV_DIR)_maya; mayapy -m pip install -r requirements.txt -r requirements-dev.txt; mayapy -m pytest -n auto tests/dcc/maya/;"
 
 .PHONY: docs
 docs:
