@@ -43,7 +43,7 @@ def get_maya_main_window():
 
     ptr = OpenMayaUI.MQtUtil.mainWindow()
     if ptr is not None:
-        from anima.ui.lib import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4, IS_QTPY
+        from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYSIDE6, IS_PYQT4
 
         if IS_PYSIDE():
             import shiboken
@@ -53,6 +53,10 @@ def get_maya_main_window():
             import shiboken2
 
             return shiboken2.wrapInstance(ptr_conv_func(ptr), QtWidgets.QWidget)
+        elif IS_PYSIDE6():
+            import shiboken6
+
+            return shiboken6.wrapInstance(ptr_conv_func(ptr), QtWidgets.QWidget)
         elif IS_PYQT4():
             import sip
 

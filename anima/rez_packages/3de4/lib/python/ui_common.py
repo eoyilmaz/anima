@@ -9,14 +9,8 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
     """Helper function for version_dialog UI for Maya"""
     # connect to db
     from anima.utils import do_db_setup
-    from anima import ui
 
     do_db_setup()
-
-    if sys.platform in ["linux", "windows"]:
-        ui.SET_PYSIDE2()
-    else:
-        ui.SET_PYSIDE6()
 
     from anima.ui.dialogs import version_dialog
     from anima.dcc import tde4

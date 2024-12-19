@@ -15,7 +15,6 @@ requires = [
 ]
 
 variants = [
-    [".python-2"],
     [".python-3"],
 ]
 
@@ -25,6 +24,9 @@ build_command = "python3 {root}/../build.py {install}"
 def commands():
     # env.PYTHONPATH.append("{root}/../python")
     env.PATH.append("{root}/bin")
+
+    # Set Qt API
+    env.QT_API = "pyside2"
 
     if system.platform == "linux":
         env.PATH.append("/opt/resolve/")

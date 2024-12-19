@@ -4,31 +4,12 @@ import logging
 from anima import logger
 
 
-def set_qt_lib():
-    """sets the Qt lib according to the maya version"""
-    import pymel
-
-    try:
-        from anima import ui
-
-        if pymel.versions.current() > 201650:
-            ui.SET_PYSIDE2()
-        else:
-            ui.SET_PYSIDE()
-    except AttributeError:
-        pass
-
-
 def version_dialog(logging_level=logging.WARNING, mode=2):
     """Helper function for version_dialog UI for Maya"""
     # connect to db
     from anima.utils import do_db_setup
 
     do_db_setup()
-
-    # use PySide for Maya 2014
-    # and PySide2 for Maya 2017
-    set_qt_lib()
 
     from anima.ui.dialogs import version_dialog as vd
     from anima.dcc import mayaEnv
@@ -51,9 +32,6 @@ def version_updater(logging_level=logging.WARNING):
     from anima.utils import do_db_setup
 
     do_db_setup()
-
-    # set Qt lib
-    set_qt_lib()
 
     from anima.ui.dialogs import version_updater as vu
     from anima.dcc import mayaEnv
@@ -96,10 +74,6 @@ def project_manager(logging_level=logging.WARNING):
 
     do_db_setup()
 
-    # use PySide for Maya 2014
-    # and PySide2 for Maya 2017
-    set_qt_lib()
-
     from anima.ui.dialogs import project_manager as projman
 
     # set the parent object to the maya main window
@@ -112,10 +86,6 @@ def archiver_dialog(logging_level=logging.WARNING, mode=2):
     from anima.utils import do_db_setup
 
     do_db_setup()
-
-    # use PySide for Maya 2014
-    # and PySide2 for Maya 2017
-    set_qt_lib()
 
     from anima.dcc import mayaEnv
     from anima.dcc.mayaEnv import archive

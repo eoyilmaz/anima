@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import logging
+
+
 from anima.utils import do_db_setup
+from anima.dcc import photoshop
+from anima.ui.dialogs import version_dialog
 
 
 def version_dialog(lib="PySide"):
@@ -15,23 +20,8 @@ def version_dialog(lib="PySide"):
     # connect to db
     do_db_setup()
 
-    from anima.ui import SET_PYSIDE, SET_PYQT4
-
-    if lib == "PySide":
-        SET_PYSIDE()
-    elif lib == "PyQt4":
-        SET_PYQT4()
-
-    from anima.dcc import photoshop
-
-    reload(photoshop)
     p = photoshop.Photoshop()
-
-    from anima.ui.dialogs import version_dialog
-
-    reload(version_dialog)
     # display only warning messages
-    import logging
 
     logging.getLogger(version_dialog.__name__).setLevel(logging.WARNING)
     logging.getLogger("anima.ui").setLevel(logging.WARNING)

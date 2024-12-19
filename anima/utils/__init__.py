@@ -40,7 +40,6 @@ from stalker import (
     TimeLog,
     User,
     Version,
-    db,
 )
 from stalker.db.session import DBSession
 from stalker.models.auth import AuthenticationLog, LOGIN, LocalSession
@@ -255,7 +254,10 @@ def do_db_setup():
 
         settings = defaults.database_engine_settings
         settings["sqlalchemy.poolclass"] = NullPool
-        db.setup(settings)
+
+        from stalker.db.setup import setup
+
+        setup(settings)
 
 
 def utc_to_local(utc_dt):

@@ -28,8 +28,8 @@ def commands():
     # env.PYTHONPATH.append("{root}/python")
     # env.PATH.append("{root}/bin")
 
-    # Set QT_LIB env var for anima
-    env.QT_LIB.set("PySide6")
+    # Set QT_API env var for anima
+    env.QT_API.set("pyside6")
     py_libs_path = "$HOME/Documents/development/pylibs"
     env.PYTHONPATH.append(
         "{}/py{}.{}/lib/python/site-packages__extras__".format(

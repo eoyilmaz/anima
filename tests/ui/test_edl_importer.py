@@ -1,32 +1,19 @@
 # -*- coding: utf-8 -*-
 
+import logging
+import os
 import shutil
 import sys
-import logging
 import tempfile
 import unittest
-import os
-import anima
 
-from anima.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE
+from qtpy.QtCore import Qt
+from qtpy.QtTest import QTest 
+
+import anima
+from anima.ui.lib import QtCore, QtGui
 from anima.ui.testing import PatchedMessageBox
 
-
-SET_PYSIDE()
-
-if IS_PYSIDE():
-    from PySide import QtCore, QtGui
-    from PySide.QtTest import QTest
-    from PySide.QtCore import Qt
-elif IS_PYQT4():
-    import sip
-    sip.setapi('QString', 2)
-    sip.setapi('QVariant', 2)
-    from PyQt4 import QtCore, QtGui
-    from PyQt4.QtTest import QTest
-    from PyQt4.QtCore import Qt
-
-from anima.ui.dialogs import edl_importer
 
 logger = logging.getLogger('anima.ui.version_updater')
 logger.setLevel(logging.DEBUG)
