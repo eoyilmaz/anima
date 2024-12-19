@@ -23,11 +23,7 @@ class DCCBase(object):
 
     It is the pipeline developers duty to create the DCC classes for the
     applications used in the studio by instantiating this class and overriding
-    the methods as necessary. You can find good examples in `Anima Tools`_
-    which is a Python package developed in `Anima Istanbul`_.
-
-    .. _Anima Tools: https://pypi.python.org/pypi/anima
-    .. _Anima Istanbul: http;//www.animaistanbul.com
+    the methods as necessary.
 
     Here is a brief example for creating an DCC for a generic program::
 

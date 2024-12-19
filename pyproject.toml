@@ -24,7 +24,7 @@ classifiers = [
     "Topic :: Software Development",
     "Topic :: Utilities",
 ]
-description = "VFX and Animation pipeline developed in Anima Istanbul"
+description = "VFX and Animation Studio Pipeline Library"
 dynamic = ["version", "dependencies"]
 keywords = [
     "animation",
