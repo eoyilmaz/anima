@@ -20,15 +20,17 @@ Place the following variables in to the config.py file::
   stalker_server_external_address = 'http://e.f.g.h:xxxx'
 """
 
-import sys
+import logging
 import os
 import stat
+import sys
 import tempfile
-import logging
-from anima.config import Config
+
 from stalker import SimpleEntity, Project
 
-__version__ = "0.8.0"
+from anima.version import __version__
+from anima.config import Config
+
 
 string_types = []
 if sys.version_info[0] >= 3:  # Python 3

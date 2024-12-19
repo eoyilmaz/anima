@@ -48,9 +48,9 @@ def commands():
 
     env.ANIMA_LIB_PATH = "${HOME}/Documents/development"
     env.ANIMA_DEV_PATH = "${HOME}/Documents/DEV"
-    env.ANIMA_PATH = os.path.expanduser("${ANIMA_LIB_PATH}/anima")
+    env.ANIMA_PATH = os.path.expanduser("${ANIMA_LIB_PATH}/anima/src")
 
-    env.PYTHONPATH.append("${ANIMA_LIB_PATH}/anima")
+    env.PYTHONPATH.append("${ANIMA_PATH}")
 
     if "maya" not in this.root and "houdini" not in this.root:
         # default PYTHONPATH
@@ -77,20 +77,20 @@ def commands():
         )
         env.PATH.append("{}/bin".format(pylibs_base_path))
         env.PYTHONPATH.append("{}/lib/python/site-packages".format(pylibs_base_path))
-        env.PYTHONPATH.append("${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config")
+        env.PYTHONPATH.append("${ANIMA_PATH}/anima/dcc/mayaEnv/config")
         env.PYTHONPATH.append(
-            "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config/${REZ_MAYA_MAJOR_VERSION}"
+            "${ANIMA_PATH}/anima/dcc/mayaEnv/config/${REZ_MAYA_MAJOR_VERSION}"
         )
         env.PYTHONPATH.append("${ANIMA_DEV_PATH}/maya/scripts")
 
         # MAYA_SCRIPT_PATH
-        env.MAYA_SCRIPT_PATH.append("${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config")
+        env.MAYA_SCRIPT_PATH.append("${ANIMA_PATH}/anima/dcc/mayaEnv/config")
         env.MAYA_SCRIPT_PATH.append(
-            "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config/${REZ_MAYA_MAJOR_VERSION}"
+            "${ANIMA_PATH}/anima/dcc/mayaEnv/config/${REZ_MAYA_MAJOR_VERSION}"
         )
 
         env.MAYA_PLUG_IN_PATH.append(
-            "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/plugins"
+            "${ANIMA_PATH}/anima/dcc/mayaEnv/plugins"
         )
         env.MAYA_PLUG_IN_PATH.append("${ANIMA_DEV_PATH}/maya/plugins")
         env.MAYA_PLUG_IN_PATH.append(
@@ -98,7 +98,7 @@ def commands():
         )
 
         env.MAYA_PLUG_IN_PATH.append(
-            "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/plugins/${REZ_MAYA_MAJOR_VERSION}"
+            "${ANIMA_PATH}/anima/dcc/mayaEnv/plugins/${REZ_MAYA_MAJOR_VERSION}"
         )
 
         # XMBLANGPATH
@@ -139,10 +139,10 @@ def commands():
         env.HOUDINI_OTLSCAN_PATH.prepend(anima_otl_path)
         env.HOUDINI_DSO_PATH.prepend(anima_dso_path)
         env.HOUDINI_PYTHON_PANEL_PATH.prepend(
-            "${ANIMA_LIB_PATH}/anima/anima/dcc/houdini/python_panels/"
+            "${ANIMA_PATH}/anima/dcc/houdini/python_panels/"
         )
         env.HOUDINI_MENU_PATH.prepend(
-            "${ANIMA_LIB_PATH}/anima/anima/dcc/houdini/menus/"
+            "${ANIMA_PATH}/anima/dcc/houdini/menus/"
         )
 
     # Blender
