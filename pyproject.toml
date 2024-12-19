@@ -1,0 +1,109 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+authors = [
+    {name = "Erkan Özgür Yılmaz", email = "eoyilmaz@gmail.com"},
+]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Topic :: Multimedia",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Software Development",
+    "Topic :: Utilities",
+]
+description = "VFX and Animation pipeline developed in Anima Istanbul"
+dynamic = ["version", "dependencies"]
+keywords = [
+    "animation",
+    "studio",
+    "vfx",
+    "pipeline"
+]
+license = { file = "LICENSE" }
+maintainers = [
+    {name = "Erkan Özgür Yılmaz", email = "eoyilmaz@gmail.com"},
+]
+name = "anima"
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[project.urls]
+"Home Page" = "https://github.com/eoyilmaz/anima"
+GitHub = "https://github.com/eoyilmaz/anima"
+Repository = "https://github.com/eoyilmaz/anima.git"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+anima = ["VERSION", "py.typed"]
+
+[tool.setuptools.exclude-package-data]
+anima = ["tests"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+optional-dependencies.test = { file = ["requirements-dev.txt"] }
+version = { file = ["VERSION"] }
+
+[tool.distutils.bdist_wheel]
+universal = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+addopts = "-n auto -W ignore -W always::DeprecationWarning --color=yes --cov=src --cov-report term --cov-report html --cov-append tests"
+
+[tool.black]
+
+[tool.flake8]
+exclude = [
+    ".github",
+    "__pycache__",
+    ".coverage",
+    ".DS_Store",
+    ".pytest_cache",
+    ".venv",
+    ".vscode",
+    "build",
+    "dist",
+    "*.egg-info",
+]
+extend-select = ["B950"]
+ignore = ["D107", "E203", "E501", "E701", "SC200", "W503"]
+max-complexity = 12
+max-line-length = 80
+
+[tool.tox]
+requires = ["tox>=4.23.2"]
+env_list = ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+
+[tool.tox.env_run_base]
+description = "run the tests with pytest"
+package = "wheel"
+wheel_build_env = ".pkg"
+deps = [
+    "pytest>=6",
+    "pytest-cov",
+    "pytest-xdist",
+]
+commands = [
+    ["pytest"],
+]
+
+[tool.mypy]
