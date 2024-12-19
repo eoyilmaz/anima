@@ -726,7 +726,7 @@ class ConformerUI(object):
         if task.versions:
             latest_task_version = (
                 Version.query.filter(Version.task == task)
-                .filter(Version.take_name == "Main")
+                .filter(Version.variant_name == "Main")
                 .order_by(Version.version_number.desc())
                 .first()
             )
@@ -1416,7 +1416,7 @@ class ConformerUI(object):
                     if task.versions:
                         last_version = (
                             Version.query.filter(Version.task == task)
-                            .filter(Version.take_name == "Main")
+                            .filter(Version.variant_name == "Main")
                             .order_by(Version.version_number.desc())
                             .first()
                         )

@@ -334,7 +334,7 @@ class DCCBase(object):
             # use the original version if it is a Repr version
             from anima.representation import Representation
 
-            if Representation.repr_separator in version.take_name and version.parent:
+            if Representation.repr_separator in version.variant_name and version.parent:
                 version = version.parent
                 logger.debug(
                     "this is a representation switching to its parent: %s" % version

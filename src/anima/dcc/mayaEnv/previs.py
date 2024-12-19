@@ -1005,7 +1005,7 @@ class ShotExporter(object):
         if ok == "OK, Continue":
             pass
 
-    def save_previs_to_shots(self, take_name):
+    def save_previs_to_shots(self, variant_name):
         """exports previs to animation shots"""
         self.pre_publish_previs()
 
@@ -1037,7 +1037,7 @@ class ShotExporter(object):
             version = Version(
                 task=shot_info[1],
                 description=description,
-                take_name=take_name,
+                variant_name=variant_name,
                 created_by=self.logged_in_user,
             )
             versions.append(version)
@@ -1266,10 +1266,10 @@ class Previs(object):
 
         se = previs.ShotExporter()
 
-        # use previs scene take_name
+        # use previs scene variant_name
         m = mayaEnv.Maya()
         v = m.get_current_version()
-        se.save_previs_to_shots(v.take_name)
+        se.save_previs_to_shots(v.variant_name)
 
     @classmethod
     def add_sequence_name_attribute_to_sequencer(cls, sequencer):

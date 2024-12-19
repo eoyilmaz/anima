@@ -1466,7 +1466,7 @@ class MediaManager(object):
 
         return link
 
-    def upload_version(self, task, file_object, take_name=None, extension=""):
+    def upload_version(self, task, file_object, variant_name=None, extension=""):
         """Upload versions to the Task.path folder and create a Version object.
 
         Again the Version object will have a Repository root relative path.
@@ -1477,17 +1477,17 @@ class MediaManager(object):
             task (stalker.Task): The task that a version is uploaded to. Should be an
                 instance of :class:`.Task` class.
             file_object (file): A file like object holding the content of the version.
-            take_name (str): A string showing the the take name of the Version.
-                If skipped defaults.version_take_name will be used.
+            variant_name (str): A string showing the the take name of the Version.
+                If skipped defaults.version_variant_name will be used.
             extension (str): The file extension of the version.
 
         Returns:
             stalker.Version: A :class:`stalker.Version` instance.
         """
-        if take_name is None:
-            take_name = defaults.version_take_name
+        if variant_name is None:
+            variant_name = defaults.version_variant_name
 
-        v = Version(task=task, take_name=take_name, created_with="Stalker Pyramid")
+        v = Version(task=task, variant_name=variant_name, created_with="Stalker Pyramid")
         v.update_paths()
         v.extension = extension
 
@@ -2776,7 +2776,7 @@ def get_task_hierarchy_name(task):
     return "%s (%s) (%s)" % (task.name, path, task.id)
 
 
-def get_unique_take_names(task_id, include_reprs=False):
+def get_unique_variant_names(task_id, include_reprs=False):
     """Return the unique take names for the given task.
 
     Args:
@@ -2788,14 +2788,14 @@ def get_unique_take_names(task_id, include_reprs=False):
         list: A list of strings of unique take names.
     """
     query = (
-        DBSession.query(Version.take_name)
+        DBSession.query(Version.variant_name)
         .filter(Version.task_id == task_id)
     )
     if not include_reprs:
         from anima.representation import Representation
-        query = query.filter(~Version.take_name.contains(Representation.repr_separator))
+        query = query.filter(~Version.variant_name.contains(Representation.repr_separator))
 
-    return [t[0] for t in query.distinct().order_by(Version.take_name).all()]
+    return [t[0] for t in query.distinct().order_by(Version.variant_name).all()]
 
 
 def get_project_from_path(path):

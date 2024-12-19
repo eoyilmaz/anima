@@ -92,9 +92,7 @@ class ExternalDCC(DCCBase):
         :param name: the desired name
         :return: str
         """
-        from anima import string_types
-
-        if not isinstance(name, string_types):
+        if not isinstance(name, str):
             raise TypeError(
                 "%s.name should be an instance of str, not %s"
                 % (self.__class__.__name__, name.__class__.__name__)

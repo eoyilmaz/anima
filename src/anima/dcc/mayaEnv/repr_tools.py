@@ -258,7 +258,7 @@ class RepresentationGenerator(object):
 
         self.maya_env = Maya()
 
-        self.base_take_name = None
+        self.base_variant_name = None
         self.version = version
 
     @classmethod
@@ -272,11 +272,11 @@ class RepresentationGenerator(object):
             node for node in auxiliary.get_root_nodes() if node.referenceFile() is None
         ]
 
-    def get_latest_repr_version(self, take_name):
+    def get_latest_repr_version(self, variant_name):
         """Return the latest published version or creates a new version.
 
         Args:
-            take_name (str): The take_name.
+            variant_name (str): The variant_name.
 
         Returns:
             Version: The latest repr version of the given take.
@@ -286,7 +286,7 @@ class RepresentationGenerator(object):
         # filter to get the latest published version
         v = (
             Version.query.filter(Version.task == self.version.task)
-            .filter(Version.take_name == take_name)
+            .filter(Version.variant_name == variant_name)
             .filter(Version.is_published == True)
             .order_by(Version.version_number.desc())
             .first()
@@ -297,7 +297,7 @@ class RepresentationGenerator(object):
             v = Version(
                 created_by=self.logged_in_user,
                 task=self.version.task,
-                take_name=take_name,
+                variant_name=variant_name,
             )
             v.is_published = True
         else:
@@ -454,11 +454,11 @@ class RepresentationGenerator(object):
 
         r = Representation(version=version)
 
-        self.base_take_name = r.get_base_take_name(version)
+        self.base_variant_name = r.get_base_variant_name(version)
         if not r.is_base():
             raise RuntimeError(
                 "This is not a Base take for this representation series, "
-                "please open the base (%s) take!!!" % self.base_take_name
+                "please open the base (%s) take!!!" % self.base_variant_name
             )
 
         return version
@@ -595,12 +595,12 @@ class RepresentationGenerator(object):
 
         # save the scene as {{original_take}}@BBOX
         # use maya
-        take_name = "%s%s%s" % (
-            self.base_take_name,
+        variant_name = "%s%s%s" % (
+            self.base_variant_name,
             Representation.repr_separator,
             "BBOX",
         )
-        v = self.get_latest_repr_version(take_name)
+        v = self.get_latest_repr_version(variant_name)
 
         self.maya_env.save_as(v)
 
@@ -1029,12 +1029,12 @@ class RepresentationGenerator(object):
 
         # 6. save the scene as {{original_take}}@GPU
         # use maya
-        take_name = "%s%s%s" % (
-            self.base_take_name,
+        variant_name = "%s%s%s" % (
+            self.base_variant_name,
             Representation.repr_separator,
             "GPU",
         )
-        v = self.get_latest_repr_version(take_name)
+        v = self.get_latest_repr_version(variant_name)
         self.maya_env.save_as(v)
 
         # export the root nodes under the same file
@@ -1502,12 +1502,12 @@ class RepresentationGenerator(object):
 
         # save the scene as {{original_take}}@ASS
         # use maya
-        take_name = "%s%s%s" % (
-            self.base_take_name,
+        variant_name = "%s%s%s" % (
+            self.base_variant_name,
             Representation.repr_separator,
             "ASS",
         )
-        v = self.get_latest_repr_version(take_name)
+        v = self.get_latest_repr_version(variant_name)
         self.maya_env.save_as(v)
 
         # export the root nodes under the same file
@@ -1886,12 +1886,12 @@ class RepresentationGenerator(object):
 
         # save the scene as {{original_take}}@ASS
         # use maya
-        take_name = "%s%s%s" % (
-            self.base_take_name,
+        variant_name = "%s%s%s" % (
+            self.base_variant_name,
             Representation.repr_separator,
             "RS",
         )
-        v = self.get_latest_repr_version(take_name)
+        v = self.get_latest_repr_version(variant_name)
         self.maya_env.save_as(v)
 
         # export the root nodes under the same file

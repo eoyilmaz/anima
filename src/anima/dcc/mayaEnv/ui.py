@@ -200,7 +200,7 @@ class PrevisUI(object):
                 % (
                     seq1.get_sequence_name(),
                     sm.get_task_name(),
-                    sm.get_take_name(),
+                    sm.get_variant_name(),
                     sm.get_version(),
                     "edl",
                 ),

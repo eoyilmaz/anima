@@ -305,7 +305,7 @@ class Nuke(DCCBase):
             output_file_full_path = os.path.join(
                 version.absolute_path,
                 "Outputs",
-                version.take_name,
+                version.variant_name,
                 "v%03d" % version.version_number,
                 output_format_enum,
                 output_file_name,

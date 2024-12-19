@@ -190,11 +190,10 @@ class ConversionManagerBase(object):
         rs_node = node_creator.create()
 
         # rename the material to have a similar name with the original
-        from anima import string_types
         if rs_node is not None:
             node_type_name = (
                 conversion_specs["node_type"]
-                if isinstance(conversion_specs["node_type"], string_types)
+                if isinstance(conversion_specs["node_type"], str)
                 else conversion_specs["secondary_type"].replace(" ", "_")
             )
 
@@ -207,7 +206,7 @@ class ConversionManagerBase(object):
         # set attributes
         attributes = conversion_specs.get("attributes", [])
         for source_attr, target_attr in list(attributes.items()):
-            if isinstance(target_attr, string_types):
+            if isinstance(target_attr, str):
                 self.convert_str_attr(node, rs_node, source_attr, target_attr)
             elif isinstance(target_attr, list):
                 self.convert_list_attr(node, rs_node, source_attr, target_attr)

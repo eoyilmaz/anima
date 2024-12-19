@@ -9,11 +9,11 @@ from anima.ui.base import ui_caller
 from anima.ui.dialogs import task_picker_dialog
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.widgets import ValidatedLineEdit
-from anima.utils import get_task_hierarchy_name, get_unique_take_names
+from anima.utils import get_task_hierarchy_name, get_unique_variant_names
 
 from stalker import Asset, Task, Version, Shot, Sequence
 
-TAKE_NAME_VALIDATOR_REGEX = re.compile("([A-Z])([a-zA-Z0-9]+)")
+variant_name_VALIDATOR_REGEX = re.compile("([A-Z])([a-zA-Z0-9]+)")
 
 
 if False:
@@ -142,7 +142,7 @@ class EntityStorage(object):
             cls.storage[asset][task] = {}
 
         if version:
-            cls.storage[asset][task][version.take_name] = version
+            cls.storage[asset][task][version.variant_name] = version
 
     @classmethod
     def add_entities(cls, entities):
@@ -176,9 +176,9 @@ class EntityStorage(object):
                 and task
                 and version
                 and task in cls.storage[asset]
-                and version.take_name in cls.storage[asset][task]
+                and version.variant_name in cls.storage[asset][task]
             ):
-                cls.storage[asset][task].pop(version.take_name)
+                cls.storage[asset][task].pop(version.variant_name)
 
     @classmethod
     def is_in_storage(cls, entity):
@@ -205,8 +205,8 @@ class EntityStorage(object):
             return (
                 asset in cls.storage
                 and task in cls.storage[asset]
-                and version.take_name in cls.storage[asset][task]
-                and cls.storage[asset][task][version.take_name] == version
+                and version.variant_name in cls.storage[asset][task]
+                and cls.storage[asset][task][version.variant_name] == version
             )
         return False
 
@@ -615,7 +615,7 @@ class TakeWidget(QtWidgets.QWidget):
         # Update Versions list
         versions = (
             Version.query.filter(Version.task == self.task)
-            .filter(Version.take_name == self.take)
+            .filter(Version.variant_name == self.take)
             .order_by(Version.version_number.desc())
             .all()
         )
@@ -653,8 +653,8 @@ class TakeWidget(QtWidgets.QWidget):
         Returns:
             bool: True for valid, False otherwise.
         """
-        text = self.get_new_take_name()
-        match = TAKE_NAME_VALIDATOR_REGEX.match(text)
+        text = self.get_new_variant_name()
+        match = variant_name_VALIDATOR_REGEX.match(text)
         if not match or "".join(match.groups()) != text:
             self.take_new_name_line_edit.set_invalid(
                 "Take name is not in correct format"
@@ -664,7 +664,7 @@ class TakeWidget(QtWidgets.QWidget):
             self.take_new_name_line_edit.set_valid()
             return True
 
-    def get_new_take_name(self):
+    def get_new_variant_name(self):
         """Return the new take name."""
         return self.take_new_name_line_edit.text()
 
@@ -713,7 +713,7 @@ class TakeWidget(QtWidgets.QWidget):
             tooltip = "\n".join(
                 [
                     "{} | {} | v{:03d}".format(
-                        get_task_hierarchy_name(v.task), v.take_name, v.version_number
+                        get_task_hierarchy_name(v.task), v.variant_name, v.version_number
                     )
                     for v in version.inputs
                 ]
@@ -823,7 +823,7 @@ class TakeWidget(QtWidgets.QWidget):
             dict: The migration data.
         """
         return {
-            "new_name": self.get_new_take_name(),
+            "new_name": self.get_new_variant_name(),
             "versions": [self.get_current_version().version_number],
         }
 
@@ -1106,7 +1106,7 @@ class TaskWidget(QtWidgets.QGroupBox):
             return True
 
         text = self.asset_new_name_line_edit.text()
-        match = TAKE_NAME_VALIDATOR_REGEX.match(text)
+        match = variant_name_VALIDATOR_REGEX.match(text)
         if not match or "".join(match.groups()) != text:
             self.asset_new_name_line_edit.set_invalid(
                 "Asset name is not in correct format"
@@ -1128,7 +1128,7 @@ class TaskWidget(QtWidgets.QGroupBox):
             return True
 
         text = self.asset_new_code_line_edit.text()
-        match = TAKE_NAME_VALIDATOR_REGEX.match(text)
+        match = variant_name_VALIDATOR_REGEX.match(text)
         if not match or "".join(match.groups()) != text:
             self.asset_new_code_line_edit.set_invalid(
                 "Asset code is not in correct format"
@@ -1186,14 +1186,14 @@ class TaskWidget(QtWidgets.QGroupBox):
             )
         )
         # add all the takes of this task as a TakeWidget
-        take_names = get_unique_take_names(self._task.id)
-        for take in take_names:
+        variant_names = get_unique_variant_names(self._task.id)
+        for take in variant_names:
             take_widget = TakeWidget(parent=self, task=self._task, take=take)
             self.child_widgets_layout.addWidget(take_widget)
             take_widget.add_references.connect(self.add_task)
             take_widget.version_updated.connect(self.version_updated)
             self.take_widgets.append(take_widget)
-        if take_names:
+        if variant_names:
             self.no_versions_place_holder.setVisible(False)
 
         if task.children:

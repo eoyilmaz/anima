@@ -532,7 +532,7 @@ def check_if_previous_version_references(progress_controller=None):
     for ref in all_references:  # check only 1st level references
         ref_version = m.get_version_from_full_path(ref.path)
         if ref_version:
-            if ref_version.task == ver.task and ref_version.take_name == ver.take_name:
+            if ref_version.task == ver.task and ref_version.variant_name == ver.variant_name:
                 same_version_references.append(ref)
         progress_controller.increment()
 
@@ -713,7 +713,7 @@ def check_if_default_shader(progress_controller=None):
 
     # skip if this is a representation
     v = staging.get("version")
-    if v and Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.variant_name:
         progress_controller.complete()
         return
 
@@ -874,7 +874,7 @@ def check_model_quality(progress_controller=None):
 
     # skip if this is a representation
     v = staging.get("version")
-    if v and Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.variant_name:
         progress_controller.complete()
         return
     progress_controller.increment()
@@ -965,7 +965,7 @@ def check_empty_groups(progress_controller=None):
         progress_controller = ProgressControllerBase()
     # skip if this is a representation
     v = staging.get("version")
-    if v and Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.variant_name:
         progress_controller.complete()
         return
 
@@ -1032,7 +1032,7 @@ def check_default_uv_set(progress_controller=None):
 
     # skip if this is a representation
     v = staging.get("version")
-    if v and Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.variant_name:
         progress_controller.complete()
         return
 
@@ -1081,7 +1081,7 @@ def check_uv_existence(progress_controller=None):
 
     # skip if this is a representation
     v = staging.get("version")
-    if v and Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.variant_name:
         progress_controller.complete()
         return
 
@@ -1117,7 +1117,7 @@ def check_out_of_space_uvs(progress_controller=None):
 
     # skip if this is a representation
     v = staging.get("version")
-    if v and Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.variant_name:
         progress_controller.complete()
         return
 
@@ -1161,7 +1161,7 @@ def check_uv_border_crossing(progress_controller=None):
 
     # skip if this is a representation
     v = staging.get("version")
-    if v and Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.variant_name:
         progress_controller.complete()
         return
 
@@ -1270,7 +1270,7 @@ def check_uvs(progress_controller=None):
 
     # skip if this is a representation
     v = staging.get("version")
-    if v and Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.variant_name:
         progress_controller.complete()
         return
 
@@ -1387,7 +1387,7 @@ def check_all_renderer_specific_textures(progress_controller=None):
         return
 
     v = staging.get("version")
-    if v and Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.variant_name:
         progress_controller.complete()
         return
 
@@ -1664,7 +1664,7 @@ def check_objects_still_using_default_shader(progress_controller=None):
 
     # skip if this is a representation
     v = staging.get("version")
-    if v and Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.variant_name:
         progress_controller.complete()
         return
     progress_controller.increment()
@@ -1697,7 +1697,7 @@ def check_component_edits_on_references(progress_controller=None):
 
     # skip if this is a representation
     v = staging.get("version")
-    if v and Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.variant_name:
         progress_controller.complete()
         return
 
@@ -2135,7 +2135,7 @@ def check_time_logs(progress_controller=None):
 
     # skip if this is a representation
     v = staging.get("version")
-    if v and Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.variant_name:
         progress_controller.complete()
         return
 
@@ -2773,7 +2773,7 @@ def create_representations(progress_controller=None):
         progress_controller.complete()
         return
 
-    if Representation.repr_separator in v.take_name:
+    if Representation.repr_separator in v.variant_name:
         progress_controller.complete()
         return
     progress_controller.increment()

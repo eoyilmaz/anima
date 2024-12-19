@@ -23,20 +23,12 @@ Place the following variables in to the config.py file::
 import logging
 import os
 import stat
-import sys
 import tempfile
 
 from stalker import SimpleEntity, Project
 
 from anima.version import __version__
 from anima.config import Config
-
-
-string_types = []
-if sys.version_info[0] >= 3:  # Python 3
-    string_types = tuple([str])
-else:  # Python 2
-    string_types = tuple([str, unicode])
 
 
 ALEMBIC = "Alembic"

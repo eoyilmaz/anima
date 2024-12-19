@@ -408,7 +408,7 @@ class Houdini(DCCBase):
         import os
 
         output_filename = "$HIP/Outputs/renders/{}/v{:03d}/$OS/{}_$OS.$F4.exr".format(
-            version.take_name,
+            version.variant_name,
             version.version_number,
             os.path.splitext(version.filename)[0]
         )

@@ -108,7 +108,7 @@ class VersionItem(QtGui.QStandardItem):
         # Take
         take_item = QtGui.QStandardItem()
         take_item.setEditable(False)
-        take_item.setText(version.take_name)
+        take_item.setText(version.variant_name)
         take_item.version = version
         take_item.action = action
         set_item_color(take_item, font_color)

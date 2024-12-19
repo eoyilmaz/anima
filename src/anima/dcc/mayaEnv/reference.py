@@ -167,7 +167,7 @@ class Reference(object):
         if not current_version.is_published:
             raise RuntimeError("Please Publish this maya scene")
 
-        if current_version.take_name != "Main":
+        if current_version.variant_name != "Main":
             raise RuntimeError("This is not the Main take")
 
         # find lookDev
@@ -184,12 +184,12 @@ class Reference(object):
 
         previous_look_dev_version = (
             Version.query.filter(Version.task == look_dev)
-            .filter(Version.take_name == "Main")
+            .filter(Version.variant_name == "Main")
             .first()
         )
 
         description = "Auto Created By %s " % logged_in_user.name
-        take_name = defaults.version_take_name
+        variant_name = defaults.version_variant_name
         if not previous_look_dev_version:
             # do the trick
             pm.newFile(force=True)
@@ -198,7 +198,7 @@ class Reference(object):
             new_version = Version(
                 task=look_dev,
                 description=description,
-                take_name=take_name,
+                variant_name=variant_name,
                 created_by=logged_in_user,
             )
             new_version.is_published = True
@@ -228,7 +228,7 @@ class Reference(object):
                 new_version = Version(
                     task=look_dev,
                     description=description,
-                    take_name=take_name,
+                    variant_name=variant_name,
                     created_by=logged_in_user,
                     parent=latest_look_dev_version,
                 )
@@ -671,13 +671,13 @@ class Reference(object):
                 Version.parent == source_version
             ).all()
             for cv in child_versions:
-                if generate_gpu is True and "@GPU" in cv.take_name:
+                if generate_gpu is True and "@GPU" in cv.variant_name:
                     generate_gpu = False
 
-                if generate_ass is True and "@ASS" in cv.take_name:
+                if generate_ass is True and "@ASS" in cv.variant_name:
                     generate_ass = False
 
-                if generate_rs is True and "@RS" in cv.take_name:
+                if generate_rs is True and "@RS" in cv.variant_name:
                     generate_rs = False
 
         total_number_of_reprs = generate_gpu + generate_ass + generate_rs
@@ -773,7 +773,7 @@ class Reference(object):
             local_generate_rs = generate_rs
 
             # check if this is a repr
-            if "@" in v.take_name:
+            if "@" in v.variant_name:
                 # use the parent
                 v = v.parent
                 if not v:
@@ -784,13 +784,13 @@ class Reference(object):
                 # generated from this version
                 child_versions = Version.query.filter(Version.parent == v).all()
                 for cv in child_versions:
-                    if local_generate_gpu is True and "@GPU" in cv.take_name:
+                    if local_generate_gpu is True and "@GPU" in cv.variant_name:
                         local_generate_gpu = False
 
-                    if local_generate_ass is True and "@ASS" in cv.take_name:
+                    if local_generate_ass is True and "@ASS" in cv.variant_name:
                         local_generate_ass = False
 
-                    if local_generate_rs is True and "@RS" in cv.take_name:
+                    if local_generate_rs is True and "@RS" in cv.variant_name:
                         local_generate_rs = False
 
             gen.version = v

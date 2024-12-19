@@ -7,7 +7,7 @@ from anima.ui.utils import get_cached_icon
 from anima.utils import (
     partial_task_query,
     convert_to_partial_task,
-    get_unique_take_names,
+    get_unique_variant_names,
 )
 
 from stalker import Project, SimpleEntity, Task
@@ -280,7 +280,7 @@ class TaskItem(QtGui.QStandardItem):
         elif self.show_takes:
             # There are no child tasks.
             # Look for takes
-            for take in get_unique_take_names(self.task.id):
+            for take in get_unique_variant_names(self.task.id):
                 take_item = TakeItem(task=self.task, take=take)
                 entity_type_item = QtGui.QStandardItem()
                 entity_type_item.setData("Take", QtCore.Qt.DisplayRole)

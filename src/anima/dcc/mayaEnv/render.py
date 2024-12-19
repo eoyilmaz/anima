@@ -1264,11 +1264,9 @@ class Render(object):
         placement_node = pm.ls(sl=1, type=pm.nt.Place2dTexture)[0]
         file_nodes = pm.ls(sl=1, type=pm.nt.File)
 
-        from anima import string_types
-
         for file_node in file_nodes:
             for attr in attr_lut:
-                if isinstance(attr, string_types):
+                if isinstance(attr, str):
                     source_attr_name = attr
                     target_attr_name = attr
                 elif isinstance(attr, tuple):
@@ -3204,7 +3202,7 @@ class LightingSceneBuilder(object):
             rig_task = ref_version.task
             rig_task_id = rig_task.id
             rig_task_id_as_str = str(rig_task_id)
-            rig_take_name = ref_version.take_name
+            rig_variant_name = ref_version.variant_name
             copy_number = auxiliary.get_reference_copy_number(ref)
 
             cacheable_attr_value = None
@@ -3213,13 +3211,13 @@ class LightingSceneBuilder(object):
             found_cacheable_attr_value = False
             if rig_task_id_as_str in self.rig_to_cacheable_lut:
                 print("rig_task_id_as_str in self.rig_to_cacheable_lut")
-                if rig_take_name in self.rig_to_cacheable_lut[rig_task_id_as_str]:
+                if rig_variant_name in self.rig_to_cacheable_lut[rig_task_id_as_str]:
                     cacheable_attr_value = self.rig_to_cacheable_lut[
                         rig_task_id_as_str
-                    ][rig_take_name]
+                    ][rig_variant_name]
                     found_cacheable_attr_value = True
                 else:
-                    print("rig_take_name not in self.rig_to_cacheable_lut[rig_task_id_as_str] !!!!!")
+                    print("rig_variant_name not in self.rig_to_cacheable_lut[rig_task_id_as_str] !!!!!")
 
             if not found_cacheable_attr_value:
                 print("not found_cacheable_attr_value")
@@ -3236,7 +3234,7 @@ class LightingSceneBuilder(object):
                     self.rig_to_cacheable_lut[rig_task_id_as_str] = {}
 
                 self.rig_to_cacheable_lut[rig_task_id_as_str][
-                    rig_take_name
+                    rig_variant_name
                 ] = cacheable_attr_value
 
             cacheable_attr_value_with_copy_number = "{}{}".format(
@@ -3247,23 +3245,23 @@ class LightingSceneBuilder(object):
             ))
 
             non_renderable_objects = []
-            look_dev_take_name = None
+            look_dev_variant_name = None
             look_dev_task = None
             if rig_task_id_as_str in self.rig_to_look_dev_lut:
                 # there is a custom mapping for this rig use it
-                if rig_take_name in self.rig_to_look_dev_lut[rig_task_id_as_str]:
+                if rig_variant_name in self.rig_to_look_dev_lut[rig_task_id_as_str]:
                     lut_data = self.rig_to_look_dev_lut[rig_task_id_as_str][
-                        rig_take_name
+                        rig_variant_name
                     ]
                     look_dev_task_id = lut_data["look_dev_task_id"]
-                    look_dev_take_name = lut_data["look_dev_take_name"]
+                    look_dev_variant_name = lut_data["look_dev_variant_name"]
                     look_dev_task = Task.query.get(look_dev_task_id)
                     if "no_render" in lut_data:
                         # there are object not to be rendered
                         non_renderable_objects = lut_data["no_render"]
             else:
                 # try to get the sibling look dev task
-                look_dev_take_name = ref_version.take_name
+                look_dev_variant_name = ref_version.variant_name
                 look_dev_task = (
                     Task.query.filter(Task.parent == rig_task.parent)
                     .filter(Task.type == look_dev_type)
@@ -3279,7 +3277,7 @@ class LightingSceneBuilder(object):
             # get the latest published look dev version for this cacheable node
             latest_published_look_dev_version = (
                 Version.query.filter(Version.task == look_dev_task)
-                .filter(Version.take_name == look_dev_take_name)
+                .filter(Version.variant_name == look_dev_variant_name)
                 .filter(Version.is_published == True)
                 .order_by(Version.version_number.desc())
                 .first()
@@ -3396,7 +3394,7 @@ class LightingSceneBuilder(object):
 
         animation_version = (
             Version.query.filter(Version.task == animation_task)
-            .filter(Version.take_name == "Main")
+            .filter(Version.variant_name == "Main")
             .order_by(Version.version_number.desc())
             .first()
         )
@@ -3521,12 +3519,12 @@ class LightingSceneBuilder(object):
             if input_version.task.type and input_version.task.type == layout_type:
                 # reference this version here too,
                 # use the RSProxy repr
-                rs_proxy_take_name = "{}@RS".format(
-                    input_version.take_name.split("@")[0]
+                rs_proxy_variant_name = "{}@RS".format(
+                    input_version.variant_name.split("@")[0]
                 )
                 input_version = (
                     Version.query.filter(Version.task == input_version.task)
-                    .filter(Version.take_name == rs_proxy_take_name)
+                    .filter(Version.variant_name == rs_proxy_variant_name)
                     .filter(Version.is_published == True)
                     .order_by(Version.version_number.desc())
                     .first()

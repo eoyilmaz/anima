@@ -255,7 +255,7 @@ class SelectedVersionItem(QtGui.QStandardItem):
         v = version
         self.setData(
             "{} | {} | v{:03d}".format(
-                get_task_hierarchy_name(v.task), v.take_name, v.version_number
+                get_task_hierarchy_name(v.task), v.variant_name, v.version_number
             ),
             QtCore.Qt.DisplayRole,
         )

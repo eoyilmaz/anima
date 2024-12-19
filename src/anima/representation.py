@@ -21,7 +21,7 @@ class Representation(object):
     one bounding box.
 
     In Anima Pipeline, different representations are managed through the
-    Version.take_name attribute. So if the base take name for a given Version
+    Version.variant_name attribute. So if the base take name for a given Version
     is **Main** then **Main_BBox** or **Main_ASS** or **Main_GPU** is
     considered as the other representations.
 
@@ -98,18 +98,18 @@ class Representation(object):
         :param str repr_name: Representation name
         :return:
         """
-        base_take_name = self.get_base_take_name(self.version)
+        base_variant_name = self.get_base_variant_name(self.version)
 
-        if repr_name != self.base_repr_name and repr_name != base_take_name:
+        if repr_name != self.base_repr_name and repr_name != base_variant_name:
             resolved_repr_name = "{}{}{}".format(
-                base_take_name,
+                base_variant_name,
                 self.repr_separator,
                 repr_name,
             )
         else:
-            resolved_repr_name = base_take_name
+            resolved_repr_name = base_variant_name
 
-        return self.version.take_name == resolved_repr_name
+        return self.version.variant_name == resolved_repr_name
 
     def is_base(self):
         """Returns a bool value depending if the version is the base of its
@@ -117,49 +117,49 @@ class Representation(object):
 
         :return: bool
         """
-        base_take_name = self.get_base_take_name(self.version)
-        return self.version.take_name == base_take_name
+        base_variant_name = self.get_base_variant_name(self.version)
+        return self.version.variant_name == base_variant_name
 
     @classmethod
-    def get_base_take_name(cls, version):
-        """Returns the base take_name for the related version
+    def get_base_variant_name(cls, version):
+        """Returns the base variant_name for the related version
         :return: str
         """
         # find the base repr name from the current version
-        take_name = ""
+        variant_name = ""
         from stalker import Version
 
         if isinstance(version, Version):
-            take_name = version.take_name
+            variant_name = version.variant_name
         elif isinstance(version, str):
-            take_name = version
+            variant_name = version
 
-        if cls.repr_separator in take_name:
+        if cls.repr_separator in variant_name:
             # it is a repr
-            base_repr_take_name = take_name.split(cls.repr_separator)[0]
+            base_repr_variant_name = variant_name.split(cls.repr_separator)[0]
         else:
             # it is the base repr
-            base_repr_take_name = take_name
+            base_repr_variant_name = variant_name
 
-        return base_repr_take_name
+        return base_repr_variant_name
 
     def list_all(self):
         """lists other representations"""
-        base_take_name = self.get_base_take_name(self.version)
+        base_variant_name = self.get_base_variant_name(self.version)
 
         # find any version that starts with the base_repr_name
         # under the same task
-        from anima.utils import get_unique_take_names
+        from anima.utils import get_unique_variant_names
 
-        take_names = get_unique_take_names(self.version.task.id, include_reprs=True)
-        take_names.sort()
+        variant_names = get_unique_variant_names(self.version.task.id, include_reprs=True)
+        variant_names.sort()
 
         repr_names = []
-        for take_name in take_names:
-            if take_name.startswith(base_take_name):
-                if take_name != base_take_name:
+        for variant_name in variant_names:
+            if variant_name.startswith(base_variant_name):
+                if variant_name != base_variant_name:
                     repr_names.append(
-                        take_name[len(base_take_name) + len(self.repr_separator) :]
+                        variant_name[len(base_variant_name) + len(self.repr_separator) :]
                     )
                 else:
                     repr_names.append(self.base_repr_name)
@@ -171,17 +171,17 @@ class Representation(object):
         :param repr_name: The take name of the desires representation.
         :return: :class:`.Version`
         """
-        base_take_name = self.get_base_take_name(self.version)
+        base_variant_name = self.get_base_variant_name(self.version)
         if repr_name == self.base_repr_name:
-            take_name = base_take_name
+            variant_name = base_variant_name
         else:
-            take_name = "{}{}{}".format(base_take_name, self.repr_separator, repr_name)
+            variant_name = "{}{}{}".format(base_variant_name, self.repr_separator, repr_name)
 
         from stalker import Version
 
         return (
             Version.query.filter_by(task=self.version.task)
-            .filter_by(take_name=take_name)
+            .filter_by(variant_name=variant_name)
             .filter_by(is_published=True)
             .order_by(Version.version_number.desc())
             .first()
@@ -193,10 +193,10 @@ class Representation(object):
         if not self.version:
             return None
 
-        take_name = self.version.take_name
-        if self.repr_separator in take_name:
+        variant_name = self.version.variant_name
+        if self.repr_separator in variant_name:
             # it is a repr
-            repr_name = take_name.split(self.repr_separator)[1]
+            repr_name = variant_name.split(self.repr_separator)[1]
         else:
             # it is the base repr
             repr_name = self.base_repr_name

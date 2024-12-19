@@ -27,7 +27,7 @@ if False:
     from PySide2 import QtCore, QtWidgets
 
 
-DEFAULT_TAKE_NAME = "Main"
+DEFAULT_variant_name = "Main"
 DEFAULT_RENDER_PRESET_NAME = "PlateInjector"
 
 
@@ -331,7 +331,7 @@ class ShotManager(object):
         cls,
         shot_clips,
         handle=0,
-        take_name=None,
+        variant_name=None,
         preset_name=None,
         reuse_latest_version=False,
     ):
@@ -340,13 +340,13 @@ class ShotManager(object):
         Args:
             shot_clips (list): Shot clips.
             handle (int): Handle from both ends of the clip.
-            take_name (str): The desired take name for the Stalker Version.
+            variant_name (str): The desired take name for the Stalker Version.
             preset_name (str): The preset name to be used for rendering.
             reuse_latest_version (bool): Create a new version everytime (default) or
                 reuse the latest version.
         """
-        if take_name is None:
-            take_name = DEFAULT_TAKE_NAME
+        if variant_name is None:
+            variant_name = DEFAULT_variant_name
 
         if preset_name is None:
             preset_name = DEFAULT_RENDER_PRESET_NAME
@@ -354,7 +354,7 @@ class ShotManager(object):
         for shot_clip in shot_clips:
             shot_clip.create_render_job(
                 handle=handle,
-                take_name=take_name,
+                variant_name=variant_name,
                 preset_name=preset_name,
                 reuse_latest_version=reuse_latest_version,
             )
@@ -394,14 +394,14 @@ class ShotClip(object):
         self.clip = clip
         self._shot_code = None
 
-    def create_shot_hierarchy(self, handle=0, take_name=None):
+    def create_shot_hierarchy(self, handle=0, variant_name=None):
         """Create the related shot hierarchy.
 
         :param int handle: The handle on each side of the clip. The default value is 0.
-        :param str take_name: The take_name of the created Plate. The default value is DEFAULT_TAKE_NAME.
+        :param str variant_name: The variant_name of the created Plate. The default value is DEFAULT_variant_name.
         """
-        if take_name is None:
-            take_name = DEFAULT_TAKE_NAME
+        if variant_name is None:
+            variant_name = DEFAULT_variant_name
 
         logged_in_user = self.get_logged_in_user()
 
@@ -855,14 +855,14 @@ class ShotClip(object):
         return type_instance
 
     def create_render_job(
-        self, handle=0, take_name=None, preset_name=None, reuse_latest_version=False
+        self, handle=0, variant_name=None, preset_name=None, reuse_latest_version=False
     ):
         """Create render job for the clip.
 
         Args:
             handle (int): The handles on each side of the clip. The default value is 0.
-            take_name (str): The take_name of the created Version. Default value is
-                DEFAULT_DEFAULT_TAKE_NAME.
+            variant_name (str): The variant_name of the created Version. Default value is
+                DEFAULT_DEFAULT_variant_name.
             preset_name (str): The template name in Resolve to use when exporting the
                 shot. The default is DEFAULT_RENDER_PRESET_NAME.
             reuse_latest_version (bool): If set to True, this will re-use the latest
@@ -870,8 +870,8 @@ class ShotClip(object):
                 always create new versions. This is handy if it is desired to write over
                 the previous version.
         """
-        if take_name is None:
-            take_name = DEFAULT_TAKE_NAME
+        if variant_name is None:
+            variant_name = DEFAULT_variant_name
 
         if preset_name is None:
             preset_name = DEFAULT_RENDER_PRESET_NAME
@@ -893,7 +893,7 @@ class ShotClip(object):
         # get the shot
         from stalker import Task, Type
 
-        shot = self.create_shot_hierarchy(handle=handle, take_name=take_name)
+        shot = self.create_shot_hierarchy(handle=handle, variant_name=variant_name)
 
         # check if the preset is Audio Only
         # TODO: Use a better approach to define if the preset is audio only.
@@ -935,7 +935,7 @@ class ShotClip(object):
         with DBSession.no_autoflush:
             all_versions = (
                 Version.query.filter(Version.task == main_task)
-                .filter(Version.take_name == take_name)
+                .filter(Version.variant_name == variant_name)
                 .all()
             )
 
@@ -943,7 +943,7 @@ class ShotClip(object):
             logged_in_user = self.get_logged_in_user()
             version = Version(
                 task=main_task,
-                take_name=take_name,
+                variant_name=variant_name,
                 created_by=logged_in_user,
                 updated_by=logged_in_user,
                 description="Autocreated by Resolve",
@@ -972,7 +972,7 @@ class ShotClip(object):
         target_dir = os.path.join(
             version.absolute_path,
             "Outputs",
-            version.take_name,
+            version.variant_name,
             "v%03d" % version.version_number,
             "wav" if audio_only else "exr",
         )
@@ -1247,7 +1247,7 @@ class ShotManagerUI(object):
         self.project_combo_box = None
         self.sequence_combo_box = None
         self.handle_spin_box = None
-        self.take_name_line_edit = None
+        self.variant_name_line_edit = None
         self.render_presets_combo_box = None
         self.reuse_latest_version_check_box = None
         self.refresh_render_presets_button = None
@@ -1367,24 +1367,24 @@ class ShotManagerUI(object):
         handle_horizontal_layout.addWidget(self.handle_spin_box)
 
         # TakeName horizontal layout
-        take_name_horizontal_layout = QtWidgets.QHBoxLayout()
-        self.main_layout.addLayout(take_name_horizontal_layout)
+        variant_name_horizontal_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addLayout(variant_name_horizontal_layout)
 
         # The take name to use
-        take_name_label = QtWidgets.QLabel(self.parent_widget)
-        take_name_label.setText("Take Name")
-        take_name_label.setMinimumWidth(140)
-        take_name_label.setMaximumWidth(140)
-        take_name_horizontal_layout.addWidget(take_name_label)
+        variant_name_label = QtWidgets.QLabel(self.parent_widget)
+        variant_name_label.setText("Take Name")
+        variant_name_label.setMinimumWidth(140)
+        variant_name_label.setMaximumWidth(140)
+        variant_name_horizontal_layout.addWidget(variant_name_label)
 
-        self.take_name_line_edit = QtWidgets.QLineEdit(self.parent_widget)
-        self.take_name_line_edit.setText(
-            DEFAULT_TAKE_NAME
+        self.variant_name_line_edit = QtWidgets.QLineEdit(self.parent_widget)
+        self.variant_name_line_edit.setText(
+            DEFAULT_variant_name
         )  # Uses the default take name
-        self.take_name_line_edit.textEdited.connect(
+        self.variant_name_line_edit.textEdited.connect(
             partial(self.shot_related_data_value_changed)
         )
-        take_name_horizontal_layout.addWidget(self.take_name_line_edit)
+        variant_name_horizontal_layout.addWidget(self.variant_name_line_edit)
 
         # Render Preset list
         render_preset_horizontal_layout = QtWidgets.QHBoxLayout()
@@ -1519,7 +1519,7 @@ class ShotManagerUI(object):
         # update the combo box based on the current project
         # set the defaults
         handle = 0
-        take_name = DEFAULT_TAKE_NAME
+        variant_name = DEFAULT_variant_name
         render_preset = DEFAULT_RENDER_PRESET_NAME
 
         project = self.project_combo_box.get_current_project()
@@ -1529,8 +1529,8 @@ class ShotManagerUI(object):
                 if "handle" in storage:
                     handle = storage["handle"]
 
-                if "take_name" in storage:
-                    take_name = storage["take_name"]
+                if "variant_name" in storage:
+                    variant_name = storage["variant_name"]
 
                 if "render_preset" in storage:
                     render_preset = storage["render_preset"]
@@ -1539,7 +1539,7 @@ class ShotManagerUI(object):
         self.handle_spin_box.setValue(handle)
 
         # update the take line edit
-        self.take_name_line_edit.setText(take_name)
+        self.variant_name_line_edit.setText(variant_name)
 
         # update the combo box
         index = self.render_presets_combo_box.findText(
@@ -1557,17 +1557,17 @@ class ShotManagerUI(object):
             return
 
         handle = self.handle_spin_box.value()
-        take_name = self.take_name_line_edit.text()
+        variant_name = self.variant_name_line_edit.text()
         render_preset = self.render_presets_combo_box.currentText()
 
         self.project_based_settings_storage[project.id] = {
             "handle": handle,
-            "take_name": take_name,
+            "variant_name": variant_name,
             "render_preset": render_preset,
         }
 
     def shot_related_data_value_changed(self, value):
-        """runs when the handle, take_name or preset value is changed"""
+        """runs when the handle, variant_name or preset value is changed"""
         if self._shot_related_data_is_updating:
             return
 
@@ -1712,7 +1712,7 @@ class ShotManagerUI(object):
         anima_dialog_base.get_logged_in_user()
 
         handle = self.handle_spin_box.value()
-        take_name = self.take_name_line_edit.text()
+        variant_name = self.variant_name_line_edit.text()
         preset_name = self.render_presets_combo_box.currentText()
         reuse_latest_version = self.reuse_latest_version_check_box.isChecked()
 
@@ -1743,7 +1743,7 @@ class ShotManagerUI(object):
                 shot_clips.append(shot_clip)
         try:
             shot_manager.create_render_jobs(
-                shot_clips, handle, take_name, preset_name, reuse_latest_version
+                shot_clips, handle, variant_name, preset_name, reuse_latest_version
             )
             if success:
                 QtWidgets.QMessageBox.information(

@@ -892,7 +892,7 @@ workspace -fr "translatorData" "Outputs/data";
         if sm is not None:
             sm.get_shot_name_template()
             sm.set_task_name(version.task.name)
-            sm.set_take_name(version.take_name)
+            sm.set_variant_name(version.variant_name)
             sm.set_version("v%03d" % version.version_number)
 
             for seq in sm.sequences.get():
@@ -906,7 +906,7 @@ workspace -fr "translatorData" "Outputs/data";
             version.absolute_path,
             "Outputs",
             "renders",
-            version.take_name,
+            version.variant_name,
             "v{:03d}".format(version.version_number),
         ).replace("\\", "/")
 
@@ -1108,9 +1108,7 @@ workspace -fr "translatorData" "Outputs/data";
         :param path: the path which wanted to be checked
         :return: True or False
         """
-        from anima import string_types
-
-        assert isinstance(path, string_types)
+        assert isinstance(path, str)
         path = os.path.expandvars(path)
         repo = cls.find_repo(path)
         return repo is not None
@@ -1322,7 +1320,7 @@ workspace -fr "translatorData" "Outputs/data";
                 version = self.get_version_from_full_path(path)
                 if version:
                     # check if this is a representation
-                    if Representation.repr_separator in version.take_name:
+                    if Representation.repr_separator in version.variant_name:
                         # use the parent version
                         version = version.parent
                     if version and version not in versions:
@@ -2027,7 +2025,7 @@ workspace -fr "translatorData" "Outputs/data";
                     # version
                     new_version = Version(
                         task=vers.task,
-                        take_name=vers.take_name,
+                        variant_name=vers.variant_name,
                         parent=vers,
                         description="Automatically created with Fix Reference "
                         "Namespace",

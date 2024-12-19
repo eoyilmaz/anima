@@ -190,7 +190,7 @@ class TestEnvironment(DCCBase):
             # save as a new version
             new_version = Version(
                 task=version.task,
-                take_name=version.take_name,
+                variant_name=version.variant_name,
                 parent=version,
                 description="Automatically created with " "Deep Reference Update",
             )

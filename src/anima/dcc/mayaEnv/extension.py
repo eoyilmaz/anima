@@ -315,21 +315,21 @@ class SequenceManagerExtension(object):
         self.task_name.set(task_name)
 
     @extends(pm.nodetypes.SequenceManager)
-    def get_take_name(self):
-        """returns the take_name attribute value, creates the attribute if
+    def get_variant_name(self):
+        """returns the variant_name attribute value, creates the attribute if
         missing
         """
-        if not self.hasAttr("take_name"):
-            self.set_take_name("")
-        return self.take_name.get()
+        if not self.hasAttr("variant_name"):
+            self.set_variant_name("")
+        return self.variant_name.get()
 
     @extends(pm.nodetypes.SequenceManager)
-    def set_take_name(self, take_name):
-        """sets the take_name attribute value"""
-        if not self.hasAttr("take_name"):
-            self.addAttr("take_name", dt="string")
+    def set_variant_name(self, variant_name):
+        """sets the variant_name attribute value"""
+        if not self.hasAttr("variant_name"):
+            self.addAttr("variant_name", dt="string")
 
-        self.take_name.set(take_name)
+        self.variant_name.set(variant_name)
 
     @extends(pm.nodetypes.SequenceManager)
     def create_sequence(self, name=None):
@@ -971,7 +971,7 @@ class ShotExtension(object):
             camera = self.currentCamera.get()
             version = sm.get_version()
             task = sm.get_task_name()
-            take = sm.get_take_name()
+            take = sm.get_variant_name()
             template = sm.get_shot_name_template()
 
             # replace template variables
@@ -1165,7 +1165,7 @@ class ShotExtension(object):
         camera = self.currentCamera.get()
         version = sm.get_version()
         task = sm.get_task_name()
-        take = sm.get_take_name()
+        take = sm.get_variant_name()
         template = sm.get_shot_name_template()
 
         # replace template variables

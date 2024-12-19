@@ -36,11 +36,11 @@ class AssetMigrationTool(object):
                 "new_code": "New Asset Code",  # optional asset new name
                 "new_parent_id": new_parent_task.id,
                 "takes": {  # Take data
-                    {old_take_name_1}: {  # Version data
+                    {old_variant_name_1}: {  # Version data
                         "new_name": {new_name},  # Optional
                         "versions": [version1.version_number, version2.version_number]
                     },
-                    {old_take_name_2}: {  # Version data
+                    {old_variant_name_2}: {  # Version data
                         "new_name": {new_name},  # Optional
                         "versions": [version1.version_number, version2.version_number]
                     }
@@ -91,15 +91,15 @@ class AssetMigrationTool(object):
         """
         raise NotImplementedError("Not implemented yet!")
 
-    def add_take(self, task, old_take_name, new_take_name=None):
+    def add_take(self, task, old_variant_name, new_variant_name=None):
         """Add a take to the list.
 
         Args:
             task (stalker.Task): The task to add the take to. The parent Asset needs to
                 be in the list.
-            old_take_name (str): The take name to add.
-            new_take_name (str): The new take name, can be skipped in which case the
-                ``old_take_name`` argument value will be used.
+            old_variant_name (str): The take name to add.
+            new_variant_name (str): The new take name, can be skipped in which case the
+                ``old_variant_name`` argument value will be used.
         """
         raise NotImplementedError("Not implemented yet!")
 
@@ -126,8 +126,8 @@ class AssetMigrationTool(object):
         for task_id in self.migration_recipe:
             progress_count += 1
             takes = self.migration_recipe[task_id].get("takes", {})
-            for take_name in takes:
-                versions = takes[take_name].get("versions", [])
+            for variant_name in takes:
+                versions = takes[variant_name].get("versions", [])
                 for i, version_number in enumerate(versions):
                     progress_count += 1
 
@@ -138,27 +138,27 @@ class AssetMigrationTool(object):
 
         for task_id in self.migration_recipe:
             takes = self.migration_recipe[task_id].get("takes", {})
-            for take_name in takes:
-                versions = takes[take_name].get("versions", [])
+            for variant_name in takes:
+                versions = takes[variant_name].get("versions", [])
                 for i, version_number in enumerate(versions):
                     progress_caller.step(
-                        message="Sort versions: {task_id}-{take_name}-"
+                        message="Sort versions: {task_id}-{variant_name}-"
                         "v{version_number:03d}".format(
                             task_id=task_id,
-                            take_name=take_name,
+                            variant_name=variant_name,
                             version_number=version_number,
                         )
                     )
                     v = (
                         Version.query.filter(Version.task_id == task_id)
-                        .filter(Version.take_name == take_name)
+                        .filter(Version.variant_name == variant_name)
                         .filter(Version.version_number == version_number)
                         .first()
                     )
                     if not v:
                         continue
                     # store the version in the migration_recipe for later use
-                    takes[take_name]["versions"][i] = v
+                    takes[variant_name]["versions"][i] = v
                     inordered_list_of_versions_to_move.append(v)
 
         # fill new_parent_id, new_name and new_code for all items
@@ -249,8 +249,8 @@ class AssetMigrationTool(object):
             # We kind of need a versions list that is in
             # reverse-breadth-first order in their dependencies to each other
             takes = self.migration_recipe[source_entity_id].get("takes", {})
-            for take_name in takes:
-                versions = takes[take_name].get("versions", [])
+            for variant_name in takes:
+                versions = takes[variant_name].get("versions", [])
                 for v in versions:  # at this point we should have normal versions
                     # check if something referencing this v has already moved this v
                     # to the ordered list.
@@ -275,7 +275,7 @@ class AssetMigrationTool(object):
                     # add the version to the version centric migration recipe
                     version_centric_migration_recipe[v] = {
                         "new_task": new_task,
-                        "take_name": takes[take_name].get("new_name", take_name),
+                        "variant_name": takes[variant_name].get("new_name", variant_name),
                     }
 
         progress_caller3 = progress_manager.register(
@@ -292,7 +292,7 @@ class AssetMigrationTool(object):
             recipe = version_centric_migration_recipe[v]
             new_version = Version(
                 task=recipe["new_task"],
-                take_name=recipe["take_name"],
+                variant_name=recipe["variant_name"],
                 description=v.description,
             )
             if "maya" in v.created_with.lower():

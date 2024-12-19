@@ -269,12 +269,12 @@ class StalkerEntityDecoder(object):
                 # check version number and take name
                 # if there is a version with the same version_number
                 # don't create it
-                take_name = v_data["take_name"]
+                variant_name = v_data["variant_name"]
                 version_number = v_data["version_number"]
 
                 v = (
                     Version.query.filter(Version.task == entity)
-                    .filter(Version.take_name == take_name)
+                    .filter(Version.variant_name == variant_name)
                     .filter(Version.version_number == version_number)
                     .first()
                 )

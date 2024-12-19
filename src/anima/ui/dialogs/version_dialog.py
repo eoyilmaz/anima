@@ -14,7 +14,7 @@ from anima.ui.views.task import TaskTreeView
 from anima.ui.widgets import TakesListWidget, RecentFilesComboBox
 from anima.ui.widgets.version import VersionsTableWidget
 
-from anima.utils import get_unique_take_names
+from anima.utils import get_unique_variant_names
 
 if sys.version_info.major > 2:
     exceptionMessageGenerator = lambda e: str(e)
@@ -1400,7 +1400,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             if children_count == 0:
                 from sqlalchemy import text
 
-                takes = get_unique_take_names(
+                takes = get_unique_variant_names(
                     task_id,
                     include_reprs=self.repr_as_separate_takes_check_box.isChecked()
                 )
@@ -1409,7 +1409,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             logger.debug("len(takes) from db: %s" % len(takes))
 
             logger.debug("adding the takes from db")
-            self.takes_list_widget.take_names = takes
+            self.takes_list_widget.variant_names = takes
             self.takes_label.setText("Takes (%s)" % len(takes))
 
     def _set_defaults(self):
@@ -1549,9 +1549,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not version:
             return
 
-        # take_name
-        take_name = version.take_name
-        self.takes_list_widget.current_take_name = take_name
+        # variant_name
+        variant_name = version.variant_name
+        self.takes_list_widget.current_variant_name = variant_name
 
         # select the version in the previous version list
         self.previous_versions_table_widget.select_version(version)
@@ -1612,10 +1612,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return
 
         # take name
-        take_name = self.takes_list_widget.current_take_name
+        variant_name = self.takes_list_widget.current_variant_name
 
-        if take_name != "":
-            logger.debug("take_name: %s" % take_name)
+        if variant_name != "":
+            logger.debug("variant_name: %s" % variant_name)
         else:
             return
 
@@ -1635,7 +1635,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 Version.description,
             )
             .filter(Version.task_id == task_id)
-            .filter(Version.take_name == take_name)
+            .filter(Version.variant_name == variant_name)
         )
 
         # get the published only
@@ -1681,7 +1681,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             )
             return None
 
-        take_name = self.takes_list_widget.current_take_name
+        variant_name = self.takes_list_widget.current_variant_name
         user = self.get_logged_in_user()
         if not user:
             self.close()
@@ -1694,7 +1694,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         try:
             version = Version(
-                task=task, created_by=user, take_name=take_name, description=description
+                task=task, created_by=user, variant_name=variant_name, description=description
             )
             version.is_published = publish
             DBSession.add(version)
@@ -2106,7 +2106,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # .filter(Version.parent == previous_version)\
             all_repr_count = (
                 Version.query.filter(Version.task == previous_version.task)
-                .filter(Version.take_name.ilike(previous_version.take_name + "@%"))
+                .filter(Version.variant_name.ilike(previous_version.variant_name + "@%"))
                 .count()
             )
 
@@ -2123,13 +2123,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                 for repr_name in self.dcc.representations:
                     repr_str = "%{take}{repr_separator}{repr_name}%".format(
-                        take=previous_version.take_name,
+                        take=previous_version.variant_name,
                         repr_name=repr_name,
                         repr_separator=Representation.repr_separator,
                     )
                     repr_version = (
                         Version.query.filter(Version.task == previous_version.task)
-                        .filter(Version.take_name.ilike(repr_str))
+                        .filter(Version.variant_name.ilike(repr_str))
                         .order_by(Version.version_number.desc())
                         .first()
                     )

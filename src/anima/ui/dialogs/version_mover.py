@@ -8,7 +8,7 @@ from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.views.task import TaskTreeView
 from anima.ui.models.task import TaskTreeModel
-from anima.utils import get_unique_take_names
+from anima.utils import get_unique_variant_names
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -209,7 +209,7 @@ class VersionMover(QtWidgets.QDialog, AnimaDialogBase):
         # get distinct take names
         from stalker.db.session import DBSession
 
-        from_take_names = get_unique_take_names(from_task.id)
+        from_variant_names = get_unique_variant_names(from_task.id)
 
         # create versions for each take
         answer = QtWidgets.QMessageBox.question(
@@ -218,22 +218,22 @@ class VersionMover(QtWidgets.QDialog, AnimaDialogBase):
             "Will copy %s versions from take names:<br><br>"
             "%s"
             "<br><br>"
-            "Is that Ok?" % (len(from_take_names), "<br>".join(from_take_names)),
+            "Is that Ok?" % (len(from_variant_names), "<br>".join(from_variant_names)),
             QtWidgets.QMessageBox.Yes,
             QtWidgets.QMessageBox.No,
         )
 
         if answer == QtWidgets.QMessageBox.Yes:
-            for take_name in from_take_names:
+            for variant_name in from_variant_names:
                 latest_version = (
                     Version.query.filter_by(task=from_task)
-                    .filter_by(take_name=take_name)
+                    .filter_by(variant_name=variant_name)
                     .order_by(Version.version_number.desc())
                     .first()
                 )
 
                 # create a new version
-                new_version = Version(task=to_task, take_name=take_name)
+                new_version = Version(task=to_task, variant_name=variant_name)
                 new_version.created_by = logged_in_user
                 new_version.extension = latest_version.extension
                 new_version.description = (
@@ -264,5 +264,5 @@ class VersionMover(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QMessageBox.information(
                 self,
                 "Success",
-                "Successfully copied %s versions" % len(from_take_names),
+                "Successfully copied %s versions" % len(from_variant_names),
             )

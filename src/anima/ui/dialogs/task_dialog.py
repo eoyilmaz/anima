@@ -2,7 +2,7 @@
 
 import re
 
-from anima import logger, string_types
+from anima import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtWidgets
 from anima.utils import get_task_hierarchy_name
@@ -704,11 +704,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         logger.debug("attr: %s" % attr)
         merged_items = []
-        from anima import string_types
-
         for item in items:
             value = getattr(item, attr)
-            if not isinstance(value, string_types) and hasattr(value, "__getitem__"):
+            if not isinstance(value, str) and hasattr(value, "__getitem__"):
                 merged_items += value
             else:
                 merged_items.append(value)
@@ -953,7 +951,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         entity_type = ""
         if isinstance(index, int):
             entity_type = self.entity_type_combo_box.itemText(index)
-        elif isinstance(index, string_types):
+        elif isinstance(index, str):
             entity_type = index
 
         if entity_type == "Task":
@@ -1268,10 +1266,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         project_name = ""
         if isinstance(index, int):
             project_name = self.projects_combo_box.itemText(index)
-        elif isinstance(index, string_types):
+        elif isinstance(index, str):
             project_name = index
 
-        if not isinstance(project_name, string_types):
+        if not isinstance(project_name, str):
             logger.debug(
                 "Project.name should be a str, not {}".format(
                     project_name.__class__.__name__
@@ -1471,7 +1469,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         item_text = ""
         if isinstance(index, int):
             item_text = self.resources_combo_box.itemText(index)
-        elif isinstance(index, string_types):
+        elif isinstance(index, str):
             item_text = index
 
         if item_text == "":
@@ -1514,7 +1512,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         item_text = ""
         if isinstance(index, int):
             item_text = self.responsible_combo_box.itemText(index)
-        elif isinstance(index, string_types):
+        elif isinstance(index, str):
             item_text = index
 
         if item_text == "":

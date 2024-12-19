@@ -518,7 +518,7 @@ class Fusion(DCCBase):
         output_file_path = os.path.join(
             version.absolute_path,
             "Outputs",
-            version.take_name,
+            version.variant_name,
             "v%03d" % version.version_number,
             file_format,
         )
@@ -999,7 +999,7 @@ class Fusion(DCCBase):
                 },
             ]
 
-        if version.take_name == "STMap":
+        if version.variant_name == "STMap":
             output_format_data = [
                 {
                     "name": "exr",

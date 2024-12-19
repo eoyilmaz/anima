@@ -870,7 +870,7 @@ def run_pre_publishers():
     # check if it is a Representation
     from anima.representation import Representation
 
-    if Representation.repr_separator in version.take_name:
+    if Representation.repr_separator in version.variant_name:
         return
 
     if version.is_published:
@@ -950,7 +950,7 @@ def run_post_publishers():
     # check if it is a Representation
     from anima.representation import Representation
 
-    if Representation.repr_separator in version.take_name:
+    if Representation.repr_separator in version.variant_name:
         return
 
     if version.is_published:
@@ -1062,7 +1062,7 @@ def generate_thumbnail():
         return
 
     # do not generate a thumbnail from a Repr
-    if "@" in v.take_name:
+    if "@" in v.variant_name:
         return
 
     task = v.task
@@ -3188,7 +3188,7 @@ def update_cache_references(cache_type=ALEMBIC):
         all_abc_files = sorted(glob.glob(glob_pattern))
         # there may be different takes,
         # but, we don't need check for that too, because we are globbing for a path
-        # that includes the ``take_name``
+        # that includes the ``variant_name``
 
         last_abc_file = all_abc_files[-1]
         if last_abc_file != os.path.expandvars(path):
@@ -3929,10 +3929,10 @@ def orphan_rig_finder(project):
         # get the latest published rig version
         # we need to consider all the takes differently
 
-        unique_takes = anima.utils.get_unique_take_names(rig_task.id)
+        unique_takes = anima.utils.get_unique_variant_names(rig_task.id)
 
         # check LookDev first
-        # if no LookDev with the same take_name
+        # if no LookDev with the same variant_name
         # we found an orphan rig
         look_dev_task = (
             Task.query.filter(Task.parent_id == rig_task.parent.id)
@@ -3941,12 +3941,12 @@ def orphan_rig_finder(project):
         )
 
         rig_task_id_as_str = str(rig_task.id)
-        for take_name in unique_takes:
+        for variant_name in unique_takes:
             # -----------------------------
             # get the latest published rig version
             latest_published_rig_version = (
                 Version.query.filter(Version.task_id == rig_task.id)
-                .filter(Version.take_name == take_name)
+                .filter(Version.variant_name == variant_name)
                 .filter(Version.is_published == True)
                 .order_by(Version.version_number.desc())
                 .first()
@@ -3964,10 +3964,10 @@ def orphan_rig_finder(project):
                 if rig_task_id_as_str not in orphan_rigs:
                     orphan_rigs[rig_task_id_as_str] = {}
 
-                orphan_rigs[rig_task_id_as_str][take_name] = {
+                orphan_rigs[rig_task_id_as_str][variant_name] = {
                     None: "no look dev task",
                     "look_dev_task_id": None,
-                    "look_dev_take_name": "Main",
+                    "look_dev_variant_name": "Main",
                     "no_render": [],
                 }
 
@@ -3977,7 +3977,7 @@ def orphan_rig_finder(project):
             # get latest published look dev version with the same take name
             latest_published_look_dev_version = (
                 Version.query.filter(Version.task_id == look_dev_task.id)
-                .filter(Version.take_name == take_name)
+                .filter(Version.variant_name == variant_name)
                 .filter(Version.is_published == True)
                 .order_by(Version.version_number.desc())
                 .first()
@@ -3987,10 +3987,10 @@ def orphan_rig_finder(project):
                 if rig_task_id_as_str not in orphan_rigs:
                     orphan_rigs[rig_task_id_as_str] = {}
 
-                orphan_rigs[rig_task_id_as_str][take_name] = {
+                orphan_rigs[rig_task_id_as_str][variant_name] = {
                     None: "no look dev published with same take",
                     "look_dev_task_id": None,
-                    "look_dev_take_name": "Main",
+                    "look_dev_variant_name": "Main",
                     "no_render": [],
                 }
 
