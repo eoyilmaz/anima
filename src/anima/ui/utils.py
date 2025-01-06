@@ -108,7 +108,7 @@ def get_app_icon(icon_name):
 
     start_time = time.time()
     # get the icon from cache if possible
-    from anima.ui import ICON_CACHE
+    from anima.ui.cache import ICON_CACHE
 
     q_icon = ICON_CACHE.get(icon_name)
     if not q_icon:
@@ -322,7 +322,7 @@ def load_font(font_filename):
 
     start_time = time.time()
     # get the font from cache if possible
-    from anima.ui import FONT_CACHE
+    from anima.ui.cache import FONT_CACHE
 
     font_family = FONT_CACHE.get(font_filename)
     if not font_family:
