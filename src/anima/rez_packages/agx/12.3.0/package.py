@@ -17,8 +17,4 @@ def commands():
     # env.PYTHONPATH.append("{root}/python")
     # env.PATH.append("{root}/bin")
 
-    env.OCIO.append(
-        "$HOME/Documents/development/"
-        "AgX/"
-        "config.ocio"
-    )
+    env.OCIO.append("$HOME/Documents/development/AgX/config.ocio")

@@ -10,7 +10,9 @@ uuid = "fdc7e1bc441d493db7e31d28530df675"
 
 description = "PyMEL"
 
-build_command = "python3 {root}/../../github_project_builder.py --owner=lumapictures --repo=pymel"
+build_command = (
+    "python3 {root}/../../github_project_builder.py --owner=lumapictures --repo=pymel"
+)
 
 
 def commands():

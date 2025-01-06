@@ -91,7 +91,7 @@ def commands():
                 houdini_version_tuple[0],
                 houdini_version_tuple[1],
                 houdini_version_tuple[2],
-                "" if system.arch == "x86_64" else f"_{system.arch}"
+                "" if system.arch == "x86_64" else f"_{system.arch}",
             )
         )
         env.REDSHIFT_RV_OPEN_ONLY = 1

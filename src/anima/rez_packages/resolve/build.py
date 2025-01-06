@@ -40,12 +40,8 @@ def fix_shebang(file_path):
     """
     shebangs = {
         "win32": None,
-        "linux": {
-            "sh": "/usr/bin/sh"
-        },
-        "darwin": {
-            "sh": "/bin/sh"
-        },
+        "linux": {"sh": "/usr/bin/sh"},
+        "darwin": {"sh": "/bin/sh"},
     }
     if sys.platform == "win32":
         return

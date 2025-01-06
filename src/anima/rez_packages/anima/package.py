@@ -89,9 +89,7 @@ def commands():
             "${ANIMA_PATH}/anima/dcc/mayaEnv/config/${REZ_MAYA_MAJOR_VERSION}"
         )
 
-        env.MAYA_PLUG_IN_PATH.append(
-            "${ANIMA_PATH}/anima/dcc/mayaEnv/plugins"
-        )
+        env.MAYA_PLUG_IN_PATH.append("${ANIMA_PATH}/anima/dcc/mayaEnv/plugins")
         env.MAYA_PLUG_IN_PATH.append("${ANIMA_DEV_PATH}/maya/plugins")
         env.MAYA_PLUG_IN_PATH.append(
             "${ANIMA_DEV_PATH}/maya/plugins/${REZ_MAYA_MAJOR_VERSION}"
@@ -123,9 +121,7 @@ def commands():
             python_major,
             python_minor,
             # Houdini uses x86 under macOS
-            "_x86"
-            if system.platform == "osx"  # and int(env.REZ_MAYA_MAJOR_VERSION) <= 2023
-            else "",
+            "_x86" if system.platform == "osx" else "",
         )
         env.PATH.append("{}/bin".format(pylibs_base_path))
         env.PYTHONPATH.append("{}/lib/python/site-packages".format(pylibs_base_path))
@@ -141,9 +137,7 @@ def commands():
         env.HOUDINI_PYTHON_PANEL_PATH.prepend(
             "${ANIMA_PATH}/anima/dcc/houdini/python_panels/"
         )
-        env.HOUDINI_MENU_PATH.prepend(
-            "${ANIMA_PATH}/anima/dcc/houdini/menus/"
-        )
+        env.HOUDINI_MENU_PATH.prepend("${ANIMA_PATH}/anima/dcc/houdini/menus/")
 
     # Blender
     if "blender" in this.root:
