@@ -8,7 +8,7 @@ import qtawesome
 from anima.ui.base import ui_caller
 from anima.ui.dialogs import task_picker_dialog
 from anima.ui.lib import QtCore, QtGui, QtWidgets
-from anima.ui.widgets import ValidatedLineEdit
+from anima.ui.widgets.common import ValidatedLineEdit
 from anima.utils import get_task_hierarchy_name, get_unique_variant_names
 
 from stalker import Asset, Task, Version, Shot, Sequence

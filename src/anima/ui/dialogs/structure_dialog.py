@@ -72,7 +72,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         name_fields_layout = QtWidgets.QVBoxLayout()
 
         # Validator
-        from anima.ui.widgets import ValidatedLineEdit
+        from anima.ui.widgets.common import ValidatedLineEdit
 
         self.name_validator_label = QtWidgets.QLabel(self)
         self.name_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
@@ -95,7 +95,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # Filename Template DoubleListWidget
         filename_template_fields_layout = QtWidgets.QVBoxLayout()
-        from anima.ui.widgets import DoubleListWidget
+        from anima.ui.widgets.common import DoubleListWidget
 
         self.filename_templates_double_list_widget = DoubleListWidget(
             dialog=self,

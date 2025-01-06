@@ -84,7 +84,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
 
         # add name_line_edit
-        from anima.ui.widgets import ValidatedLineEdit
+        from anima.ui.widgets.common import ValidatedLineEdit
 
         self.name_line_edit = ValidatedLineEdit(message_field=self.name_validator_label)
         self.name_fields_vertical_layout.insertWidget(0, self.name_line_edit)

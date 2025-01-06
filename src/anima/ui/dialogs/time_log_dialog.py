@@ -7,7 +7,7 @@ from distutils.version import LooseVersion
 from anima import TIMING_RESOLUTION, logger
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
-from anima.ui.widgets import TaskComboBox, TimeEdit
+from anima.ui.widgets.common import TaskComboBox, TimeEdit
 from anima.utils import fix_task_statuses, local_to_utc, utc_to_local
 
 import pytz

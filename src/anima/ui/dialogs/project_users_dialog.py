@@ -79,7 +79,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             i, QtWidgets.QFormLayout.FieldRole, self.users_fields_vertical_layout
         )
 
-        from anima.ui.widgets import DoubleListWidget
+        from anima.ui.widgets.common import DoubleListWidget
 
         self.users_double_list_widget = DoubleListWidget(
             dialog=self,

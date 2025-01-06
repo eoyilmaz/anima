@@ -156,7 +156,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.parent_task_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
 
         # Line Edit
-        from anima.ui.widgets import ValidatedLineEdit
+        from anima.ui.widgets.common import ValidatedLineEdit
 
         self.parent_task_line_edit = ValidatedLineEdit(
             message_field=self.parent_task_validator_label

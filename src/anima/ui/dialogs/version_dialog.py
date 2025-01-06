@@ -11,7 +11,7 @@ from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 from anima.ui.views.task import TaskTreeView
-from anima.ui.widgets import TakesListWidget, RecentFilesComboBox
+from anima.ui.widgets.common import RecentFilesComboBox, TakesListWidget
 from anima.ui.widgets.version import VersionsTableWidget
 
 from anima.utils import get_unique_variant_names

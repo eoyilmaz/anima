@@ -87,7 +87,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.name_validator_label.setText("Validator Message")
 
         # create name_line_edit
-        from anima.ui.widgets import ValidatedLineEdit
+        from anima.ui.widgets.common import ValidatedLineEdit
 
         self.name_line_edit = ValidatedLineEdit(message_field=self.name_validator_label)
         self.name_line_edit.setPlaceholderText("Enter Name")
@@ -118,7 +118,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
 
         # create code_line_edit
-        from anima.ui.widgets import ValidatedLineEdit
+        from anima.ui.widgets.common import ValidatedLineEdit
 
         self.code_line_edit = ValidatedLineEdit(message_field=self.code_validator_label)
         self.code_line_edit.setPlaceholderText("Enter Code")
