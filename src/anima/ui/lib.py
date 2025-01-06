@@ -14,8 +14,6 @@ PYQT4 = "pyqt4"
 PYQT5 = "pyqt5"
 PYQT6 = "pyqt6"
 
-QTPY = "QtPy"  # support for https://www.gihub.com/motttoso/Qt.py
-
 # set the default
 qt_api_env_var_name = "QT_API"
 qt_api = PYSIDE2
@@ -52,7 +50,3 @@ def IS_PYQT5():
 
 def IS_PYQT6():
     return qt_api.lower() == PYQT6.lower()
-
-
-def IS_QTPY():
-    return qt_api.lower() == QTPY.lower()
