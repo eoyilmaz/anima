@@ -148,7 +148,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         for i in [1, 5, 10]:
             button = create_button(
-                "%s" % i,
+                str(i),
                 hbox_layout,
                 GenericTools.set_frames_at_once,
                 callback_kwargs={"count": i},
@@ -475,7 +475,7 @@ class GenericTools(object):
         try:
             fusion_env.set_shot_from_range(version)
         except BaseException as e:
-            QtWidgets.QMessageBox.critical(None, "Error", "%s" % e)
+            QtWidgets.QMessageBox.critical(None, "Error", f"{e}")
         finally:
             QtWidgets.QMessageBox.information(
                 None, "Success", "Shot Range has been updated successfully!"

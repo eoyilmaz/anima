@@ -392,13 +392,13 @@ def hair_from_curves():
         first_cv_tra = pm.xform(q=True, ws=True, t=(curves[i] + ".cv[0"))
 
         pm.setAttr(
-            (cpom + ".ip"),
+            (f"{cpom}.ip"),
             (first_cv_tra[0], first_cv_tra[1], first_cv_tra[2]),
             type="double3",
         )
 
-        pu = pm.getAttr(cpom + ".r.u")
-        pv = pm.getAttr(cpom + ".r.v")
+        pu = pm.getAttr(f"{cpom}.r.u")
+        pv = pm.getAttr(f"{cpom}.r.v")
 
         hair_curve_name_prefix = mesh + "Follicle"
         naming_index = num_of_curves * int(pu * float(num_of_curves - 1) + 0.5) + int(
@@ -409,47 +409,45 @@ def hair_from_curves():
 
         # create follicle
         hair = pm.createNode("follicle")
-        pm.setAttr(pu, hair + ".parameterU")
-        pm.setAttr(pv, hair + ".parameterV")
+        pm.setAttr(pu, f"{hair}.parameterU")
+        pm.setAttr(pv, f"{hair}.parameterV")
 
-        pm.connectAttr((curve_shapes[i] + ".worldSpace[0]"), (hair + ".sp"))
+        pm.connectAttr((f"{curve_shapes[i]}.worldSpace[0]"), (f"{hair}.sp"))
 
         transforms = pm.listTransforms(hair)
         hair_dag = transforms[0]
 
-        pm.connectAttr((mesh_shape + ".worldMatrix[0]"), (hair + ".inputWorldMatrix"))
+        pm.connectAttr((f"{mesh_shape}.worldMatrix[0]"), (f"{hair}.inputWorldMatrix"))
 
-        pm.connectAttr((mesh_shape + ".outMesh"), (hair + ".inputMesh"))
+        pm.connectAttr((f"{mesh_shape}.outMesh"), (f"{hair}.inputMesh"))
         current_uv_set = pm.polyUVSet(q=True, currentUVSet=mesh_shape)
-        pm.setAttr(current_uv_set[0], (hair + ".mapSetName"), type="string")
+        pm.setAttr(current_uv_set[0], (f"{hair}.mapSetName"), type="string")
 
-        pm.connectAttr((hair + ".outTranslate"), (hair_dag + ".translate"))
-        pm.connectAttr((hair + ".outRotate"), (hair_dag + ".rotate"))
-        pm.setAttr((hair_dag + ".translate"), lock=True)
-        pm.setAttr((hair_dag + ".rotate"), lock=True)
+        pm.connectAttr((f"{hair}.outTranslate"), (f"{hair_dag}.translate"))
+        pm.connectAttr((f"{hair}.outRotate"), (f"{hair_dag}.rotate"))
+        pm.setAttr((f"{hair_dag}.translate"), lock=True)
+        pm.setAttr((f"{hair_dag}.rotate"), lock=True)
 
-        pm.setAttr(hair + ".degree", 3)
-        pm.setAttr(hair + ".startDirection", 1)
-        pm.setAttr(hair + ".restPose", 3)
+        pm.setAttr(f"{hair}.degree", 3)
+        pm.setAttr(f"{hair}.startDirection", 1)
+        pm.setAttr(f"{hair}.restPose", 3)
 
         pm.parent(hair_system_group, relative=hair_dag)
 
         pm.parent(hair_dag, absolute=curves[i])
 
-        pm.setAttr(hair + ".simulationMethod", 2)
+        pm.setAttr(f"{hair}.simulationMethod", 2)
 
         # initHairCurveDisplay(curves[i], "start")
 
         hair_index = i
+        pm.connectAttr((f"{hair}.outHair"), (f"{hair_system}.inputHair[{hair_index}]"))
         pm.connectAttr(
-            (hair + ".outHair"), (hair_system + ".inputHair[%f]" % hair_index)
-        )
-        pm.connectAttr(
-            (hair_system + ".inputHair[%f]" % hair_index), (hair + ".currentPosition")
+            (f"{hair_system}.inputHair[{hair_index}]"), (f"{hair}.currentPosition")
         )
 
         crv = dup_shape[0]
-        pm.connectAttr((hair + ".outCurve"), (crv + ".create"))
+        pm.connectAttr((f"{hair}.outCurve"), (f"{crv}.create"))
         # initHairCurveDisplay(crv, "current")
 
         transforms = pm.listTransforms(crv)
@@ -603,9 +601,9 @@ def benchmark(iter_cnt):
 
     total_time = time.time() - start_time
     print("------------------------------")
-    print("BenchmarkTime : %s" % total_time)
-    print("Total iterCnt : %s" % iter_cnt)
-    print("Average FPS   : %s" % ((stop - start) * iter_cnt / total_time))
+    print(f"BenchmarkTime : {total_time:0.3f}")
+    print(f"Total iterCnt : {iter_cnt:0.3f}")
+    print("Average FPS   : {:0.3f}".format((stop - start) * iter_cnt / total_time))
 
 
 def load_shelf_tab(shelf_path):
@@ -615,7 +613,7 @@ def load_shelf_tab(shelf_path):
 
     if os.path.exists(shelf_path):
         try:
-            pm.mel.eval('loadNewShelf "%s"' % shelf_path)
+            pm.mel.eval(f'loadNewShelf "{shelf_path}"')
         except Exception:
             # probably not in GUI mode
             return
@@ -640,7 +638,7 @@ def delete_shelf_tab(shelf_name, confirm=True):
         # before doing anything ask it
         response = pm.confirmDialog(
             title="Delete Shelf?",
-            message="Delete %s?" % shelf_name,
+            message=f"Delete {shelf_name}?",
             button=["Yes", "No"],
             defaultButton="No",
             cancelButton="No",
@@ -653,7 +651,7 @@ def delete_shelf_tab(shelf_name, confirm=True):
     shelf_number = -1
     number_of_shelves = pm.optionVar["numShelves"]
     for i in range(1, number_of_shelves + 1):
-        if pm.optionVar["shelfName%s" % i] == shelf_name:
+        if pm.optionVar[f"shelfName{i}"] == shelf_name:
             shelf_number = i
             break
 
@@ -663,24 +661,24 @@ def delete_shelf_tab(shelf_name, confirm=True):
 
     # offset shelves
     for i in range(shelf_number, number_of_shelves):
-        pm.optionVar["shelfLoad%s" % i] = pm.optionVar["shelfLoad%s" % (i + 1)]
-        pm.optionVar["shelfName%s" % i] = pm.optionVar["shelfName%s" % (i + 1)]
-        pm.optionVar["shelfFile%s" % i] = pm.optionVar["shelfFile%s" % (i + 1)]
+        pm.optionVar[f"shelfLoad{i}"] = pm.optionVar[f"shelfLoad{(i + 1)}"]
+        pm.optionVar[f"shelfName{i}"] = pm.optionVar[f"shelfName{(i + 1)}"]
+        pm.optionVar[f"shelfFile{i}"] = pm.optionVar[f"shelfFile{(i + 1)}"]
 
-    pm.optionVar.pop("shelfLoad%s" % number_of_shelves)
+    pm.optionVar.pop(f"shelfLoad{number_of_shelves}")
     number_of_shelves -= 1
     pm.optionVar["numShelves"] = number_of_shelves
 
-    pm.windows.deleteUI("%s|%s" % (shelf_top_level_path, shelf_name), layout=1)
+    pm.windows.deleteUI(f"{shelf_top_level_path}|{shelf_name}", layout=1)
 
     # remove the shelf mel file from user folders
     import os
 
     for path in pm.internalVar(userShelfDir=1).split(os.path.pathsep):
-        shelf_file_name = "shelf_%s.mel" % shelf_name
+        shelf_file_name = f"shelf_{shelf_name}.mel"
         shelf_file_full_path = os.path.join(path, shelf_file_name)
 
-        deleted_file_name = "%s.deleted" % shelf_file_name
+        deleted_file_name = f"{shelf_file_name}.deleted"
         deleted_file_full_path = os.path.join(path, deleted_file_name)
 
         try:
@@ -896,7 +894,7 @@ def run_pre_publishers():
             pm.confirmDialog(
                 title="SaveError",
                 icon="critical",
-                message="<b>%s</b><br/><br/>%s" % ("SCENE NOT SAVED!!!", e),
+                message="<b>{}</b><br/><br/>{}".format("SCENE NOT SAVED!!!", e),
                 button=["Ok"],
             )
             raise e
@@ -913,7 +911,7 @@ def run_pre_publishers():
             pm.confirmDialog(
                 title="SaveError",
                 icon="critical",
-                message="<b>%s</b><br/><br/>%s" % ("SCENE NOT SAVED!!!", e),
+                message="<b>{}</b><br/><br/>{}".format("SCENE NOT SAVED!!!", e),
                 button=["Ok"],
             )
             raise e
@@ -985,7 +983,7 @@ def run_post_publishers():
             pm.confirmDialog(
                 title="PublishError",
                 icon="critical",
-                message="<b>%s</b><br/><br/>%s" % ("POST PUBLISH FAILED!!!", e),
+                message="<b>{}</b><br/><br/>{}".format("POST PUBLISH FAILED!!!", e),
                 button=["Ok"],
             )
             raise e
@@ -1183,7 +1181,7 @@ def perform_playblast(
 
     else:
         # call the original playblast
-        return pm.mel.eval("performPlayblast_orig(%s);" % action)
+        return pm.mel.eval(f"performPlayblast_orig({action});")
 
 
 def set_range_from_shot(shot):
@@ -1541,13 +1539,13 @@ class Playblaster(object):
                 )
 
     def get_hud_data(self):
-        """ """
+        """Return HUD data."""
         # try to get the shot from sequencer
         current_shot = pm.sequenceManager(q=1, currentShot=1)
 
         current_cam_name = "NoCameraFound"
         if current_shot:
-            shot_name = pm.getAttr("%s.shotName" % current_shot)
+            shot_name = pm.getAttr(f"{current_shot}.shotName")
             current_cam_name = pm.shot(current_shot, q=1, cc=1)
             if current_cam_name:
                 current_cam = pm.PyNode(current_cam_name)
@@ -1627,16 +1625,18 @@ class Playblaster(object):
                 # ok try to use the filename
                 user_name = pm.sceneName().split("_")[-1]
 
-        hud_string = "%s | %s:%smm | tc:%s [%s] | Shot: %s | Length: %s/%sfr | [%s]" % (
-            shot_info,
-            current_cam_name.split(":")[-1],
-            int(focal_length),
-            tc,
-            str(int(cf) - 1).zfill(4),
-            shot_name.split(":")[-1],
-            cs_frame,
-            str(length).zfill(3),
-            user_name,
+        hud_string = (
+            "{} | {}:{}mm | tc:{} [{}] | Shot: {} | Length: {}/{}fr | [{}]".format(
+                shot_info,
+                current_cam_name.split(":")[-1],
+                int(focal_length),
+                tc,
+                str(int(cf) - 1).zfill(4),
+                shot_name.split(":")[-1],
+                cs_frame,
+                str(length).zfill(3),
+                user_name,
+            )
         )
         return hud_string
 
@@ -1990,7 +1990,7 @@ class Playblaster(object):
                     current_camera_name = (
                         current_camera.getParent().name().split(":")[-1]
                     )
-                filename = "%s_%s" % (
+                filename = "{}_{}".format(
                     os.path.splitext(self.version.filename)[0],
                     current_camera_name,
                 )  # node name
@@ -2035,10 +2035,12 @@ class Playblaster(object):
                     "video": pm.playblast(**playblast_options),
                     "audio": {
                         "node": audio_node,
-                        "offset": playblast_options.get("startTime", 0)
-                        - audio_node.offset.get()
-                        if audio_node
-                        else 0,
+                        "offset": (
+                            playblast_options.get("startTime", 0)
+                            - audio_node.offset.get()
+                            if audio_node
+                            else 0
+                        ),
                         "duration": (
                             playblast_options.get("endTime", 0)
                             - playblast_options.get("startTime", 0)
@@ -2107,7 +2109,7 @@ class Playblaster(object):
                 options = dict()
                 if sequence:
                     # Ep002_004_0210_v007.mov.####.png
-                    # fix start number for %04d to %05d passage (eg. 9900 to 10010)
+                    # fix start number for {:04d} to {:05d} passage (eg. 9900 to 10010)
                     smallest_start_number = 1e10
                     for file_in_seq in sequence:
                         filename = os.path.basename(file_in_seq)
@@ -2122,13 +2124,13 @@ class Playblaster(object):
                 options["framerate"] = frame_rate
                 options["r"] = frame_rate
 
-                # first convert the #'s to %03d format
+                # first convert the #'s to {:03d} format
                 temp_str = video_file_path.replace("#", "")
                 hash_count = len(video_file_path) - len(temp_str)
                 splits = video_file_path.split("#")
-                video_file_path = "%s%s%s" % (
+                video_file_path = "{}{}{}".format(
                     splits[0],
-                    "%0{hash_count}d".format(hash_count=hash_count),
+                    "{{:0{hash_count}d}}".format(hash_count=hash_count),
                     splits[-1],
                 )
                 video_file_path_h264 = splits[0].replace(".mov.", ".")
@@ -2300,9 +2302,11 @@ class Playblaster(object):
                     "video": temp_video_file_full_path[0],
                     "audio": {
                         "node": audio_node,
-                        "offset": audio_node.offset.get() - shot_start_frame
-                        if audio_node
-                        else 0,
+                        "offset": (
+                            audio_node.offset.get() - shot_start_frame
+                            if audio_node
+                            else 0
+                        ),
                         "duration": shot_end_frame - shot_start_frame + 1,
                     },
                 }
@@ -2360,23 +2364,23 @@ class Playblaster(object):
         import os
 
         if not os.path.exists(output_file_full_path):
-            raise RuntimeError("Output file does not exits: %s" % output_file_full_path)
+            raise RuntimeError(f"Output file does not exits: {output_file_full_path}")
 
         import os
 
         output_file_name = os.path.basename(output_file_full_path)
 
-        hires_output_file_name = "%s%s" % (
+        hires_output_file_name = "{}{}".format(
             os.path.splitext(output_file_name)[0],
             hires_extension,
         )
 
-        webres_output_file_name = "%s%s" % (
+        webres_output_file_name = "{}{}".format(
             os.path.splitext(output_file_name)[0],
             webres_extension,
         )
 
-        thumbnail_output_file_name = "%s%s" % (
+        thumbnail_output_file_name = "{}{}".format(
             os.path.splitext(output_file_name)[0],
             thumbnail_extension,
         )
@@ -3048,10 +3052,14 @@ def export_cache_of_all_cacheable_nodes(
     )
 
 
-def extract_version_from_path(path):
-    """extracts version number ("_v%03d") as an integer from the given path
+def extract_version_from_path(path: str) -> int:
+    """Extract version number ("_v{:03d}") as an integer from the given path
 
-    :param str path: The path to extract the version number from
+    Args:
+        path (str): The path to extract the version number from.
+
+    Returns:
+        int: The extracted version number.
     """
     import re
 
@@ -3113,7 +3121,9 @@ def auto_reference_caches(cache_type=ALEMBIC):
 
         # the directory name is also the instance name
         asset_instance_name = dir_name
-        glob_pattern = "{}/*{}*".format(dir_abs_path, asset_instance_name).replace("\\", "/")
+        glob_pattern = "{}/*{}*".format(dir_abs_path, asset_instance_name).replace(
+            "\\", "/"
+        )
 
         all_cache_files = sorted(glob.glob(glob_pattern), key=extract_version_from_path)
         if not all_cache_files:
@@ -3182,7 +3192,7 @@ def update_cache_references(cache_type=ALEMBIC):
         prefix = m.group(1)
 
         # glob the files
-        glob_pattern = "%s*" % prefix
+        glob_pattern = f"{prefix}*"
         # The versions will always be sorted properly
         # we don't need to check if the last path in the is the latest one
         all_abc_files = sorted(glob.glob(glob_pattern))
@@ -3204,7 +3214,7 @@ def update_cache_references(cache_type=ALEMBIC):
         print("Updated:")
 
     for old_ref_path, new_ref_path in updated_path_info:
-        print("%s -> %s" % (old_ref_path, new_ref_path))
+        print(f"{old_ref_path} -> {new_ref_path}")
 
 
 # noinspection PyStatementEffect
@@ -3390,13 +3400,13 @@ $frame_scale = tan(deg_to_rad($cone_angle * 0.5));
         script_job_no = pm.scriptJob(
             e=[
                 "SelectionChanged",
-                'if pm.ls(sl=1) and pm.ls(sl=1)[0].name() == "%s":\n'
+                f'if pm.ls(sl=1) and pm.ls(sl=1)[0].name() == "{self.light.name()}":\n'
                 "    pm.displayPref(displayAffected=False)\n"
                 "else:\n"
-                "    pm.displayPref(displayAffected=True)" % self.light.name(),
+                "    pm.displayPref(displayAffected=True)",
             ]
         )
-        self.store_data("%s" % script_job_no)
+        self.store_data(f"{script_job_no}")
 
     def setup(self):
         """setup the magic"""
@@ -3447,7 +3457,7 @@ $frame_scale = tan(deg_to_rad($cone_angle * 0.5));
         all_preview_curves = []
         map(all_preview_curves.extend, self.preview_curves.values())
         shapes_group = pm.group(
-            all_preview_curves, n="%s_barndoor_preview_curves" % self.light.name()
+            all_preview_curves, n=f"{self.light.name()}_barndoor_preview_curves"
         )
 
         self.store_node(shapes_group)
@@ -3858,7 +3868,7 @@ class DummyWindowLight(object):
         shape.aiVisibleInDiffuse.set(0)
         shape.aiVisibleInGlossy.set(0)
 
-        pm.polyEditUV("%s.map[0:10000]" % shape.name(), u=u, v=v, r=False)
+        pm.polyEditUV(f"{shape.name()}.map[0:10000]", u=u, v=v, r=False)
 
         # update the texture
         try:

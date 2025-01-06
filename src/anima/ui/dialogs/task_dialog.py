@@ -78,7 +78,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # Dialog Label
         self.dialog_label = QtWidgets.QLabel(self)
-        self.dialog_label.setText("%s Task" % self.mode)
+        self.dialog_label.setText(f"{self.mode} Task")
         self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);font: 18pt;")
         self.vertical_layout.addWidget(self.dialog_label)
 
@@ -702,7 +702,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :param attr: The attribute name
         :return:
         """
-        logger.debug("attr: %s" % attr)
+        logger.debug(f"attr: {attr}")
         merged_items = []
         for item in items:
             value = getattr(item, attr)
@@ -710,7 +710,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 merged_items += value
             else:
                 merged_items.append(value)
-        logger.debug("merged_items: %s" % merged_items)
+        logger.debug(f"merged_items: {merged_items}")
         return list(set(merged_items))
 
     @classmethod
@@ -723,7 +723,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         values = cls.get_merged_items(items, attr)
         if len(values) == 1:
-            logger.debug("unique_items: %s" % values)
+            logger.debug(f"unique_items: {values}")
             return values[0]
         else:
             return None
@@ -815,7 +815,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # entity_type
         entity_type = self.get_unique_items(self.tasks, "entity_type")
-        logger.debug("entity_type: %s" % entity_type)
+        logger.debug(f"entity_type: {entity_type}")
         if entity_type:
             index = self.entity_type_combo_box.findText(entity_type)
             if index and index != self.entity_type_combo_box.currentIndex():

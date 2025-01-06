@@ -23,7 +23,7 @@ class PrevisUI(object):
         self.row_spacing = 3
         self.window = None
         self.window_name = "Previz_Window"
-        self.window_title = "Previz Tools v%s" % anima.__version__
+        self.window_title = f"Previz Tools v{anima.__version__}"
 
         self.edl_checkBox = None
         self.mxf_checkBox = None
@@ -113,7 +113,7 @@ class PrevisUI(object):
             version_number = current_version.version_number
         else:
             version_number = 1
-        version_string = "v%03d" % version_number
+        version_string = f"v{version_number:03d}"
 
         version = core.textField(text=version_string)
         lenght_slider_grp = core.intSliderGrp(
@@ -196,8 +196,7 @@ class PrevisUI(object):
         edl_path = os.path.normpath(
             os.path.join(
                 playblast_output_path,
-                "%s_%s_%s_%s.%s"
-                % (
+                "{}_{}_{}_{}.{}".format(
                     seq1.get_sequence_name(),
                     sm.get_task_name(),
                     sm.get_variant_name(),

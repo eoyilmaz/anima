@@ -115,7 +115,7 @@ class General(object):
         if len(ref_namespaces) == 0 and len(all_namespaces) > 0:
             for ns in all_namespaces:
                 pm.namespace(rm=ns, mnr=1)
-                print("Deleted -> : %s" % ns)
+                print(f"Deleted -> : {ns}")
             pm.warning(
                 "There are no references in this scene. All empty namespaces "
                 "are deleted."
@@ -150,32 +150,32 @@ class General(object):
                 pivr = node.rotatePivot.get()
                 pivs = node.scalePivot.get()
 
-            # print('tra: %0.3f %0.3f %0.3f' % (tra[0], tra[1], tra[2]))
-            # print('rot: %0.3f %0.3f %0.3f' % (rot[0], rot[1], rot[2]))
-            # print('sca: %0.3f %0.3f %0.3f' % (sca[0], sca[1], sca[2]))
+            # print("tra: {:0.3f} {:0.3f} {:0.3f}".format(tra[0], tra[1], tra[2]))
+            # print("rot: {:0.3f} {:0.3f} {:0.3f}".format(rot[0], rot[1], rot[2]))
+            # print("sca: {:0.3f} {:0.3f} {:0.3f}".format(sca[0], sca[1], sca[2]))
             #
-            # print('rotpiv: %0.3f %0.3f %0.3f' % (pivr[0], pivr[1], pivr[2]))
-            # print('scapiv: %0.3f %0.3f %0.3f' % (pivs[0], pivs[1], pivs[2]))
+            # print("rotpiv: {:0.3f} {:0.3f} {:0.3f}".format(pivr[0], pivr[1], pivr[2]))
+            # print("scapiv: {:0.3f} {:0.3f} {:0.3f}".format(pivs[0], pivs[1], pivs[2]))
 
-            data.append("%s" % tra[0])
-            data.append("%s" % tra[1])
-            data.append("%s" % tra[2])
+            data.append(f"{tra[0]}")
+            data.append(f"{tra[1]}")
+            data.append(f"{tra[2]}")
 
-            data.append("%s" % rot[0])
-            data.append("%s" % rot[1])
-            data.append("%s" % rot[2])
+            data.append(f"{rot[0]}")
+            data.append(f"{rot[1]}")
+            data.append(f"{rot[2]}")
 
-            data.append("%s" % sca[0])
-            data.append("%s" % sca[1])
-            data.append("%s" % sca[2])
+            data.append(f"{sca[0]}")
+            data.append(f"{sca[1]}")
+            data.append(f"{sca[2]}")
 
-            data.append("%s" % pivr[0])
-            data.append("%s" % pivr[1])
-            data.append("%s" % pivr[2])
+            data.append(f"{pivr[0]}")
+            data.append(f"{pivr[1]}")
+            data.append(f"{pivr[2]}")
 
-            data.append("%s" % pivs[0])
-            data.append("%s" % pivs[1])
-            data.append("%s" % pivs[2])
+            data.append(f"{pivs[0]}")
+            data.append(f"{pivs[1]}")
+            data.append(f"{pivs[2]}")
 
         with open(cls.transform_info_temp_file_path, "w") as f:
             f.write("\n".join(data))
@@ -256,27 +256,22 @@ class General(object):
                 except RuntimeError:
                     pass
 
-            # print('tra: %0.3f %0.3f %0.3f' %
-            #       (float(data[j]), float(data[j + 1]), float(data[j + 2])))
-            # print('rot: %0.3f %0.3f %0.3f' %
-            #       (float(data[j + 3]), float(data[j + 4]), float(data[j + 5])))
-            # print('sca: %0.3f %0.3f %0.3f' %
-            #       (float(data[j + 6]), float(data[j + 7]), float(data[j + 8])))
-            # print('pivr: %0.3f %0.3f %0.3f' %
-            #       (float(data[j + 9]), float(data[j + 10]), float(data[j + 11])))
-            # print('pivs: %0.3f %0.3f %0.3f' %
-            #       (float(data[j + 12]), float(data[j + 13]), float(data[j + 14])))
+            # print("tra : {:0.3f} {:0.3f} {:0.3f}".format(float(data[j]), float(data[j + 1]), float(data[j + 2])))
+            # print("rot : {:0.3f} {:0.3f} {:0.3f}".format(float(data[j + 3]), float(data[j + 4]), float(data[j + 5])))
+            # print("sca : {:0.3f} {:0.3f} {:0.3f}".format(float(data[j + 6]), float(data[j + 7]), float(data[j + 8])))
+            # print("pivr: {:0.3f} {:0.3f} {:0.3f}".format(float(data[j + 9]), float(data[j + 10]), float(data[j + 11])))
+            # print("pivs: {:0.3f} {:0.3f} {:0.3f}".format(float(data[j + 12]), float(data[j + 13]), float(data[j + 14])))
 
     @classmethod
     def export_component_transform_info(cls):
-        """exports the transformation data in to a temp file"""
+        """Export the transformation data in to a temp file."""
         data = []
         for node in pm.ls(sl=1, fl=1):
             tra = pm.xform(node, q=1, ws=1, t=1)  # node.t.get()
 
-            data.append("%s" % tra[0])
-            data.append("%s" % tra[1])
-            data.append("%s" % tra[2])
+            data.append(f"{tra[0]}")
+            data.append(f"{tra[1]}")
+            data.append(f"{tra[2]}")
 
         with open(cls.transform_info_temp_file_path, "w") as f:
             f.write("\n".join(data))
@@ -565,12 +560,12 @@ class UnknownPluginCleaner(object):
         pc.path = path
         result = pc.clean()
         if result:
-            print("Cleaned: %s" % path)
+            print(f"Cleaned: {path}")
     ```
 
     """
 
-    backup_template = "%s.backup%s"
+    backup_template = "{}.backup{}"
 
     def __init__(self, path="", show_progress=True):
         self._path = None
@@ -597,18 +592,18 @@ class UnknownPluginCleaner(object):
         return os.path.dirname(self.path)
 
     def generate_backup_path(self):
-        """generates a backup path"""
+        """generates a backup path."""
         import os
 
-        backup_path = self.backup_template % (self.path, self.backup_counter)
+        backup_path = self.backup_template.format(self.path, self.backup_counter)
         while os.path.exists(backup_path):
             self.backup_counter += 1
-            backup_path = self.backup_template % (self.path, self.backup_counter)
+            backup_path = self.backup_template.format(self.path, self.backup_counter)
         return backup_path
 
     def get_latest_backup_path(self):
-        """gets the latest backup"""
-        backup_path = self.backup_template % (self.path, "*")
+        """Return the latest backup."""
+        backup_path = self.backup_template.format(self.path, "*")
         import glob
 
         all_backup_files = glob.glob(backup_path)
@@ -624,7 +619,7 @@ class UnknownPluginCleaner(object):
         return last_backup_path
 
     def backup(self):
-        """creates a backup of the file"""
+        """Create a backup of the file."""
         import shutil
 
         backup_path = self.generate_backup_path()
@@ -655,7 +650,7 @@ class UnknownPluginCleaner(object):
     def clean(self):
         pdm = ProgressManagerFactory.get_progress_manager()
         progress_caller = pdm.register(
-            2, title="Cleaning %s" % os.path.basename(self.path)
+            2, title="Cleaning {}".format(os.path.basename(self.path))
         )
         try:
             with open(self.path) as f:
@@ -713,11 +708,11 @@ def unknown_plugin_cleaner_ui():
                 QtWidgets.QMessageBox.information(
                     maya_main_window,
                     "Cleaned",
-                    "Cleaned:<br><br>%s" % os.path.basename(file_path),
+                    "Cleaned:<br><br>{}".format(os.path.basename(file_path)),
                 )
             else:
                 QtWidgets.QMessageBox.information(
                     maya_main_window,
                     "Clean",
-                    "The file was clean:<br><br>%s" % os.path.basename(file_path),
+                    "The file was clean:<br><br>{}".format(os.path.basename(file_path)),
                 )

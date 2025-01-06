@@ -12,6 +12,7 @@ from anima import logger
 from anima.publish import clear_publishers
 
 from stalker import db, User, LocalSession
+from stalker.db import setup
 
 logger.setLevel(logging.WARNING)
 
@@ -47,8 +48,8 @@ def test_data():
 @pytest.fixture(scope="function")
 def create_test_db():
     """creates a test database"""
-    db.setup({"sqlalchemy.url": "sqlite:///:memory:"})
-    db.init()
+    setup.setup({"sqlalchemy.url": "sqlite:///:memory:"})
+    setup.init()
 
 
 @pytest.fixture(scope="function")
@@ -568,7 +569,7 @@ def ldap_server():
             # load the mock data
             logger.debug("Loading mock connection data")
             logger.debug(
-                "test_ldap_server_entries_path: %s" % test_ldap_server_entries_path
+                f"test_ldap_server_entries_path: {test_ldap_server_entries_path}"
             )
             self.strategy.entries_from_json(test_ldap_server_entries_path)
 
@@ -586,7 +587,7 @@ def ldap_server():
                     "memberOf": ["CN=GPU Users Admin,CN=Users,DC=animagpu,DC=local"],
                     "name": "admin",
                     "objectCategory": "CN=Person,CN=Schema,CN=Configuration,DC=animagpu,DC=local",
-                    # "objectCategory": "CN=Person,CN=Schema,CN=Configuration,%s" % defaults.ldap_base_dn,
+                    # "objectCategory": f"CN=Person,CN=Schema,CN=Configuration,{defaults.ldap_base_dn}",
                     "objectClass": ["top", "person", "organizationalPerson", "user"],
                     "objectGUID": "{9d96ef4a-14e7-4a77-b5b1-97b2fa239f9f}",
                     "objectSid": "S-1-5-21-2227021422-3894238547-674366654-1131",
@@ -621,22 +622,22 @@ def ldap_server():
 
     orig_server_class = ldap3.Server
     ldap3.Server = MockServer
-    logger.debug("ldap3.Server: %s" % ldap3.Server)
+    logger.debug(f"ldap3.Server: {ldap3.Server}")
 
     logger.debug("Replacing original ldap3.Connection class")
     orig_connection_class = ldap3.Connection
     ldap3.Connection = MockConnection
-    logger.debug("ldap3.Connection: %s" % ldap3.Connection)
+    logger.debug(f"ldap3.Connection: {ldap3.Connection}")
 
     yield MockServer, MockConnection
 
     # restore the class
     logger.debug("Restoring original ldap3.Server class")
     ldap3.Server = orig_server_class
-    logger.debug("ldap3.Server: %s" % ldap3.Server)
+    logger.debug(f"ldap3.Server: {ldap3.Server}")
     logger.debug("Restoring original ldap3.Connection class")
     ldap3.Connection = orig_connection_class
-    logger.debug("ldap3.Connection: %s" % ldap3.Connection)
+    logger.debug(f"ldap3.Connection: {ldap3.Connection}")
 
 
 @pytest.fixture(scope="function")

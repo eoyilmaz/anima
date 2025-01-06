@@ -40,7 +40,14 @@ CACHE_FORMAT_DATA = {
 
 
 def get_generic_text_attr(self, attr):
-    """patch Simple entity to add new functionality"""
+    """Return the value of the attribute from the generic text.
+
+    Args:
+        attr (str): The name of the attribute.
+
+    Returns:
+        Any: The corresponding value for the given attr.
+    """
     import json
 
     attr_value = None
@@ -51,7 +58,12 @@ def get_generic_text_attr(self, attr):
 
 
 def set_generic_text_attr(self, attr, value):
-    """patch Simple entity to add new functionality"""
+    """Set the value of the attribute in the generic text.
+
+    Args:
+        attr (str): The name of the attribute.
+        value (Any): The value to set to.
+    """
     import json
 
     data = {}
@@ -67,29 +79,30 @@ SimpleEntity.set_generic_text_attr = set_generic_text_attr
 
 # Patch Stalker.Project
 @property
-def is_managed(self):
-    """Return True if this is a managed project."""
+def is_managed(self) -> bool:
+    """Return True if this is a managed project.
+
+    Returns:
+        bool: True if this is a managed project, False otherwise.
+    """
     project_repo = self.repository
     return not os.path.exists(
-        os.path.join(
-            project_repo.path, self.code, "unmanaged_project"
-        )
+        os.path.join(project_repo.path, self.code, "unmanaged_project")
     )
 
 
 @property
-def cache_format(self):
+def cache_format(self) -> str:
     """Return the project cache format.
 
     By default it is Alembic.
+
+    Returns:
+        str: The cache format name.
     """
     project_repo = self.repository
 
-    if os.path.exists(
-        os.path.join(
-            project_repo.path, self.code, "use_usd"
-        )
-    ):
+    if os.path.exists(os.path.join(project_repo.path, self.code, "use_usd")):
         return USD
     else:
         return ALEMBIC

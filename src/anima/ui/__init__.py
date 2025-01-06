@@ -54,4 +54,3 @@ def IS_PYQT6():
 
 def IS_QTPY():
     return qt_api.lower() == QTPY.lower()
-

@@ -161,9 +161,7 @@ class TaskDetailWidget(QtWidgets.QWidget):
         from anima.ui.widgets.sequence import SequenceComboBox
 
         self.sequence_field = SequenceComboBox(self)
-        self.sequence_field.currentIndexChanged.connect(
-            self.sequence_changed
-        )
+        self.sequence_field.currentIndexChanged.connect(self.sequence_changed)
         self.form_layout.setWidget(
             i, QtWidgets.QFormLayout.LabelRole, self.sequence_label
         )
@@ -238,14 +236,13 @@ class TaskDetailWidget(QtWidgets.QWidget):
                 self.updated_by_field.setText(task.updated_by.name)
 
             self.timing_field.setText(
-                "%s - %s"
-                % (
+                "{} - {}".format(
                     task.start.strftime("%d-%m-%Y %H:%M"),
                     task.end.strftime("%d-%m-%Y %H:%M"),
                 )
             )
 
-            self.priority_field.setText("%s" % task.priority)
+            self.priority_field.setText(f"{task.priority}")
 
             from stalker import Shot
 
@@ -256,8 +253,8 @@ class TaskDetailWidget(QtWidgets.QWidget):
                 )
                 self.sequence_label.setVisible(True)
                 self.sequence_field.setVisible(True)
-                self.cut_in_field.setText("%s" % task.cut_in)
-                self.cut_out_field.setText("%s" % task.cut_out)
+                self.cut_in_field.setText(f"{task.cut_in}")
+                self.cut_out_field.setText(f"{task.cut_out}")
                 self.cut_in_label.setVisible(True)
                 self.cut_in_field.setVisible(True)
                 self.cut_out_label.setVisible(True)
@@ -325,6 +322,7 @@ class TaskDetailWidget(QtWidgets.QWidget):
     def sequence_changed(self):
         """Update shot sequence."""
         from stalker import Shot
+
         if self.task is None or not isinstance(self.task, Shot):
             return
 
@@ -332,4 +330,5 @@ class TaskDetailWidget(QtWidgets.QWidget):
         if seq is not None:
             self.task.sequences = [seq]
             from stalker.db.session import DBSession
+
             DBSession.commit()

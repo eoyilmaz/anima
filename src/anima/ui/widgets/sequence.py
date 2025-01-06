@@ -49,8 +49,9 @@ class SequenceComboBox(QtWidgets.QComboBox):
 
         if project and not isinstance(project, Project):
             raise TypeError(
-                "%s.project should be a Stalker Project instance, not %s"
-                % (self.__class__.__name__, project.__class__.__name__)
+                "{}.project should be a Stalker Project instance, not {}".format(
+                    self.__class__.__name__, project.__class__.__name__
+                )
             )
 
         self._project = project

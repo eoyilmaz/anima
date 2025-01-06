@@ -71,7 +71,7 @@ def test_restore_limits_maximum_files_stored(prepare_recent_file_cache_path):
 
     rm = RecentFileManager()
     for i in range(defaults.max_recent_files + 100):
-        rm.add("Env1", "some path %s" % i)
+        rm.add("Env1", f"some path {i}")
 
     rm2 = RecentFileManager()
     assert len(rm2["Env1"]) == defaults.max_recent_files

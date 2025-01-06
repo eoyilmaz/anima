@@ -53,7 +53,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # ----------------------
         # Dialog Label
         self.dialog_label = QtWidgets.QLabel(self)
-        self.dialog_label.setText("%s Project" % self.mode)
+        self.dialog_label.setText(f"{self.mode} Project")
         self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);\nfont: 18pt;")
         self.vertical_layout.addWidget(self.dialog_label)
         self.line = QtWidgets.QFrame(self)
@@ -467,7 +467,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             else:
                 if len(text) > self.max_project_name_length:
                     self.code_line_edit.set_invalid(
-                        "Code is too long (>%s)" % self.max_project_name_length
+                        f"Code is too long (>{self.max_project_name_length})"
                     )
                 else:
                     self.code_line_edit.set_valid()

@@ -457,8 +457,8 @@ class RepresentationGenerator(object):
         self.base_variant_name = r.get_base_variant_name(version)
         if not r.is_base():
             raise RuntimeError(
-                "This is not a Base take for this representation series, "
-                "please open the base (%s) take!!!" % self.base_variant_name
+                "This is not a Base variant for this representation series, "
+                f"please open the base ({self.base_variant_name}) variant!!!"
             )
 
         return version
@@ -492,7 +492,7 @@ class RepresentationGenerator(object):
         def generate_filename():
             random_part = uuid.uuid4().hex[-4:]
             data = os.path.splitext(filename)
-            return "%s_%s%s" % (data[0], random_part, data[1])
+            return "{}_{}{}".format(data[0], random_part, data[1])
 
         if not force:
             if os.path.exists(filename):
@@ -522,7 +522,7 @@ class RepresentationGenerator(object):
 
         if not os.path.exists(self.version.absolute_full_path):
             raise RuntimeError(
-                "Path doesn't exists: %s" % self.version.absolute_full_path
+                f"Path doesn't exists: {self.version.absolute_full_path}"
             )
         self.open_version(self.version)
 
@@ -537,8 +537,9 @@ class RepresentationGenerator(object):
         if len(refs_with_no_bbox_repr):
             raise RuntimeError(
                 "Please generate the BBOX Representation of the references "
-                "first!!!\n%s"
-                % "\n".join(map(lambda x: str(x.path), refs_with_no_bbox_repr))
+                "first!!!\n{}".format(
+                    "\n".join(map(lambda x: str(x.path), refs_with_no_bbox_repr))
+                )
             )
 
         # do different things for Vegetation tasks
@@ -595,7 +596,7 @@ class RepresentationGenerator(object):
 
         # save the scene as {{original_take}}@BBOX
         # use maya
-        variant_name = "%s%s%s" % (
+        variant_name = "{}{}{}".format(
             self.base_variant_name,
             Representation.repr_separator,
             "BBOX",
@@ -622,7 +623,7 @@ class RepresentationGenerator(object):
 
         if not os.path.exists(self.version.absolute_full_path):
             raise RuntimeError(
-                "Path doesn't exists: %s" % self.version.absolute_full_path
+                f"Path doesn't exists: {self.version.absolute_full_path}"
             )
         self.open_version(self.version)
 
@@ -640,8 +641,9 @@ class RepresentationGenerator(object):
         if len(refs_with_no_gpu_repr):
             raise RuntimeError(
                 "Please generate the GPU Representation of the references "
-                "first!!!\n%s"
-                % "\n".join(map(lambda x: str(x.path), refs_with_no_gpu_repr))
+                "first!!!\n{}".format(
+                    "\n".join(map(lambda x: str(x.path), refs_with_no_gpu_repr))
+                )
             )
 
         # unload all references
@@ -654,25 +656,25 @@ class RepresentationGenerator(object):
         ).replace("\\", "/")
 
         gpu_command = (
-            "gpuCache -startTime %(start_frame)s -endTime %(end_frame)s "
+            "gpuCache -startTime {start_frame} -endTime {end_frame} "
             "-optimize -optimizationThreshold 40000 "
             "-writeMaterials "
             "-dataFormat ogawa "
-            '-directory "%(path)s" '
-            '-fileName "%(filename)s" '
-            "%(node)s;"
+            '-directory "{path}" '
+            '-fileName "{filename}" '
+            "{node};"
         )
 
         # do not use the -dataFormat flag if it is earlier than Maya2014 Ext1
         if pm.versions.current() < 201450:
             gpu_command = (
-                "gpuCache -startTime %(start_frame)s "
-                "-endTime %(end_frame)s "
+                "gpuCache -startTime {start_frame} "
+                "-endTime {end_frame} "
                 "-optimize -optimizationThreshold 40000 "
                 "-writeMaterials "
-                '-directory "%(path)s" '
-                '-fileName "%(filename)s" '
-                "%(node)s;"
+                '-directory "{path}" '
+                '-fileName "{filename}" '
+                "{node};"
             )
 
         start_frame = end_frame = int(pm.currentTime(q=1))
@@ -715,7 +717,7 @@ class RepresentationGenerator(object):
                             temp_output_fullpath
                         )
 
-                        output_filename = "%s_%s" % (
+                        output_filename = "{}_{}".format(
                             self.version.nice_name,
                             child_node_name.split(":")[-1]
                             .replace(":", "_")
@@ -725,14 +727,13 @@ class RepresentationGenerator(object):
                         # run the mel command
                         # check if file exists
                         pm.mel.eval(
-                            gpu_command
-                            % {
-                                "start_frame": start_frame,
-                                "end_frame": start_frame,  # end_frame,
-                                "node": child_node.fullPath(),
-                                "path": temp_output_path,
-                                "filename": temp_output_filename,
-                            }
+                            gpu_command.format(
+                                start_frame=start_frame,
+                                end_frame=start_frame,  # end_frame,
+                                node=child_node.fullPath(),
+                                path=temp_output_path,
+                                filename=temp_output_filename,
+                            )
                         )
 
                         cache_file_full_path = os.path.join(
@@ -775,7 +776,7 @@ class RepresentationGenerator(object):
                                 "cacheFileName", cache_file_full_path, type="string"
                             )
                         else:
-                            print("File not found!: %s" % cache_file_full_path)
+                            print(f"File not found!: {cache_file_full_path}")
 
                 # clean up other nodes
                 try:
@@ -826,11 +827,10 @@ class RepresentationGenerator(object):
                             temp_output_fullpath
                         )
 
-                        output_filename = (
-                            "%s.abc"
-                            % os.path.splitext(
-                                os.path.basename(rs_proxy_mesh_file_name)
-                            )[0]
+                        output_filename = "{}.abc".format(
+                            os.path.splitext(os.path.basename(rs_proxy_mesh_file_name))[
+                                0
+                            ]
                         )
 
                         # generate at origin
@@ -845,14 +845,13 @@ class RepresentationGenerator(object):
                         # run the mel command
                         # check if file exists
                         pm.mel.eval(
-                            gpu_command
-                            % {
-                                "start_frame": start_frame,
-                                "end_frame": end_frame,
-                                "node": child_node.fullPath(),
-                                "path": temp_output_path,
-                                "filename": temp_output_filename,
-                            }
+                            gpu_command.format(
+                                start_frame=start_frame,
+                                end_frame=end_frame,
+                                node=child_node.fullPath(),
+                                path=temp_output_path,
+                                filename=temp_output_filename,
+                            )
                         )
 
                         # restore local position
@@ -929,7 +928,7 @@ class RepresentationGenerator(object):
                                 temp_output_fullpath
                             )
 
-                            output_filename = "%s_%s" % (
+                            output_filename = "{}_{}".format(
                                 self.version.nice_name,
                                 child_full_path,
                             )
@@ -945,18 +944,17 @@ class RepresentationGenerator(object):
                             # run the mel command
                             # check if file exists
                             pm.mel.eval(
-                                gpu_command
-                                % {
-                                    "start_frame": start_frame,
-                                    "end_frame": end_frame,
-                                    "node": child_node.fullPath(),
-                                    "path": temp_output_path,
-                                    "filename": temp_output_filename,
-                                }
+                                gpu_command.format(
+                                    start_frame=start_frame,
+                                    end_frame=end_frame,
+                                    node=child_node.fullPath(),
+                                    path=temp_output_path,
+                                    filename=temp_output_filename,
+                                )
                             )
 
                             cache_file_full_path = os.path.join(
-                                output_path, "%s.abc" % (output_filename)
+                                output_path, f"{output_filename}.abc"
                             ).replace("\\", "/")
 
                             # create the intermediate directories
@@ -1029,7 +1027,7 @@ class RepresentationGenerator(object):
 
         # 6. save the scene as {{original_take}}@GPU
         # use maya
-        variant_name = "%s%s%s" % (
+        variant_name = "{}{}{}".format(
             self.base_variant_name,
             Representation.repr_separator,
             "GPU",
@@ -1075,7 +1073,7 @@ class RepresentationGenerator(object):
             # generate if not exists
             if not os.path.exists(tx_path):
                 # TODO: Consider Color Management
-                cmd = 'maketx -o "%s" -u --oiio %s' % (tx_path, tile_path)
+                cmd = 'maketx -o "{}" -u --oiio {}'.format(tx_path, tile_path)
 
                 if os.name == "nt":
                     proc = subprocess.Popen(
@@ -1131,18 +1129,18 @@ class RepresentationGenerator(object):
 
         if not os.path.exists(self.version.absolute_full_path):
             raise RuntimeError(
-                "Path doesn't exists: %s" % self.version.absolute_full_path
+                f"Path doesn't exists: {self.version.absolute_full_path}"
             )
         self.open_version(self.version)
 
         task = self.version.task
 
-        # export_command = 'arnoldExportAss -f "%(path)s" -s -mask 24 ' \
+        # export_command = 'arnoldExportAss -f "{path}" -s -mask 24 ' \
         #                  '-lightLinks 0 -compressed -boundingBox ' \
         #                  '-shadowLinks 0 -cam perspShape;'
 
         export_command = (
-            'arnoldExportAss -f "%(path)s" -s -mask 60'
+            'arnoldExportAss -f "{path}" -s -mask 60'
             "-lightLinks 1 -compressed -boundingBox "
             "-shadowLinks 1 -cam perspShape;"
         )
@@ -1161,8 +1159,9 @@ class RepresentationGenerator(object):
         if len(refs_with_no_ass_repr):
             raise RuntimeError(
                 "Please generate the ASS Representation of the references "
-                "first!!!\n%s"
-                % "\n".join(map(lambda x: str(x.path), refs_with_no_ass_repr))
+                "first!!!\n{}".format(
+                    "\n".join(map(lambda x: str(x.path), refs_with_no_ass_repr))
+                )
             )
 
         if self.is_look_dev_task(task):
@@ -1231,7 +1230,7 @@ class RepresentationGenerator(object):
                     node.referenceFile() is None
                     and node.name() not in READ_ONLY_NODE_NAMES
                 ):
-                    node.rename("%s_%s" % (node.name(), uuid.uuid4().hex))
+                    node.rename("{}_{}".format(node.name(), uuid.uuid4().hex))
 
             nodes_to_ass_files = {}
 
@@ -1257,9 +1256,11 @@ class RepresentationGenerator(object):
                     pm.select(child_node)
                     # TODO: Instead of uuid4 please use a deterministic so reproducible
                     #       random suffix using the fullpath.
-                    child_node.rename("%s_%s" % (child_node.name(), uuid.uuid4().hex))
+                    child_node.rename(
+                        "{}_{}".format(child_node.name(), uuid.uuid4().hex)
+                    )
 
-                    output_filename = "%s_%s.ass" % (
+                    output_filename = "{}_{}.ass".format(
                         self.version.nice_name,
                         child_node_name,
                     )
@@ -1268,11 +1269,9 @@ class RepresentationGenerator(object):
 
                     # run the mel command
                     pm.mel.eval(
-                        export_command % {"path": output_full_path.replace("\\", "/")}
+                        export_command.format(path=output_full_path.replace("\\", "/"))
                     )
-                    nodes_to_ass_files[child_node_full_path] = (
-                        "%s.gz" % output_full_path
-                    )
+                    nodes_to_ass_files[child_node_full_path] = f"{output_full_path}.gz"
                     # print("{} -> {}".format(
                     #     child_node_full_path,
                     #     output_full_path)
@@ -1360,7 +1359,7 @@ class RepresentationGenerator(object):
                     node.referenceFile() is None
                     and node.name() not in READ_ONLY_NODE_NAMES
                 ):
-                    node.rename("%s_%s" % (node.name(), uuid.uuid4().hex))
+                    node.rename("{}_{}".format(node.name(), uuid.uuid4().hex))
 
             # find the _pfxPolygons node
             pfx_polygons_node = pm.PyNode("kks___vegetation_pfxPolygons")
@@ -1371,7 +1370,7 @@ class RepresentationGenerator(object):
                     child_node_name = child_node.name().split("___")[-1]
 
                     pm.select(child_node)
-                    output_filename = "%s_%s.ass" % (
+                    output_filename = "{}_{}.ass".format(
                         self.version.nice_name,
                         child_node_name.replace(":", "_").replace("|", "_"),
                     )
@@ -1380,12 +1379,12 @@ class RepresentationGenerator(object):
 
                     # run the mel command
                     pm.mel.eval(
-                        export_command % {"path": output_full_path.replace("\\", "/")}
+                        export_command.format(path=output_full_path.replace("\\", "/"))
                     )
 
                     # generate an aiStandIn node and set the path
                     ass_node = auxiliary.create_arnold_stand_in(
-                        path="%s.gz" % output_full_path
+                        path=f"{output_full_path}.gz"
                     )
                     ass_tra = ass_node.getParent()
 
@@ -1406,7 +1405,7 @@ class RepresentationGenerator(object):
                     pm.delete(child_node)
 
                     # give it the same name with the original
-                    ass_tra.rename("%s" % child_node_name)
+                    ass_tra.rename(f"{child_node_name}")
 
             # clean up other nodes
             pm.delete("kks___vegetation_pfxStrokes")
@@ -1502,7 +1501,7 @@ class RepresentationGenerator(object):
 
         # save the scene as {{original_take}}@ASS
         # use maya
-        variant_name = "%s%s%s" % (
+        variant_name = "{}{}{}".format(
             self.base_variant_name,
             Representation.repr_separator,
             "ASS",
@@ -1561,13 +1560,13 @@ class RepresentationGenerator(object):
 
         if not os.path.exists(self.version.absolute_full_path):
             raise RuntimeError(
-                "Path doesn't exists: %s" % self.version.absolute_full_path
+                f"Path doesn't exists: {self.version.absolute_full_path}"
             )
         self.open_version(self.version)
 
         task = self.version.task
 
-        export_command = 'rsProxy -fp "%(path)s" -c -z -sl;'
+        export_command = 'rsProxy -fp "{path}" -c -z -sl;'
 
         # calculate output path
         output_path = os.path.join(self.version.absolute_path, "Outputs/rs/").replace(
@@ -1583,8 +1582,9 @@ class RepresentationGenerator(object):
         if len(refs_with_no_ass_repr):
             raise RuntimeError(
                 "Please generate the RS Representation of the references "
-                "first!!!\n%s"
-                % "\n".join(map(lambda x: str(x.path), refs_with_no_ass_repr))
+                "first!!!\n{}".format(
+                    "\n".join(map(lambda x: str(x.path), refs_with_no_ass_repr))
+                )
             )
 
         # from anima.dcc.mayaEnv.redshift import RedShiftTextureProcessor
@@ -1679,9 +1679,11 @@ class RepresentationGenerator(object):
                     child_node_full_path = child_node.fullPath()
 
                     pm.select(child_node)
-                    child_node.rename("%s_%s" % (child_node.name(), uuid.uuid4().hex))
+                    child_node.rename(
+                        "{}_{}".format(child_node.name(), uuid.uuid4().hex)
+                    )
 
-                    output_filename = "%s_%s.rs" % (
+                    output_filename = "{}_{}.rs".format(
                         self.version.nice_name,
                         child_node_name,
                     )
@@ -1700,7 +1702,9 @@ class RepresentationGenerator(object):
                     # run the mel command with temp file path
                     try:
                         pm.mel.eval(
-                            export_command % {"path": temp_full_path.replace("\\", "/")}
+                            export_command.format(
+                                path=temp_full_path.replace("\\", "/")
+                            )
                         )
                         # then move it to the original place
                         try:
@@ -1798,7 +1802,7 @@ class RepresentationGenerator(object):
                     child_node_name = child_node.name().split("___")[-1]
 
                     pm.select(child_node)
-                    output_filename = "%s_%s.rs" % (
+                    output_filename = "{}_{}.rs".format(
                         self.version.nice_name,
                         child_node_name.replace(":", "_").replace("|", "_"),
                     )
@@ -1814,7 +1818,7 @@ class RepresentationGenerator(object):
 
                     # run the mel command
                     pm.mel.eval(
-                        export_command % {"path": output_full_path.replace("\\", "/")}
+                        export_command.format(path=output_full_path.replace("\\", "/"))
                     )
 
                     # generate an aiStandIn node and set the path
@@ -1841,7 +1845,7 @@ class RepresentationGenerator(object):
                     pm.delete(child_node)
 
                     # give it the same name with the original
-                    rs_proxy_tra.rename("%s" % child_node_name)
+                    rs_proxy_tra.rename(f"{child_node_name}")
 
                     # set the drawing overrides
                     rs_proxy_tra.overrideEnabled.set(1)
@@ -1886,7 +1890,7 @@ class RepresentationGenerator(object):
 
         # save the scene as {{original_take}}@ASS
         # use maya
-        variant_name = "%s%s%s" % (
+        variant_name = "{}{}{}".format(
             self.base_variant_name,
             Representation.repr_separator,
             "RS",

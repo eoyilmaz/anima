@@ -308,7 +308,7 @@ def UI():
     selection_manager_window = pm.window(
         "selectionManagerWindow",
         wh=(300, 200),
-        title=("Selection Manager %s" % __version__),
+        title=(f"Selection Manager {__version__}"),
     )
     form_layout1 = pm.formLayout("selectionManager_formLayout1", nd=100)
     with form_layout1:

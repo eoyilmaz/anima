@@ -298,7 +298,8 @@ class TDE4Point(object):
             x, y = self.data[frame_number]
             self.data[frame_number] = [
                 (x - old_width * 0.5) / old_width * new_width + new_width * 0.5,
-                (y - old_height * 0.5) / old_height * new_height_from_width + new_height  * 0.5,
+                (y - old_height * 0.5) / old_height * new_height_from_width
+                + new_height * 0.5,
             ]
 
 

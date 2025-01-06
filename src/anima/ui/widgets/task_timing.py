@@ -183,17 +183,20 @@ class TaskTimingInfoWidget(QtWidgets.QWidget):
         if isinstance(task, Task):
             self._task = task
 
-            self.bid_field.setText("%s %s" % (task.bid_timing, task.bid_unit))
+            self.bid_field.setText("{} {}".format(task.bid_timing, task.bid_unit))
             self.schedule_timing_field.setText(
-                "%s %s" % (task.schedule_timing, task.schedule_unit)
+                "{} {}".format(task.schedule_timing, task.schedule_unit)
             )
             self.total_time_logs_field.setText(
-                "%s %s" % task.least_meaningful_time_unit(task.total_logged_seconds)
+                "{} {}".format(
+                    task.least_meaningful_time_unit(task.total_logged_seconds)
+                )
             )
             self.time_to_complete_field.setText(
-                "%s %s"
-                % task.least_meaningful_time_unit(
-                    task.total_seconds - task.total_logged_seconds
+                "{} {}".format(
+                    task.least_meaningful_time_unit(
+                        task.total_seconds - task.total_logged_seconds
+                    )
                 )
             )
 

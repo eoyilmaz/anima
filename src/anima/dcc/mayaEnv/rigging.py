@@ -107,7 +107,7 @@ class Rigging(object):
             shapes[i] = temp_list[0]
         joint_shapes = pm.listRelatives(joints, s=True, pa=True)
         for i in range(0, len(joint_shapes)):
-            name = "%sShape%s" % (joints, (i + 1))
+            name = "{}Shape{}".format(joints, (i + 1))
             temp = "".join(name.split("|", 1))
             pm.rename(joint_shapes[i], temp)
         pm.delete(objects)
@@ -134,7 +134,7 @@ class Rigging(object):
         if len(joint_shape):
             pm.delete(joint_shape)
         for i in range(0, len(shape)):
-            name = "%sShape%f" % (joints, (i + 1))
+            name = "{}Shape{}".format(joints, (i + 1))
             shape[i] = pm.rename(shape[i], name)
             temp_list = pm.parent(shape[i], joints, r=True, s=True)
             shape[i] = temp_list[0]
@@ -316,7 +316,7 @@ class Rigging(object):
 
             pm.select(None)
             joint = pm.nt.Joint()
-            joint.rename("%s#" % joint_name_string)
+            joint.rename("{}#".format(joint_name_string))
             joint.t.set(world_pos)
 
             joint.rotateOrder.set(orientations.index(orientation))
@@ -324,7 +324,7 @@ class Rigging(object):
 
         if suffix_string is not None:
             for joint in joints:
-                joint.rename("%s%s" % (joint.name(), suffix_string))
+                joint.rename("{}{}".format(joint.name(), suffix_string))
 
         for i in range(len(joints) - 1):
             if not align_to_world:
@@ -751,13 +751,15 @@ class PinController(object):
 
         # create a sphere with the size of pin_size
         self.pin_transform, make_nurbs_node = pm.sphere(radius=self.size)
-        self.pin_transform.rename("%s#" % self.pin_name_prefix)
+        self.pin_transform.rename("{}#".format(self.pin_name_prefix))
 
         self.pin_shape = self.pin_transform.getShape()
 
         # create two axial correction groups
         self.compensation_group = auxiliary.axial_correction_group(self.pin_transform)
-        self.compensation_group.rename("%s_CompensationGrp" % self.pin_transform.name())
+        self.compensation_group.rename(
+            "{}_CompensationGrp".format(self.pin_transform.name())
+        )
 
         self.axial_correction_group = auxiliary.axial_correction_group(
             self.compensation_group
@@ -786,7 +788,7 @@ class PinController(object):
         self.follicle_transform, self.follicle_shape = auxiliary.create_follicle(
             self.pin_to_shape, self.pin_uv
         )
-        self.follicle_transform.rename("%s_Follicle" % self.pin_transform.name())
+        self.follicle_transform.rename("{}_Follicle".format(self.pin_transform.name()))
 
         # move the axial correction group
         pm.xform(self.axial_correction_group, ws=1, t=vtx_coord)
@@ -805,7 +807,7 @@ class PinController(object):
 
     def get_pin_shader(self):
         """this creates or returns the existing pin shader"""
-        shaders = pm.ls("%s*" % self.pin_shader_prefix)
+        shaders = pm.ls("{}*".format(self.pin_shader_prefix))
         if shaders:
             # try to find the shader with the same color
             for shader in shaders:
@@ -815,12 +817,12 @@ class PinController(object):
         # so we couldn't find a shader
         # lets create one
         shader = pm.shadingNode("lambert", asShader=1)
-        shader.rename("%s#" % self.pin_shader_prefix)
+        shader.rename("{}#".format(self.pin_shader_prefix))
         shader.color.set(self.color)
 
         # also create the related shadingEngine
         shading_engine = pm.nt.ShadingEngine()
-        shading_engine.rename("%sSG#" % self.pin_shader_prefix)
+        shading_engine.rename("{}SG#".format(self.pin_shader_prefix))
         shader.outColor >> shading_engine.surfaceShader
 
         return shader
@@ -948,16 +950,16 @@ class SkinTools(object):
             current_index = i
             if current_index > (last_index + 1):
                 if start_index != last_index:
-                    compacted_list.append("%s:%s" % (start_index, last_index))
+                    compacted_list.append("{}:{}".format(start_index, last_index))
                 else:
-                    compacted_list.append("%s" % start_index)
+                    compacted_list.append("{}".format(start_index))
                 start_index = current_index
             last_index = current_index
 
         if start_index != last_index:
-            compacted_list.append("%s:%s" % (start_index, index_list[-1]))
+            compacted_list.append("{}:{}".format(start_index, index_list[-1]))
         else:
-            compacted_list.append("%s" % start_index)
+            compacted_list.append(f"{start_index}")
 
         return compacted_list
 
@@ -1170,7 +1172,7 @@ class SkinToolsUI(object):
             self.replace_item_in_list(item_index, item)
         else:
             item.liw.set(1)
-            self.replace_item_in_list(item_index, "%s (h)" % item.name())
+            self.replace_item_in_list(item_index, f"{item.name()} (h)")
 
         pm.textScrollList(self.influence_list_text_scroll_list, e=1, sii=item_index)
 
@@ -1227,7 +1229,7 @@ class SkinToolsUI(object):
             display_string = joint.name()
 
             if joint.liw.get():
-                display_string = "%s (h)" % display_string
+                display_string = f"{display_string} (h)"
 
             pm.textScrollList(
                 self.influence_list_text_scroll_list, e=1, append=display_string
@@ -1242,7 +1244,7 @@ class SkinToolsUI(object):
 
         # change the skin influence to current selection
         if selected_item != "":
-            pm.mel.eval("setSmoothSkinInfluence %s" % selected_item.name())
+            pm.mel.eval("setSmoothSkinInfluence {}".format(selected_item.name()))
 
 
 class JointHierarchy(object):
@@ -1275,8 +1277,10 @@ class JointHierarchy(object):
 
         if not found_end_joint:
             raise RuntimeError(
-                "Cannot reach end joint (%s) from start joint (%s)"
-                % (self.end_joint, self.start_joint)
+                "Cannot reach end joint ({}) from start joint ({})".format(
+                    self.end_joint,
+                    self.start_joint,
+                )
             )
 
     def duplicate(self, class_=None, prefix="", suffix="", subdivision=0):
@@ -1532,7 +1536,7 @@ class BendyLimbJointHierarchy(JointHierarchy):
             # create a cluster for first two and last two cvs of the curve
             for j in range(2):
                 cluster, cluster_handle = pm.cluster(
-                    "%s.cv[%s:%s]" % (curve.name(), j * 2, j * 2 + 1)
+                    "{}.cv[{}:{}]".format(curve.name(), j * 2, j * 2 + 1)
                 )
 
                 # move the cluster to the start or end of the curve
@@ -1540,7 +1544,9 @@ class BendyLimbJointHierarchy(JointHierarchy):
                     cv_index = j * 2
                 else:
                     cv_index = j * 2 + 1
-                tra = pm.xform("%s.cv[%s]" % (curve.name(), cv_index), q=1, ws=1, t=1)
+                tra = pm.xform(
+                    "{}.cv[{}]".format(curve.name(), cv_index), q=1, ws=1, t=1
+                )
                 cluster_handle.t.set(tra)
                 cluster_handle.getShape().origin.set(tra)
 

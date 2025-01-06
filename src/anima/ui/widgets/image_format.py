@@ -77,7 +77,7 @@ class ImageFormatWidget(object):
         )
         self.combo_box.clear()
         for imf_id, imf_name, imf_width, imf_height in all_image_formats:
-            imf_text = "%s (%s x %s)" % (imf_name, imf_width, imf_height)
+            imf_text = "{} ({} x {})".format(imf_name, imf_width, imf_height)
             self.combo_box.addItem(imf_text, imf_id)
 
     def create_push_button_clicked(self):

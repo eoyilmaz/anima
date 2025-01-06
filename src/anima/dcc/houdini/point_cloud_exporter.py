@@ -13,7 +13,7 @@ def export_data(node, path):
 
     all_data = []
     for i in range(int(len(point_positions) / 3)):
-        raw_data = "%s \t%s \t%s \t%s \t%s \t%s\n" % (
+        raw_data = "{} \t{} \t{} \t{} \t{} \t{}\n".format(
             point_positions[i * 3],
             point_positions[i * 3 + 1],
             point_positions[i * 3 + 2],

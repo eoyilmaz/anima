@@ -126,8 +126,8 @@ def test_get_version_from_full_path_with_multiple_repositories(create_test_db):
     version2.update_paths()
 
     DBSession.commit()
-    logger.debug('version1.full_path : %s' % version1.full_path)
-    logger.debug('version2.full_path : %s' % version2.full_path)
+    logger.debug(f"version1.full_path : {version1.full_path}")
+    logger.debug(f"version2.full_path : {version2.full_path}")
 
     # now try to get the versions with an DCCBase instance
     dcc = DCCBase()
@@ -318,10 +318,10 @@ def test_get_versions_from_path_with_multiple_repositories(create_test_db):
     version4.update_paths()
 
     DBSession.commit()
-    logger.debug('version1.full_path : %s' % version1.full_path)
-    logger.debug('version2.full_path : %s' % version2.full_path)
-    logger.debug('version3.full_path : %s' % version2.full_path)
-    logger.debug('version4.full_path : %s' % version2.full_path)
+    logger.debug(f"version1.full_path : {version1.full_path}")
+    logger.debug(f"version2.full_path : {version2.full_path}")
+    logger.debug(f"version3.full_path : {version2.full_path}")
+    logger.debug(f"version4.full_path : {version2.full_path}")
 
     # now try to get the versions with an DCCBase instance
     dcc = DCCBase()
@@ -493,10 +493,10 @@ def test_trim_repo_path_with_multiple_repositories(create_test_db):
     version4.update_paths()
 
     DBSession.commit()
-    logger.debug('version1.full_path : %s' % version1.full_path)
-    logger.debug('version2.full_path : %s' % version2.full_path)
-    logger.debug('version3.full_path : %s' % version2.full_path)
-    logger.debug('version4.full_path : %s' % version2.full_path)
+    logger.debug(f"version1.full_path : {version1.full_path}")
+    logger.debug(f"version2.full_path : {version2.full_path}")
+    logger.debug(f"version3.full_path : {version2.full_path}")
+    logger.debug(f"version4.full_path : {version2.full_path}")
 
     # now try to get the versions with an DCCBase instance
     dcc = DCCBase()

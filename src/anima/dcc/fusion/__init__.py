@@ -43,7 +43,9 @@ class Fusion(DCCBase):
         self.fusion_prefs = self.fusion.GetPrefs()["Global"]
 
         # update name with version
-        self.name = "Fusion%s" % self.fusion.GetAttrs("FUSIONS_Version").split(".")[0]
+        self.name = "Fusion{}".format(
+            self.fusion.GetAttrs("FUSIONS_Version").split(".")[0]
+        )
 
         self.comp = self.fusion.GetCurrentComp()
         self.comp_prefs = self.comp.GetPrefs()["Comp"]
@@ -279,7 +281,7 @@ class Fusion(DCCBase):
                 if version is not None:
                     break
 
-            logger.debug("version from recent files is: %s" % version)
+            logger.debug(f"version from recent files is: {version}")
 
         return version
 
@@ -475,13 +477,13 @@ class Fusion(DCCBase):
                 node.Input = input_node
             elif "ref_id" in node_tree["connected_to"]:
                 ref_id = node_tree["connected_to"]["ref_id"]
-                print("ref_id: %s" % ref_id)
+                print(f"ref_id: {ref_id}")
                 # find a node with ref_id equals to ref_id that is given in the
                 # node tree
                 all_nodes = self.comp.GetToolList().values()
                 for r_node in all_nodes:
                     node_ref_id = r_node.GetData("ref_id")
-                    print("node_ref_id: %s" % node_ref_id)
+                    print(f"node_ref_id: {node_ref_id}")
                     if node_ref_id == ref_id:
                         node.Input = r_node
                         break
@@ -506,12 +508,12 @@ class Fusion(DCCBase):
             version, include_project_code=False
         )
 
-        file_name_buffer.append("%(version_sig_name)s.001.%(format)s")
+        file_name_buffer.append("{version_sig_name}.001.{format}")
         template_kwargs.update(
             {"version_sig_name": version_sig_name, "format": file_format}
         )
 
-        output_file_name = "".join(file_name_buffer) % template_kwargs
+        output_file_name = "".join(file_name_buffer).format(**template_kwargs)
 
         # check if it is a stereo comp
         # if it is enable separate view rendering
@@ -519,7 +521,7 @@ class Fusion(DCCBase):
             version.absolute_path,
             "Outputs",
             version.variant_name,
-            "v%03d" % version.version_number,
+            f"v{version.version_number:03d}",
             file_format,
         )
 
@@ -535,18 +537,20 @@ class Fusion(DCCBase):
         ).replace("\\", "/")
 
         # make the path Project: relative
-        output_file_full_path = "Project:%s" % os.path.relpath(
-            output_file_full_path, os.path.dirname(version.absolute_path)
+        output_file_full_path = "Project:{}".format(
+            os.path.relpath(
+                output_file_full_path, os.path.dirname(version.absolute_path)
+            )
         )
 
         # set the output path
         if sys.version_info[0] >= 3:
-            return "%s" % os.path.normpath(output_file_full_path)
+            return os.path.normpath(output_file_full_path)
         else:
-            return "%s" % os.path.normpath(output_file_full_path).encode()
+            return os.path.normpath(output_file_full_path).encode()
 
     def output_node_name_generator(self, file_format):
-        return "%s_%s" % (self._main_output_node_name, file_format)
+        return "{}_{}".format(self._main_output_node_name, file_format)
 
     def create_slate_node(self, version, submitting_for="FINAL", submission_note=""):
         """Creates the slate node
@@ -631,7 +635,9 @@ class Fusion(DCCBase):
         slate_node.Input4 = version.task.project.name
 
         # Version Name
-        slate_node.Input5 = "%s_v%03d" % (version.nice_name, version.version_number)
+        slate_node.Input5 = "{}_v{:03d}".format(
+            version.nice_name, version.version_number
+        )
 
         # Submitting For
         slate_node.Input6 = submitting_for
@@ -708,7 +714,11 @@ class Fusion(DCCBase):
                             "type": "OCIOColorSpace",
                             "ref_id": random_ref_id,
                             "input_list": {
-                                "OCIOConfig": "" if "OCIO" in os.environ else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
+                                "OCIOConfig": (
+                                    ""
+                                    if "OCIO" in os.environ
+                                    else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio"
+                                ),
                                 "SourceSpace": "ACES - ACES2065-1",
                                 "OutputSpace": "Output - Rec.709",
                             },
@@ -716,7 +726,11 @@ class Fusion(DCCBase):
                                 "Input": {
                                     "type": "OCIOColorSpace",
                                     "input_list": {
-                                        "OCIOConfig": "" if "OCIO" in os.environ else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
+                                        "OCIOConfig": (
+                                            ""
+                                            if "OCIO" in os.environ
+                                            else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio"
+                                        ),
                                         "SourceSpace": "Utility - Linear - sRGB",
                                         "OutputSpace": "ACES - ACES2065-1",
                                     },
@@ -876,7 +890,11 @@ class Fusion(DCCBase):
                             "Input": {
                                 "type": "OCIOColorSpace",
                                 "input_list": {
-                                    "OCIOConfig": "" if "OCIO" in os.environ else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
+                                    "OCIOConfig": (
+                                        ""
+                                        if "OCIO" in os.environ
+                                        else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio"
+                                    ),
                                     "SourceSpace": "ACES - ACES2065-1",
                                     "OutputSpace": "Utility - sRGB - Texture",
                                 },
@@ -885,7 +903,11 @@ class Fusion(DCCBase):
                                         "type": "OCIOColorSpace",
                                         "ref_id": random_ref_id,
                                         "input_list": {
-                                            "OCIOConfig": "" if "OCIO" in os.environ else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
+                                            "OCIOConfig": (
+                                                ""
+                                                if "OCIO" in os.environ
+                                                else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio"
+                                            ),
                                             "SourceSpace": "ACES - ACES2065-1",
                                             "OutputSpace": "ACES - ACES2065-1",
                                         },
@@ -938,7 +960,11 @@ class Fusion(DCCBase):
                             "Input": {
                                 "type": "OCIOColorSpace",
                                 "input_list": {
-                                    "OCIOConfig": "" if "OCIO" in os.environ else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
+                                    "OCIOConfig": (
+                                        ""
+                                        if "OCIO" in os.environ
+                                        else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio"
+                                    ),
                                     "SourceSpace": "ACES - ACES2065-1",
                                     "OutputSpace": "ACES - ACES2065-1",
                                 },
@@ -986,7 +1012,11 @@ class Fusion(DCCBase):
                             "Input": {
                                 "type": "OCIOColorSpace",
                                 "input_list": {
-                                    "OCIOConfig": "" if "OCIO" in os.environ else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
+                                    "OCIOConfig": (
+                                        ""
+                                        if "OCIO" in os.environ
+                                        else "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio"
+                                    ),
                                     "SourceSpace": "ACES - ACES2065-1",
                                     "OutputSpace": "Output - Rec.709",
                                 },
@@ -1125,15 +1155,17 @@ class Fusion(DCCBase):
         :return:
         """
         project_directory_in = os.path.normpath(project_directory_in)
-        print("setting project directory to: %s" % project_directory_in)
+        print(f"setting project directory to: {project_directory_in}")
 
         # set a path map
         self.comp.SetPrefs(
             {
                 "Comp.Paths.Map": {
-                    "Project:": project_directory_in
-                    if sys.version_info[0] >= 3
-                    else project_directory_in.encode()
+                    "Project:": (
+                        project_directory_in
+                        if sys.version_info[0] >= 3
+                        else project_directory_in.encode()
+                    )
                 }
             }
         )

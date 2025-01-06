@@ -133,8 +133,7 @@ class ReviewWidget(QtWidgets.QWidget):
 
         if self.task:
             self.task_name_widget.setText(
-                "%s (%s) (%s)"
-                % (
+                "{} ({}) ({})".format(
                     self.task.name,
                     " | ".join(
                         [self.task.project.name]
@@ -169,8 +168,9 @@ class ReviewWidget(QtWidgets.QWidget):
 
         if not isinstance(reviewer, User):
             raise TypeError(
-                "%s.reviewer should be a stalker.User instance, not %s"
-                % (self.__class__.__name__, reviewer.__class__.__name__)
+                "{}.reviewer should be a stalker.User instance, not {}".format(
+                    self.__class__.__name__, reviewer.__class__.__name__
+                )
             )
         self._reviewer = reviewer
 
@@ -195,8 +195,9 @@ class ReviewWidget(QtWidgets.QWidget):
 
         if not isinstance(task, Task):
             raise TypeError(
-                "%s.task should be a stalker.Task instance, not %s"
-                % (self.__class__.__name__, task.__class__.__name__)
+                "{}.task should be a stalker.Task instance, not {}".format(
+                    self.__class__.__name__, task.__class__.__name__
+                )
             )
         self._task = task
 
@@ -253,8 +254,9 @@ class ReviewTypeWidget(QtWidgets.QComboBox):
         """
         if review_type not in [APPROVE, REQUEST_REVISION]:
             raise RuntimeError(
-                "%s.review_type should be set to either %s or %s, not %s"
-                % (self.__class__.__name__, APPROVE, REQUEST_REVISION, review_type)
+                "{}.review_type should be set to either {} or {}, not {}".format(
+                    self.__class__.__name__, APPROVE, REQUEST_REVISION, review_type
+                )
             )
 
         index = self.findText(review_type)

@@ -173,7 +173,7 @@ class DCCBase(object):
         :meth:`~anima.dcc.base.DCCBase.get_version_from_full_path`
         because it returns a list of
         :class:`~stalker.models.version.Version` instances which are
-        residing in that path. The list is ordered by the ``id``\ s of the
+        residing in that path. The list is ordered by the ``id`` s of the
         instances.
 
         :param path: A path which has possible
@@ -229,10 +229,10 @@ class DCCBase(object):
         os_independent_path = Repository.to_os_independent_path(full_path)
 
         # try to get a version with that info
-        logger.debug("getting a version with path: %s" % full_path)
+        logger.debug(f"getting a version with path: {full_path}")
 
         version = Version.query.filter(Version.full_path == os_independent_path).first()
-        logger.debug("version: %s" % version)
+        logger.debug(f"version: {version}")
         return version
 
     def get_current_version(self):
@@ -276,7 +276,7 @@ class DCCBase(object):
                 if version is not None:
                     break
 
-            logger.debug("version from recent files is: %s" % version)
+            logger.debug(f"version from recent files is: {version}")
 
         return version
 
@@ -319,7 +319,7 @@ class DCCBase(object):
           version argument and a Version instance will be get from the given
           parent_ref.path.
         """
-        logger.debug("parent_ref: %s" % parent_ref)
+        logger.debug(f"parent_ref: {parent_ref}")
 
         logger.debug("get a version")
         if not parent_ref:
@@ -330,14 +330,14 @@ class DCCBase(object):
             version = self.get_version_from_full_path(parent_ref.path)
 
         if version:
-            logger.debug("got a version: %s" % version.absolute_full_path)
+            logger.debug(f"got a version: {version.absolute_full_path}")
             # use the original version if it is a Repr version
             from anima.representation import Representation
 
             if Representation.repr_separator in version.variant_name and version.parent:
                 version = version.parent
                 logger.debug(
-                    "this is a representation switching to its parent: %s" % version
+                    f"this is a representation switching to its parent: {version}"
                 )
 
             # update the reference list
@@ -359,7 +359,7 @@ class DCCBase(object):
         dictionary which has three keys called 'leave', 'update' and 'create'.
 
         Each of these keys correspond to a value of a list of
-        :class:`~stalker.model.version.Version`\ s. Where the list in 'leave'
+        :class:`~stalker.model.version.Version` instances. Where the list in 'leave'
         key shows the Versions referenced (or deeply referenced) to the
         current scene which doesn't need to be changed.
 
@@ -383,7 +383,8 @@ class DCCBase(object):
             pdm = ProgressManagerFactory.get_progress_manager()
 
         caller = pdm.register(
-            3, "%s.check_referenced_versions() prepare data" % self.__class__.__name__
+            3,
+            f"{self.__class__.__name__}.check_referenced_versions() prepare data",
         )
 
         # deeply get which file is referencing which other files
@@ -421,7 +422,7 @@ class DCCBase(object):
         # register a new caller
         caller = pdm.register(
             len(dfs_version_references),
-            "%s.check_referenced_versions()" % self.__class__.__name__,
+            f"{self.__class__.__name__}.check_referenced_versions()",
         )
 
         # iterate back in the list
@@ -623,7 +624,7 @@ class DCCBase(object):
         from anima import defaults
 
         return os.path.normpath(
-            os.path.expanduser("%s/projects_backup" % defaults.local_cache_folder)
+            os.path.expanduser(f"{defaults.local_cache_folder}/projects_backup")
         ).replace("\\", "/")
 
     def create_project_structure(self, version):
@@ -660,8 +661,8 @@ class DCCBase(object):
         # (ex: do not duplicate the file)
         if len(os.path.commonprefix([output_full_path, version.absolute_full_path])):
             logger.debug(
-                "Local copy file: %s is on the same drive with the source "
-                "file: %s" % (output_full_path, version.absolute_full_path)
+                f"Local copy file: {output_full_path} is on the same drive "
+                f"with the source file: {version.absolute_full_path}"
             )
             logger.debug("Not duplicating it!")
             return
@@ -681,7 +682,7 @@ class DCCBase(object):
             # no space left
             pass
 
-        logger.debug("created copy to: %s" % output_full_path)
+        logger.debug(f"created copy to: {output_full_path}")
 
     @classmethod
     def get_shot(cls, version):
@@ -715,7 +716,7 @@ class Filter(object):
     task type.
 
     :param version: :class:`~stalker.models.version.Version` instance. The
-      related :class:`~stalker.models.task.Task`\ s
+      related :class:`~stalker.models.task.Task` instances
       :attr:`~stalker.models.task.Task.type` attribute is key here. It defines
       which filter to apply to.
 

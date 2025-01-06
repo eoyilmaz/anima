@@ -188,7 +188,7 @@ class Reference(object):
             .first()
         )
 
-        description = "Auto Created By %s " % logged_in_user.name
+        description = f"Auto Created By {logged_in_user.name}"
         variant_name = defaults.version_variant_name
         if not previous_look_dev_version:
             # do the trick
@@ -273,8 +273,8 @@ class Reference(object):
         if ref_count > 25:
             result = pm.windows.confirmBox(
                 "Fix Reference Namespace",
-                "You have %s references in your scene,\n"
-                "this will take too much time\n\nIs that Ok?" % ref_count,
+                f"You have {ref_count} references in your scene,\n"
+                "this will take too much time\n\nIs that Ok?",
             )
             if not result:
                 return
@@ -343,9 +343,9 @@ class Reference(object):
         )[0]
         result = cls.fix_student_license(file_path)
         if result:
-            pm.informBox("Done!", "Fixed:\n\n%s" % file_path)
+            pm.informBox("Done!", f"Fixed:\n\n{file_path}")
         else:
-            pm.informBox("Fail!", "No Student License Found on\n\n%s" % file_path)
+            pm.informBox("Fail!", f"No Student License Found on\n\n{file_path}")
 
     @classmethod
     def fix_student_license(cls, path):
@@ -358,9 +358,9 @@ class Reference(object):
         for i in range(200):
             if "student" in data[i].lower():
                 # backup the file
-                shutil.copy(path, "%s.orig" % path)
+                shutil.copy(path, f"{path}.orig")
                 data.pop(i)
-                print("Fixed: %s" % path)
+                print(f"Fixed: {path}")
                 with open(path, "w") as f:
                     f.writelines(data)
                 return True
@@ -385,6 +385,7 @@ class Reference(object):
     def archive_multiple_scenes(cls):
         """Archive multiple scenes."""
         from anima.ui.scripts import maya as maya_ui_scripts
+
         maya_ui_scripts.archiver_dialog()
 
     @classmethod
@@ -492,8 +493,9 @@ class Reference(object):
 
         response = pm.confirmDialog(
             title="Remove Selected References?",
-            message="Remove selected references\n\n%s"
-            % "\n".join(map(lambda x: str(x), refs_to_remove)),
+            message="Remove selected references\n\n{}".format(
+                "\n".join(map(lambda x: str(x), refs_to_remove))
+            ),
             button=["Yes", "No"],
             defaultButton="No",
             cancelButton="No",
@@ -745,8 +747,7 @@ class Reference(object):
 
         response = pm.confirmDialog(
             title="Do Create Representations?",
-            message="Create all Repr. for all %s FileReferences?"
-            % len(versions_to_visit),
+            message=f"Create all Repr. for all {len(versions_to_visit)} FileReferences?",
             button=["Yes", "No"],
             defaultButton="No",
             cancelButton="No",
@@ -836,8 +837,9 @@ class Reference(object):
             pm.confirmDialog(
                 title="Error",
                 message="The following versions can not be published "
-                "(check script editor):\n\n%s"
-                % ("\n".join(map(lambda x: x.nice_name, versions_cannot_be_published))),
+                "(check script editor):\n\n{}".format(
+                    "\n".join(map(lambda x: x.nice_name, versions_cannot_be_published))
+                ),
                 button=["OK"],
                 defaultButton="OK",
                 cancelButton="OK",

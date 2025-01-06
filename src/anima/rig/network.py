@@ -15,7 +15,10 @@ class Network(object):
         pass
 
     def _createNetwork(self):
-        """creates a networkNode. This node holds all the limb nodes"""
+        """Create a networkNode.
+
+        This node holds all the limb nodes.
+        """
         # creates a networkNode. This node holds all the maya nodes
         self._name = self._name + "_Network"
         pm.createNode("network", n=self.name)
@@ -27,7 +30,7 @@ class Network(object):
         if not object in self.connections:
             mayaCon = object + (".message")
             networkId = len(self.connections)
-            tempAttr = "%s[%s]" % ("affectedBy", networkId)
+            tempAttr = f"affectedBy[{networkId}]"
             networkCon = self.name + "." + tempAttr
             pm.connectAttr(mayaCon, networkCon)
             self.connections.append(object)

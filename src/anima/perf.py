@@ -65,7 +65,7 @@ class TimeReporter(object):
     def __init__(self):
         self._title = None
         self.report_text = ""
-        self.time_format = "%0.2f sec"
+        self.time_format = "{:0.2f} sec"
         self.title = "Process"
 
         self.start_time = 0
@@ -94,4 +94,4 @@ class TimeReporter(object):
 
     def report(self):
         self.measure()
-        print(self.report_text % self.duration)
+        print(self.report_text.format(self.duration))

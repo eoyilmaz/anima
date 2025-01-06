@@ -216,7 +216,7 @@ def check_node_names_with_bad_characters(progress_controller=None):
         raise PublishError(
             "There are nodes with <b>unknown characters</b> in their names:"
             "<br><br>"
-            "%s" % "<br>".join(nodes_with_bad_name[:MAX_NODE_DISPLAY])
+            "{}".format("<br>".join(nodes_with_bad_name[:MAX_NODE_DISPLAY]))
         )
 
 
@@ -352,7 +352,7 @@ def check_file_texture_paths_with_bad_characters(progress_controller=None):
         raise PublishError(
             "There are FileTexture nodes with <b>unknown characters</b> in their texture paths:"
             "<br><br>"
-            "%s" % "<br>".join(bad_nodes[:MAX_NODE_DISPLAY])
+            "{}".format("<br>".join(bad_nodes[:MAX_NODE_DISPLAY]))
         )
 
 
@@ -422,17 +422,15 @@ def check_representations(progress_controller=None):
             color = "red" if current_repr != repr_name else "green"
 
             ref_repr_labels.append(
-                '<span style="color: %(color)s">%(repr_name)s</span> -> '
-                "%(ref)s"
-                % {"color": color, "repr_name": repr_name, "ref": ref.refNode.name()}
+                '<span style="color: {color}">{repr_name}</span> -> '
+                "{ref}".format(color=color, repr_name=repr_name, ref=ref.refNode.name())
             )
 
         raise PublishError(
-            "You are saving as the <b>%s</b> representation<br>"
+            "You are saving as the <b>{}</b> representation<br>"
             "for the current scene, but the following references<br>"
-            "are not <b>%s</b> representations of their versions:<br><br>"
-            "%s"
-            % (
+            "are not <b>{}</b> representations of their versions:<br><br>"
+            "{}".format(
                 current_repr,
                 current_repr,
                 "<br>".join(ref_repr_labels[:MAX_NODE_DISPLAY]),
@@ -532,7 +530,10 @@ def check_if_previous_version_references(progress_controller=None):
     for ref in all_references:  # check only 1st level references
         ref_version = m.get_version_from_full_path(ref.path)
         if ref_version:
-            if ref_version.task == ver.task and ref_version.variant_name == ver.variant_name:
+            if (
+                ref_version.task == ver.task
+                and ref_version.variant_name == ver.variant_name
+            ):
                 same_version_references.append(ref)
         progress_controller.increment()
 
@@ -607,9 +608,12 @@ def check_only_published_versions_are_used(progress_controller=None):
     progress_controller.complete()
     if len(non_published_versions):
         raise PublishError(
-            "Please use only <b>published</b> versions for:<br><br>%s"
-            % "<br>".join(
-                map(lambda x: x.nice_name, non_published_versions[:MAX_NODE_DISPLAY])
+            "Please use only <b>published</b> versions for:<br><br>{}".format(
+                "<br>".join(
+                    map(
+                        lambda x: x.nice_name, non_published_versions[:MAX_NODE_DISPLAY]
+                    )
+                )
             )
         )
 
@@ -694,11 +698,14 @@ def check_history(progress_controller=None):
         # there is history
         raise PublishError(
             "There is history on:\n\n"
-            "%s"
+            "{}"
             "\n\n"
             "there should be no "
-            "history in Model versions"
-            % "\n".join(map(lambda x: x.name(), nodes_with_history[:MAX_NODE_DISPLAY]))
+            "history in Model versions".format(
+                "\n".join(
+                    map(lambda x: x.name(), nodes_with_history[:MAX_NODE_DISPLAY])
+                )
+            )
         )
 
 
@@ -765,9 +772,10 @@ def check_if_root_nodes_have_no_transformation(progress_controller=None):
     if len(non_freezed_root_nodes):
         pm.select(non_freezed_root_nodes)
         raise PublishError(
-            "Please freeze the following node transformations:\n\n%s"
-            % "\n".join(
-                map(lambda x: x.name(), non_freezed_root_nodes[:MAX_NODE_DISPLAY])
+            "Please freeze the following node transformations:\n\n{}".format(
+                "\n".join(
+                    map(lambda x: x.name(), non_freezed_root_nodes[:MAX_NODE_DISPLAY])
+                )
             )
         )
 
@@ -850,12 +858,13 @@ def check_if_leaf_mesh_nodes_have_no_transformation(progress_controller=None):
         pm.select(mesh_nodes_with_transform_children)
         raise PublishError(
             "The following meshes have other objects parented to them:"
-            "\n\n%s"
-            "\n\nPlease remove any object under them!"
-            % "\n".join(
-                map(
-                    lambda x: x.name(),
-                    mesh_nodes_with_transform_children[:MAX_NODE_DISPLAY],
+            "\n\n{}"
+            "\n\nPlease remove any object under them!".format(
+                "\n".join(
+                    map(
+                        lambda x: x.name(),
+                        mesh_nodes_with_transform_children[:MAX_NODE_DISPLAY],
+                    )
                 )
             )
         )
@@ -1051,8 +1060,9 @@ def check_default_uv_set(progress_controller=None):
         pm.select(tra_nodes)
         raise RuntimeError(
             """There are nodes with <b>non default UVSet (map1)</b>:
-            <br><br>%s"""
-            % "<br>".join(map(lambda x: x.name(), tra_nodes[:MAX_NODE_DISPLAY]))
+            <br><br>{}""".format(
+                "<br>".join(map(lambda x: x.name(), tra_nodes[:MAX_NODE_DISPLAY]))
+            )
         )
 
 
@@ -1101,8 +1111,9 @@ def check_uv_existence(progress_controller=None):
         pm.select(tra_nodes)
         raise RuntimeError(
             """There are nodes with <b>no UVs</b>:
-            <br><br>%s"""
-            % "<br>".join(map(lambda x: x.name(), tra_nodes[:MAX_NODE_DISPLAY]))
+            <br><br>{}""".format(
+                "<br>".join(map(lambda x: x.name(), tra_nodes[:MAX_NODE_DISPLAY]))
+            )
         )
 
 
@@ -1135,8 +1146,8 @@ def check_out_of_space_uvs(progress_controller=None):
 
             progress_controller.increment()
     except (IndexError, RuntimeError) as e:
-        print("node: %s" % node)
-        raise RuntimeError("%s \n node: %s" % (e, node))
+        print(f"node: {node}")
+        raise RuntimeError(f"{e} \n node: {node}")
 
     progress_controller.complete()
     if len(nodes_with_out_of_space_uvs):
@@ -1145,8 +1156,9 @@ def check_out_of_space_uvs(progress_controller=None):
         pm.select(tra_nodes)
         raise RuntimeError(
             """There are nodes which have a UV value bigger than <b>10</b>:
-            <br><br>%s"""
-            % "<br>".join(list(map(lambda x: x.name(), tra_nodes[:MAX_NODE_DISPLAY])))
+            <br><br>{}""".format(
+                "<br>".join(list(map(lambda x: x.name(), tra_nodes[:MAX_NODE_DISPLAY])))
+            )
         )
 
 
@@ -1199,7 +1211,9 @@ def check_uv_border_crossing(progress_controller=None):
             # the polyListComponentConversion takes 85% of the processing time
             # of getting the uvShells here
             shell_uv_group_ids = pm.polyListComponentConversion(
-                "%s.map[%s]" % (node.name(), current_uv_id), toUV=1, uvShell=1
+                "{}.map[{}]".format(node.name(), current_uv_id),
+                toUV=1,
+                uvShell=1,
             )
 
             uv_shell_uv_ids = []
@@ -1239,7 +1253,7 @@ def check_uv_border_crossing(progress_controller=None):
                     nodes_with_uvs_crossing_borders.append(node)
                     break
         except (IndexError, RuntimeError) as e:
-            print("%s\nnode: %s" % (e, node))
+            print(f"{e}\nnode: {node}")
             raise RuntimeError()
 
         progress_controller.increment()
@@ -1251,8 +1265,9 @@ def check_uv_border_crossing(progress_controller=None):
         pm.select(tra_nodes)
         raise RuntimeError(
             """There are nodes with <b>UV-Shells</b> that are crossing
-            <b>UV BORDERS</b>:<br><br>%s"""
-            % "<br>".join(map(lambda x: x.name(), tra_nodes[:MAX_NODE_DISPLAY]))
+            <b>UV BORDERS</b>:<br><br>{}""".format(
+                "<br>".join(map(lambda x: x.name(), tra_nodes[:MAX_NODE_DISPLAY]))
+            )
         )
 
 
@@ -1306,10 +1321,10 @@ def check_uvs(progress_controller=None):
     if len(meshes_with_zero_uv_area):
         pm.select([node.getParent() for node in meshes_with_zero_uv_area])
         raise RuntimeError(
-            """There are meshes with no uvs or faces with zero uv area:<br><br>
-            %s"""
-            % "<br>".join(
-                map(lambda x: x.name(), meshes_with_zero_uv_area[:MAX_NODE_DISPLAY])
+            """There are meshes with no uvs or faces with zero uv area:<br><br>{}""".format(
+                "<br>".join(
+                    map(lambda x: x.name(), meshes_with_zero_uv_area[:MAX_NODE_DISPLAY])
+                )
             )
         )
 
@@ -1440,7 +1455,7 @@ def check_all_renderer_specific_textures(progress_controller=None):
 
         for orig_texture_path in textures_found_on_path:
             # now check if there is a .tx for this texture
-            bin_texture_path = "%s%s" % (
+            bin_texture_path = "{}{}".format(
                 os.path.splitext(orig_texture_path)[0],
                 current_renderer_texture_extension,
             )
@@ -1457,9 +1472,7 @@ def check_all_renderer_specific_textures(progress_controller=None):
             print(path)
         progress_controller.complete()
         raise PublishError(
-            "There are textures with no <b>%s</b> file!!!<br><br>"
-            "%s"
-            % (
+            "There are textures with no <b>{}</b> file!!!<br><br>{}".format(
                 current_renderer_texture_extension.upper(),
                 "<br>".join(textures_with_no_tx),
             )
@@ -1497,8 +1510,10 @@ def check_lights(progress_controller=None):
         progress_controller.increment()
         progress_controller.complete()
         raise PublishError(
-            "There are <b>Lights</b> in the current scene:<br><br>%s<br><br>"
-            "Please delete them!!!" % "<br>".join(map(lambda x: x.name(), all_lights))
+            "There are <b>Lights</b> in the current scene:<br><br>{}<br><br>"
+            "Please delete them!!!".format(
+                "<br>".join(map(lambda x: x.name(), all_lights))
+            )
         )
     progress_controller.complete()
 
@@ -1529,9 +1544,10 @@ def check_only_supported_materials_are_used(progress_controller=None):
         pm.select(non_arnold_materials)
         progress_controller.complete()
         raise PublishError(
-            "There are non-Arnold materials in the scene:<br><br>%s<br><br>"
-            "Please remove them!!!"
-            % "<br>".join(map(lambda x: x.name(), non_arnold_materials))
+            "There are non-Arnold materials in the scene:<br><br>{}<br><br>"
+            "Please remove them!!!".format(
+                "<br>".join(map(lambda x: x.name(), non_arnold_materials))
+            )
         )
     progress_controller.complete()
 
@@ -1646,8 +1662,9 @@ def check_multiple_connections_for_textures(progress_controller=None):
         progress_controller.complete()
         raise PublishError(
             "Please update the scene so the following nodes are connected <br>"
-            "to only <b>one material</b> (duplicate them):<br><br>%s<br><br>"
-            % "<br>".join(map(lambda x: x.name(), nodes_with_multiple_materials))
+            "to only <b>one material</b> (duplicate them):<br><br>{}<br><br>".format(
+                "<br>".join(map(lambda x: x.name(), nodes_with_multiple_materials))
+            )
         )
     progress_controller.complete()
 
@@ -1679,8 +1696,9 @@ def check_objects_still_using_default_shader(progress_controller=None):
         progress_controller.complete()
         raise PublishError(
             "There are objects still using <b>initialShadingGroup</b><br><br>"
-            "%s<br><br>Please assign a proper material to them"
-            % "<br>".join(objects_with_default_material[:MAX_NODE_DISPLAY])
+            "{}<br><br>Please assign a proper material to them".format(
+                "<br>".join(objects_with_default_material[:MAX_NODE_DISPLAY])
+            )
         )
     progress_controller.increment()
     progress_controller.complete()
@@ -1726,11 +1744,12 @@ def check_component_edits_on_references(progress_controller=None):
     if len(references_with_component_edits):
         raise PublishError(
             "There are <b>component edits</b> on the following References:"
-            "<br><br>%s<br><br>Please remove them!!!"
-            % "<br>".join(
-                map(
-                    lambda x: x.refNode.name(),
-                    references_with_component_edits[:MAX_NODE_DISPLAY],
+            "<br><br>{}<br><br>Please remove them!!!".format(
+                "<br>".join(
+                    map(
+                        lambda x: x.refNode.name(),
+                        references_with_component_edits[:MAX_NODE_DISPLAY],
+                    )
                 )
             )
         )
@@ -1814,7 +1833,7 @@ def check_unique_names_for_geometry(progress_controller=None):
         mc.select(non_unique_names)
         raise PublishError(
             "Some geometry objects are not <b>Uniquely Named</b><br><br>"
-            "%s<br><br>Please rename them."
+            "{}<br><br>Please rename them."
         )
     progress_controller.complete()
 
@@ -1868,9 +1887,8 @@ def check_root_node_name(progress_controller=None):
             " ", "_"
         )  # Maya node names can not include spaces. Replace with '_'.
         if asset_name[0].isdigit():  # if asset name starts with a number
-            asset_name = (
-                "_%s" % asset_name
-            )  # add "_" in front (Maya node names can not start with a number)
+            # add "_" in front (Maya node names can not start with a number)
+            asset_name = f"_{asset_name}"
         if ":" in root_node_name:
             raise PublishError(
                 "Imported namespaces are not allowed in non-referenced root node names"
@@ -1904,13 +1922,13 @@ def check_root_node_name___fix():
         correct_node_name = asset_name
         correct_node_name = correct_node_name.replace(" ", "_")
         if correct_node_name[0].isdigit():
-            correct_node_name = "_%s" % correct_node_name
+            correct_node_name = f"_{correct_node_name}"
         if correct_node_name[-1].isdigit():
             correct_node_name += "_grp"
     else:
         correct_node_name = root_node_name
         if correct_node_name[0].isdigit():
-            correct_node_name = "_%s" % correct_node_name
+            correct_node_name = f"_{correct_node_name}"
         if correct_node_name[-1].isdigit():
             correct_node_name += "_grp"
 
@@ -2179,7 +2197,7 @@ def check_time_logs(progress_controller=None):
                         progress_controller.complete()
                         raise PublishError(
                             "<p>Please create a TimeLog before publishing "
-                            "this version, for task.id: %s" % task.id
+                            f"this version, for task.id: {task.id}"
                         )
     progress_controller.complete()
 
@@ -2312,7 +2330,7 @@ def check_sequence_name___fix():
     scene_name = get_scene_name_from_task(task)
 
     # set sequencer name as seq_name + sc_name
-    name = "%s_%s" % (sequence_name, scene_name)
+    name = f"{sequence_name}_{scene_name}"
     sequencer.set_sequence_name(name)
 
 
@@ -2350,7 +2368,7 @@ def check_sequence_name_format(progress_controller=None):
 
     progress_controller.increment()
     # set sequencer name as seq_name + sc_name
-    name = "%s_%s" % (sequence_name, scene_name)
+    name = f"{sequence_name}_{scene_name}"
 
     if sequencer.get_sequence_name() != name:
         progress_controller.complete()
@@ -2359,10 +2377,10 @@ def check_sequence_name_format(progress_controller=None):
             "<br>"
             "It should have been:<br>"
             "<br>"
-            "%s<br>"
+            f"{name}<br>"
             "<br>"
             "But found:<br>"
-            "%s" % (name, sequencer.get_sequence_name())
+            f"{sequencer.get_sequence_name()}"
         )
 
     progress_controller.complete()
@@ -2409,11 +2427,10 @@ def check_shot_name_format(progress_controller=None):
             "A four digit shot number or + uppercase letter for shot alternatives.<br>"
             "<br>The following shots have wrongly formatted shot names:<br>"
             "<br>"
-            "%s"
-            % (
+            "{}".format(
                 ", ".join(
                     map(
-                        lambda x: "%s -> %s" % (x.name(), x.shotName.get()),
+                        lambda x: "{} -> {}".format(x.name(), x.shotName.get()),
                         shots_with_wrong_shot_name_format,
                     )
                 )
@@ -2526,8 +2543,7 @@ def check_unique_shot_names(progress_controller=None):
         raise PublishError(
             "The following shots have non-unique shot names:<br>"
             "<br>"
-            "%s"
-            % (
+            "{}".format(
                 ", ".join(
                     map(lambda x: x.shotName.get(), shots_with_non_unique_shot_names)
                 )
@@ -2660,9 +2676,9 @@ def check_reference_types(progress_controller=None):
         raise PublishError(
             "There are <b>Wrong Reference Types</b> in the current scene!!!<br>"
             "<br>"
-            "%s"
+            f"{ref_paths}"
             "<br>"
-            "Please <b>REMOVE</b> them!" % ref_paths
+            "Please <b>REMOVE</b> them!"
         )
 
 
@@ -2948,7 +2964,7 @@ def export_edl_and_xml(progress_controller=None):
 
     # EDL
     edl_path = tempfile.gettempdir()
-    edl_file_name = "%s_v%03i.edl" % (
+    edl_file_name = "{}_v{:03d}.edl".format(
         current_version.nice_name,
         current_version.version_number,
     )
@@ -2957,7 +2973,7 @@ def export_edl_and_xml(progress_controller=None):
 
     # XML
     xml_path = tempfile.gettempdir()
-    xml_file_name = "%s_v%03i.xml" % (
+    xml_file_name = "{}_v{:03d}.xml".format(
         current_version.nice_name,
         current_version.version_number,
     )
@@ -3096,7 +3112,7 @@ def export_camera(progress_controller=None):
 
         cam_v = Version(
             task=camera_task,
-            description="Exported from %s task on Publish" % v.task.name,
+            description=f"Exported from {v.task.name} task on Publish",
         )
         cam_v.update_paths()
         cam_v.extension = ".ma"
@@ -3132,7 +3148,7 @@ def export_fbx(progress_controll=None):
     # get the asset name
     asset = v.task.parent
 
-    output_fbx_path = "%s/Outputs/FBX/%s.fbx" % (v.absolute_path, asset.nice_name)
+    output_fbx_path = f"{v.absolute_path}/Outputs/FBX/{asset.nice_name}.fbx"
 
     # Create the folder first
     try:

@@ -246,7 +246,7 @@ def initializePlugin(mobject):
             OpenMayaMPx.MPxNode.kLocatorNode,
         )
     except:
-        sys.stderr.write("Failed to register node: %s" % kPluginNodeTypeName)
+        sys.stderr.write(f"Failed to register node: {kPluginNodeTypeName}")
         raise
 
 
@@ -256,5 +256,5 @@ def uninitializePlugin(mobject):
     try:
         mplugin.deregisterNode(oyTrajectoryDrawerNodeId)
     except:
-        sys.stderr.write("Failed to deregister node: %s" % kPluginNodeTypeName)
+        sys.stderr.write(f"Failed to deregister node: {kPluginNodeTypeName}")
         raise

@@ -63,7 +63,7 @@ class MayaRenderCommandBuilder(object):
             ]
         else:
             # use the default command
-            cmd_buffer = ["mayarender%s" % os.getenv("MAYA_VERSION", "")]
+            cmd_buffer = ["mayarender{}".format(os.getenv("MAYA_VERSION", ""))]
 
         if self.render_engine == "mentalRay":
             cmd_buffer.append("-r mr")
@@ -74,22 +74,22 @@ class MayaRenderCommandBuilder(object):
             cmd_buffer.append("-r file")
 
         if self.render_engine == "3delight":
-            cmd_buffer.append("-an 1 -s @#@ -e @#@ -inc %d" % self.by_frame)
+            cmd_buffer.append(f"-an 1 -s @#@ -e @#@ -inc {self.by_frame:d}")
         else:
-            cmd_buffer.append("-s @#@ -e @#@ -b %d" % self.by_frame)
+            cmd_buffer.append(f"-s @#@ -e @#@ -b {self.by_frame:d}")
 
         if self.camera:
-            cmd_buffer.append(' -cam "%s"' % self.camera)
+            cmd_buffer.append(f' -cam "{self.camera}"')
 
         if self.render_layer:
             if self.render_engine == "3delight":
-                cmd_buffer.append('-rp "%s"' % self.render_layer)
+                cmd_buffer.append(f'-rp "{self.render_layer}"')
             else:
-                cmd_buffer.append('-rl "%s"' % self.render_layer)
+                cmd_buffer.append(f'-rl "{self.render_layer}"')
 
         if self.project:
             cmd_buffer.append(
-                '-proj "%s"' % os.path.normpath(self.project).replace("\\", "/")
+                '-proj "{}"'.format(os.path.normpath(self.project).replace("\\", "/"))
             )
 
         cmd_buffer.append(self.file_full_path)
@@ -345,7 +345,7 @@ This system will be updated in Afanasy."""
             from stalker import Version
 
             assert isinstance(v, Version)
-            return "%s:%s_v%03i%s" % (
+            return "{}:{}_v{:03d}{}".format(
                 v.task.project.code,
                 v.nice_name,
                 v.version_number,
@@ -379,13 +379,12 @@ This system will be updated in Afanasy."""
 
             if any(attr_values):
                 msg_text = "<br>".join(
-                    map(lambda x: "%s: %s" % (x[0], x[1]), attr_values)
+                    map(lambda x: "{}: {}".format(x[0], x[1]), attr_values)
                 )
 
                 response = pm.confirmDialog(
                     title="Ignore These Settings?",
-                    message="You have ignored:<br><br>%s<br><br><b>Is that ok?</b>"
-                    % msg_text,
+                    message=f"You have ignored:<br><br>{msg_text}<br><br><b>Is that ok?</b>",
                     button=["Yes", "No"],
                     defaultButton="No",
                     cancelButton="No",
@@ -490,8 +489,8 @@ This system will be updated in Afanasy."""
                 message = (
                     "Some DomeLights have <b>BackGround Render "
                     "Enabled</b>:"
-                    "<br><br>%s<br><br>"
-                    "Are you Sure?" % "<br>".join(domes_to_fix)
+                    "<br><br>{}<br><br>"
+                    "Are you Sure?".format("<br>".join(domes_to_fix))
                 )
 
                 response = pm.confirmDialog(
@@ -534,10 +533,10 @@ This system will be updated in Afanasy."""
             if total_diff_samples > max_allowed_diff_samples:
                 pm.confirmDialog(
                     title="Too Much Diffuse Samples!!!",
-                    message="You are using too much DIFFUSE SAMPLES (>%s)<br>"
+                    message="You are using too much DIFFUSE SAMPLES (>{})<br>"
                     "<br>"
                     "Please either reduce AA samples of Diffuse "
-                    "Samples!!!" % max_allowed_diff_samples,
+                    "Samples!!!".format(max_allowed_diff_samples),
                     button=["OK"],
                     defaultButton="OK",
                     cancelButton="OK",
@@ -548,10 +547,10 @@ This system will be updated in Afanasy."""
             if total_glossy_samples > max_allowed_glossy_samples:
                 pm.confirmDialog(
                     title="Too Much Glossy Samples!!!",
-                    message="You are using too much GLOSSY SAMPLES (>%s)<br>"
+                    message="You are using too much GLOSSY SAMPLES (>{})<br>"
                     "<br>"
                     "Please either reduce AA samples of Glossy "
-                    "Samples!!!" % max_allowed_glossy_samples,
+                    "Samples!!!".format(max_allowed_glossy_samples),
                     button=["OK"],
                     defaultButton="OK",
                     cancelButton="OK",
@@ -562,10 +561,10 @@ This system will be updated in Afanasy."""
             if total_sss_samples > max_allowed_sss_samples:
                 pm.confirmDialog(
                     title="Too Much SSS Samples!!!",
-                    message="You are using too much SSS SAMPLES (>%s)<br>"
+                    message="You are using too much SSS SAMPLES (>{})<br>"
                     "<br>"
                     "Please either reduce AA samples of SSS "
-                    "Samples!!!" % max_allowed_sss_samples,
+                    "Samples!!!".format(max_allowed_sss_samples),
                     button=["OK"],
                     defaultButton="OK",
                     cancelButton="OK",
@@ -703,21 +702,21 @@ This system will be updated in Afanasy."""
         pm.optionVar["cgru_afanasy__errors_avoid_host_ov"] = errors_avoid_host
         pm.optionVar["cgru_afanasy__errors_retries_ov"] = errors_retries
         pm.optionVar["cgru_afanasy__errors_task_same_host_ov"] = errors_task_same_host
-        pm.optionVar[
-            "cgru_afanasy__errors_errors_forgive_time_ov"
-        ] = errors_forgive_time
+        pm.optionVar["cgru_afanasy__errors_errors_forgive_time_ov"] = (
+            errors_forgive_time
+        )
         pm.optionVar["cgru_afanasy__paused_ov"] = pause
 
         pm.optionVar["cgru_afanasy__generate_previews_ov"] = generate_previews
 
         # get paths
         scene_name = pm.sceneName()
-        datetime = "%s%s" % (
+        datetime = "{}{}".format(
             time.strftime("%y%m%d-%H%M%S-"),
             str(time.time() - int(time.time()))[2:5],
         )
 
-        filename = "%s.%s.mb" % (scene_name, datetime)
+        filename = f"{scene_name}.{datetime}.mb"
 
         project_path = pm.workspace(q=1, rootDirectory=1)
 
@@ -737,19 +736,19 @@ This system will be updated in Afanasy."""
         # job_name = os.path.basename(scene_name)
         job_name = self.generate_job_name()
 
-        logger.debug("%ss %se %sr" % (start_frame, end_frame, by_frame))
-        logger.debug("scene                 = %s" % scene_name)
-        logger.debug("file                  = %s" % filename)
-        logger.debug("job_name              = %s" % job_name)
-        logger.debug("project_path          = %s" % project_path)
-        logger.debug("outputs               = %s" % outputs)
-        logger.debug("annotation            = %s" % annotation)
-        logger.debug("separate_layers       = %s" % separate_layers)
-        logger.debug("errors_avoid_host     = %s" % errors_avoid_host)
-        logger.debug("errors_retries        = %s" % errors_retries)
-        logger.debug("errors_task_same_host = %s" % errors_task_same_host)
-        logger.debug("errors_forgive_time   = %s" % errors_forgive_time)
-        logger.debug("generate_previews     = %s" % generate_previews)
+        logger.debug("{}s {}e {}r".format(start_frame, end_frame, by_frame))
+        logger.debug(f"scene                 = {scene_name}")
+        logger.debug(f"file                  = {filename}")
+        logger.debug(f"job_name              = {job_name}")
+        logger.debug(f"project_path          = {project_path}")
+        logger.debug(f"outputs               = {outputs}")
+        logger.debug(f"annotation            = {annotation}")
+        logger.debug(f"separate_layers       = {separate_layers}")
+        logger.debug(f"errors_avoid_host     = {errors_avoid_host}")
+        logger.debug(f"errors_retries        = {errors_retries}")
+        logger.debug(f"errors_task_same_host = {errors_task_same_host}")
+        logger.debug(f"errors_forgive_time   = {errors_forgive_time}")
+        logger.debug(f"generate_previews     = {generate_previews}")
 
         if pm.checkBox("cgru_afanasy__close", q=1, v=1):
             pm.deleteUI(self.window)
@@ -852,7 +851,7 @@ This system will be updated in Afanasy."""
                 if separate_layers == 2:
                     blocks.append(block)
                 else:
-                    job = af.Job("%s - %s" % (job_name, layer_name))
+                    job = af.Job(f"{job_name} - {layer_name}")
                     # add blocks
                     job.blocks = [block]
                     jobs.append(job)
@@ -890,7 +889,7 @@ This system will be updated in Afanasy."""
             else:
                 job.setTimeLife(240 * 3600)
 
-            job.setCmdPost('deletefiles -s "%s"' % os.path.abspath(filename))
+            job.setCmdPost('deletefiles -s "{}"'.format(os.path.abspath(filename)))
             if pause:
                 job.offline()
 
@@ -900,7 +899,7 @@ This system will be updated in Afanasy."""
 
             for i in range(submit_multiple_times):
                 orig_job_name = job.data["name"]
-                job.setName("%s - %03i" % (orig_job_name, i + 1))
+                job.setName("{} - {:03d}".format(orig_job_name, i + 1))
                 status, data = job.send()
 
                 # restore job name

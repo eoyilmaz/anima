@@ -123,7 +123,7 @@ class MotionBuilder(DCCBase):
         for clip_info in clip_data:
             assert isinstance(clip_info, ClipData)
             # create a new camera
-            clip_camera = pyfbsdk.FBCamera("Camera_Shot_%s" % str(clip_info.shot_name))
+            clip_camera = pyfbsdk.FBCamera(f"Camera_Shot_{clip_info.shot_name}")
 
             # Create a Shot clip
             cut_in_fbtime = pyfbsdk.FBTime(0, 0, 0, clip_info.cut_in)

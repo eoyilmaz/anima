@@ -18,7 +18,7 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
 
     import pymel
 
-    m.name = "Maya%s" % str(pymel.versions.current())[0:4]
+    m.name = "Maya{}".format(str(pymel.versions.current())[0:4])
 
     logger.setLevel(logging_level)
 
@@ -40,7 +40,7 @@ def version_updater(logging_level=logging.WARNING):
 
     import pymel
 
-    m.name = "Maya%s" % str(pymel.versions.current())[0:4]
+    m.name = "Maya{}".format(str(pymel.versions.current())[0:4])
 
     logger.setLevel(logging_level)
 
@@ -94,13 +94,16 @@ def archiver_dialog(logging_level=logging.WARNING, mode=2):
     import pymel
 
     m = mayaEnv.Maya()
-    m.name = "Maya%s" % str(pymel.versions.current())[0:4]
+    m.name = "Maya{}".format(str(pymel.versions.current())[0:4])
 
     logger.setLevel(logging_level)
 
     # set the parent object to the maya main window
     ui_caller(
-        None, None, archiver_dialog.MultiVersionSelectDialog,
-        environment=m, parent=mayaEnv.get_maya_main_window(),
-        archiver=archive.Archiver()
+        None,
+        None,
+        archiver_dialog.MultiVersionSelectDialog,
+        environment=m,
+        parent=mayaEnv.get_maya_main_window(),
+        archiver=archive.Archiver(),
     )

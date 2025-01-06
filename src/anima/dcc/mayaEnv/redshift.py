@@ -51,7 +51,7 @@ class RSProxyDataObject(object):
         import pymel.core as pm
 
         parent_node_name = self.parent_name
-        nodes_with_name = pm.ls("|%s" % parent_node_name)
+        nodes_with_name = pm.ls(f"|{parent_node_name}")
         parent_node = None
         if nodes_with_name:
             parent_node = nodes_with_name[0]
@@ -82,11 +82,11 @@ class RSProxyDataObject(object):
         import pymel.core as pm
 
         self.parent_node = self.get_parent()
-        self.shape_node = pm.createNode("mesh", name="%sShape" % self.node_name)
+        self.shape_node = pm.createNode("mesh", name=f"{self.node_name}Shape")
         self.transform_node = self.shape_node.getParent()
         self.transform_node.rename(self.node_name)
 
-        self.rs_proxy_node = pm.nt.RedshiftProxyMesh(name="%sRsProxy" % self.node_name)
+        self.rs_proxy_node = pm.nt.RedshiftProxyMesh(name=f"{self.node_name}RsProxy")
         self.rs_proxy_node.outMesh >> self.shape_node.inMesh
         self.rs_proxy_node.fileName.set(self.instance_file)
 

@@ -86,12 +86,12 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
                 index = i
                 break
 
-        logger.debug("current index: %s" % index)
+        logger.debug(f"current index: {index}")
 
         # select the row
         if index != -1:
             item = self.item(index, 0)
-            logger.debug("item : %s" % item)
+            logger.debug(f"item : {item}")
             self.setCurrentItem(item)
 
     @property
@@ -216,14 +216,16 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             # file size
 
             # get the file size
-            # file_size_format = "%.2f MB"
+            # file_size_format = "{:.2f} MB"
             file_size = -1
             if version_file_exists:
                 file_size = float(os.path.getsize(absolute_full_path)) / 1048576
 
             from anima import defaults
 
-            item = QtWidgets.QTableWidgetItem(defaults.file_size_format % file_size)
+            item = QtWidgets.QTableWidgetItem(
+                defaults.file_size_format.format(file_size)
+            )
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
 
@@ -414,8 +416,9 @@ class VersionDetailsWidget(QtWidgets.QWidget):
 
         if not isinstance(version, Version):
             raise TypeError(
-                "%s.version should be set to a Stalker Version instance, not %s"
-                % (self.__class__.__name__, version.__class__.__name__)
+                "{}.version should be set to a Stalker Version instance, not {}".format(
+                    self.__class__.__name__, version.__class__.__name__
+                )
             )
 
         self._version = version

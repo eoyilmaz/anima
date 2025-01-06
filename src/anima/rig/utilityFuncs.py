@@ -29,7 +29,7 @@ class UtilityFuncs:
     @staticmethod
     def typeCheck(instanceName, className):
         if not isinstance(instanceName, (className)):
-            raise TypeError("%s should be an instance of %s", (instanceName, className))
+            raise TypeError(f"{instanceName} should be an instance of {className}")
 
     @staticmethod
     def evaluate(command):

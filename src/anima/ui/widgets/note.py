@@ -12,20 +12,20 @@ class NoteWidget(QtWidgets.QWidget):
     bg_colors = {
         "": {
             "bg": QtGui.QColor(0x000000),
-            "fg": QtGui.QColor(0xffffff),
+            "fg": QtGui.QColor(0xFFFFFF),
         },
         "Request Review": {
-            "bg": QtGui.QColor(0xffc657),
+            "bg": QtGui.QColor(0xFFC657),
             "fg": QtGui.QColor(133, 93, 16),
         },
         "Request Revision": {
-            "bg": QtGui.QColor(0x6f3cc4),
-            "fg": QtGui.QColor(0xffffff),
+            "bg": QtGui.QColor(0x6F3CC4),
+            "fg": QtGui.QColor(0xFFFFFF),
         },
         "Forced Status": {
-            "bg": QtGui.QColor(0xe2755f),
-            "fg": QtGui.QColor(0xffffff),
-        }
+            "bg": QtGui.QColor(0xE2755F),
+            "fg": QtGui.QColor(0xFFFFFF),
+        },
     }
 
     def __init__(self, note=None, parent=None, **kwargs):
@@ -87,11 +87,11 @@ class NoteWidget(QtWidgets.QWidget):
             palette = self.title_label.palette()
             palette.setColor(
                 self.title_label.backgroundRole(),
-                self.bg_colors.get(note_type_name, self.bg_colors[""])["bg"]
+                self.bg_colors.get(note_type_name, self.bg_colors[""])["bg"],
             )
             palette.setColor(
                 self.title_label.foregroundRole(),
-                self.bg_colors.get(note_type_name, self.bg_colors[""])["fg"]
+                self.bg_colors.get(note_type_name, self.bg_colors[""])["fg"],
             )
             self.title_label.setPalette(palette)
 
@@ -100,11 +100,7 @@ class NoteWidget(QtWidgets.QWidget):
             date = self.note.date_created
             self.date_created_label.setText(
                 "{:04d}-{:02d}-{:02d} {:02d}:{:02d}".format(
-                    date.year,
-                    date.month,
-                    date.day,
-                    date.hour,
-                    date.minute
+                    date.year, date.month, date.day, date.hour, date.minute
                 )
             )
 
@@ -112,11 +108,11 @@ class NoteWidget(QtWidgets.QWidget):
             palette = self.date_created_label.palette()
             palette.setColor(
                 self.title_label.backgroundRole(),
-                self.bg_colors.get(note_type_name, self.bg_colors[""])["bg"]
+                self.bg_colors.get(note_type_name, self.bg_colors[""])["bg"],
             )
             palette.setColor(
                 self.title_label.foregroundRole(),
-                self.bg_colors.get(note_type_name, self.bg_colors[""])["fg"]
+                self.bg_colors.get(note_type_name, self.bg_colors[""])["fg"],
             )
             self.date_created_label.setPalette(palette)
             self.date_created_label.setAutoFillBackground(True)

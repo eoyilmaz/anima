@@ -18,7 +18,7 @@ class ReferenceEditorTestCase(unittest.TestCase):
             logger.debug('creating a new QApplication')
             self.app = QtGui.QApplication(sys.argv)
         else:
-            logger.debug('using the present QApplication: %s' % QtGui.qApp)
+            logger.debug('using the present QApplication: {}'.format(QtGui.qApp))
             # self.app = QtGui.qApp
             self.app = QtGui.QApplication.instance()
 

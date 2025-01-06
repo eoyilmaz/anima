@@ -40,8 +40,8 @@ class NameMixin(object):
         """validates the given name value"""
         if not isinstance(name, str):
             raise TypeError(
-                "%(class)s.name should be a string, not %(name_class)s"
-                % {"class": cls.__name__, "name_class": name.__class__.__name__}
+                f"{cls.__name__}.name should be a string, "
+                f"not {name.__class__.__name__}: {name}"
             )
         return name
 
@@ -70,18 +70,14 @@ class DurationMixin(object):
 
         if not isinstance(duration, (int, float)):
             raise TypeError(
-                "%(class)s.duration should be an non-negative float, not "
-                "%(duration_class)s"
-                % {"class": cls.__name__, "duration_class": duration.__class__.__name__}
+                f"{cls.__name__}.duration should be an non-negative float, "
+                f"not {duration.__class__.__name__}"
             )
 
         duration = int(duration)
 
         if duration < 0:
-            raise ValueError(
-                "%(class)s.duration should be an non-negative float"
-                % {"class": cls.__name__}
-            )
+            raise ValueError(f"{cls.__name__}.duration should be an non-negative float")
 
         return duration
 
@@ -155,31 +151,31 @@ class Sequence(EditBase, NameMixin, DurationMixin):
         template = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xmeml>
 <xmeml version="5">
-%(pre_indent)s<sequence>
-%(pre_indent)s%(indentation)s<duration>%(duration)s</duration>
-%(pre_indent)s%(indentation)s<name>%(name)s</name>
-%(rate)s
-%(pre_indent)s%(indentation)s<timecode>
-%(pre_indent)s%(indentation)s%(indentation)s<string>%(timecode)s</string>
-%(pre_indent)s%(indentation)s</timecode>
-%(media)s
-%(pre_indent)s</sequence>
+{pre_indent}<sequence>
+{pre_indent}{indentation}<duration>{duration}</duration>
+{pre_indent}{indentation}<name>{name}</name>
+{rate}
+{pre_indent}{indentation}<timecode>
+{pre_indent}{indentation}{indentation}<string>{timecode}</string>
+{pre_indent}{indentation}</timecode>
+{media}
+{pre_indent}</sequence>
 </xmeml>"""
 
-        return template % {
-            "duration": self.duration,
-            "name": self.name,
-            "ntsc": str(self.ntsc).upper(),
-            "rate": self.rate.to_xml(
+        return template.format(
+            duration=self.duration,
+            name=self.name,
+            ntsc=str(self.ntsc).upper(),
+            rate=self.rate.to_xml(
                 indentation=indentation, pre_indent=indentation + pre_indent
             ),
-            "timecode": self.timecode,
-            "media": self.media.to_xml(
+            timecode=self.timecode,
+            media=self.media.to_xml(
                 indentation=indentation, pre_indent=indentation + pre_indent
             ),
-            "indentation": " " * indentation,
-            "pre_indent": " " * pre_indent,
-        }
+            indentation=" " * indentation,
+            pre_indent=" " * pre_indent,
+        )
 
     def from_edl(self, edl_list):
         """Fills attributes with the given edl.List instance
@@ -269,9 +265,9 @@ class Sequence(EditBase, NameMixin, DurationMixin):
         # convert clips to events
         if not self.media:
             raise RuntimeError(
-                "Can not run %(class)s.to_edl() without a Media instance, "
-                "please add a Media instance to this %(class)s instance."
-                % {"class": self.__class__.__name__}
+                f"Can not run {self.__class__.__name__}.to_edl() without a "
+                "Media instance, please add a Media instance to this "
+                f"{self.__class__.__name__} instance."
             )
 
         video = self.media.video
@@ -281,7 +277,7 @@ class Sequence(EditBase, NameMixin, DurationMixin):
                 for clip in track.clips:
                     i += 1
                     e = Event({})
-                    e.num = "%06i" % i
+                    e.num = f"{i:06d}"
                     e.clip_name = clip.id
                     e.reel = clip.name
                     e.track = "V" if clip.type == "Video" else "A"
@@ -332,22 +328,22 @@ class Sequence(EditBase, NameMixin, DurationMixin):
    </Configuration>
    <Group>
       <FileList>
-         <File>%(file_pathurl)s</File>
+         <File>{file_pathurl}</File>
       </FileList>
       <Transcode>
          <Version>1.0</Version>
-         <File>%(mxf_pathurl)s</File>
-         <ClipName>%(clip_name)s</ClipName>
-         <ProjectName>%(sequence_name)s</ProjectName>
-         <TapeName>%(clip_name)s</TapeName>
-         <TC_Start>%(sequence_timecode)s</TC_Start>
+         <File>{mxf_pathurl}</File>
+         <ClipName>{clip_name}</ClipName>
+         <ProjectName>{sequence_name}</ProjectName>
+         <TapeName>{clip_name}</TapeName>
+         <TC_Start>{sequence_timecode}</TC_Start>
          <DropFrame>false</DropFrame>
          <EdgeTC>** TimeCode N/A **</EdgeTC>
          <FilmType>35.4</FilmType>
          <KN_Start>AAAAAAAA-0000+00</KN_Start>
-         <Frames>%(clip_duration)i</Frames>
-         <Width>%(width)i</Width>
-         <Height>%(height)i</Height>
+         <Frames>{clip_duration}</Frames>
+         <Width>{width}</Width>
+         <Height>{height}</Height>
          <PixelRatio>1.0000</PixelRatio>
          <UseFilmInfo>false</UseFilmInfo>
          <UseTapeInfo>true</UseTapeInfo>
@@ -395,12 +391,12 @@ class Sequence(EditBase, NameMixin, DurationMixin):
                         "clip_id": clip.id,
                         "clip_name": clip.name,
                         # metafuze likes frame number
-                        "clip_duration": clip.duration - 1,
-                        "width": video.width,
-                        "height": video.height,
+                        "clip_duration": int(clip.duration - 1),
+                        "width": int(video.width),
+                        "height": int(video.height),
                     }
 
-                    rendered_xmls.append(metafuze_xml_template % kwargs)
+                    rendered_xmls.append(metafuze_xml_template.format(**kwargs))
 
         return rendered_xmls
 
@@ -424,19 +420,19 @@ class Media(EditBase):
 
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this Media object"""
-        template = """%(pre_indent)s<media>
-%(video)s
-%(pre_indent)s</media>"""
+        template = """{pre_indent}<media>
+{video}
+{pre_indent}</media>"""
 
         video_data = self.video.to_xml(
             indentation=indentation, pre_indent=indentation + pre_indent
         )
 
-        return template % {
-            "video": video_data,
-            "pre_indent": " " * pre_indent,
-            "indentation": " " * indentation,
-        }
+        return template.format(
+            video=video_data,
+            pre_indent=" " * pre_indent,
+            indentation=" " * indentation,
+        )
 
 
 class Video(EditBase):
@@ -465,15 +461,15 @@ class Video(EditBase):
 
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this Video object"""
-        template = """%(pre_indent)s<video>
-%(pre_indent)s%(indentation)s<format>
-%(pre_indent)s%(indentation)s%(indentation)s<samplecharacteristics>
-%(pre_indent)s%(indentation)s%(indentation)s%(indentation)s<width>%(width)s</width>
-%(pre_indent)s%(indentation)s%(indentation)s%(indentation)s<height>%(height)s</height>
-%(pre_indent)s%(indentation)s%(indentation)s</samplecharacteristics>
-%(pre_indent)s%(indentation)s</format>
-%(tracks)s
-%(pre_indent)s</video>"""
+        template = """{pre_indent}<video>
+{pre_indent}{indentation}<format>
+{pre_indent}{indentation}{indentation}<samplecharacteristics>
+{pre_indent}{indentation}{indentation}{indentation}<width>{width}</width>
+{pre_indent}{indentation}{indentation}{indentation}<height>{height}</height>
+{pre_indent}{indentation}{indentation}</samplecharacteristics>
+{pre_indent}{indentation}</format>
+{tracks}
+{pre_indent}</video>"""
 
         track_data = []
         for track in self.tracks:
@@ -484,13 +480,13 @@ class Video(EditBase):
             )
         track_data_as_str = "\n".join(track_data)
 
-        return template % {
-            "width": self.width,
-            "height": self.height,
-            "tracks": track_data_as_str,
-            "pre_indent": " " * pre_indent,
-            "indentation": " " * indentation,
-        }
+        return template.format(
+            width=self.width,
+            height=self.height,
+            tracks=track_data_as_str,
+            pre_indent=" " * pre_indent,
+            indentation=" " * indentation,
+        )
 
 
 class Track(EditBase):
@@ -522,8 +518,7 @@ class Track(EditBase):
                     if random_part != clip.id:
                         random_id = int(random_part) + 1
                         compare_clip.id = "{} {}".format(
-                            clip.id.split(" ")[0],
-                            random_id
+                            clip.id.split(" ")[0], random_id
                         )
                     else:
                         random_id = 2
@@ -543,13 +538,17 @@ class Track(EditBase):
             clip.from_xml(clip_tag)
             self.clips.append(clip)
 
-    def to_xml(self, indentation=2, pre_indent=0):
-        """returns an xml version of this Track object"""
-        template = """%(pre_indent)s<track>
-%(pre_indent)s%(indentation)s<locked>%(locked)s</locked>
-%(pre_indent)s%(indentation)s<enabled>%(enabled)s</enabled>
-%(clips)s
-%(pre_indent)s</track>"""
+    def to_xml(self, indentation=2, pre_indent=0) -> str:
+        """Return an xml version of this Track object.
+
+        Returns:
+            str: The rendered XML version of this Track object.
+        """
+        template = """{pre_indent}<track>
+{pre_indent}{indentation}<locked>{locked}</locked>
+{pre_indent}{indentation}<enabled>{enabled}</enabled>
+{clips}
+{pre_indent}</track>"""
 
         clip_data = []
         for clip in self.clips:
@@ -560,13 +559,13 @@ class Track(EditBase):
             )
         clip_data_as_str = "\n".join(clip_data)
 
-        return template % {
-            "locked": str(self.locked).upper(),
-            "enabled": str(self.enabled).upper(),
-            "clips": clip_data_as_str,
-            "pre_indent": " " * pre_indent,
-            "indentation": " " * indentation,
-        }
+        return template.format(
+            locked=str(self.locked).upper(),
+            enabled=str(self.enabled).upper(),
+            clips=clip_data_as_str,
+            pre_indent=" " * pre_indent,
+            indentation=" " * indentation,
+        )
 
 
 class Clip(EditBase, NameMixin, DurationMixin):
@@ -621,8 +620,8 @@ class Clip(EditBase, NameMixin, DurationMixin):
 
         if not isinstance(id_, str):
             raise TypeError(
-                "%(class)s.id should be a string or unicode, not %(id_class)s"
-                % {"class": cls.__name__, "id_class": id_.__class__.__name__}
+                f"{cls.__name__}.id should be a string or unicode, "
+                f"not {id_.__class__.__name__}: '{id_}'"
             )
 
         return id_
@@ -660,39 +659,41 @@ class Clip(EditBase, NameMixin, DurationMixin):
 
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this Clip object"""
-        template = """%(pre_indent)s<clipitem id="%(id)s">
-%(pre_indent)s%(indentation)s<end>%(end)i</end>
-%(pre_indent)s%(indentation)s<name>%(name)s</name>
-%(pre_indent)s%(indentation)s<enabled>%(enabled)s</enabled>
-%(pre_indent)s%(indentation)s<start>%(start)i</start>
-%(pre_indent)s%(indentation)s<in>%(in)i</in>
-%(pre_indent)s%(indentation)s<duration>%(duration)i</duration>%(rate)s
-%(pre_indent)s%(indentation)s<out>%(out)i</out>
-%(file)s
-%(pre_indent)s</clipitem>"""
+        template = """{pre_indent}<clipitem id="{id}">
+{pre_indent}{indentation}<end>{end}</end>
+{pre_indent}{indentation}<name>{name}</name>
+{pre_indent}{indentation}<enabled>{enabled}</enabled>
+{pre_indent}{indentation}<start>{start}</start>
+{pre_indent}{indentation}<in>{in_}</in>
+{pre_indent}{indentation}<duration>{duration}</duration>{rate}
+{pre_indent}{indentation}<out>{out}</out>
+{file}
+{pre_indent}</clipitem>"""
 
         rate_xml = ""
         if self.rate:
-            rate_xml = "\n{}".format(self.rate.to_xml(
-                indentation=indentation, pre_indent=pre_indent + indentation
-            ))
+            rate_xml = "\n{}".format(
+                self.rate.to_xml(
+                    indentation=indentation, pre_indent=pre_indent + indentation
+                )
+            )
 
-        return template % {
-            "id": self.id,
-            "start": self.start,
-            "end": self.end,
-            "name": self.name,
-            "enabled": self.enabled,
-            "duration": self.duration,
-            "in": self.in_,
-            "out": self.out,
-            "file": self.file.to_xml(
+        return template.format(
+            id=self.id,
+            start=int(self.start),
+            end=int(self.end),
+            name=self.name,
+            enabled=self.enabled,
+            duration=int(self.duration),
+            in_=int(self.in_),
+            out=int(self.out),
+            file=self.file.to_xml(
                 indentation=indentation, pre_indent=pre_indent + indentation
             ),
-            "pre_indent": " " * pre_indent,
-            "indentation": " " * indentation,
-            "rate": rate_xml,
-        }
+            pre_indent=" " * pre_indent,
+            indentation=" " * indentation,
+            rate=rate_xml,
+        )
 
 
 class File(EditBase, NameMixin, DurationMixin):
@@ -708,12 +709,16 @@ class File(EditBase, NameMixin, DurationMixin):
 
     @property
     def id(self):
-        """the getter for the _id attribute"""
+        """Get the _id attribute."""
         return self._id
 
     @id.setter
     def id(self, id_):
-        """the setter for the _id attribute"""
+        """Set the _id attribute.
+
+        Args:
+            id_ (str): The id of this File.
+        """
         self._id = self._validate_id(id_)
 
     @classmethod
@@ -726,9 +731,8 @@ class File(EditBase, NameMixin, DurationMixin):
         """validates the given pathurl value"""
         if not isinstance(pathurl, str):
             raise TypeError(
-                "%(class)s.pathurl should be a string, not "
-                "%(pathurl_class)s"
-                % {"class": cls.__name__, "pathurl_class": pathurl.__class__.__name__}
+                f"{cls.__name__}.pathurl should be a string, "
+                f"not {pathurl.__class__.__name__}: '{pathurl}'"
             )
 
         # expand any environment vars
@@ -739,9 +743,7 @@ class File(EditBase, NameMixin, DurationMixin):
                 split_from = "file://"
 
             pathurl = "file://localhost/{}".format(
-                os.path.normpath(
-                    os.path.expandvars(pathurl.split(split_from)[-1])
-                )
+                os.path.normpath(os.path.expandvars(pathurl.split(split_from)[-1]))
             ).replace("\\", "/")
 
             # remove double slashes after "localhost"
@@ -782,23 +784,23 @@ class File(EditBase, NameMixin, DurationMixin):
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this File object"""
         if self.exported_once:
-            template = """%(pre_indent)s<file id="%(id)s"/>"""
+            template = """{pre_indent}<file id="{id}"/>"""
         else:
-            template = """%(pre_indent)s<file id="%(id)s">
-%(pre_indent)s%(indentation)s<duration>%(duration)i</duration>
-%(pre_indent)s%(indentation)s<name>%(name)s</name>
-%(pre_indent)s%(indentation)s<pathurl>%(pathurl)s</pathurl>
-%(pre_indent)s</file>"""
+            template = """{pre_indent}<file id="{id}">
+{pre_indent}{indentation}<duration>{duration}</duration>
+{pre_indent}{indentation}<name>{name}</name>
+{pre_indent}{indentation}<pathurl>{pathurl}</pathurl>
+{pre_indent}</file>"""
             self.exported_once = True
 
-        return template % {
-            "id": self.id,
-            "duration": self.duration,
-            "name": self.name,
-            "pathurl": self.pathurl,
-            "pre_indent": " " * pre_indent,
-            "indentation": " " * indentation,
-        }
+        return template.format(
+            id=self.id,
+            duration=self.duration,
+            name=self.name,
+            pathurl=self.pathurl,
+            pre_indent=" " * pre_indent,
+            indentation=" " * indentation,
+        )
 
 
 class Rate(EditBase):
@@ -829,9 +831,8 @@ class Rate(EditBase):
 
         if not isinstance(timebase, str):
             raise TypeError(
-                "%(class)s.timebase should be a str, not "
-                "%(timebase_class)s"
-                % {"class": cls.__name__, "timebase_class": timebase.__class__.__name__}
+                f"{cls.__name__}.timebase should be a str, "
+                f"not {timebase.__class__.__name__}: '{timebase}'"
             )
 
         return timebase
@@ -853,9 +854,8 @@ class Rate(EditBase):
 
         if not isinstance(ntsc, bool):
             raise TypeError(
-                "%(class)s.ntsc should be a bool value, not "
-                "%(ntsc_class)s"
-                % {"class": cls.__name__, "ntsc_class": ntsc.__class__.__name__}
+                f"{cls.__name__}.ntsc should be a bool value, "
+                f"not {ntsc.__class__.__name__}: {ntsc}"
             )
 
         return bool(ntsc)
@@ -881,13 +881,13 @@ class Rate(EditBase):
 
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this Media object"""
-        template = """%(pre_indent)s<rate>
-%(pre_indent)s%(indentation)s<timebase>%(timebase)s</timebase>
-%(pre_indent)s%(indentation)s<ntsc>%(ntsc)s</ntsc>
-%(pre_indent)s</rate>"""
-        return template % {
-            "timebase": self.timebase,
-            "ntsc": "TRUE" if self.ntsc else "FALSE",
-            "pre_indent": " " * pre_indent,
-            "indentation": " " * indentation,
-        }
+        template = """{pre_indent}<rate>
+{pre_indent}{indentation}<timebase>{timebase}</timebase>
+{pre_indent}{indentation}<ntsc>{ntsc}</ntsc>
+{pre_indent}</rate>"""
+        return template.format(
+            timebase=self.timebase,
+            ntsc="TRUE" if self.ntsc else "FALSE",
+            pre_indent=" " * pre_indent,
+            indentation=" " * indentation,
+        )

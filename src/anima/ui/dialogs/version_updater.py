@@ -145,7 +145,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         layout.addWidget(self.cancel_push_button)
         main_layout.addWidget(main_widget)
 
-
     def _validate_environment(self, environment):
         """validates the given DCC value"""
         if environment:
@@ -231,7 +230,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # get the column 0 item which holds the Version instance
         # index = self.versions_treeView.model().index(index.row(), 0)
         item = model.itemFromIndex(index)
-        logger.debug("itemAt(position) : %s" % item)
+        logger.debug(f"itemAt(position) : {item}")
 
         if not item:
             return

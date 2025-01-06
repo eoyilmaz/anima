@@ -63,8 +63,9 @@ class UIFileTestCase(unittest.TestCase):
     def test_pyqt4_filename_attribute_initialized_correctly(self):
         """testing if the pyqt4_filename attribute is initialized correctly
         """
-        expected_value = "%s_UI_pyqt4.py" % \
+        expected_value = "{}_UI_pyqt4.py".format(
             os.path.basename(self.test_uicFile_path)[:-4]
+        )
         self.assertEqual(expected_value, self.test_uicFile.pyqt4_filename)
 
     def test_pyqt4_full_path_attribute_initialized_correctly(self):
@@ -78,8 +79,9 @@ class UIFileTestCase(unittest.TestCase):
     def test_pyside_filename_attribute_initialized_correctly(self):
         """testing if the pyside_filename attribute is initialized correctly
         """
-        expected_value = '%s_UI_pyside.py' % \
-                         os.path.basename(self.test_uicFile_path)[:-4]
+        expected_value = '{}_UI_pyside.py'.format(
+            os.path.basename(self.test_uicFile_path)[:-4]
+        )
         self.assertEqual(expected_value, self.test_uicFile.pyside_filename)
 
     def test_pyside_full_path_attribute_initialized_correctly(self):

@@ -275,7 +275,9 @@ class AssetMigrationTool(object):
                     # add the version to the version centric migration recipe
                     version_centric_migration_recipe[v] = {
                         "new_task": new_task,
-                        "variant_name": takes[variant_name].get("new_name", variant_name),
+                        "variant_name": takes[variant_name].get(
+                            "new_name", variant_name
+                        ),
                     }
 
         progress_caller3 = progress_manager.register(
@@ -296,7 +298,9 @@ class AssetMigrationTool(object):
                 description=v.description,
             )
             if "maya" in v.created_with.lower():
-                dcc_env.open(version=v, force=True, skip_update_check=True, prompt=False)
+                dcc_env.open(
+                    version=v, force=True, skip_update_check=True, prompt=False
+                )
                 # replace all top level references with the versions from version_lut
                 for ref in pm.listReferences():
                     # all refs must be base version

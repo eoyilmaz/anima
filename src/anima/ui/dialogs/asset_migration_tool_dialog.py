@@ -713,7 +713,9 @@ class TakeWidget(QtWidgets.QWidget):
             tooltip = "\n".join(
                 [
                     "{} | {} | v{:03d}".format(
-                        get_task_hierarchy_name(v.task), v.variant_name, v.version_number
+                        get_task_hierarchy_name(v.task),
+                        v.variant_name,
+                        v.version_number,
                     )
                     for v in version.inputs
                 ]
@@ -1563,16 +1565,12 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
             amt.migrate()
         except Exception as e:
             QtWidgets.QMessageBox.critical(
-                self,
-                "Error",
-                "Error during migration:\n\n{}".format(e)
+                self, "Error", "Error during migration:\n\n{}".format(e)
             )
             print(e)
         else:
             QtWidgets.QMessageBox.information(
-                self,
-                "Success",
-                "Successfully migrated assets!\n\nClose the UI now."
+                self, "Success", "Successfully migrated assets!\n\nClose the UI now."
             )
             # disable the migrate button
             self.migrate_button.setDisabled(True)

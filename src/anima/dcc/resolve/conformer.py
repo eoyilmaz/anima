@@ -98,8 +98,7 @@ class ConformerUI(object):
 
         resolve_project_label = QtWidgets.QLabel(self.parent_widget)
         resolve_project_label.setText(
-            "%s - [%s fps] / Resolve"
-            % (
+            "{} - [{} fps] / Resolve".format(
                 self.resolve_project.GetName(),
                 self.resolve_project.GetSetting("timelineFrameRate"),
             )
@@ -435,7 +434,7 @@ class ConformerUI(object):
     # TODO: seeing stalker ids in UI might be confusing... keep id data hidden
     def add_data_as_text_to_ui(self, name, task_id):
         """returns a predefined text to combo boxes for this UI"""
-        return "%s - [%s]" % (name, task_id)
+        return "{} - [{}]".format(name, task_id)
 
     def get_id_from_data_text(self, text):
         """separates id from combo box texts added with add_data_as_text_to_ui() for this UI"""
@@ -465,9 +464,9 @@ class ConformerUI(object):
             self.seq_combo_box.insertItem(0, "ALL", None)
             self.seq_combo_box.setCurrentIndex(0)
 
-            self.fps_line.setText("%s" % stalker_project.fps)
-            self.width_line.setText("%s" % stalker_project.image_format.width)
-            self.height_line.setText("%s" % stalker_project.image_format.height)
+            self.fps_line.setText(f"{stalker_project.fps}")
+            self.width_line.setText(f"{stalker_project.image_format.width}")
+            self.height_line.setText(f"{stalker_project.image_format.height}")
 
     def seq_combo_box_changed(self, *args):
         """runs when the seq_combo_box is changed"""
@@ -513,9 +512,9 @@ class ConformerUI(object):
                 self.shot_out_combo_box.setEnabled(0)
 
                 # Set properties from Project instance
-                self.fps_line.setText("%s" % project.fps)
-                self.width_line.setText("%s" % project.image_format.width)
-                self.height_line.setText("%s" % project.image_format.height)
+                self.fps_line.setText(f"{project.fps}")
+                self.width_line.setText(f"{project.image_format.width}")
+                self.height_line.setText(f"{project.image_format.height}")
             else:
                 from stalker import Task, Shot, Sequence
 
@@ -523,9 +522,9 @@ class ConformerUI(object):
                 # set properties from first shot under Scene (assume all shots under scene have the same res,fps)
                 for t in scene.walk_hierarchy():
                     if isinstance(t, Shot):
-                        self.fps_line.setText("%s" % t.fps)
-                        self.width_line.setText("%s" % t.image_format.width)
-                        self.height_line.setText("%s" % t.image_format.height)
+                        self.fps_line.setText(f"{t.fps}")
+                        self.width_line.setText(f"{t.image_format.width}")
+                        self.height_line.setText(f"{t.image_format.height}")
                         break
 
                 # fill shot_in_combo_box with shots
@@ -675,7 +674,7 @@ class ConformerUI(object):
         return shots
 
     def get_valid_statuses_from_ui(self):
-        """returns valisd statuses from ui"""
+        """Return valid statuses from ui."""
         valid_status_names = []
 
         if self.wip_check_box.isChecked():
@@ -716,7 +715,7 @@ class ConformerUI(object):
             if task_name != "Plate":  # do not check status for plates
                 valid_status_names = self.get_valid_statuses_from_ui()
                 if task.status.name not in valid_status_names:
-                    print("%s -> %s" % (shot.name, task.status.name))
+                    print(f"{shot.name} -> {task.status.name}")
                     return None
 
         task_path = task.absolute_path
@@ -741,22 +740,24 @@ class ConformerUI(object):
         if latest_task_name:
             if not self.alpha_only_check_box.isChecked():
                 file_paths = glob.glob(
-                    "%s/*/%s/*%s.*.%s" % (output_path, ext, latest_task_name, ext)
+                    "{}/*/{}/*{}.*.{}".format(output_path, ext, latest_task_name, ext)
                 )
                 if not file_paths:  # try outputs with no version folders
                     file_paths = glob.glob(
-                        "%s/%s/*%s.*.%s" % (output_path, ext, latest_task_name, ext)
+                        "{}/{}/*{}.*.{}".format(output_path, ext, latest_task_name, ext)
                     )
             else:  # check for paths that contain "alpha" as text
                 version_folder = latest_task_name.split("_")[-1]
                 file_paths = glob.glob(
-                    "%s/%s/%s/*%s*.*.%s"
-                    % (output_path, version_folder, ext, "alpha", ext)
+                    "{}/{}/{}/*{}*.*.{}".format(
+                        output_path, version_folder, ext, "alpha", ext
+                    )
                 )
                 if not file_paths:  # try outputs with no version folders
                     file_paths = glob.glob(
-                        "%s/%s/*%s*%s.*.%s"
-                        % (output_path, ext, "alpha", version_folder, ext)
+                        "{}/{}/*{}*{}.*.{}".format(
+                            output_path, ext, "alpha", version_folder, ext
+                        )
                     )
 
         # try to find path manually for plate tasks as they might not have default naming conventions or versions
@@ -764,7 +765,7 @@ class ConformerUI(object):
             version_numbers = []
             main_dir = os.path.join(shot.absolute_path, "Plate", "Outputs", "Main")
             if os.path.isdir(main_dir):
-                dir_names = glob.glob("%s/*" % main_dir)
+                dir_names = glob.glob(f"{main_dir}/*")
                 for dir_name in dir_names:
                     if (
                         os.path.isdir(dir_name)
@@ -775,13 +776,10 @@ class ConformerUI(object):
                         version_numbers.append(int(os.path.basename(dir_name)[1:]))
             if version_numbers:
                 latest_version_number = max(version_numbers)
-                latest_version_folder_name = "v%s" % str(latest_version_number).rjust(
-                    3, "0"
-                )
+                latest_version_folder_name = f"v{latest_version_number:03d}"
                 plate_path = os.path.join(main_dir, latest_version_folder_name, ext)
                 plate_path = os.path.normpath(plate_path).replace("\\", "/")
-
-                file_paths = glob.glob("%s/*.%s" % (plate_path, ext))
+                file_paths = glob.glob("{}/*.{}".format(plate_path, ext))
 
         if file_paths:
             regex = r"\d+$|#+$"
@@ -790,10 +788,10 @@ class ConformerUI(object):
             last_dir_base = os.path.splitext(file_paths[-1])[0]
             start_frame = int(re.findall(regex, first_dir_base)[0])
             end_frame = int(re.findall(regex, last_dir_base)[0])
-            resolve_path = "%s.[%s-%s].%s" % (dir_base, start_frame, end_frame, ext)
-            resolve_raw_path = "%s.%s.%s" % (
+            resolve_path = "{}.[{}-{}].{}".format(dir_base, start_frame, end_frame, ext)
+            resolve_raw_path = "{}.{}.{}".format(
                 dir_base,
-                "%0{digits}d".format(digits=len(str(start_frame))),
+                "{{:0{digits}d}}".format(digits=len(str(start_frame))),
                 ext,
             )
             resolve_path = os.path.normpath(resolve_path).replace("\\", "/")
@@ -836,14 +834,15 @@ class ConformerUI(object):
 
         try:
             tc_exif = info["Time Code"].split(" ")[0]
-            t = timecode.Timecode("%s" % fps, start_timecode=int(tc_exif))
+            t = timecode.Timecode(f"{fps}", start_timecode=int(tc_exif))
             frame_number = t.frame_number
         except BaseException:
             pass
 
         print(
-            "[%s] frame number returned from [%s]"
-            % (frame_number, os.path.basename(img_path))
+            "[{}] frame number returned from [{}]".format(
+                frame_number, os.path.basename(img_path)
+            )
         )
 
         return frame_number
@@ -860,14 +859,16 @@ class ConformerUI(object):
         # for some reason fcpxml does not like float fps like 24.0
         # if the decimal is .0 than fps must be integer 24 so...
         if float(fps) / math.trunc(float(fps)) == 1.0:
-            fps = "%s" % math.trunc(float(fps))
+            fps = "{}".format(math.trunc(float(fps)))
 
         with open(xml_file_full_path, "w") as f:
-            f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-            f.write("<!DOCTYPE fcpxml>\n")
-            f.write('<fcpxml version="1.8">\n')
-            f.write("    <resources>\n")
-            f.write("        <format " 'id="r0" ' 'frameDuration="1/%ss"/>\n' % fps)
+            f.write(
+                '<?xml version="1.0" encoding="UTF-8"?>\n'
+                "<!DOCTYPE fcpxml>\n"
+                '<fcpxml version="1.8">\n'
+                "    <resources>\n"
+                f'        <format id="r0" frameDuration="1/{fps}s"/>\n'
+            )
             ind = 0
             seq_frames = 0
             tc_frame_numbers = []
@@ -879,7 +880,7 @@ class ConformerUI(object):
                 total_frames = (last_frame - first_frame) + 1
                 seq_frames += total_frames
                 str_first_frame = clip_path.split(".")[-2].split("-")[0].strip("[")
-                first_image_path = "%s.%s.%s" % (
+                first_image_path = "{}.{}.{}".format(
                     ".".join(clip_path.split(".")[:-2]),
                     str_first_frame,
                     extension,
@@ -897,14 +898,13 @@ class ConformerUI(object):
                 tc_frame_numbers.append(st)
 
                 f.write(
-                    '        <asset src="file://localhost/%s" '
-                    'duration="%s/%ss" '
+                    '        <asset src="file://localhost/{}" '
+                    'duration="{}/{}s" '
                     'hasVideo="1" '
-                    'id="r%s" '
+                    'id="r{}" '
                     'format="r0" '
-                    'name="%s" '
-                    'start="%s/%ss"/>\n'
-                    % (
+                    'name="{}" '
+                    'start="{}/{}s"/>\n'.format(
                         clip_path,
                         str(total_frames),
                         fps,
@@ -914,15 +914,15 @@ class ConformerUI(object):
                         fps,
                     )
                 )
-            f.write("    </resources>\n")
-            f.write("    <library>\n")
-            f.write('        <event name="%s">\n' % timeline_name)
-            f.write('            <project name="%s">\n' % timeline_name)
             f.write(
-                '                <sequence duration="%s/%ss" tcFormat="NDF" '
-                'format="r0" tcStart="0/1s">\n' % (str(seq_frames), fps)
+                "    </resources>\n"
+                "    <library>\n"
+                f'        <event name="{timeline_name}">\n'
+                f'            <project name="{timeline_name}">\n'
+                f'                <sequence duration="{seq_frames}/{fps}s" '
+                'tcFormat="NDF" format="r0" tcStart="0/1s">\n'
+                "                    <spine>\n"
             )
-            f.write("                    <spine>\n")
             ind = 0
             offset_frame = 0
             for clip_path in clip_path_list:
@@ -936,94 +936,64 @@ class ConformerUI(object):
                 if self.slated_check_box.isChecked():
                     if not self.record_in_check_box.isChecked():
                         f.write(
-                            '                        <asset-clip offset="%s/%ss" duration="%s/%ss" '
-                            'tcFormat="NDF" enabled="1" format="r0" ref="r%s" '
-                            'name="%s" start="%s/%ss">\n'
-                            % (
-                                str(offset_frame),
-                                fps,
-                                "1",
-                                fps,
-                                str(ind),
-                                os.path.basename(clip_path),
-                                str(st),
-                                fps,
-                            )
-                        )
-                        f.write(
-                            '                            <adjust-transform position="0 0" '
+                            "                        "
+                            "<asset-clip "
+                            f'offset="{offset_frame}/{fps}s" duration="1/{fps}s" '
+                            f'tcFormat="NDF" enabled="1" format="r0" ref="r{ind}" '
+                            f'name="{os.path.basename(clip_path)}" start="{st}/{fps}s">\n'
+                            "                            "
+                            '<adjust-transform position="0 0" '
                             'anchor="0 0" scale="1 1"/>\n'
+                            "                        "
+                            "</asset-clip>\n"
                         )
-                        f.write("                        </asset-clip>\n")
                         offset_frame += 1
                     else:
                         slate_frame = offset_frame - 1
                         f.write(
-                            '                        <asset-clip offset="%s/%ss" duration="%s/%ss" '
-                            'tcFormat="NDF" enabled="1" format="r0" ref="r%s" '
-                            'name="%s" start="%s/%ss">\n'
-                            % (
-                                str(slate_frame),
-                                fps,
-                                "1",
-                                fps,
-                                str(ind),
-                                os.path.basename(clip_path),
-                                str(st),
-                                fps,
-                            )
-                        )
-                        f.write(
-                            '                            <adjust-transform position="0 0" '
+                            "                        "
+                            f'<asset-clip offset="{slate_frame}/{fps}s" '
+                            f'duration="1/{fps}s" '
+                            f'tcFormat="NDF" enabled="1" format="r0" ref="r{ind}" '
+                            f'name="{os.path.basename(clip_path)}" '
+                            f'start="{st}/{fps}s">\n'
+                            "                            "
+                            '<adjust-transform position="0 0" '
                             'anchor="0 0" scale="1 1"/>\n'
+                            "                        "
+                            "</asset-clip>\n"
                         )
-                        f.write("                        </asset-clip>\n")
                 f.write(
-                    '                        <asset-clip offset="%s/%ss" duration="%s/%ss" '
-                    'tcFormat="NDF" enabled="1" format="r0" ref="r%s" '
-                    'name="%s" start="%s/%ss">\n'
-                    % (
-                        str(offset_frame),
-                        fps,
-                        str(total_frames),
-                        fps,
-                        str(ind),
-                        os.path.basename(clip_path),
-                        str(st),
-                        fps,
-                    )
-                )
-                f.write(
-                    '                            <adjust-transform position="0 0" '
+                    "                        "
+                    f'<asset-clip offset="{offset_frame}/{fps}s" duration="{total_frames}/{fps}s" '
+                    f'tcFormat="NDF" enabled="1" format="r0" ref="r{ind}" '
+                    f'name="{os.path.basename(clip_path)}" start="{st}/{fps}s">\n'
+                    "                            "
+                    '<adjust-transform position="0 0" '
                     'anchor="0 0" scale="1 1"/>\n'
+                    "                        </asset-clip>\n"
                 )
-                f.write("                        </asset-clip>\n")
                 if not self.record_in_check_box.isChecked():
                     offset_frame += total_frames
-            f.write("                    </spine>\n")
-            f.write("                </sequence>\n")
-            f.write("            </project>\n")
-            f.write("        </event>\n")
-            f.write("    </library>\n")
-            f.write("</fcpxml>")
+            f.write(
+                "                    </spine>\n"
+                "                </sequence>\n"
+                "            </project>\n"
+                "        </event>\n"
+                "    </library>\n"
+                "</fcpxml>"
+            )
 
     def generate_timeline_name(self):
         """Generates a timeline name according to the UI input"""
         import datetime
 
         today = datetime.datetime.today()
-        now = "%s%s%s_%s%s%s" % (
-            today.year,
-            str(today.month).rjust(2, "0"),
-            str(today.day).rjust(2, "0"),
-            str(today.hour).rjust(2, "0"),
-            str(today.minute).rjust(2, "0"),
-            str(today.second).rjust(2, "0"),
-        )
+        now = today.strftime("%Y%m%d_%H%M%S")
         proj_name = self.project_combo_box.currentText()
         seq_name = self.seq_combo_box.currentText()
         scn_name = self.scene_combo_box.currentText()
-        timeline_name = "%s_%s_%s_%s" % (proj_name, seq_name, scn_name, now)
+        timeline_name = "{}_{}_{}_{}".format(proj_name, seq_name, scn_name, now)
         return timeline_name
 
     def conform_shots(self, shots):
@@ -1047,7 +1017,7 @@ class ConformerUI(object):
                 if clip_path:
                     clip_path_list.append(clip_path)
                 elif clip_path is None:
-                    none_path_list.append("%s -> No Outputs/Main found." % shot.name)
+                    none_path_list.append(f"{shot.name} -> No Outputs/Main found.")
 
                 if (
                     t_name == "Comp"
@@ -1067,12 +1037,12 @@ class ConformerUI(object):
                     rc_in = shot.record_in
                     if not rc_in:
                         raise RuntimeError(
-                            "%s -> No record in data! Turn off Record In check box."
-                            % shot.name
+                            f"{shot.name} -> No record in data! "
+                            "Turn off Record In check box."
                         )
                     record_in_list.append([clip_path, rc_in])
 
-                print("Checking Shot... - %s" % shot.name)
+                print(f"Checking Shot... - {shot.name}")
             clip_path_list.sort()
             record_in_list.sort()
             none_path_list.sort()
@@ -1097,7 +1067,7 @@ class ConformerUI(object):
 
                         clip_range = os.path.basename(clip_path_list[i]).split(".")[1]
                         plate_range = os.path.basename(plate_path_list[i]).split(".")[1]
-                        print("Clip: %s -> Plate: %s" % (clip_range, plate_range))
+                        print(f"Clip: {clip_range} -> Plate: {plate_range}")
                         if clip_range != plate_range:
                             plate_range_mismatch_list.append(clip_path_list[i])
                     except IndexError:
@@ -1108,7 +1078,7 @@ class ConformerUI(object):
             )
             for i in range(0, len(clip_path_list)):
                 if plate_path_list and self.plus_plates_check_box.isChecked():
-                    print("%s  +  %s" % (clip_path_list[i], plate_path_list[i]))
+                    print(f"{clip_path_list[i]}  +  {plate_path_list[i]}")
                 else:
                     print(clip_path_list[i])
             print(
@@ -1206,7 +1176,7 @@ class ConformerUI(object):
                 if clip_info:
                     clip_path_list.append([clip_info, start_index, end_index])
                 elif clip_info is None:
-                    none_path_list.append("%s -> No Outputs/Main found." % shot.name)
+                    none_path_list.append(f"{shot.name} -> No Outputs/Main found.")
 
                 if (
                     t_name == "Comp"
@@ -1230,12 +1200,12 @@ class ConformerUI(object):
                     rc_in = shot.record_in
                     if not rc_in:
                         raise RuntimeError(
-                            "%s -> No record in data! Turn off Record In check box."
-                            % shot.name
+                            f"{shot.name} -> No record in data! "
+                            "Turn off Record In check box."
                         )
                     record_in_list.append([clip_info, start_index, end_index, rc_in])
 
-                print("Checking Shot... - %s" % shot.name)
+                print(f"Checking Shot... - {shot.name}")
             clip_path_list.sort()
             record_in_list.sort()
             none_path_list.sort()
@@ -1260,7 +1230,7 @@ class ConformerUI(object):
 
                         clip_range = [clip_path_list[i][1], clip_path_list[i][2]]
                         plate_range = [plate_path_list[i][1], plate_path_list[i][2]]
-                        print("Clip: %s -> Plate: %s" % (clip_range, plate_range))
+                        print(f"Clip: {clip_range} -> Plate: {plate_range}")
                         if clip_range != plate_range:
                             plate_range_mismatch_list.append(clip_path_list[i])
                     except IndexError:
@@ -1271,7 +1241,7 @@ class ConformerUI(object):
             )
             for i in range(0, len(clip_path_list)):
                 if plate_path_list and self.plus_plates_check_box.isChecked():
-                    print("%s  +  %s" % (clip_path_list[i][0], plate_path_list[i][0]))
+                    print(f"{clip_path_list[i][0]}  +  {plate_path_list[i][0]}")
                 else:
                     print(clip_path_list[i][0])
             print(
@@ -1311,7 +1281,7 @@ class ConformerUI(object):
 
                 if not use_current_timeline:
                     timeline_name = self.generate_timeline_name()
-                    print("Creating new timeline with name: %s" % timeline_name)
+                    print(f"Creating new timeline with name: {timeline_name}")
                     timeline = media_pool.CreateEmptyTimeline(timeline_name)
                 else:
                     print("Using current timeline!")
@@ -1320,9 +1290,9 @@ class ConformerUI(object):
                     clip_path = clip_info[0]
                     start_index = clip_info[1]
                     end_index = clip_info[2]
-                    print("clip_path  : %s" % clip_path)
-                    print("start frame: %s" % start_index)
-                    print("end frame  : %s" % end_index)
+                    print(f"clip_path  : {clip_path}")
+                    print(f"start frame: {start_index}")
+                    print(f"end frame  : {end_index}")
                     media_pool_item = media_pool.ImportMedia(
                         [
                             {
@@ -1385,7 +1355,7 @@ class ConformerUI(object):
             from stalker import Task, Version
 
             for shot in shots:
-                print("Checking Shot... - %s" % shot.name)
+                print(f"Checking Shot... - {shot.name}")
                 task = (
                     Task.query.filter(Task.parent == shot)
                     .filter(Task.name == t_name)
@@ -1404,7 +1374,7 @@ class ConformerUI(object):
                         try:
                             valid_status_names = self.get_valid_statuses_from_ui()
                             if task.status.name not in valid_status_names:
-                                print("%s -> %s" % (shot.name, task.status.name))
+                                print(f"{shot.name} -> {task.status.name}")
                                 has_valid_status = False
                         except AttributeError:
                             pass
@@ -1439,13 +1409,15 @@ class ConformerUI(object):
                             ]
                             version_folder = latest_task_name.split("_")[-1]
                             file_paths = glob.glob(
-                                "%s/%s/%s/*%s*.*.%s"
-                                % (output_path, version_folder, ext, "alpha", ext)
+                                "{}/{}/{}/*{}*.*.{}".format(
+                                    output_path, version_folder, ext, "alpha", ext
+                                )
                             )
                             if not file_paths:  # try outputs with no version folders
                                 file_paths = glob.glob(
-                                    "%s/%s/*%s*%s.*.%s"
-                                    % (output_path, ext, "alpha", version_folder, ext)
+                                    "{}/{}/*{}*{}.*.{}".format(
+                                        output_path, ext, "alpha", version_folder, ext
+                                    )
                                 )
                             if file_paths:
                                 raw_seconds = os.path.getmtime(file_paths[0])
@@ -1457,7 +1429,7 @@ class ConformerUI(object):
                         )
 
                         if modification_date >= query_date:
-                            item_label = "%s - %s : %s > %s" % (
+                            item_label = "{} - {} : {} > {}".format(
                                 task.parent.name,
                                 task.name,
                                 str(modification_date).split(" ")[0],
@@ -1473,7 +1445,7 @@ class ConformerUI(object):
                         continue
 
             if update_list:
-                print("update_list: %s" % update_list)
+                print(f"update_list: {update_list}")
                 update_list.sort(key=lambda x: x[0])
                 for i, item_data in enumerate(update_list):
                     self.updated_shot_list.addItem(item_data[0])

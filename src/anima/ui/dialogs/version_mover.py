@@ -215,10 +215,12 @@ class VersionMover(QtWidgets.QDialog, AnimaDialogBase):
         answer = QtWidgets.QMessageBox.question(
             self,
             "Info",
-            "Will copy %s versions from take names:<br><br>"
-            "%s"
+            "Will copy {} versions from take names:<br><br>"
+            "{}"
             "<br><br>"
-            "Is that Ok?" % (len(from_variant_names), "<br>".join(from_variant_names)),
+            "Is that Ok?".format(
+                len(from_variant_names), "<br>".join(from_variant_names)
+            ),
             QtWidgets.QMessageBox.Yes,
             QtWidgets.QMessageBox.No,
         )
@@ -237,8 +239,9 @@ class VersionMover(QtWidgets.QDialog, AnimaDialogBase):
                 new_version.created_by = logged_in_user
                 new_version.extension = latest_version.extension
                 new_version.description = (
-                    "Moved from another task (id=%s) with Version Mover"
-                    % latest_version.task.id
+                    "Moved from another task (id={}) with Version Mover".format(
+                        latest_version.task.id
+                    )
                 )
                 new_version.created_with = latest_version.created_with
                 DBSession.add(new_version)
@@ -264,5 +267,5 @@ class VersionMover(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QMessageBox.information(
                 self,
                 "Success",
-                "Successfully copied %s versions" % len(from_variant_names),
+                "Successfully copied {} versions".format(len(from_variant_names)),
             )

@@ -48,7 +48,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if self.image_format:
             self.mode = "Update"
 
-        self.dialog_label.setText("%s Image Format" % self.mode)
+        self.dialog_label.setText(f"{self.mode} Image Format")
 
         # create name_line_edit
         from anima.ui.widgets import ValidatedLineEdit

@@ -49,7 +49,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # Dialog Label
         dialog_label = QtWidgets.QLabel(self)
-        dialog_label.setText("%s Structure" % self.mode)
+        dialog_label.setText(f"{self.mode} Structure")
         dialog_label.setStyleSheet("color: rgb(71, 143, 202);\n" "font: 18pt;")
         main_layout.addWidget(dialog_label)
 
@@ -73,6 +73,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # Validator
         from anima.ui.widgets import ValidatedLineEdit
+
         self.name_validator_label = QtWidgets.QLabel(self)
         self.name_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
 
@@ -126,7 +127,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         widget.customContextMenuRequested.connect(
             self.show_secondary_filename_template_context_menu
         )
-        form_layout.setLayout(1, field_role, filename_template_fields_layout,)
+        form_layout.setLayout(
+            1,
+            field_role,
+            filename_template_fields_layout,
+        )
 
         # ========================================
         # Custom Template
@@ -134,13 +139,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         custom_template_label.setText(
             '<html><head/><body><p align="right">Custom<br/>Template</p></body></html>'
         )
-        form_layout.setWidget(
-            2, label_role, custom_template_label
-        )
+        form_layout.setWidget(2, label_role, custom_template_label)
         self.custom_template_plain_text_edit = QtWidgets.QPlainTextEdit(self)
-        form_layout.setWidget(
-            2, field_role, self.custom_template_plain_text_edit
-        )
+        form_layout.setWidget(2, field_role, self.custom_template_plain_text_edit)
         main_layout.addLayout(form_layout)
 
         # ========================================
@@ -166,7 +167,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.filename_templates_double_list_widget.clear()
         self.filename_templates_double_list_widget.add_primary_items(
             list(
-                map(lambda x: "%s (%s) (%s)" % (x.name, x.target_entity_type, x.id), fts)
+                map(
+                    lambda x: "{} ({}) ({})".format(x.name, x.target_entity_type, x.id),
+                    fts,
+                )
             )
         )
 
@@ -190,15 +194,19 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.name_line_edit.setText(self.structure.name)
         self.name_line_edit.set_valid()
 
-        self.custom_template_plain_text_edit.setPlainText(self.structure.custom_template)
+        self.custom_template_plain_text_edit.setPlainText(
+            self.structure.custom_template
+        )
 
         # add the structure templates to the secondary list of the double list
         self.filename_templates_double_list_widget.clear()
         self.filename_templates_double_list_widget.add_secondary_items(
-            list(map(
-                lambda x: "%s (%s) (%s)" % (x.name, x.target_entity_type, x.id),
-                self.structure.templates,
-            ))
+            list(
+                map(
+                    lambda x: "{} ({}) ({})".format(x.name, x.target_entity_type, x.id),
+                    self.structure.templates,
+                )
+            )
         )
 
         # add all the other filename templates from the database
@@ -209,7 +217,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         ).all()
 
         self.filename_templates_double_list_widget.add_primary_items(
-            map(lambda x: "%s (%s) (%s)" % (x.name, x.target_entity_type, x.id), fts)
+            map(
+                lambda x: "{} ({}) ({})".format(x.name, x.target_entity_type, x.id), fts
+            )
         )
 
     def show_primary_filename_template_context_menu(self, position):
@@ -269,7 +279,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 if create_filename_template_dialog.result() == accepted:
                     ft = create_filename_template_dialog.filename_template
                     list_widget.addItem(
-                        "%s (%s) (%s)" % (ft.name, ft.target_entity_type, ft.id)
+                        "{} ({}) ({})".format(ft.name, ft.target_entity_type, ft.id)
                     )
                 create_filename_template_dialog.deleteLater()
 
@@ -293,7 +303,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         # update the text of the item
                         ft = update_filename_template_dialog.filename_template
                         item.setText(
-                            "%s (%s) (%s)" % (ft.name, ft.target_entity_type, ft.id)
+                            "{} ({}) ({})".format(ft.name, ft.target_entity_type, ft.id)
                         )
 
                     update_filename_template_dialog.deleteLater()

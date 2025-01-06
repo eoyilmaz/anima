@@ -108,7 +108,7 @@ class ShotExporter2(object):
 
         shot = Shot.query.filter(Shot.name == shot_name).first()
         if not shot:
-            raise RuntimeError("No shot found with shot name: %s" % shot_name)
+            raise RuntimeError(f"No shot found with shot name: {shot_name}")
 
         # get the child task
         child_task = (
@@ -218,7 +218,7 @@ def move_all_anim_curves():
             message = "Anim Curves can NOT be moved:\r\n"
             message += "\r"
             for i in range(0, len(non_moved_curves)):
-                message += "%s\n" % non_moved_curves[i]
+                message += f"{non_moved_curves[i]}\n"
                 if i > 30:
                     message += "+ More...\n"
                     break
@@ -279,7 +279,7 @@ def create_shots_from_scratch():
 
     def create_shots(with_cameras):
         cnt = 0
-        while pm.textField("%s%s" % (shot_name_name, str(cnt)), ex=1):
+        while pm.textField(f"{shot_name_name}{cnt}", ex=1):
             cnt += 1
 
         seqs = [seq for seq in pm.ls(type="sequencer") if seq.referenceFile() is None]
@@ -288,12 +288,10 @@ def create_shots_from_scratch():
 
         seq = seqs[0]
         for i in range(0, cnt):
-            shot_node_name = pm.textField(
-                "%s%s" % (shot_name_name, str(i)), q=1, text=1
-            )
-            start_frame = pm.intField("%s%s" % (start_frame_name, str(i)), q=1, v=1)
-            end_frame = pm.intField("%s%s" % (end_frame_name, str(i)), q=1, v=1)
-            shot_num = pm.textField("%s%s" % (shot_num_name, str(i)), q=1, text=1)
+            shot_node_name = pm.textField(f"{shot_name_name}{i}", q=1, text=1)
+            start_frame = pm.intField(f"{start_frame_name}{i}", q=1, v=1)
+            end_frame = pm.intField(f"{end_frame_name}{i}", q=1, v=1)
+            shot_num = pm.textField(f"{shot_num_name}{i}", q=1, text=1)
             shot = pm.createNode("shot", n=shot_node_name)
             shot.setAttr("startFrame", start_frame)
             shot.setAttr("sequenceStartFrame", start_frame)
@@ -303,11 +301,11 @@ def create_shots_from_scratch():
             seq.add_shot(shot)
 
             if with_cameras:
-                camera_name = "%s%s" % (
+                camera_name = "{}{}".format(
                     pm.textField("camera_prefix_name", q=1, text=1),
-                    str(i + 1),
+                    i + 1,
                 )
-                cam = pm.mel.eval('camera -n "%s";' % camera_name)
+                cam = pm.mel.eval(f'camera -n "{camera_name}";')
                 pm.PyNode(cam[1]).setAttr("farClipPlane", 1000000)
                 pm.PyNode(cam[1]).setAttr("focalLength", 35)
                 pm.PyNode(cam[0]).attr("scaleX").lock()
@@ -317,30 +315,20 @@ def create_shots_from_scratch():
 
     def set_parameters_from_length(*args):
         cnt = 0
-        while pm.intField("%s%s" % (shot_length_name, str(cnt)), ex=1):
+        while pm.intField(f"{shot_length_name}{i}", ex=1):
             cnt += 1
 
         for i in range(0, cnt):
             if i == 0:
-                s_frame = pm.intField("%s%s" % (start_frame_name, str(i)), q=1, v=1)
-                start_length = pm.intField(
-                    "%s%s" % (shot_length_name, str(i)), q=1, v=1
-                )
-                pm.intField(
-                    "%s%s" % (end_frame_name, str(i)), e=1, v=s_frame + start_length
-                )
+                s_frame = pm.intField(f"{start_frame_name}{i}", q=1, v=1)
+                start_length = pm.intField(f"{shot_length_name}{i}", q=1, v=1)
+                pm.intField(f"{end_frame_name}{i}", e=1, v=s_frame + start_length)
             else:
-                prev_end_frame = pm.intField(
-                    "%s%s" % (end_frame_name, str(i - 1)), q=1, v=1
-                )
+                prev_end_frame = pm.intField(f"{end_frame_name}{i-1}", q=1, v=1)
+                pm.intField(f"{start_frame_name}{i}", e=1, v=prev_end_frame + 1)
+                start_length = pm.intField(f"{shot_length_name}{i}", q=1, v=1)
                 pm.intField(
-                    "%s%s" % (start_frame_name, str(i)), e=1, v=prev_end_frame + 1
-                )
-                start_length = pm.intField(
-                    "%s%s" % (shot_length_name, str(i)), q=1, v=1
-                )
-                pm.intField(
-                    "%s%s" % (end_frame_name, str(i)),
+                    f"{end_frame_name}{i}",
                     e=1,
                     v=prev_end_frame + 1 + start_length,
                 )
@@ -389,69 +377,42 @@ def create_shots_from_scratch():
 
                     def checkbox_state(*args):
                         check_cnt = 0
-                        while pm.checkBox(
-                            "%s%s" % ("shotCheckBox", str(check_cnt)), ex=1
-                        ):
+                        while pm.checkBox(f"shotCheckBox{check_cnt}", ex=1):
                             check_cnt += 1
 
                         for k in range(0, check_cnt):
-                            state = pm.checkBox("shotCheckBox%s" % str(k), q=1, v=1)
+                            state = pm.checkBox(f"shotCheckBox{k}", q=1, v=1)
                             if not state:
-                                pm.textField(
-                                    "%s%s" % (shot_num_name, str(k)), e=1, en=0
-                                )
-                                pm.textField(
-                                    "%s%s" % (shot_name_name, str(k)), e=1, en=0
-                                )
+                                pm.textField(f"{shot_num_name}{k}", e=1, en=0)
+                                pm.textField(f"{shot_name_name}{k}", e=1, en=0)
                             else:
-                                pm.textField(
-                                    "%s%s" % (shot_num_name, str(k)), e=1, en=1
-                                )
-                                pm.textField(
-                                    "%s%s" % (shot_name_name, str(k)), e=1, en=1
-                                )
+                                pm.textField(f"{shot_num_name}{k}", e=1, en=1)
+                                pm.textField(f"{shot_name_name}{k}", e=1, en=1)
 
                     pm.checkBox(
-                        "shotCheckBox%s" % str(i),
+                        f"shotCheckBox{i}",
                         onc=checkbox_state,
                         ofc=checkbox_state,
                     )
 
-                    shot_number = ""
-                    for j in range(0, 4):
-                        digit = len(str(shot_num))
-                        if digit == 1:
-                            shot_number = "000%s" % str(shot_num)
-                        if digit == 2:
-                            shot_number = "00%s" % str(shot_num)
-                        if digit == 3:
-                            shot_number = "0%s" % str(shot_num)
-                        if digit == 4:
-                            shot_number = "%s" % str(shot_num)
-
-                    pm.textField(
-                        "%s%s" % (shot_num_name, str(i)), text=str(shot_number), en=0
-                    )
+                    shot_number = f"{shot_num}".zfill(4)
+                    pm.textField(f"{shot_num_name}{i}", text=str(shot_number), en=0)
                     shot_num += 10
 
                     pm.intField(
-                        "%s%s" % (shot_length_name, str(i)),
+                        f"{shot_length_name}{i}",
                         cc=set_parameters_from_length,
                         v=1,
                     )
 
-                    pm.intField("%s%s" % (start_frame_name, str(i)), en=0, v=1)
+                    pm.intField(f"{start_frame_name}{i}", en=0, v=1)
                     if i == 0:
-                        pm.intField(
-                            "%s%s" % (start_frame_name, str(i)), e=1, v=start_frame
-                        )
+                        pm.intField(f"{start_frame_name}{i}", e=1, v=start_frame)
 
-                    pm.intField("%s%s" % (end_frame_name, str(i)), en=0, v=1)
+                    pm.intField(f"{end_frame_name}{i}", en=0, v=1)
 
-                    shot_node_name = "shot%s" % str(i + 1)
-                    pm.textField(
-                        "%s%s" % (shot_name_name, str(i)), text=shot_node_name, en=0
-                    )
+                    shot_node_name = f"shot{i + 1}"
+                    pm.textField(f"{shot_name_name}{i}", text=shot_node_name, en=0)
 
         with pm.columnLayout():
 
@@ -618,7 +579,7 @@ class ShotExporter(object):
             message = "No Cameras assigned to shots:\r\n"
             message += "\r"
             for shot in shots_without_camera:
-                message += "shot %s\n" % (shot.getShotName())
+                message += f"shot {shot.getShotName()}\n"
             pm.confirmDialog(title="Error", message=message, button="OK")
             raise RuntimeError("No Cameras assigned to some shots.")
 
@@ -637,7 +598,7 @@ class ShotExporter(object):
             message = "Wrong Shot Names:\r\n"
             message += "\r"
             for shot in shots_with_bad_names:
-                message += "%s - %s\n" % (shot.getName(), shot.getShotName())
+                message += "{} - {}\n".format(shot.getName(), shot.getShotName())
             pm.confirmDialog(title="Error", message=message, button="OK")
             raise RuntimeError(message)
 
@@ -656,7 +617,7 @@ class ShotExporter(object):
             message = "More than 1 shot Numbered as:\r\n"
             message += "\r"
             for shot_name in shots_without_unique_names:
-                message += "shot [ %s ]\n" % shot_name
+                message += f"shot [ {shot_name} ]\n"
             pm.confirmDialog(title="Error", message=message, button="OK")
             raise RuntimeError("Non-Unique Shot Names.")
 
@@ -672,7 +633,7 @@ class ShotExporter(object):
                 start = shots_sorted[ind].getSequenceStartTime()
                 end = shot.getSequenceEndTime()
                 if end >= start:
-                    overlapping_shots.append("%s & %s" % (shot, shots_sorted[ind]))
+                    overlapping_shots.append("{} & {}".format(shot, shots_sorted[ind]))
                 if ind == (len(shots_sorted) - 1):
                     break
 
@@ -680,7 +641,7 @@ class ShotExporter(object):
                 message = "Overlapped Shots:\r\n"
                 message += "\r"
                 for shots_info in overlapping_shots:
-                    message += "[ %s ] are overlapping\n" % shots_info
+                    message += f"[ {shots_info} ] are overlapping\n"
                 pm.confirmDialog(title="Error", message=message, button="OK")
                 raise RuntimeError("There Are overlapping shots in Sequencer.")
 
@@ -700,7 +661,7 @@ class ShotExporter(object):
             message = "Shot Numbers are not Ordered in Sequencer:\r\n"
             message += "\r"
             for shot in non_sequential_shots:
-                message += "shot [ %s ]\n" % (shot.getShotName())
+                message += f"shot [ {shot.getShotName()} ]\n"
             message += "\r\n"
             message += "Shots above seem to be placed randomly in Sequencer.\r"
             message += "\r\n"
@@ -754,7 +715,7 @@ class ShotExporter(object):
             message = "Shots below does NOT have equal shot/seq frame ranges :\r\n"
             message += "\r"
             for shot in shots_with_bad_frame_range:
-                message += "[ %s ]\n" % shot
+                message += f"[ {shot} ]\n"
             message += "\r\n"
             message += "Generally we do Not prefer this in our Projects.\r"
             message += "\r\n"
@@ -786,7 +747,7 @@ class ShotExporter(object):
             message = "Shots below have restricted values for shot attrs:\r\n"
             message += "\r"
             for info in shots_with_bad_attrs:
-                message += "[ %s ] - %s | su an %s -> %s olmali\n" % (
+                message += "[ {} ] - {} | must be {} -> {}\n".format(
                     info[0],
                     info[1],
                     info[2],
@@ -815,7 +776,7 @@ class ShotExporter(object):
             message = "Shots do not have a Task to save:\r\n"
             message += "\r"
             for shot in shots_without_task:
-                message += "shot [ %s ]\n" % (shot.getShotName())
+                message += f"shot [ {shot.getShotName()} ]\n"
             pm.confirmDialog(title="Error", message=message, button="OK")
             raise RuntimeError("Some Shots do not have Stalker Tasks.")
 
@@ -890,9 +851,7 @@ class ShotExporter(object):
             # duplicate, clear parents and unparent shot cam from original
             pm.currentTime(s_frame)
             id += 1
-            shot_camera = pm.duplicate(
-                the_cam, rr=1, name="camera__shotExp_%s" % str(id)
-            )
+            shot_camera = pm.duplicate(the_cam, rr=1, name=f"camera__shotExp_{id}")
             tr_parents = shot_camera[0].listRelatives(type="transform")
             for tr in tr_parents:
                 pm.delete(tr)
@@ -909,8 +868,8 @@ class ShotExporter(object):
                     new_key = pm.duplicate(connection, rr=1)
                     anim_curves.append(new_key[0])
                     pm.connectAttr(
-                        "%s.output" % new_key[0],
-                        "%s.%s" % (shot_camera[0].getShape(), attribute_name),
+                        f"{new_key[0]}.output",
+                        "{}.{}".format(shot_camera[0].getShape(), attribute_name),
                     )
 
             # parent constraint shot cam to original
@@ -924,10 +883,11 @@ class ShotExporter(object):
 
             # bake all keyable attrs between shot frame range
             pm.mel.eval(
-                'bakeResults -simulation true -t "%s:%s" -sampleBy 1 -disableImplicitControl true '
+                'bakeResults -simulation true -t "{}:{}" -sampleBy 1 -disableImplicitControl true '
                 "-preserveOutsideKeys true -sparseAnimCurveBake false -removeBakedAttributeFromLayer false "
-                "-bakeOnOverrideLayer false -minimizeRotation true -controlPoints false -shape true %s;"
-                % (int(s_frame), int(e_frame), shot_camera[0])
+                "-bakeOnOverrideLayer false -minimizeRotation true -controlPoints false -shape true {};".format(
+                    int(s_frame), int(e_frame), shot_camera[0]
+                )
             )
 
             # restore isolation
@@ -1054,7 +1014,7 @@ class ShotExporter(object):
         index = 0
         for shot_info in shots_to_export:
             v = versions[index]
-            message += "shot[ %s ] -> %s\n" % (shot_info[2], v)
+            message += "shot[ {} ] -> {}\n".format(shot_info[2], v)
             index += 1
         dialog = pm.confirmDialog(
             title="Important Warning",
@@ -1121,10 +1081,12 @@ class ShotExporter(object):
             message = "Shots could not be saved:\r\n"
             message += "\r"
             for shot in errored_shots:
-                message += "[ %s ]\n" % shot
+                message += f"[ {shot} ]\n"
             pm.confirmDialog(title="Error", message=message, button="OK")
             DBSession.rollback()
-            raise RuntimeError("Some Shots could not be saved. Contact Mehmet ERER.")
+            raise RuntimeError(
+                "Some Shots could not be saved. Contact your supervisor."
+            )
 
         # leave it as empty new file
         pm.newFile(force=True)
@@ -1169,7 +1131,7 @@ class Previs(object):
                     dup_cam_shape = dup_cam.listRelatives(ad=1, type=pm.nt.Camera)
 
                 # rename the new cam
-                dup_cam.rename("%s_#" % cam.name())
+                dup_cam.rename(f"{cam.name()}_#")
 
                 print("===========")
                 print("New Camera: {}".format(dup_cam))
@@ -1223,13 +1185,18 @@ class Previs(object):
 
         # create shot nodes from cameras
         import time
+
         for cam in cams:
             # read camera keyframes
             print("-------------------------------------------")
             print(cam)
             start_time = time.time()
             keyframes = pm.keyframe(cam.tx, q=1, timeChange=True)
-            print("pm.keyframes()             : {:0.2f} s".format(time.time() - start_time))
+            print(
+                "pm.keyframes()             : {:0.2f} s".format(
+                    time.time() - start_time
+                )
+            )
 
             if not keyframes:
                 continue
@@ -1240,22 +1207,42 @@ class Previs(object):
             # create a shot node
             start_time = time.time()
             shot = seq.create_shot()
-            print("seq.create_shot()          : {:0.2f} s".format(time.time() - start_time))
+            print(
+                "seq.create_shot()          : {:0.2f} s".format(
+                    time.time() - start_time
+                )
+            )
             start_time = time.time()
             shot.startFrame.set(start_frame)
             shot.endFrame.set(end_frame)
-            print("set startFrame and endFrame: {:0.2f} s".format(time.time() - start_time))
+            print(
+                "set startFrame and endFrame: {:0.2f} s".format(
+                    time.time() - start_time
+                )
+            )
             start_time = time.time()
             shot.setSequenceStartTime(start_frame)
-            print("shot.setSequenceStartTime(): {:0.2f} s".format(time.time() - start_time))
+            print(
+                "shot.setSequenceStartTime(): {:0.2f} s".format(
+                    time.time() - start_time
+                )
+            )
             start_time = time.time()
             shot.set_camera(cam)
-            print("shot.set_camera()          : {:0.2f} s".format(time.time() - start_time))
+            print(
+                "shot.set_camera()          : {:0.2f} s".format(
+                    time.time() - start_time
+                )
+            )
 
             # TODO: write this properly
             start_time = time.time()
             shot.track.set(1)
-            print("shot.track.set(1)          : {:0.2f} s".format(time.time() - start_time))
+            print(
+                "shot.track.set(1)          : {:0.2f} s".format(
+                    time.time() - start_time
+                )
+            )
             print("Done! {}".format(cam))
 
     @classmethod

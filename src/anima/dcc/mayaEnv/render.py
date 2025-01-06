@@ -303,10 +303,10 @@ class Render(object):
         for material in materials:
             # textures should start with the same name of the material
             material_name = material.name().split(":")[-1]  # strip namespaces
-            print("material.name: %s" % material_name)
+            print(f"material.name: {material_name}")
 
-            pattern = "%s/%s_*" % (texture_path, material_name)
-            print("pattern: %s" % pattern)
+            pattern = "{}/{}_*".format(texture_path, material_name)
+            print(f"pattern: {pattern}")
 
             files = glob.glob(pattern)
             print(files)
@@ -321,7 +321,7 @@ class Render(object):
                 # BaseColor
                 # create a new aiImage
                 base_color_file_path = glob.glob(
-                    "%s/%s_BaseColor*" % (texture_path, material_name)
+                    "{}/{}_BaseColor*".format(texture_path, material_name)
                 )
                 if base_color_file_path:
                     # fix diffuse weight
@@ -345,7 +345,9 @@ class Render(object):
                 ]
                 for height_channel_name in height_channel_names:
                     height_file_path = glob.glob(
-                        "%s/%s_%s*" % (texture_path, material_name, height_channel_name)
+                        "{}/{}_{}*".format(
+                            texture_path, material_name, height_channel_name
+                        )
                     )
                     if height_file_path:
                         height_file_path = height_file_path[0]
@@ -369,7 +371,7 @@ class Render(object):
                 # *********************************************
                 # Metalness
                 metalness_file_path = glob.glob(
-                    "%s/%s_Metalness*" % (texture_path, material_name)
+                    "{}/{}_Metalness*".format(texture_path, material_name)
                 )
                 if metalness_file_path:
                     metalness_file_path = metalness_file_path[0]
@@ -385,7 +387,7 @@ class Render(object):
                 # *********************************************
                 # Normal
                 normal_file_path = glob.glob(
-                    "%s/%s_Normal*" % (texture_path, material_name)
+                    "{}/{}_Normal*".format(texture_path, material_name)
                 )
                 if normal_file_path:
                     normal_file_path = normal_file_path[0]
@@ -405,7 +407,7 @@ class Render(object):
                 # Roughness
                 # specularRoughness
                 roughness_file_path = glob.glob(
-                    "%s/%s_Roughness*" % (texture_path, material_name)
+                    "{}/{}_Roughness*".format(texture_path, material_name)
                 )
                 if roughness_file_path:
                     roughness_file_path = roughness_file_path[0]
@@ -424,7 +426,7 @@ class Render(object):
                 # BaseColor
                 # create a new aiImage
                 diffuse_color_file_path = glob.glob(
-                    "%s/%s_Diffuse*" % (texture_path, material_name)
+                    "{}/{}_Diffuse*".format(texture_path, material_name)
                 )
                 if diffuse_color_file_path:
                     use_udim = False
@@ -446,7 +448,7 @@ class Render(object):
                 # Accept also BaseColor
                 # create a new aiImage
                 base_color_file_path = glob.glob(
-                    "%s/%s_BaseColor*" % (texture_path, material_name)
+                    "{}/{}_BaseColor*".format(texture_path, material_name)
                 )
                 if base_color_file_path:
                     use_udim = False
@@ -478,7 +480,9 @@ class Render(object):
                 ]
                 for height_channel_name in height_channel_names:
                     height_file_path = glob.glob(
-                        "%s/%s_%s*" % (texture_path, material_name, height_channel_name)
+                        "{}/{}_{}*".format(
+                            texture_path, material_name, height_channel_name
+                        )
                     )
                     if height_file_path:
                         use_udim = False
@@ -523,7 +527,7 @@ class Render(object):
                     pass
 
                 metalness_file_path = glob.glob(
-                    "%s/%s_Metal*" % (texture_path, material_name)
+                    "{}/{}_Metal*".format(texture_path, material_name)
                 )
                 if metalness_file_path:
                     use_udim = False
@@ -550,7 +554,7 @@ class Render(object):
                 # *********************************************
                 # Reflectivity
                 reflectivity_file_path = glob.glob(
-                    "%s/%s_Reflectivity*" % (texture_path, material_name)
+                    "{}/{}_Reflectivity*".format(texture_path, material_name)
                 )
                 if reflectivity_file_path:
                     use_udim = False
@@ -577,7 +581,7 @@ class Render(object):
                 # *********************************************
                 # Normal
                 normal_file_path = glob.glob(
-                    "%s/%s_Normal*" % (texture_path, material_name)
+                    "{}/{}_Normal*".format(texture_path, material_name)
                 )
                 if normal_file_path:
                     use_udim = False
@@ -605,7 +609,7 @@ class Render(object):
                 # Roughness
                 # specularRoughness
                 roughness_file_path = glob.glob(
-                    "%s/%s_Roughness*" % (texture_path, material_name)
+                    "{}/{}_Roughness*".format(texture_path, material_name)
                 )
                 if roughness_file_path:
                     use_udim = False
@@ -820,8 +824,10 @@ class Render(object):
 
         if value != -1:
             for item in objects:
-                attr_full_name = "%s.%s" % (item.name(), attr_name)
-                override_attr_full_name = "%s.%s" % (item.name(), override_attr_name)
+                attr_full_name = "{}.{}".format(item.name(), attr_name)
+                override_attr_full_name = "{}.{}".format(
+                    item.name(), override_attr_name
+                )
                 caller.step(message=attr_full_name)
 
                 if not is_default_layer:
@@ -839,8 +845,10 @@ class Render(object):
                     item.setAttr(override_attr_name, True)
         else:
             for item in objects:
-                attr_full_name = "%s.%s" % (item.name(), attr_name)
-                override_attr_full_name = "%s.%s" % (item.name(), override_attr_name)
+                attr_full_name = "{}.{}".format(item.name(), attr_name)
+                override_attr_full_name = "{}.{}".format(
+                    item.name(), override_attr_name
+                )
                 caller.step(message=attr_full_name)
 
                 # remove any overrides
@@ -1025,7 +1033,7 @@ class Render(object):
 
         Select your mentalrayTexture nodes and then run the script.
 
-        The filename should use the file.%nd.ext format
+        The filename should use the file.{:0nd}.ext format
         """
 
         textures = pm.ls(sl=1, type="mentalrayTexture")
@@ -1041,16 +1049,9 @@ class Render(object):
                 extension = "." + splits[-1]
 
                 expr = (
-                    "string $padded_frame = python(\"'%0"
-                    + str(pad)
-                    + "d'%\" + string(frame));\n"
-                    + 'string $filename = "'
-                    + base
-                    + '" + \
-                       $padded_frame + ".tga";\n'
-                    + 'setAttr -type "string" '
-                    + texture.name()
-                    + ".fileTextureName $filename;\n"
+                    f'string $padded_frame = python("\'{{:0{pad}d}}\'.format(" + string(frame) + ")");\n'
+                    f'string $filename = "{base}" + $padded_frame + ".tga";\n'
+                    f'setAttr -type "string" {texture.name()}.fileTextureName $filename;\n'
                 )
 
                 # create the expression
@@ -1083,7 +1084,7 @@ class Render(object):
     def reload_file_textures(cls):
         fileList = pm.ls(type="file")
         for fileNode in fileList:
-            mel.eval("AEfileTextureReloadCmd(%s.fileTextureName)" % fileNode)
+            mel.eval(f"AEfileTextureReloadCmd({fileNode}.fileTextureName)")
 
     @classmethod
     def transfer_shaders(cls, allow_component_assignments=False):
@@ -1213,8 +1214,9 @@ class Render(object):
         if len(lut["no_match"]):
             pm.select(lut["no_match"])
             print(
-                "The following nodes has no corresponding source:\n%s"
-                % ("\n".join([node.name() for node in lut["no_match"]]))
+                "The following nodes has no corresponding source:\n{}".format(
+                    "\n".join([node.name() for node in lut["no_match"]])
+                )
             )
 
     @classmethod
@@ -1485,7 +1487,7 @@ class Render(object):
             with open(cls.shader_data_temp_file_path, "w") as f:
                 json.dump(shader_assignments, f, indent=4)
         except BaseException as e:
-            pm.confirmDialog(title="Error", message="%s" % e, button="OK")
+            pm.confirmDialog(title="Error", message=f"{e}", button="OK")
         else:
             pm.confirmDialog(
                 title="Successful",
@@ -1663,12 +1665,12 @@ class Render(object):
             pm.delete(skin_sss)
 
             skin_name = orig_name
-            standard_name = "%s_aiStandard" % orig_name
+            standard_name = f"{orig_name}_aiStandard"
 
             skin.rename(skin_name)
             standard.rename(standard_name)
 
-            print("updated %s" % skin_name)
+            print(f"updated {skin_name}")
 
     @classmethod
     def normalize_sss_weights(cls):
@@ -1907,12 +1909,12 @@ class Render(object):
         glass objects and run this
         """
         shader_name = "toolbox_glass_shader"
-        shaders = pm.ls("%s*" % shader_name)
+        shaders = pm.ls(f"{shader_name}*")
         selection = pm.ls(sl=1)
         if len(shaders) > 0:
             shader = shaders[0]
         else:
-            shader = pm.shadingNode("aiStandard", asShader=1, name="%s#" % shader_name)
+            shader = pm.shadingNode("aiStandard", asShader=1, name=f"{shader_name}#")
             shader.setAttr("Ks", 1)
             shader.setAttr("specularRoughness", 0)
             shader.setAttr("Kr", 0)
@@ -1955,15 +1957,13 @@ class Render(object):
 
     @classmethod
     def setup_z_limiter(cls):
-        """creates z limiter setup"""
+        """Create z limiter setup."""
         shader_name = "z_limiter_shader#"
-        shaders = pm.ls("%s*" * shader_name)
+        shaders = pm.ls(f"{shader_name}*")
         if len(shaders) > 0:
             shader = shaders[0]
         else:
-            shader = pm.shadingNode(
-                "surfaceShader", asShader=1, name="%s#" % shader_name
-            )
+            shader = pm.shadingNode("surfaceShader", asShader=1, name=f"{shader_name}#")
 
     @classmethod
     def convert_file_node_to_ai_image_node(cls):
@@ -2310,8 +2310,9 @@ class Render(object):
             gpu_path = gpu_node.getAttr("cacheFileName")
 
             new_nodes = pm.mel.eval(
-                'AbcImport -mode import -reparent "%s" "%s";'
-                % (node.fullPath(), os.path.expandvars(gpu_path))
+                'AbcImport -mode import -reparent "{}" "{}";'.format(
+                    node.fullPath(), os.path.expandvars(gpu_path)
+                )
             )
 
             # get imported nodes
@@ -2392,7 +2393,7 @@ class Render(object):
             ass_path = os.path.normpath(os.path.expandvars(ass_path))
 
             # give info to user
-            caller.title = "Moving: %s" % ass_path
+            caller.title = f"Moving: {ass_path}"
 
             # check if it is in the source location
             if source_driver not in ass_path:
@@ -2426,7 +2427,7 @@ class Render(object):
                 target_f = source_f.replace(source_driver, target_driver)
                 # move files to new location
                 shutil.move(source_f, target_f)
-                inner_caller.step(message="Moving: %s" % source_f)
+                inner_caller.step(message=f"Moving: {source_f}")
             inner_caller.end_progress()
 
             # finally update DSO path
@@ -2472,13 +2473,15 @@ class Render(object):
             pass
 
         def _generate_rs():
-            export_command = 'rsProxy -fp "%(path)s" -c -z -sl;'
+            export_command = 'rsProxy -fp "{path}" -c -z -sl;'
             temp_rs_full_path = tempfile.mktemp(suffix=".rs")
             rs_full_path = os.path.join(
                 rs_output_folder_path, os.path.basename(temp_rs_full_path)
             ).replace("\\", "/")
 
-            pm.mel.eval(export_command % {"path": temp_rs_full_path.replace("\\", "/")})
+            pm.mel.eval(
+                export_command.format(path=temp_rs_full_path.replace("\\", "/"))
+            )
 
             shutil.move(temp_rs_full_path, rs_full_path)
 
@@ -2809,13 +2812,13 @@ class RenderSlicer(object):
         """validates the slices_in_x value"""
         if not isinstance(slices_in_x, int):
             raise TypeError(
-                "%s.slices_in_x should be a non-zero positive integer, not %s"
-                % (cls.__name__, slices_in_x.__class__.__name__)
+                f"{cls.__name__}.slices_in_x should be a non-zero positive "
+                f"integer, not {slices_in_x.__class__.__name__}"
             )
 
         if slices_in_x <= 0:
             raise ValueError(
-                "%s.slices_in_x should be a non-zero positive integer" % cls.__name__
+                f"{cls.__name__}.slices_in_x should be a non-zero positive integer"
             )
 
         return slices_in_x
@@ -2835,13 +2838,13 @@ class RenderSlicer(object):
         """validates the slices_in_y value"""
         if not isinstance(slices_in_y, int):
             raise TypeError(
-                "%s.slices_in_y should be a non-zero positive integer, not %s"
-                % (cls.__name__, slices_in_y.__class__.__name__)
+                f"{cls.__name__}.slices_in_y should be a non-zero positive "
+                f"integer, not {slices_in_y.__class__.__name__}"
             )
 
         if slices_in_y <= 0:
             raise ValueError(
-                "%s.slices_in_y should be a non-zero positive integer" % cls.__name__
+                f"{cls.__name__}.slices_in_y should be a non-zero positive integer"
             )
 
         return slices_in_y
@@ -2870,8 +2873,8 @@ class RenderSlicer(object):
 
         if not isinstance(camera, pm.nt.Camera):
             raise TypeError(
-                "%s.camera should be a Maya camera, not %s"
-                % (cls.__name__, camera.__class__.__name__)
+                f"{cls.__name__}.camera should be a Maya camera, "
+                f"not {camera.__class__.__name__}"
             )
 
         return camera
@@ -3217,7 +3220,9 @@ class LightingSceneBuilder(object):
                     ][rig_variant_name]
                     found_cacheable_attr_value = True
                 else:
-                    print("rig_variant_name not in self.rig_to_cacheable_lut[rig_task_id_as_str] !!!!!")
+                    print(
+                        "rig_variant_name not in self.rig_to_cacheable_lut[rig_task_id_as_str] !!!!!"
+                    )
 
             if not found_cacheable_attr_value:
                 print("not found_cacheable_attr_value")
@@ -3240,9 +3245,11 @@ class LightingSceneBuilder(object):
             cacheable_attr_value_with_copy_number = "{}{}".format(
                 cacheable_attr_value, copy_number
             )
-            print("cacheable_attr_value_with_copy_number: {}".format(
-                cacheable_attr_value_with_copy_number
-            ))
+            print(
+                "cacheable_attr_value_with_copy_number: {}".format(
+                    cacheable_attr_value_with_copy_number
+                )
+            )
 
             non_renderable_objects = []
             look_dev_variant_name = None

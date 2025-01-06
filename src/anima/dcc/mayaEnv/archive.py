@@ -209,7 +209,7 @@ sourceimages/3dPaintTextures"""
                     "{}/{}".format(
                         scenes_folder_lut.get(ref_ext, refs_folder),
                         os.path.basename(ref_path),
-                    )
+                    ),
                 )
 
             # now write all the data back to a new temp scene
@@ -255,9 +255,7 @@ sourceimages/3dPaintTextures"""
                 else:
                     # TODO: Update this to also catch frames that doesn't start from
                     #       1001.
-                    image_file_paths = glob.glob(
-                        path.replace(".1001.", ".*.")
-                    )
+                    image_file_paths = glob.glob(path.replace(".1001.", ".*."))
 
                 for image_file_path in image_file_paths:
                     logger.debug(image_file_path)
@@ -364,8 +362,10 @@ sourceimages/3dPaintTextures"""
                 )
 
             if not versions:
-                print("no version found in the same project, "
-                      "looking in to other projects")
+                print(
+                    "no version found in the same project, "
+                    "looking in to other projects"
+                )
                 # try to look in to all projects, order by Project.date_created
                 versions = (
                     Version.query.join(Task, Version.task_id == Task.id)

@@ -33,9 +33,11 @@ class Photoshop(DCCBase):
 
         if not isinstance(version, Version):
             raise RuntimeError(
-                '"version" argument in %s.save_as() should be a'
-                "stalker.models.version.Version instance, not %s"
-                % (self.__class__.__name__, version.__class__.__name__)
+                '"version" argument in {}.save_as() should be a'
+                "stalker.models.version.Version instance, not {}".format(
+                    self.__class__.__name__,
+                    version.__class__.__name__,
+                )
             )
 
         version.update_paths()
@@ -78,9 +80,10 @@ class Photoshop(DCCBase):
 
         if not isinstance(version, Version):
             raise RuntimeError(
-                '"version" argument in %s.save_as() should be a'
-                "stalker.models.version.Version instance, not %s"
-                % (self.__class__.__name__, version.__class__.__name__)
+                '"version" argument in {}.save_as() should be a'
+                "stalker.models.version.Version instance, not {}".format(
+                    self.__class__.__name__, version.__class__.__name__
+                )
             )
 
         version.update_paths()
@@ -151,12 +154,12 @@ class Photoshop(DCCBase):
             # no active document
             return None
 
-        logger.debug("full_path : %s" % full_path)
+        logger.debug(f"full_path : {full_path}")
         # try to get it from the current open scene
         if full_path != "":
             logger.debug("trying to get the version from current file")
             version = self.get_version_from_full_path(full_path)
-            logger.debug("version from current file: %s" % version)
+            logger.debug(f"version from current file: {version}")
 
         return version
 
@@ -189,6 +192,6 @@ class Photoshop(DCCBase):
                 if version is not None:
                     break
 
-            logger.debug("version from recent files is: %s" % version)
+            logger.debug(f"version from recent files is: {version}")
 
         return version

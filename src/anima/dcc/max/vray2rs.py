@@ -58,9 +58,11 @@ CONVERSION_SPEC_SHEET = {
             # 'refraction_useInterpolation': '',
             # 'refraction_dispersion': 'refr_abbe',
             "refraction_dispersion_on": {
-                "refr_abbe": lambda x, y: y.ParameterBlock.refraction_dispersion.Value
-                if ((x - 1.0) / 149.0)
-                else 0  # VRay uses a value between 1-150
+                "refr_abbe": lambda x, y: (
+                    y.ParameterBlock.refraction_dispersion.Value
+                    if ((x - 1.0) / 149.0)
+                    else 0
+                )  # VRay uses a value between 1-150
                 # fit it in to 0-100 range
             },
             # 'translucency_on': '',
@@ -600,7 +602,7 @@ def use_front_material(source_node):
     for parent, param, i in ConversionManager.outputs(source_node):
         # param.Value = front_material
         ConversionManager.connect_attr(
-            front_material, parent, "%s[%i]" % (param.GetName(), i)
+            front_material, parent, "{}[{}]".format(param.GetName(), i)
         )
 
     # also assign the front material to all of the dependencies.
@@ -746,7 +748,7 @@ class ConversionManager(ConversionManagerBase):
         target_node_pymxs = pymxs.runtime.getMEditMaterial(2)
 
         # Then execute the connection script
-        exec("target_node_pymxs.%s = source_node_pymxs" % target_parameter)
+        exec(f"target_node_pymxs.{target_parameter} = source_node_pymxs")
         # This should've worked!
 
     @classmethod
@@ -988,7 +990,7 @@ class ConversionManager(ConversionManagerBase):
         for old_node, new_node in new_nodes:
             # get the INodes using directly the old_node as material
             # Recursively assign the new material to the objects
-            print("cleaning up: %s" % old_node.GetName())
+            print(f"cleaning up: {old_node.GetName()}")
             iteration = 0
             while True:
                 iteration += 1
@@ -996,7 +998,7 @@ class ConversionManager(ConversionManagerBase):
                 try:
                     inode_name = inode.GetName()
                     inode_mat = inode.GetMaterial()
-                    print("updating material of (%i): %s" % (iteration, inode_name))
+                    print(f"updating material of ({iteration}): {inode_name}")
                 except RuntimeError:
                     break
                 if inode_mat.GetName() == old_node.GetName():
@@ -1030,7 +1032,7 @@ class ConversionManager(ConversionManagerBase):
                                     self.connect_attr(
                                         new_node,
                                         parent,
-                                        "%s[%i]" % (param.GetName(), i),
+                                        "{}[{}]".format(param.GetName(), i),
                                     )
                                 else:
                                     # do it with pymxs
@@ -1040,8 +1042,7 @@ class ConversionManager(ConversionManagerBase):
                                     # material editor
                                     print("using pymxs for complex connection!")
                                     print(
-                                        "%s --> %s.%s[%s]"
-                                        % (
+                                        "{} --> {}.{}[{}]".format(
                                             new_node.GetFullName(),
                                             parent.GetName(),
                                             param.GetName(),
@@ -1052,7 +1053,7 @@ class ConversionManager(ConversionManagerBase):
                                     self.connect_attr(
                                         new_node,
                                         parent,
-                                        "%s[%i]" % (param.GetName(), i),
+                                        "{}[{}]".format(param.GetName(), i),
                                     )
 
                                     # # put the material to slot 1. which is slot
@@ -1079,8 +1080,7 @@ class ConversionManager(ConversionManagerBase):
 
                             except TypeError:
                                 print(
-                                    "Could not connect: %s --> %s.%s[%s]"
-                                    % (
+                                    "Could not connect: {} --> {}.{}[{}]".format(
                                         new_node.GetFullName(),
                                         parent.GetName(),
                                         param.GetName(),

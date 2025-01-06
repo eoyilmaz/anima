@@ -31,7 +31,7 @@ class Animation(object):
 
         # duplicate the input graph
         node = pm.duplicate(selected_node, un=1, rr=1)[0]
-        node.rename("%s_Equalized#" % selected_node.name())
+        node.rename(f"{selected_node.name()}_Equalized#")
 
         # create speed attribute
         if not node.hasAttr("speed"):
@@ -156,7 +156,7 @@ class Animation(object):
         """calls the mel script oySmoothComponentAnimation"""
         # get the frame range
         frame_range = pm.textFieldButtonGrp(ui_item, q=1, tx=1)
-        pm.mel.eval("oySmoothComponentAnimation(%s)" % frame_range)
+        pm.mel.eval(f"oySmoothComponentAnimation({frame_range})")
 
     @classmethod
     def smooth_selected_keyframes(cls, iteration=10):
@@ -195,12 +195,12 @@ class Animation(object):
         """creates alembic cache from selected nodes"""
         import os
 
-        root_flag = "-root %(node)s"
+        root_flag = "-root {node}"
         mel_command = (
-            'AbcExport -j "-frameRange %(start)s %(end)s -ro '
+            'AbcExport -j "-frameRange {start} {end} -ro '
             "-stripNamespaces -uvWrite -wholeFrameGeo -worldSpace "
-            "%(roots)s "
-            '-file %(path)s";'
+            "{roots} "
+            '-file {path}";'
         )
 
         current_path = pm.workspace.path
@@ -243,18 +243,18 @@ class Animation(object):
             # generate root flags
             roots = []
             for node in nodes:
-                roots.append(root_flag % {"node": node.fullPath()})
+                roots.append(root_flag.format(node=node.fullPath()))
 
             roots_as_string = " ".join(roots)
 
             start = int(pm.playbackOptions(q=1, minTime=1))
             end = int(pm.playbackOptions(q=1, maxTime=1))
-            rendered_mel_command = mel_command % {
-                "start": start,
-                "end": end,
-                "roots": roots_as_string,
-                "path": abc_full_path,
-            }
+            rendered_mel_command = mel_command.format(
+                start=start,
+                end=end,
+                roots=roots_as_string,
+                path=abc_full_path,
+            )
             pm.mel.eval(rendered_mel_command)
 
     @classmethod

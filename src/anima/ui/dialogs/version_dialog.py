@@ -87,7 +87,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """The main version creation dialog for the pipeline.
 
     This is the main interface that the users of the ``anima`` will use to
-    create a new :class:`~stalker.models.version.Version`\ s.
+    create a new :class:`~stalker.models.version.Version` instances.
 
     It is possible to run the version_dialog UI in read-only mode where the UI
     is created only for choosing previous versions. There will only be one
@@ -97,7 +97,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
       ``open``, ``save``, ``export``,  ``import`` or ``reference``. The most
       basic way to do this is to pass an instance of a class which is derived
       from the :class:`~anima.dcc.base.DCCBase` which has all this
-      methods but produces ``NotImplementedError``\ s if the child class has
+      methods but produces ``NotImplementedError``s if the child class has
       not implemented these actions.
 
       The main duty of the Environment object is to introduce the host
@@ -140,7 +140,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.mode = None
         self.window_title = ""
         self.chosen_version = None
-        self.environment_name_format = "%n (%e)"
+        self.environment_name_format = "{name} ({extension})"
         # create the project attribute in projects_combo_box
         self.current_dialog = None
 
@@ -773,19 +773,19 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """updates the window title depending on the DCC and mode"""
         import anima
 
-        window_title = "Anima Pipeline v%s " % anima.__version__
+        window_title = f"Anima Pipeline v{anima.__version__} "
 
         if self.dcc:
-            window_title = "%s | %s" % (window_title, self.dcc.name)
+            window_title = f"{window_title} | {self.dcc.name}"
         else:
-            window_title = "%s | No Environment" % window_title
+            window_title = f"{window_title} | No Environment"
 
         if self.mode == SAVE_AS_MODE:
-            window_title = "%s | Version: Save-As Mode" % window_title
+            window_title = f"{window_title} | Version: Save-As Mode"
         elif self.mode == OPEN_MODE:
-            window_title = "%s | Version: Open Mode" % window_title
+            window_title = f"{window_title} | Version: Open Mode"
         elif self.mode == SAVE_AS_AND_OPEN_MODE:
-            window_title = "%s | Version: Save As & Open Mode" % window_title
+            window_title = f"{window_title} | Version: Save As & Open Mode"
 
         # change the window title
         self.setWindowTitle(window_title)
@@ -945,9 +945,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.clear_recent_file_push_button_clicked
         )
 
-        self.show_completed_check_box.stateChanged.connect(
-            self.fill_tasks_tree_view
-        )
+        self.show_completed_check_box.stateChanged.connect(self.fill_tasks_tree_view)
 
         logger.debug("finished setting up interface signals")
 
@@ -1063,9 +1061,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                             self,
                             "Error",
                             "This version is referenced by the following "
-                            "tasks:<br><br>%s<br><br>"
-                            "So, you can not un-publish it!"
-                            % "<br>".join(list(map(lambda x: x.name, related_tasks))),
+                            "tasks:<br><br>{}<br><br>"
+                            "So, you can not un-publish it!".format(
+                                "<br>".join(list(map(lambda x: x.name, related_tasks))),
+                            ),
                         )
                     else:
                         version.is_published = False
@@ -1092,9 +1091,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                             self,
                             "Error",
                             "This version is referenced by the following "
-                            "tasks:<br><br>%s<br><br>"
-                            "So, you can not delete it!"
-                            % "<br>".join(list(map(lambda x: x.name, related_tasks))),
+                            "tasks:<br><br>{}<br><br>"
+                            "So, you can not delete it!".format(
+                                "<br>".join(list(map(lambda x: x.name, related_tasks)))
+                            ),
                         )
                     else:
                         # Ask user if he/she is sure
@@ -1132,7 +1132,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     utils.open_browser_in_location(path)
                 except IOError:
                     QtWidgets.QMessageBox.critical(
-                        self, "Error", "Path doesn't exists:\n%s" % path
+                        self, "Error", f"Path doesn't exists:\n{path}"
                     )
             elif choice == "Browse Outputs...":
                 path = os.path.join(
@@ -1142,7 +1142,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     utils.open_browser_in_location(path)
                 except IOError:
                     QtWidgets.QMessageBox.critical(
-                        self, "Error", "Path doesn't exists:\n%s" % path
+                        self, "Error", f"Path doesn't exists:\n{path}"
                     )
             elif choice == "Upload Output...":
                 # upload output to the given version
@@ -1322,6 +1322,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         from sqlalchemy import alias
         from stalker import Task, Project, Status
         from stalker.db.session import DBSession
+
         inner_tasks = alias(Task.__table__)
         subquery = DBSession.query(inner_tasks.c.id).filter(
             inner_tasks.c.project_id == Project.id
@@ -1363,7 +1364,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if task_ids:
             task_id = task_ids[0]
 
-        logger.debug("task_id : %s" % task_id)
+        logger.debug(f"task_id : {task_id}")
 
         # update the thumbnail
         # TODO: do it in another thread
@@ -1402,15 +1403,15 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                 takes = get_unique_variant_names(
                     task_id,
-                    include_reprs=self.repr_as_separate_takes_check_box.isChecked()
+                    include_reprs=self.repr_as_separate_takes_check_box.isChecked(),
                 )
                 takes = sorted(takes, key=lambda x: x.lower())
 
-            logger.debug("len(takes) from db: %s" % len(takes))
+            logger.debug(f"len(takes) from db: {len(takes)}")
 
             logger.debug("adding the takes from db")
             self.takes_list_widget.variant_names = takes
-            self.takes_label.setText("Takes (%s)" % len(takes))
+            self.takes_label.setText(f"Takes ({len(takes)})")
 
     def _set_defaults(self):
         """sets up the defaults for the interface"""
@@ -1499,7 +1500,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # get the last version from the environment
         version_from_env = dcc.get_last_version()
 
-        logger.debug("version_from_env: %s" % version_from_env)
+        logger.debug(f"version_from_env: {version_from_env}")
         self.restore_ui(version_from_env)
 
         if is_external_env:
@@ -1523,13 +1524,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :param [Version, Task] entity: Stalker Version or Task instance
           instance
         """
-        logger.debug("restoring ui with the given entity: %s", entity)
+        logger.debug(f"restoring ui with the given entity: {entity}")
 
         # quit if entity is None
         if entity is None:
             return
 
         from stalker import Task, Version
+
         version = None
         task = None
         if isinstance(entity, Version):
@@ -1615,7 +1617,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         variant_name = self.takes_list_widget.current_variant_name
 
         if variant_name != "":
-            logger.debug("variant_name: %s" % variant_name)
+            logger.debug(f"variant_name: {variant_name}")
         else:
             return
 
@@ -1694,19 +1696,19 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         try:
             version = Version(
-                task=task, created_by=user, variant_name=variant_name, description=description
+                task=task,
+                created_by=user,
+                variant_name=variant_name,
+                description=description,
             )
             version.is_published = publish
             DBSession.add(version)
         except (TypeError, ValueError) as e:
             # pop up an Message Dialog to give the error message
             try:
-                error_message = "%s" % e
+                error_message = f"{e}"
             except UnicodeEncodeError:
-                if sys.version_info[0] >= 3:
-                    error_message = str(e)
-                else:
-                    error_message = unicode(e)
+                error_message = str(e)
             QtWidgets.QMessageBox.critical(self, "Error", error_message)
 
             DBSession.rollback()
@@ -1731,7 +1733,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             try:
                 self.dcc.export_as(new_version)
             except RuntimeError as e:
-                error_message = "%s" % e
+                error_message = f"{e}"
                 print(error_message)
                 QtWidgets.QMessageBox.critical(self, "Error", error_message)
                 from stalker.db.session import DBSession
@@ -1746,7 +1748,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     QtWidgets.QMessageBox.information(
                         self,
                         "Export",
-                        "%s\n\n has been exported correctly!" % new_version.filename,
+                        f"{new_version.filename}\n\n" "has been exported correctly!",
                     )
 
     def save_as_push_button_clicked(self):
@@ -1828,25 +1830,25 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         from stalker.db.session import DBSession
 
         is_external_env = False
-        environment = self.dcc
-        if not environment:
+        dcc = self.dcc
+        if not dcc:
             # get the environment
             dcc_name = self.dcc_combo_box.currentText()
             from anima.dcc.external import ExternalDCCFactory
 
-            env_factory = ExternalDCCFactory()
-            environment = env_factory.get_env(dcc_name, self.environment_name_format)
+            dcc_factory = ExternalDCCFactory()
+            dcc = dcc_factory.get_env(dcc_name, self.environment_name_format)
             is_external_env = True
-            if not environment:
-                logger.debug("no DCC found with name: %s" % dcc_name)
+            if not dcc:
+                logger.debug(f"no DCC found with name: {dcc_name}")
                 DBSession.rollback()
                 return
-            logger.debug("env: %s" % environment.name)
+            logger.debug("dcc: {environment.name}")
         else:
             # check if the version the user is trying to create and the version
             # that is currently open in the current environment belongs to the
             # same task
-            current_version = environment.get_current_version()
+            current_version = dcc.get_current_version()
             if current_version and current_version.task != new_version.task:
                 # ask the user if he/she is sure about that
                 answer = QtWidgets.QMessageBox.question(
@@ -1854,11 +1856,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     "Possible Mistake?",
                     "Saving under different Task<br>"
                     "<br>"
-                    "current version: <b>%s</b><br>"
-                    "new version    : <b>%s</b><br>"
+                    "current version: <b>{}</b><br>"
+                    "new version    : <b>{}</b><br>"
                     "<br>"
-                    "Are you sure?"
-                    % (current_version.nice_name, new_version.nice_name),
+                    "Are you sure?".format(
+                        current_version.nice_name, new_version.nice_name
+                    ),
                     QtWidgets.QMessageBox.Yes,
                     QtWidgets.QMessageBox.No,
                 )
@@ -1870,7 +1873,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         if version.is_published:
             # check if this is the first version
-            logger.debug("version.version_number: %s" % version.version_number)
+            logger.debug(f"version.version_number: {version.version_number}")
             if version.version_number == 1:
                 # it is not allowed to publish the first version
                 QtWidgets.QMessageBox.critical(
@@ -1887,15 +1890,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         from anima.exc import PublishError
 
         try:
-            environment.save_as(new_version, **kwargs)
+            dcc.save_as(new_version, **kwargs)
         except (RuntimeError, PublishError) as e:
             try:
-                error_message = "%s" % e
+                error_message = f"{e}"
             except UnicodeEncodeError:
-                if sys.version_info[0] >= 3:
-                    error_message = str(e)
-                else:
-                    error_message = unicode(e)
+                error_message = str(e)
 
             print(error_message)
             QtWidgets.QMessageBox.critical(self, "Error", error_message)
@@ -1908,7 +1908,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             clipboard = QtWidgets.QApplication.clipboard()
 
             logger.debug(
-                "new_version.absolute_full_path: %s" % new_version.absolute_full_path
+                f"new_version.absolute_full_path: {new_version.absolute_full_path}"
             )
 
             v_path = os.path.normpath(new_version.absolute_full_path)
@@ -1919,8 +1919,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QMessageBox.warning(
                 self,
                 "Path Generated",
-                "A new Version is created at:\n\n%s\n\n"
-                "And the path is copied to your clipboard!!!" % v_path,
+                f"A new Version is created at:\n\n{v_path}\n\n"
+                "And the path is copied to your clipboard!!!",
                 QtWidgets.QMessageBox.Ok,
             )
 
@@ -1934,9 +1934,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QMessageBox.critical(
                 self,
                 "Error",
-                "Something went wrong with %s\n"
+                f"Something went wrong with {dcc.name}\n"
                 "and the file is not created!\n\n"
-                "Please save again!" % environment.name,
+                "Please save again!",
             )
             DBSession.rollback()
         DBSession.commit()
@@ -2067,7 +2067,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QMessageBox.critical(
                 self,
                 "File Doesn't Exist!",
-                "File doesn't exist!:<br><br>%s" % version.absolute_full_path,
+                f"File doesn't exist!:<br><br>{version.absolute_full_path}",
             )
             return False
         return True
@@ -2096,7 +2096,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not self.check_version_file_exists(previous_version):
             return
 
-        logger.debug("referencing version with id: %s" % previous_version.id)
+        logger.debug(f"referencing version with id: {previous_version.id}")
         # call the environments reference method
         if self.dcc is not None:
             # get the use namespace state
@@ -2106,7 +2106,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # .filter(Version.parent == previous_version)\
             all_repr_count = (
                 Version.query.filter(Version.task == previous_version.task)
-                .filter(Version.variant_name.ilike(previous_version.variant_name + "@%"))
+                .filter(
+                    Version.variant_name.ilike(f"{previous_version.variant_name}@%")
+                )
                 .count()
             )
 
@@ -2161,8 +2163,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     QtWidgets.QMessageBox.information(
                         self,
                         "Reference",
-                        "%s\n\n has been referenced correctly!"
-                        % previous_version.filename,
+                        f"{previous_version.filename}"
+                        "\n\n has been referenced correctly!",
                         QtWidgets.QMessageBox.Ok,
                     )
             except RuntimeError as e:
@@ -2251,7 +2253,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         thumbnail_full_path = ui_utils.choose_thumbnail(
             self,
             start_path=task.absolute_path,
-            dialog_title="Choose Thumbnail for: %s" % task.name,
+            dialog_title=f"Choose Thumbnail for: {task.name}",
         )
 
         # if the thumbnail_full_path is empty do not do anything
@@ -2334,6 +2336,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 # path is task id
                 task_id = int(path)
                 from stalker import Task
+
                 task = Task.query.filter(Task.id == task_id).first()
                 self.restore_ui(task)
             else:

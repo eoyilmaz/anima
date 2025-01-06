@@ -610,9 +610,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         self.setHorizontalHeaderLabels(self.horizontal_labels)
 
         for task in tasks:
-            task_item = TaskItem(
-                0, 4, task=task, show_takes=self.show_takes
-            )
+            task_item = TaskItem(0, 4, task=task, show_takes=self.show_takes)
             task_item.parent = None
             task_item.setColumnCount(4)
 
@@ -663,7 +661,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
 
     def hasChildren(self, index):
         """Return if the item with the index has children.
-D
+
         Args:
             index: The model index.
 

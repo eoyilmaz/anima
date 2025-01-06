@@ -13,7 +13,7 @@ RENDER_FILE_PATH_STORAGE = ""
 class Blender(DCCBase):
     """The Blender DCC wrapper"""
 
-    name = "Blender%s.%s" % (bpy.app.version[0:2])
+    name = "Blender{}.{}".format(*bpy.app.version[0:2])
     representations = ["Base"]
 
     has_publishers = True
@@ -180,7 +180,7 @@ class Blender(DCCBase):
         for key in files:
             if files[key]:
                 bpy.ops.wm.append(
-                    directory="%s/%s/" % (version.absolute_full_path, key),
+                    directory=f"{version.absolute_full_path}/{key}/",
                     files=files[key],
                 )
 
@@ -238,7 +238,7 @@ class Blender(DCCBase):
         for key in files:
             if files[key]:
                 bpy.ops.wm.link(
-                    directory="%s/%s/" % (version.absolute_full_path, key),
+                    directory=f"{version.absolute_full_path}/{key}/",
                     files=files[key],
                 )
 
@@ -254,9 +254,7 @@ class Blender(DCCBase):
             file_path = lib.filepath
             if file_path.startswith("//"):  # This is a relative path
                 curr_blend_file_dir = os.path.dirname(bpy.data.filepath)
-                file_full_path = os.path.normpath(
-                    "%s%s" % (curr_blend_file_dir, file_path)
-                )
+                file_full_path = os.path.normpath(f"{curr_blend_file_dir}{file_path}")
             else:
                 file_full_path = os.path.normpath(file_path)
             version = self.get_version_from_full_path(file_full_path)
@@ -276,9 +274,7 @@ class Blender(DCCBase):
             file_path = lib.filepath
             if file_path.startswith("//"):  # This is a relative path
                 curr_blend_file_dir = os.path.dirname(bpy.data.filepath)
-                file_full_path = os.path.normpath(
-                    "%s%s" % (curr_blend_file_dir, file_path)
-                )
+                file_full_path = os.path.normpath(f"{curr_blend_file_dir}{file_path}")
             else:
                 file_full_path = os.path.normpath(file_path)
             version = self.get_version_from_full_path(file_full_path)
@@ -287,9 +283,11 @@ class Blender(DCCBase):
                     latest_published_version = version.latest_published_version
 
                     # make it relative again
-                    new_file_path = "//%s" % os.path.relpath(
-                        latest_published_version.absolute_full_path,
-                        os.path.dirname(bpy.data.filepath),
+                    new_file_path = "//{}".format(
+                        os.path.relpath(
+                            latest_published_version.absolute_full_path,
+                            os.path.dirname(bpy.data.filepath),
+                        )
                     )
                     lib.filepath = new_file_path
                     lib.reload()
@@ -432,10 +430,10 @@ class Blender(DCCBase):
             else:
                 version_sig_name = "playblast"
 
-        output_filename_template = "//Outputs/playblast/%(version_sig_name)s.#"
-        rendered_output_filename = output_filename_template % {
-            "version_sig_name": version_sig_name
-        }
+        output_filename_template = "//Outputs/playblast/{version_sig_name}.#"
+        rendered_output_filename = output_filename_template.format(
+            version_sig_name=version_sig_name
+        )
 
         bpy.context.scene.render.filepath = rendered_output_filename
 
@@ -466,7 +464,10 @@ class Blender(DCCBase):
 
             movie_file_rel_path = rendered_output_filename.replace(
                 "#",
-                "%s-%s" % (bpy.context.scene.frame_start, bpy.context.scene.frame_end),
+                "{}-{}".format(
+                    bpy.context.scene.frame_start,
+                    bpy.context.scene.frame_end,
+                ),
             )[
                 2:
             ]  # removes the '//' at the beginning of the file path

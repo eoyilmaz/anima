@@ -141,26 +141,23 @@ class FitStencilToView(Operator):
         region = context.region
         region_view_3d = context.region_data
         print(
-            "region_view_3d.view_camera_offset   : %s"
-            % region_view_3d.view_camera_offset
+            f"region_view_3d.view_camera_offset   : {region_view_3d.view_camera_offset}"
         )
         print(
-            "region_view_3d.view_camera_offset[0]: %s"
-            % region_view_3d.view_camera_offset[0]
+            f"region_view_3d.view_camera_offset[0]: {region_view_3d.view_camera_offset[0]}"
         )
         print(
-            "region_view_3d.view_camera_offset[1]: %s"
-            % region_view_3d.view_camera_offset[1]
+            f"region_view_3d.view_camera_offset[1]: {region_view_3d.view_camera_offset[1]}"
         )
         print(
-            "region_view_3d.view_camera_zoom     : %s" % region_view_3d.view_camera_zoom
+            f"region_view_3d.view_camera_zoom     : {region_view_3d.view_camera_zoom}"
         )
         print("-------------------")
         print("Estimated goal values:")
-        print("stencil_dimension.x                   : %s" % stencil_dimension.x)
-        print("stencil_dimension.y                   : %s" % stencil_dimension.y)
-        print("stencil_pos.x                         : %s" % stencil_pos.x)
-        print("stencil_pos.y                         : %s" % stencil_pos.y)
+        print(f"stencil_dimension.x                   : {stencil_dimension.x}")
+        print(f"stencil_dimension.y                   : {stencil_dimension.y}")
+        print(f"stencil_pos.x                         : {stencil_pos.x}")
+        print(f"stencil_pos.y                         : {stencil_pos.y}")
         print("-------------------")
 
         bpy.ops.view3d.view_center_camera()

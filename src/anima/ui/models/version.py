@@ -21,34 +21,32 @@ class VersionItem(QtGui.QStandardItem):
 
     def __init__(self, *args, **kwargs):
         QtGui.QStandardItem.__init__(self, *args, **kwargs)
-        logger.debug("VersionItem.__init__() is started for item: %s" % self.text())
+        logger.debug(f"VersionItem.__init__() is started for item: {self.text()}")
         self.loaded = False
         self.version = None
         self.parent = None
         self.pseudo_model = None
         self.fetched_all = False
         self.setEditable(False)
-        logger.debug("VersionItem.__init__() is finished for item: %s" % self.text())
+        logger.debug(f"VersionItem.__init__() is finished for item: {self.text()}")
 
     def clone(self):
         """returns a copy of this item"""
-        logger.debug("VersionItem.clone() is started for item: %s" % self.text())
+        logger.debug(f"VersionItem.clone() is started for item: {self.text()}")
         new_item = VersionItem()
         new_item.version = self.version
         new_item.parent = self.parent
         new_item.fetched_all = self.fetched_all
-        logger.debug("VersionItem.clone() is finished for item: %s" % self.text())
+        logger.debug(f"VersionItem.clone() is finished for item: {self.text()}")
         return new_item
 
     def canFetchMore(self):
-        logger.debug("VersionItem.canFetchMore() is started for item: %s" % self.text())
+        logger.debug(f"VersionItem.canFetchMore() is started for item: {self.text()}")
         if self.version and not self.fetched_all:
             return_value = bool(self.version.inputs)
         else:
             return_value = False
-        logger.debug(
-            "VersionItem.canFetchMore() is finished for item: %s" % self.text()
-        )
+        logger.debug(f"VersionItem.canFetchMore() is finished for item: {self.text()}")
         return return_value
 
     @classmethod
@@ -97,9 +95,7 @@ class VersionItem(QtGui.QStandardItem):
         # Nice Name
         nice_name_item = QtGui.QStandardItem()
         nice_name_item.toolTip()
-        nice_name_item.setText(
-            "%s_v%s" % (version.nice_name, ("%s" % version.version_number).zfill(3))
-        )
+        nice_name_item.setText(f"{version.nice_name}_v{version.version_number:03d}")
         nice_name_item.setEditable(False)
         nice_name_item.version = version
         nice_name_item.action = action
@@ -115,7 +111,7 @@ class VersionItem(QtGui.QStandardItem):
 
         # Current
         current_version_item = QtGui.QStandardItem()
-        current_version_item.setText("%s" % version.version_number)
+        current_version_item.setText(f"{version.version_number}")
         current_version_item.setEditable(False)
         current_version_item.version = version
         current_version_item.action = action
@@ -131,9 +127,7 @@ class VersionItem(QtGui.QStandardItem):
 
         latest_published_version_text = "No Published Version"
         if latest_published_version:
-            latest_published_version_text = (
-                "%s" % latest_published_version.version_number
-            )
+            latest_published_version_text = f"{latest_published_version.version_number}"
         latest_published_version_item.setText(latest_published_version_text)
         set_item_color(latest_published_version_item, font_color)
 
@@ -185,7 +179,7 @@ class VersionItem(QtGui.QStandardItem):
         ]
 
     def fetchMore(self):
-        logger.debug("VersionItem.fetchMore() is started for item: %s" % self.text())
+        logger.debug(f"VersionItem.fetchMore() is started for item: {self.text()}")
 
         if self.canFetchMore():
             # model = self.model() # This will cause a SEGFAULT
@@ -197,15 +191,15 @@ class VersionItem(QtGui.QStandardItem):
                 )
 
             self.fetched_all = True
-        logger.debug("VersionItem.fetchMore() is finished for item: %s" % self.text())
+        logger.debug(f"VersionItem.fetchMore() is finished for item: {self.text()}")
 
     def hasChildren(self):
-        logger.debug("VersionItem.hasChildren() is started for item: %s" % self.text())
+        logger.debug(f"VersionItem.hasChildren() is started for item: {self.text()}")
         if self.version:
             return_value = bool(self.version.inputs)
         else:
             return_value = False
-        logger.debug("VersionItem.hasChildren() is finished for item: %s" % self.text())
+        logger.debug(f"VersionItem.hasChildren() is finished for item: {self.text()}")
         return return_value
 
     def type(self, *args, **kwargs):
@@ -250,32 +244,28 @@ class VersionTreeModel(QtGui.QStandardItemModel):
         logger.debug("VersionTreeModel.populateTree() is finished")
 
     def canFetchMore(self, index):
-        logger.debug("VersionTreeModel.canFetchMore() is started for index: %s" % index)
+        logger.debug(f"VersionTreeModel.canFetchMore() is started for index: {index}")
         if not index.isValid():
             return_value = False
         else:
             item = self.itemFromIndex(index)
             return_value = item.canFetchMore()
-        logger.debug(
-            "VersionTreeModel.canFetchMore() is finished for index: %s" % index
-        )
+        logger.debug(f"VersionTreeModel.canFetchMore() is finished for index: {index}")
         return return_value
 
     def fetchMore(self, index):
         """fetches more elements"""
-        logger.debug("VersionTreeModel.canFetchMore() is started for index: %s" % index)
+        logger.debug(f"VersionTreeModel.canFetchMore() is started for index: {index}")
         if index.isValid():
             item = self.itemFromIndex(index)
             item.fetchMore()
-        logger.debug(
-            "VersionTreeModel.canFetchMore() is finished for index: %s" % index
-        )
+        logger.debug(f"VersionTreeModel.canFetchMore() is finished for index: {index}")
 
     def hasChildren(self, index):
         """returns True or False depending on to the index and the item on the
         index
         """
-        logger.debug("VersionTreeModel.hasChildren() is started for index: %s" % index)
+        logger.debug(f"VersionTreeModel.hasChildren() is started for index: {index}")
         if not index.isValid():
             return_value = len(self.root_versions) > 0
         else:
@@ -286,5 +276,5 @@ class VersionTreeModel(QtGui.QStandardItemModel):
                 return_value = False
                 if item:
                     return_value = item.hasChildren()
-        logger.debug("VersionTreeModel.hasChildren() is finished for index: %s" % index)
+        logger.debug(f"VersionTreeModel.hasChildren() is finished for index: {index}")
         return return_value

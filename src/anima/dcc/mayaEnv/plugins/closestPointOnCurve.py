@@ -7,6 +7,7 @@ import maya.OpenMayaMPx as OpenMayaMPx
 kPluginNodeTypeName = "spClosestPointOnCurve"
 cpocPluginId = OpenMaya.MTypeId(0x00349)
 
+
 # Node definition
 class closestPointOnCurve(OpenMayaMPx.MPxNode):
     # the plugs
@@ -242,7 +243,7 @@ def initializePlugin(mobject):
             kPluginNodeTypeName, cpocPluginId, nodeCreator, nodeInitializer
         )
     except:
-        sys.stderr.write("Failed to register node: %s" % kPluginNodeTypeName)
+        sys.stderr.write(f"Failed to register node: {kPluginNodeTypeName}")
         raise
 
 
@@ -252,5 +253,5 @@ def uninitializePlugin(mobject):
     try:
         mplugin.deregisterNode(cpocPluginId)
     except:
-        sys.stderr.write("Failed to deregister node: %s" % kPluginNodeTypeName)
+        sys.stderr.write(f"Failed to deregister node: {kPluginNodeTypeName}")
         raise

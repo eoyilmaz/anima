@@ -5,18 +5,14 @@ from shapes import Shape
 
 
 class DrawNode(object):
-    """ """
+    """Draw node that draws the node.
 
-    # TODO: add documentation here!
+    Args:
+        drawer (str):
+        name (str):
+    """
 
     def __init__(self, drawer, name):
-
-        # Drawn Node
-        """
-
-        :param drawer:
-        :param name:
-        """
 
         self._drawnNode = None
 
@@ -186,39 +182,39 @@ class DrawNode(object):
         tempConst = self.inputPoint(constrained, maintainOff)
         pm.delete(tempConst)
 
-    # Create Parent Constrain
     def constrain(
         self, node_in, constType="point", targetType="constObj", maintainOff=0
     ):
+        """Create a parent constraint.
 
-        """
-        :param constType: It can bePoint Orient or Parent
-        :param targetType: It can be constObj or targetObj
-                if targetType is constObj node in object Constrain drawnNode
-                if targetType is targetObj drawnNode Constrain node in object
-        :param node_in: if it is 1 preserve the constrained object’s position
-        :param target: it should be constObj or targetObj
-        :param maintainOffset: if it is 1 preserve the constrained
-                object’s position
+        Args:
+            node_in (pm.nt.Node): The node.
+            constType (str): It can bePoint Orient or Parent
+            targetType (str): It can be constObj or targetObj if targetType is
+                constObj node in object Constrain drawnNode if targetType is
+                targetObj drawnNode Constrain node in object
+            target: it should be constObj or targetObj.
+            maintainOffset: if it is 1 preserve the constrained objects
+                position.
         """
         tempConst = None
         target, constrained, setObjType = self._validate_targetType(node_in, targetType)
 
-        if constType is "point":
+        if constType == "point":
             tempConst = pm.pointConstraint(target, constrained, mo=maintainOff)
-            if setObjType is "setConstrainedPoint":
+            if setObjType == "setConstrainedPoint":
                 self._constrainedPoint = tempConst
             else:
                 self._targetPoint = tempConst
-        elif constType is "orient":
-            tempConst = pm.orienConstraint(target, constrained, mo=maintainOff)
-            if setObjType is "setConstrainedPoint":
+        elif constType == "orient":
+            tempConst = pm.orientConstraint(target, constrained, mo=maintainOff)
+            if setObjType == "setConstrainedPoint":
                 self._constrainedOrient = tempConst
             else:
                 self._targetOrient = tempConst
-        elif constType is "parent":
+        elif constType == "parent":
             tempConst = pm.parentConstraint(target, constrained, mo=maintainOff)
-            if setObjType is "setConstrainedPoint":
+            if setObjType == "setConstrainedPoint":
                 self._constrainedParent = tempConst
             else:
                 self._targetParent = tempConst
@@ -232,10 +228,10 @@ class DrawNode(object):
         :param targetType:
         :return: :raise:
         """
-        if (targetType is not "constObj") and (targetType is not "targetObj"):
-            raise TypeError("%s parameter should be constObj or targetObj" % targetType)
+        if (targetType != "constObj") and (targetType != "targetObj"):
+            raise TypeError(f"{targetType} parameter should be constObj or targetObj")
 
-        elif targetType is "constObj":
+        elif targetType == "constObj":
             return node_in, self.drawnNode, "setConstrainedPoint"
         else:
             return self.drawnNode, node_in, "setTargetPoint"
@@ -243,7 +239,6 @@ class DrawNode(object):
     def temp_constrain(
         self, node_in, constType="point", targetType="constObj", maintainOff=0
     ):
-
         """
         :param constType: It can bePoint Orient or Parent
         :param targetType: It can be constObj or targetObj

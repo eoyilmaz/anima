@@ -414,8 +414,7 @@ class UserDashboardWidget(QtWidgets.QWidget, UserPropertyMixin):
         self.notes_scroll_area.setWidgetResizable(True)
         self.notes_scroll_area.setFixedWidth(275)
         self.notes_scroll_area.setSizePolicy(
-            QtWidgets.QSizePolicy.Fixed,
-            QtWidgets.QSizePolicy.Expanding
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding
         )
 
         self.notes_scroll_area_widget = QtWidgets.QWidget(self)
@@ -450,13 +449,12 @@ class UserDashboardWidget(QtWidgets.QWidget, UserPropertyMixin):
 
         # get the latest 50 notes of the users Tasks
         all_notes = (
-            DBSession
-            .query(Note)
+            DBSession.query(Note)
             .join(Entity_Notes, Entity_Notes.c.note_id == Note.id)
             .join(Task, Task.id == Entity_Notes.c.entity_id)
             .join(Task_Resources, Task.id == Task_Resources.c.task_id)
             .filter(Task_Resources.c.resource_id == self.user.id)
-            .filter(Note.name != 'Auto Extended Time')
+            .filter(Note.name != "Auto Extended Time")
             .order_by(Note.date_updated.desc())
             .limit(50)
             .all()
@@ -486,40 +484,40 @@ class UserTasksByStatusWidget(
     status_order = ["WFD", "RTS", "WIP", "PREV", "HREV", "DREV", "CMPL", "OH", "STOP"]
     status_colors = {
         "WFD": {
-            "bg": QtGui.QColor(0xcddce5),
+            "bg": QtGui.QColor(0xCDDCE5),
             "fg": QtGui.QColor(0x000000),
         },
         "RTS": {
-            "bg": QtGui.QColor(0xd15b47),
-            "fg": QtGui.QColor(0xffffff),
+            "bg": QtGui.QColor(0xD15B47),
+            "fg": QtGui.QColor(0xFFFFFF),
         },
         "WIP": {
-            "bg": QtGui.QColor(0xffc657),
-            "fg": QtGui.QColor(0xffffff),
+            "bg": QtGui.QColor(0xFFC657),
+            "fg": QtGui.QColor(0xFFFFFF),
         },
         "PREV": {
-            "bg": QtGui.QColor(0x6fb3e0),
-            "fg": QtGui.QColor(0xffffff),
+            "bg": QtGui.QColor(0x6FB3E0),
+            "fg": QtGui.QColor(0xFFFFFF),
         },
         "HREV": {
-            "bg": QtGui.QColor(0x6f3cc4),
-            "fg": QtGui.QColor(0xffffff),
+            "bg": QtGui.QColor(0x6F3CC4),
+            "fg": QtGui.QColor(0xFFFFFF),
         },
         "DREV": {
-            "bg": QtGui.QColor(0x6f3cc4),
-            "fg": QtGui.QColor(0xffffff),
+            "bg": QtGui.QColor(0x6F3CC4),
+            "fg": QtGui.QColor(0xFFFFFF),
         },
         "CMPL": {
-            "bg": QtGui.QColor(0x82af6f),
-            "fg": QtGui.QColor(0xffffff),
+            "bg": QtGui.QColor(0x82AF6F),
+            "fg": QtGui.QColor(0xFFFFFF),
         },
         "OH": {
-            "bg": QtGui.QColor(0xf76162),
-            "fg": QtGui.QColor(0xffffff),
+            "bg": QtGui.QColor(0xF76162),
+            "fg": QtGui.QColor(0xFFFFFF),
         },
         "STOP": {
-            "bg": QtGui.QColor(0x4e5962),
-            "fg": QtGui.QColor(0xffffff),
+            "bg": QtGui.QColor(0x4E5962),
+            "fg": QtGui.QColor(0xFFFFFF),
         },
     }
 
@@ -615,12 +613,10 @@ class UserTasksByStatusWidget(
                 status_tab.setAutoFillBackground(True)
                 palette = status_tab.palette()
                 palette.setColor(
-                    status_tab.backgroundRole(),
-                    self.status_colors[status_code]["bg"]
+                    status_tab.backgroundRole(), self.status_colors[status_code]["bg"]
                 )
                 palette.setColor(
-                    status_tab.foregroundRole(),
-                    self.status_colors[status_code]["fg"]
+                    status_tab.foregroundRole(), self.status_colors[status_code]["fg"]
                 )
                 status_tab.setPalette(palette)
 
@@ -641,8 +637,7 @@ class UserTasksByStatusWidget(
                 status_tab_layout.addWidget(task_table)
 
                 tasks = (
-                    Task.query
-                    .filter(Task.project==self.project)
+                    Task.query.filter(Task.project == self.project)
                     .filter(Task.resources.contains(self.user))
                     .filter(Task.status == status)
                     .all()

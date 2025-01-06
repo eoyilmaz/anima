@@ -22,7 +22,7 @@ class NodeUtils(object):
         for input_entry_key in node_input_list.keys():
             input_entry = node_input_list[input_entry_key]
             input_id = input_entry.GetAttrs()["INPS_ID"]
-            print("%s: %s" % (input_entry_key, input_id))
+            print(f"{input_entry_key}: {input_id}")
 
     @classmethod
     def get_node_attr(cls, node, attr):

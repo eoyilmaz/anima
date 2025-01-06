@@ -153,8 +153,10 @@ class ScheduleTimingWidget(QtWidgets.QWidget):
             timing_resolution = defaults.timing_resolution
         elif not isinstance(timing_resolution, datetime.timedelta):
             raise TypeError(
-                "%s.timing_resolution should be set to a datetime.timedelta instance, not %s"
-                % (self.__class__.__name__, timing_resolution.__class__.__name__)
+                "{}.timing_resolution should be set to a datetime.timedelta "
+                "instance, not {}".format(
+                    self.__class__.__name__, timing_resolution.__class__.__name__
+                )
             )
 
         self._timing_resolution = timing_resolution

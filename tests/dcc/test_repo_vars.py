@@ -73,14 +73,12 @@ def test_environment_var_values_are_correct(create_test_repo):
     for repo in data["all_repos"]:
         assert (
             os.environ[
-                defaults.repo_env_template
-                % {
-                    "id": repo.id,
-                    "code": repo.code,
-                }
+                defaults.repo_env_template.format(
+                    id=repo.id,
+                    code=repo.code,
+                )
             ]
-            == repo.path
-        )
+         )== repo.path
 
 
 def test_to_os_independent_path_is_working_properly(create_test_repo):
@@ -93,7 +91,7 @@ def test_to_os_independent_path_is_working_properly(create_test_repo):
     windows_path = "T:/test/repo/4/windows/path/PRJ1/Assets/test.ma"
     osx_path = "/test/repo/4/osx/path/PRJ1/Assets/test.ma"
 
-    os_independent_path = "$REPO%s/PRJ1/Assets/test.ma" % data["repo4"].code
+    os_independent_path = "$REPO{}/PRJ1/Assets/test.ma".format(data["repo4"].code)
 
     assert Repository.to_os_independent_path(linux_path) == os_independent_path
     assert Repository.to_os_independent_path(windows_path) == os_independent_path
@@ -104,7 +102,7 @@ def test_to_os_independent_path_is_working_properly(create_test_repo):
     windows_path = "T:/test/repo/5/windows/path/PRJ1/Assets/test.ma"
     osx_path = "/test/repo/5/osx/path/PRJ1/Assets/test.ma"
 
-    os_independent_path = "$REPO%s/PRJ1/Assets/test.ma" % data["repo5"].code
+    os_independent_path = "$REPO{}/PRJ1/Assets/test.ma".format(data["repo5"].code)
 
     assert Repository.to_os_independent_path(linux_path) == os_independent_path
     assert Repository.to_os_independent_path(windows_path) == os_independent_path

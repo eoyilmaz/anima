@@ -21,7 +21,7 @@ def get_max_version():
 class Max(DCCBase):
     """The 3dsmax DCC class"""
 
-    name = "3dsMax%s" % get_max_version()
+    name = f"3dsMax{get_max_version()}"
     extensions = [".max"]
 
     def get_current_version(self):
@@ -428,7 +428,7 @@ class Max(DCCBase):
         from pymxs import runtime as rt
 
         record_count = rt.objXRefMgr.recordCount
-        print("record count: %s" % record_count)
+        print(f"record count: {record_count}")
         records = []
         for i in range(record_count):
             records.append(rt.objXRefMgr.GetRecord(i + 1))
@@ -459,17 +459,12 @@ class Max(DCCBase):
             version.absolute_path,
             "Outputs",
             "v{:03d}".format(version.version_number),
-            "renders"
+            "renders",
         ).replace("\\", "/")
         version_sig_name = self.get_significant_name(version)
 
         render_file_full_path = (
-            "%(render_output_folder)s/masterLayer/"
-            "%(version_sig_name)s.0000.exr"
-            % {
-                "render_output_folder": render_output_folder,
-                "version_sig_name": version_sig_name,
-            }
+            f"{render_output_folder}/masterLayer/{version_sig_name}.0000.exr"
         )
 
         rs = MaxPlus.RenderSettings

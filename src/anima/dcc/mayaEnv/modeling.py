@@ -23,7 +23,7 @@ class Modeling(object):
             in_list = 0
             indeces = vtx.connectedVertices().indices()
             for cvtx_index in indeces:
-                cvtx = pm.PyNode("%s.vtx[%s]" % (shape.name(), cvtx_index))
+                cvtx = pm.PyNode("{}.vtx[{}]".format(shape.name(), cvtx_index))
                 if cvtx in vtxs:
                     in_list += 1
             if in_list == 1:
@@ -39,7 +39,7 @@ class Modeling(object):
 
             cvtx_indeces = current_vtx.connectedVertices().indices()
             for cvtx_index in cvtx_indeces:
-                cvtx = pm.PyNode("%s.vtx[%s]" % (shape.name(), cvtx_index))
+                cvtx = pm.PyNode("{}.vtx[{}]".format(shape.name(), cvtx_index))
                 if cvtx in vtxs:
                     vtxs.remove(cvtx)
                     bucket.append(cvtx)
@@ -411,6 +411,7 @@ class Modeling(object):
 
         if pm.general.about(batch=1) or not mesh_count:
             from anima.utils.progress import ProgressDialogBase
+
             pdm.dialog_class = ProgressDialogBase
             pdm.create_dialog()
 
@@ -430,10 +431,12 @@ class Modeling(object):
                         # meshes_with_zero_uv_area.append(node)
                         # break
                         faces_with_zero_uv_area.append(
-                            "%s.f[%s]" % (node.fullPath(), i)
+                            "{}.f[{}]".format(node.fullPath(), i)
                         )
                 except RuntimeError:
-                    faces_with_zero_uv_area.append("%s.f[%s]" % (node.fullPath(), i))
+                    faces_with_zero_uv_area.append(
+                        "{}.f[{}]".format(node.fullPath(), i)
+                    )
 
             caller.step()
 

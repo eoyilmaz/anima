@@ -34,13 +34,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.fill_ui_with_filename_template(self.filename_template)
 
     def _setup_ui(self):
-        """setup the ui elements"""
+        """Setup the ui elements."""
         self.resize(750, 180)
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
 
         # Dialog Label
         self.dialog_label = QtWidgets.QLabel(self)
-        self.dialog_label.setText("%s Filename Template" % self.mode)
+        self.dialog_label.setText(f"{self.mode} Filename Template")
         self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);font: 18pt;")
         self.vertical_layout.addWidget(self.dialog_label)
 

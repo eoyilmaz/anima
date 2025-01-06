@@ -13,6 +13,7 @@ from qtpy.QtTest import QTest
 import anima
 from anima.ui.lib import QtCore, QtGui
 from anima.ui.testing import PatchedMessageBox
+from anima.ui.dialogs import edl_importer
 
 
 logger = logging.getLogger('anima.ui.version_updater')
@@ -47,7 +48,7 @@ class EDLImporterTestCase(unittest.TestCase):
             logger.debug('creating a new QApplication')
             self.app = QtGui.QApplication(sys.argv)
         else:
-            logger.debug('using the present QApplication: %s' % QtGui.qApp)
+            logger.debug(f"using the present QApplication: {QtGui.qApp}")
             # self.app = QtGui.qApp
             self.app = QtGui.QApplication.instance()
 

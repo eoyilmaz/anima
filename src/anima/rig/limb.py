@@ -28,14 +28,14 @@ class Limb(object):
     def _validate_charName(self, charName_in):
         """validates the given charName_in"""
         if charName_in == None:
-            raise TypeError("%s.name can not be None!" % self.__class__.__name__)
+            raise TypeError(f"{self.__class__.__name__}.name can not be None!")
         if not isinstance(charName_in, (Character)):
             raise TypeError(
-                "%s.name should be an instance of Character!" % self.__class__.__name__
+                f"{self.__class__.__name__}.name should be an instance of Character!"
             )
         if charName_in == "":
             raise ValueError(
-                "%s.name can not be an empty string!" % self.__class__.__name__
+                f"{self.__class__.__name__}.name can not be an empty string!"
             )
         return charName_in
 

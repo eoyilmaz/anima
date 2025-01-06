@@ -1,11 +1,12 @@
 # v1.0.1
 
-# import sys
+import sys
 import maya.OpenMaya as OpenMaya
 import maya.OpenMayaMPx as OpenMayaMPx
 
 kPluginNodeTypeName = "oyClosestPointOnMesh"
 cpomPluginId = OpenMaya.MTypeId(0x00357)
+
 
 # Node definition
 class oyClosestPointOnMesh(OpenMayaMPx.MPxNode):
@@ -269,7 +270,7 @@ def initializePlugin(mobject):
             kPluginNodeTypeName, cpomPluginId, nodeCreator, nodeInitializer
         )
     except:
-        sys.stderr.write("Failed to register node: %s" % kPluginNodeTypeName)
+        sys.stderr.write(f"Failed to register node: {kPluginNodeTypeName}")
         raise
 
 
@@ -279,5 +280,5 @@ def uninitializePlugin(mobject):
     try:
         mplugin.deregisterNode(cpomPluginId)
     except:
-        sys.stderr.write("Failed to deregister node: %s" % kPluginNodeTypeName)
+        sys.stderr.write(f"Failed to deregister node: {kPluginNodeTypeName}")
         raise

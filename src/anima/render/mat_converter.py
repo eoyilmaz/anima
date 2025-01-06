@@ -98,9 +98,9 @@ class ConversionManagerBase(object):
         """finds and converts all the nodes in the current scene"""
         nodes_converted = []
         for node_type in self.conversion_spec_sheet:
-            print("searching for: %s" % node_type)
+            print(f"searching for: {node_type}")
             found_nodes = self.list_nodes(node_type)
-            print("found: %s nodes" % len(found_nodes))
+            print(f"found: {len(found_nodes)} nodes")
             for node in found_nodes:
                 new_node = self.convert(node)
                 nodes_converted.append([node, new_node])
@@ -178,7 +178,7 @@ class ConversionManagerBase(object):
         node_type = self.get_node_type(node)
         conversion_specs = self.conversion_spec_sheet.get(node_type)
         if not conversion_specs:
-            print("No conversion_specs for: %s" % node_type)
+            print(f"No conversion_specs for: {node_type}")
             return
 
         # call any call_before

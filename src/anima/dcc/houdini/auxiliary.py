@@ -127,22 +127,22 @@ def very_nice_camera_rig(
     main_ctrl.parm("focal").set(focal_length)
     main_ctrl.parm("aperture").set(horizontal_film_aperture)
     main_ctrl_name = main_ctrl.name()
-    camera.parm("focal").setExpression('ch("../%s/focal")' % main_ctrl_name)
-    camera.parm("aperture").setExpression('ch("../%s/aperture")' % main_ctrl_name)
+    camera.parm("focal").setExpression(f'ch("../{main_ctrl_name}/focal")')
+    camera.parm("aperture").setExpression(f'ch("../{main_ctrl_name}/aperture")')
 
     # Depth Of Field
     camera.parm("RS_campro_dofEnable").setExpression(
-        'ch("../%s/useDepthOfField")' % main_ctrl_name
+        f'ch("../{main_ctrl_name}/useDepthOfField")'
     )
 
     # F-Stop
-    camera.parm("fstop").setExpression('ch("../%s/fstop")' % main_ctrl_name)
+    camera.parm("fstop").setExpression(f'ch("../{main_ctrl_name}/fstop")')
 
     # Camera Local Position and Offsets
     # Focus Offset
-    camera.parm("tx").setExpression('ch("../%s/offsetX")' % main_ctrl_name)
-    camera.parm("ty").setExpression('ch("../%s/offsetY")' % main_ctrl_name)
-    camera.parm("tz").setExpression('ch("../%s/offsetZ")' % main_ctrl_name)
+    camera.parm("tx").setExpression(f'ch("../{main_ctrl_name}/offsetX")')
+    camera.parm("ty").setExpression(f'ch("../{main_ctrl_name}/offsetY")')
+    camera.parm("tz").setExpression(f'ch("../{main_ctrl_name}/offsetZ")')
 
     # Back to focal plane
     camera.parm("focus").setExpression(
@@ -154,13 +154,13 @@ def very_nice_camera_rig(
     # -----------------------------------------------------------
     # Camera Orientation
 
-    roll_ctrl.parm("rz").setExpression('ch("../%s/roll1")' % main_ctrl_name)
-    pitch_ctrl.parm("rx").setExpression('ch("../%s/pitch")' % main_ctrl_name)
-    heading_ctrl.parm("ry").setExpression('ch("../%s/heading")' % main_ctrl_name)
+    roll_ctrl.parm("rz").setExpression(f'ch("../{main_ctrl_name}/roll1")')
+    pitch_ctrl.parm("rx").setExpression(f'ch("../{main_ctrl_name}/pitch")')
+    heading_ctrl.parm("ry").setExpression(f'ch("../{main_ctrl_name}/heading")')
 
-    camera.parm("rx").setExpression('ch("../%s/camerarx")' % main_ctrl_name)
-    camera.parm("ry").setExpression('ch("../%s/camerary")' % main_ctrl_name)
-    camera.parm("rz").setExpression('ch("../%s/camerarz")' % main_ctrl_name)
+    camera.parm("rx").setExpression(f'ch("../{main_ctrl_name}/camerarx")')
+    camera.parm("ry").setExpression(f'ch("../{main_ctrl_name}/camerary")')
+    camera.parm("rz").setExpression(f'ch("../{main_ctrl_name}/camerarz")')
 
     heading_ctrl.parm("tx").lock(True)
     heading_ctrl.parm("ty").lock(True)

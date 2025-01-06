@@ -38,20 +38,26 @@ def get_cached_icon(icon_name, *args, **kwargs):
                 "browse_folder": qtawesome.icon("fa5.folder-open"),
                 "budget": qtawesome.icon("fa.credit-card-alt"),
                 "create_project": qtawesome.icon("fa5s.sitemap"),
-                "cross": qtawesome.icon("ph.x-bold")
-                if qtawesome_version_info[0]
-                else qtawesome.icon("fa.close"),
+                "cross": (
+                    qtawesome.icon("ph.x-bold")
+                    if qtawesome_version_info[0]
+                    else qtawesome.icon("fa.close")
+                ),
                 "copy": qtawesome.icon("fa5.copy"),
                 "daily": qtawesome.icon("ei.eye-open"),
                 "dashboard": qtawesome.icon("fa.dashboard"),
                 "default": qtawesome.icon("ei.ban-circle"),
                 "delete": qtawesome.icon("fa5.trash-alt"),
-                "dependent_of": qtawesome.icon("mdi6.tray-arrow-up", rotated=90)
-                if qtawesome_version_info[0]
-                else qtawesome.icon("ei.arrow-left"),
-                "depends_to": qtawesome.icon("mdi6.tray-arrow-down", rotated=-90)
-                if qtawesome_version_info[0]
-                else qtawesome.icon("ei.arrow-right"),
+                "dependent_of": (
+                    qtawesome.icon("mdi6.tray-arrow-up", rotated=90)
+                    if qtawesome_version_info[0]
+                    else qtawesome.icon("ei.arrow-left")
+                ),
+                "depends_to": (
+                    qtawesome.icon("mdi6.tray-arrow-down", rotated=-90)
+                    if qtawesome_version_info[0]
+                    else qtawesome.icon("ei.arrow-right")
+                ),
                 "department": qtawesome.icon("fa.group"),
                 "edit_entity": qtawesome.icon("fa.pencil-square-o"),
                 "export": qtawesome.icon("fa5s.file-export"),
@@ -67,9 +73,11 @@ def get_cached_icon(icon_name, *args, **kwargs):
                 "reload": qtawesome.icon("ei.refresh"),
                 "report": qtawesome.icon("fa.bar-chart"),
                 "resource": qtawesome.icon("fa.user"),
-                "result": qtawesome.icon("msc.graph-line")
-                if qtawesome_version_info[0]
-                else qtawesome.icon("ei.graph"),
+                "result": (
+                    qtawesome.icon("msc.graph-line")
+                    if qtawesome_version_info[0]
+                    else qtawesome.icon("ei.graph")
+                ),
                 "review": qtawesome.icon("fa.comments-o"),
                 "sequence": qtawesome.icon("fa.film"),
                 "shot": qtawesome.icon("fa.camera"),
@@ -112,15 +120,15 @@ def get_app_icon(icon_name):
         local_icon_cache_path = os.path.normpath(
             os.path.expanduser(os.path.join(defaults.local_cache_folder, "icons"))
         )
-        local_icon_full_path = os.path.join(local_icon_cache_path, "%s.png" % icon_name)
-        logger.debug("local_icon_full_path: %s" % local_icon_full_path)
+        local_icon_full_path = os.path.join(local_icon_cache_path, f"{icon_name}.png")
+        logger.debug(f"local_icon_full_path: {local_icon_full_path}")
         if not os.path.exists(local_icon_full_path):
-            logger.debug("local icon cache not found: %s" % icon_name)
+            logger.debug(f"local icon cache not found: {icon_name}")
             logger.debug("retrieving icon from library!")
             here = os.path.abspath(os.path.dirname(__file__))
             images_path = os.path.join(here, "images")
-            icon_full_path = os.path.join(images_path, "%s.png" % icon_name)
-            logger.debug("icon_full_path: %s" % icon_full_path)
+            icon_full_path = os.path.join(images_path, f"{icon_name}.png")
+            logger.debug(f"icon_full_path: {icon_full_path}")
 
             # copy to local cache folder
             try:
@@ -137,7 +145,7 @@ def get_app_icon(icon_name):
                 return None
         q_icon = QtGui.QIcon(local_icon_full_path)
         ICON_CACHE[icon_name] = q_icon
-    logger.debug("get_icon took: %0.6f s" % (time.time() - start_time))
+    logger.debug("get_icon took: {:0.6f} s".format(time.time() - start_time))
     return q_icon
 
 
@@ -193,7 +201,7 @@ def update_graphics_view_with_entity_thumbnail(entity, graphics_view):
                     full_path = os.path.expandvars(parent.thumbnail.full_path)
                     if not os.path.exists(full_path):
                         full_path = None
-                    logger.debug("found parent thumbnail at: %s" % full_path)
+                    logger.debug(f"found parent thumbnail at: {full_path}")
                     break
 
     if full_path:
@@ -211,7 +219,7 @@ def update_graphics_view_with_image_file(image_full_path, graphics_view):
     if image_full_path != "":
         image_full_path = os.path.normpath(image_full_path)
         image_format = os.path.splitext(image_full_path)[-1].replace(".", "").upper()
-        logger.debug("creating pixmap from: %s" % image_full_path)
+        logger.debug(f"creating pixmap from: {image_full_path}")
 
         # size = conf.thumbnail_size
         # width = size[0]
@@ -219,8 +227,8 @@ def update_graphics_view_with_image_file(image_full_path, graphics_view):
         size = graphics_view.size()
         width = size.width()
         height = size.height()
-        logger.debug("width: %s" % width)
-        logger.debug("height: %s" % height)
+        logger.debug(f"width: {width}")
+        logger.debug(f"height: {height}")
 
         if os.path.exists(image_full_path):
             pixmap = QtGui.QPixmap(image_full_path, format=image_format).scaled(
@@ -356,7 +364,7 @@ def load_font(font_filename):
     else:
         logger.debug("font found in runtime cache!")
 
-    logger.debug("load_font took: %0.6f s" % (time.time() - start_time))
+    logger.debug("load_font took: {:0.6f} s".format(time.time() - start_time))
     return font_family
 
 
@@ -453,8 +461,7 @@ def set_widget_bg_color(widget, color):
     :return:
     """
     widget.setStyleSheet(
-        "background-color: rgba(%s, %s, %s, 1);"
-        % (
+        "background-color: rgba({}, {}, {}, 1);".format(
             int(color.color[0] * 255),
             int(color.color[1] * 255),
             int(color.color[2] * 255),

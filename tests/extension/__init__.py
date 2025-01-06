@@ -84,15 +84,15 @@ class ExtenderTester(unittest.TestCase):
         class Extension(object):
             @extends([Baz, Bar])
             def func1(self):
-                return 'overridden func1 in %s' % self.__class__.__name__
+                return f"overridden func1 in {self.__class__.__name__}"
 
             @extends(Baz)
             def func2(self):
-                return 'overridden func2 in %s' % self.__class__.__name__
+                return f"overridden func2 in {self.__class__.__name__}"
 
             @extends(Bar)
             def func3(self):
-                return 'overridden func3 in %s' % self.__class__.__name__
+                return f"overridden func3 in {self.__class__.__name__}"
 
         b1 = Baz()
         b2 = Bar()

@@ -684,24 +684,21 @@ class PickedObject(object):
 
         oyParSw - switch to --> %PARENTNAME%
         """
-        # simply add "python(import oyObjectPicker as oyOP; oyOP.setObjectsParentTo( %s, %s+\".pickedData.constrainedParent[ %number% ]\" ))"
+        # simply add "python(import oyObjectPicker as oyOP; oyOP.setObjectsParentTo( {}, {}+\".pickedData.constrainedParent[ %number% ]\" ))"
 
-        command_label = "oyObjectPicker - switch to --> " + parent.name()
+        command_label = f"oyObjectPicker - switch to --> {parent.name()}"
         parent_index = self.get_parent_index(parent)
 
         if parent_index == -1:
             return
 
         command_string = (
-            "{\n \
-        int $parentIndex = "
-            + str(parent_index)
-            + ';\n \
-        string $parentConstraint[] = `listConnections ("%s.pickedData.parentConstraint")`;\n \
-        string $parents[] = `parentConstraint -q -tl $parentConstraint[0]`;\n \
-        string $parentName = $parents[ $parentIndex ];\n \
-        python("import oyObjectPicker as oyOP; oyOP.set_objects_parent( \'%s\', \'"+$parentName+"\')");\n \
-        }'
+            "{\n"
+            f"int $parentIndex = {parent_index};\n"
+            'string $parentConstraint[] = `listConnections ("{}.pickedData.parentConstraint")`;\n'
+            "string $parents[] = `parentConstraint -q -tl $parentConstraint[0]`;\n"
+            "string $parentName = $parents[ $parentIndex ];\n"
+            "python(\"import oyObjectPicker as oyOP; oyOP.set_objects_parent( '{}', '\"+$parentName+\"')\");\n"
         )
 
         # pm.mel.source("oyAddDAGMenuCommands")
@@ -710,7 +707,7 @@ class PickedObject(object):
         # )
 
     def add_default_options_to_dag_menu(self):
-        """adds the default menu options to the DAG menu
+        """Add the default menu options to the DAG menu.
 
         oyObjectPicker --> fix jump
         oyObjectPicker --> edit keyframes
@@ -718,27 +715,27 @@ class PickedObject(object):
         pm.mel.source("oyAddDAGMenuCommands")
 
         command_label = "oyObjectPicker --> release object"
-        command_string = "python(\"import oyObjectPicker as oyOP; oyOP.relaseObjectWithName('%s')\");"
+        command_string = "python(\"import oyObjectPicker as oyOP; oyOP.relaseObjectWithName('{}}')\");"
         pm.mel.oyADMC_addSpecialCommandsToObject(
             self._object.name(), command_label, command_string
         )
 
         command_label = "oyObjectPicker --> edit_keyframes"
-        command_string = "python(\"import oyObjectPicker as oyOP; oyOP.edit_keyframes_of_object('%s')\");"
+        command_string = "python(\"import oyObjectPicker as oyOP; oyOP.edit_keyframes_of_object('{}')\");"
         pm.mel.oyADMC_addSpecialCommandsToObject(
             self._object.name(), command_label, command_string
         )
 
         command_label = "oyObjectPicker --> fix jump"
         command_string = (
-            "python(\"import oyObjectPicker as oyOP; oyOP.fix_jump_on_object('%s')\");"
+            "python(\"import oyObjectPicker as oyOP; oyOP.fix_jump_on_object('{}')\");"
         )
         pm.mel.oyADMC_addSpecialCommandsToObject(
             self._object.name(), command_label, command_string
         )
 
     def get_parent_index(self, parent):
-        """returns the given parents index"""
+        """Return the given parents index."""
         parent = pm.nodetypes.DagNode(parent)
 
         parents = self.get_parent_list()
@@ -750,9 +747,9 @@ class PickedObject(object):
         return -1
 
     def get_parent_name_at_index(self, index):
-        """returns the parent name at the index
+        """Return the parent name at the index.
 
-        the index is used in the parent list of the parent constraint
+        The index is used in the parent list of the parent constraint.
         """
         parents = self.get_parent_list()
         return parents[index]
@@ -967,8 +964,10 @@ def set_objects_parent(object_, parent):
         object_ = pm.nodetypes.DagNode(object_)
         parent = pm.nodetypes.DagNode(parent)
         pm.PopupError(
-            "CYCLE ERROR!!!\n%s is a parent or special object for %s"
-            % (object_.name(), parent.name())
+            "CYCLE ERROR!!!\n{} is a parent or special object for {}".format(
+                object_.name(),
+                parent.name(),
+            )
         )
         # do not setup any object
         return

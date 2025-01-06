@@ -38,18 +38,16 @@ def submit_alembic_job(path, project_code="", host_mask=""):
         project_code (str): Project.code
         host_mask (str): The host mask.
     """
-    job_name = "%s:%s - Alembic Export" % (project_code, os.path.basename(path))
+    job_name = "{}:{} - Alembic Export".format(project_code, os.path.basename(path))
     block_name = job_name
 
     if "REZ_USED_RESOLVE" in os.environ:
         # this is a rez configured environment
         # use the same rez request to build the render command
-        command = [
-            "rez-env {} -- mayapy".format(os.environ["REZ_USED_RESOLVE"])
-        ]
+        command = ["rez-env {} -- mayapy".format(os.environ["REZ_USED_RESOLVE"])]
     else:
         # use the default command
-        command = ["mayapy%s" % os.getenv("MAYA_VERSION", "")]
+        command = ["mayapy{}".format(os.getenv("MAYA_VERSION", ""))]
 
     command += [
         "-c",
@@ -68,10 +66,10 @@ def submit_playblast_job(path, project_code="", host_mask=""):
         project_code (str): Project.code
         host_mask (str): The host mask.
     """
-    job_name = "%s:%s - Playblast" % (project_code, os.path.basename(path))
+    job_name = "{}:{} - Playblast".format(project_code, os.path.basename(path))
     block_name = job_name
     command = [
-        "mayapy%s" % os.getenv("MAYA_VERSION", ""),
+        "mayapy{}".format(os.getenv("MAYA_VERSION", "")),
         "-c",
         '"import pymel.core as pm;'
         "from anima.dcc.mayaEnv import afanasy_publisher;"
@@ -130,7 +128,7 @@ def export_playblast(path, force_batch_mode=False, reference_depth=0):
         force=True,
         skip_update_check=True,
         prompt=False,
-        reference_depth=reference_depth
+        reference_depth=reference_depth,
     )
 
     from anima.dcc.mayaEnv import animation
@@ -172,6 +170,6 @@ def export_playblast(path, force_batch_mode=False, reference_depth=0):
         resolution=100,
         playblast_view_options=default_view_options,
         upload_to_server=True,
-        force_batch_mode=True
+        force_batch_mode=True,
     )
     print("Playblast Done!")

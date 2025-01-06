@@ -2,7 +2,7 @@
 
 
 class RepresentationManager(object):
-    """Manages Task/Version :class:`.Representation`\ s.
+    """Manages Task/Version :class:`.Representation` instances.
 
     RepresentationManager manages all these different representations as one
     and supplies easy switching or on load switching for different
@@ -21,8 +21,8 @@ class Representation(object):
     one bounding box.
 
     In Anima Pipeline, different representations are managed through the
-    Version.variant_name attribute. So if the base take name for a given Version
-    is **Main** then **Main_BBox** or **Main_ASS** or **Main_GPU** is
+    Version.variant_name attribute. So if the base variant name for a given
+    Version is **Main** then **Main@BBox** or **Main@ASS** or **Main@GPU** is
     considered as the other representations.
 
     This is done in that way to allow easy creations of different
@@ -48,13 +48,9 @@ class Representation(object):
 
             if not isinstance(version, Version):
                 raise TypeError(
-                    "%(class)s.version should be a "
-                    "stalker.models.version.Version instance, not "
-                    "%(version_class)s"
-                    % {
-                        "class": self.__class__.__name__,
-                        "version_class": version.__class__.__name__,
-                    }
+                    f"{self.__class__.__name__}.version should be a "
+                    "stalker.models.version.Version instance, "
+                    f"not {version.__class__.__name__}: '{version}'"
                 )
         return version
 
@@ -151,7 +147,9 @@ class Representation(object):
         # under the same task
         from anima.utils import get_unique_variant_names
 
-        variant_names = get_unique_variant_names(self.version.task.id, include_reprs=True)
+        variant_names = get_unique_variant_names(
+            self.version.task.id, include_reprs=True
+        )
         variant_names.sort()
 
         repr_names = []
@@ -159,23 +157,30 @@ class Representation(object):
             if variant_name.startswith(base_variant_name):
                 if variant_name != base_variant_name:
                     repr_names.append(
-                        variant_name[len(base_variant_name) + len(self.repr_separator) :]
+                        variant_name[
+                            len(base_variant_name) + len(self.repr_separator) :
+                        ]
                     )
                 else:
                     repr_names.append(self.base_repr_name)
         return repr_names
 
     def find(self, repr_name=""):
-        """returns the Version instance with the given representation name.
+        """Return the Version instance with the given representation name.
 
-        :param repr_name: The take name of the desires representation.
-        :return: :class:`.Version`
+        Args:
+            repr_name (str) : The variant name of the desires representation.
+
+        Returns:
+            :class:`.Version`: The related version.
         """
         base_variant_name = self.get_base_variant_name(self.version)
         if repr_name == self.base_repr_name:
             variant_name = base_variant_name
         else:
-            variant_name = "{}{}{}".format(base_variant_name, self.repr_separator, repr_name)
+            variant_name = "{}{}{}".format(
+                base_variant_name, self.repr_separator, repr_name
+            )
 
         from stalker import Version
 

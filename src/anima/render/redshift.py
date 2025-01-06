@@ -78,8 +78,8 @@ class RedShiftTextureProcessor(object):
         pdm = ProgressManagerFactory.get_progress_manager()
         caller = pdm.register(len(self.files_to_process), title="Converting Textures")
         for file_path in self.files_to_process:
-            command = '%s "%s"' % (self.executable, file_path)
-            rsmap_full_path = "%s.rstexbin" % os.path.splitext(file_path)[0]
+            command = f'{self.executable} "{file_path}"'
+            rsmap_full_path = "{}.rstexbin".format(os.path.splitext(file_path)[0])
 
             # os.system(command)
             if os.name == "nt":

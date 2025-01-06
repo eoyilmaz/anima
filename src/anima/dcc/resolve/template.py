@@ -249,9 +249,26 @@ RESOLVE_TEMPLATE_VAR_NAMES = [
     "White Balance Tint",
     "White Point",
 ]
+
 RESOLVE_TEMPLATE_VARS = dict(
     (var, ("%{{{}}}".format(var))) for var in RESOLVE_TEMPLATE_VAR_NAMES
 )
+"""The template dictionary storage.
+
+This holds all the available values that Resolve can use as a variable. It is a
+dictionary in the following format:
+
+.. code-block:: python
+    {
+        "value1": "%{value1}",
+        "value2": "%{value2}",
+    }
+
+"%" sign in the RESOLVE_TEMPLATE_VARS is needed for Resolve as Resolve
+output templates uses that as the formatting character.
+
+So it is not for Python. Don't replace it...
+"""
 
 
 def format_resolve_template(template_in, format_variables):
@@ -259,8 +276,12 @@ def format_resolve_template(template_in, format_variables):
     result is always Resolve safe. Meaning that variables like "%{Clip Type}"
     will be preserved if the given ``format_variables`` doesn't alter it.
 
-    :param str template_in: A string
-    :param dict format_variables:
-    :return:
+    Args:
+        template_in (str): A string.
+        format_variables (dict): The format variables dict. Generally a copy of
+            RESOLVE_TEMPLATE_VARS with some rendered values.
+
+    Returns:
+        str: The rendered template.
     """
-    return template_in.replace("{", "(").replace("}", ")s") % format_variables
+    return template_in.replace("%{", "{").format(**format_variables)

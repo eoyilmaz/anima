@@ -112,25 +112,23 @@ class ProgressDialogManagerTestCase(unittest.TestCase):
         self.assertIn('setRange', pm.dialog.call_info)
 
         # check the values
-        self.assertEqual(pm.dialog.call_info['setRange'], [(0, 5), {}])
-        self.assertEqual(pm.dialog.call_info['setValue'], [(2,), {}])
+        self.assertEqual(pm.dialog.call_info["setRange"], [(0, 5), {}])
+        self.assertEqual(pm.dialog.call_info["setValue"], [(2,), {}])
 
     def test_step_will_set_the_dialog_title(self):
-        """testing if the step method will set the dialog title to the stepped
-        caller
-        """
+        """The step method will set the dialog title to the stepped caller."""
         pm = ProgressDialogManager()
-        test_title1 = 'test title 1'
-        test_title2 = 'test title 2'
+        test_title1 = "test title 1"
+        test_title2 = "test title 2"
         caller1 = pm.register(5, test_title1)
         caller2 = pm.register(5, test_title2)
         pm.step(caller1)
-        self.assertEqual(pm.dialog.call_info['setLabelText'],
-                         [('%s : ' % test_title1,), {}])
+        self.assertEqual(pm.dialog.call_info["setLabelText"],
+                         [(f"{test_title1} : ",), {}])
 
         pm.step(caller2)
-        self.assertEqual(pm.dialog.call_info['setLabelText'],
-                         [('%s : ' % test_title2,), {}])
+        self.assertEqual(pm.dialog.call_info["setLabelText"],
+                         [(f"{test_title2} : ",), {}])
 
     def test_end_progress_method_removes_the_given_caller_from_list(self):
         """testing if the end_progress method will remove the given caller from

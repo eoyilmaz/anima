@@ -781,7 +781,7 @@ class NetflixReporter(object):
                     )
                 if not comp_or_cleanup_task:
                     # no comp or cleanup task, something wrong
-                    print("No Comp or CleanUp task in: %s" % shot.name)
+                    print(f"No Comp or CleanUp task in: {shot.name}")
                     continue
 
                 vfx_final_version = ""
@@ -795,7 +795,9 @@ class NetflixReporter(object):
                     ).first()
                     if version:
                         latest_version = version.latest_version
-                        vfx_final_version = "v%03i" % latest_version.version_number
+                        vfx_final_version = "v{:03d}".format(
+                            latest_version.version_number
+                        )
 
                 # {shot_cost};{currency};{report_date};{report_note}
                 total_bid_seconds = 0
@@ -829,14 +831,14 @@ class NetflixReporter(object):
                     vfx_turnover_to_vendor_date=vfx_turnover_to_vendor_date.strftime(
                         self.date_time_format
                     ),
-                    vfx_next_studio_review_date=vfx_next_studio_review_date.strftime(
-                        self.date_time_format
-                    )
-                    if comp_or_cleanup_task.status.code in ["CMPL", "PREV"]
-                    else "",
+                    vfx_next_studio_review_date=(
+                        vfx_next_studio_review_date.strftime(self.date_time_format)
+                        if comp_or_cleanup_task.status.code in ["CMPL", "PREV"]
+                        else ""
+                    ),
                     vfx_final_delivery_date=shot.end.strftime(self.date_time_format),
                     vfx_final_version=vfx_final_version,
-                    shot_cost="%0.2f" % (total_bid_seconds / 3600 * hourly_cost),
+                    shot_cost="{:0.2f}".format(total_bid_seconds / 3600 * hourly_cost),
                     currency=currency,
                     report_date=utc_now.strftime(self.date_time_format),
                     report_note="",
@@ -921,7 +923,7 @@ class NetflixReview(object):
             version_data.append(shot.name)
 
             # Scope Of Work
-            version_data.append('"%s"' % shot.description)
+            version_data.append(f'"{shot.description}"')
 
             # Vendor
             version_data.append(vendor)

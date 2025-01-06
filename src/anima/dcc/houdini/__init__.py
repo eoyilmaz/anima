@@ -22,7 +22,7 @@ class Houdini(DCCBase):
     def __init__(self, name="", version=None):
         super(Houdini, self).__init__(name, version)
         self.set_environment_variables()
-        self.name = "%s%s.%s" % (
+        self.name = "{}{}.{}".format(
             self.name,
             hou.applicationVersion()[0],
             hou.applicationVersion()[1],
@@ -197,14 +197,15 @@ class Houdini(DCCBase):
             return
 
         # set the $JOB variable to the parent of version.full_path
-        logger.debug("version: %s" % version)
-        logger.debug("version.path: %s" % version.absolute_path)
-        logger.debug("version.filename: %s" % version.filename)
-        logger.debug("version.full_path: %s" % version.absolute_full_path)
+        logger.debug(f"version: {version}")
+        logger.debug(f"version.path: {version.absolute_path}")
+        logger.debug(f"version.filename: {version.filename}")
+        logger.debug(f"version.full_path: {version.absolute_full_path}")
         logger.debug(
-            "version.full_path (calculated): %s"
-            % os.path.join(version.absolute_full_path, version.filename).replace(
-                "\\", "/"
+            "version.full_path (calculated): {}".format(
+                os.path.join(version.absolute_full_path, version.filename).replace(
+                    "\\", "/"
+                )
             )
         )
         job = str(version.absolute_path)
@@ -213,9 +214,9 @@ class Houdini(DCCBase):
             0
         ]
 
-        logger.debug("job     : %s" % job)
-        logger.debug("hip     : %s" % hip)
-        logger.debug("hipName : %s" % hip_name)
+        logger.debug(f"job     : {job}")
+        logger.debug(f"hip     : {hip}")
+        logger.debug(f"hipName : {hip_name}")
 
         self.set_environment_variable("JOB", job)
         self.set_environment_variable("HIP", hip)
@@ -223,7 +224,7 @@ class Houdini(DCCBase):
 
     @classmethod
     def set_environment_variable(cls, var, value):
-        """Set environment variable
+        """Set environment variable.
 
         Args:
             var (str): The name of the var.
@@ -237,12 +238,12 @@ class Houdini(DCCBase):
             # should be Houdini 12
             hou.allowEnvironmentToOverwriteVariable(var, True)
 
-        hscript_command = "set -g %s = '%s'" % (var, value)
+        hscript_command = f"set -g {var} = '{value}'"
         hou.hscript(str(hscript_command))
 
     @classmethod
     def update_flipbook_settings(cls):
-        """updates the flipbook settings"""
+        """Update the flipbook settings."""
         from anima.dcc.houdini import auxiliary
 
         scene_viewer = auxiliary.get_scene_viewer()
@@ -251,7 +252,7 @@ class Houdini(DCCBase):
 
         fs = scene_viewer.flipbookSettings()
         flipbook_path = "$HIP/Outputs/playblast"
-        fs.output("%s/$HIPNAME.$F4.jpg" % flipbook_path)
+        fs.output(f"{flipbook_path}/$HIPNAME.$F4.jpg")
 
         # create the output folder
         import os
@@ -410,7 +411,7 @@ class Houdini(DCCBase):
         output_filename = "$HIP/Outputs/renders/{}/v{:03d}/$OS/{}_$OS.$F4.exr".format(
             version.variant_name,
             version.version_number,
-            os.path.splitext(version.filename)[0]
+            os.path.splitext(version.filename)[0],
         )
 
         shot_node = self.get_shot_node()
@@ -472,17 +473,17 @@ class Houdini(DCCBase):
                     # set the render camera
                     try:
                         output_node.parm("RS_renderCamera").setExpression(
-                            'chsop("%s/shotcam")' % shot_node.path()
+                            f'chsop("{shot_node.path()}/shotcam")'
                         )
                     except hou.PermissionError:  # parameter is locked
                         pass
 
                     try:
                         output_node.parm("RS_overrideRes1").setExpression(
-                            'ch("%s/cam_resx")' % shot_node.path()
+                            f'ch("{shot_node.path()}/cam_resx")'
                         )
                         output_node.parm("RS_overrideRes2").setExpression(
-                            'ch("%s/cam_resy")' % shot_node.path()
+                            f'ch("{shot_node.path()}/cam_resy")'
                         )
                     except hou.PermissionError:  # parameter is locked
                         pass
@@ -512,13 +513,13 @@ class Houdini(DCCBase):
                 if aov_count:
                     for i in range(aov_count):
                         aov_index = i + 1
-                        aov_custom_prefix_parm = "RS_aovCustomPrefix_%s" % aov_index
-                        aov_custom_suffix_parm = "RS_aovSuffix_%s" % aov_index
+                        aov_custom_prefix_parm = f"RS_aovCustomPrefix_{aov_index}"
+                        aov_custom_suffix_parm = f"RS_aovSuffix_{aov_index}"
                         try:
                             output_node.parm(aov_custom_prefix_parm).set(
                                 '`strreplace(chs("RS_outputFileNamePrefix"), '
-                                '".$F4.exr", "_" + chs("%s") + ".$F4.exr")`'
-                                % aov_custom_suffix_parm
+                                '".$F4.exr", '
+                                f'"_" + chs("{aov_custom_suffix_parm}") + ".$F4.exr")`'
                             )
                         except hou.PermissionError:
                             # node is locked

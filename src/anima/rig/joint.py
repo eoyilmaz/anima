@@ -47,7 +47,6 @@ class Joint(object):
 # JOINT CHAIN CLASS
 class JointChain(object):
     def __init__(self, jointsName, positions):
-
         """
 
         :param jointsName:
@@ -79,7 +78,7 @@ class JointChain(object):
     def _validate_positions(self, positions):
         if not isinstance(positions, (list)):
             raise TypeError(
-                "%s.name should be an instance of List!" % self.__class__.__name__
+                f"{self.__class__.__name__}.name should be an instance of List!"
             )
 
     # PROPERTIES
@@ -129,7 +128,7 @@ class JointChain(object):
 
         # joint should be pm.nt.Joint type
         if not isinstance(joint, pm.nt.Joint):
-            raise TypeError("%s sholud be an instance of pm.nt.Joint Class" % joint)
+            raise TypeError(f"{joint} should be an instance of pm.nt.Joint Class")
         jointUnder = self.jointUnder(joint)
         if jointUnder is None:
             return 0
@@ -254,14 +253,13 @@ class JointChain(object):
             if joint_in == self.jointChain[index]:
                 return index
         raise TypeError(
-            "%s is not a member joint of %s" % (joint_in, self.__class__.__name__)
+            f"{joint_in} is not a member joint of {self.__class__.__name__}"
         )
 
 
 # SPINE JOINT CLASS
 class SpineJoints(JointChain):
     def __init__(self, jointsName, curve, spans=10, horizontalSpine=0):
-
         """
 
         :param jointsName:

@@ -19,7 +19,7 @@ bl_info = {
 }
 
 
-idname_template = "stalker.%s_%s_menu"
+idname_template = "stalker.{}_{}_menu"
 registered_menus = []
 
 
@@ -69,10 +69,10 @@ class StripGenerator(object):
 
         :param str full_path: The path of the file
         """
-        logger.debug("adding output from: %s" % full_path)
+        logger.debug(f"adding output from: {full_path}")
         extension = os.path.splitext(full_path)[-1].lower()
 
-        logger.debug("extension: %s" % extension)
+        logger.debug(f"extension: {extension}")
 
         output_type = None
         for key in output_types.keys():
@@ -97,7 +97,7 @@ class StripGenerator(object):
             )
         elif output_type == "movie":
             logger.debug("output is movie")
-            logger.debug("full_path: %s" % full_path)
+            logger.debug(f"full_path: {full_path}")
             bpy.ops.sequencer.movie_strip_add(
                 filepath=full_path,
                 files=[
@@ -111,7 +111,7 @@ class StripGenerator(object):
                 channel=channel,
             )
         else:
-            logger.debug("output_type is unknown: %s" % output_type)
+            logger.debug(f"output_type is unknown: {output_type}")
 
     def storyboard(self, task):
         """When a Scene task is given it will create a strip from the output of
@@ -193,15 +193,15 @@ class StalkerMenu(bpy.types.Menu):
 
 
 def draw_stalker_entity_menu_item(self, context):
-    """draws one menu item"""
-    logger.debug("entity_id   : %s" % self.stalker_entity_id)
-    logger.debug("entity_name : %s" % self.stalker_entity_name)
+    """Draw one menu item."""
+    logger.debug(f"entity_id   : {self.stalker_entity_id}")
+    logger.debug(f"entity_name : {self.stalker_entity_name}")
 
 
 def draw_stalker_project_menu_item(self, context):
-    """draws one menu item"""
-    logger.debug("entity_id   : %s" % self.stalker_entity_id)
-    logger.debug("entity_name : %s" % self.stalker_entity_name)
+    """Draw one menu item."""
+    logger.debug(f"entity_id   : {self.stalker_entity_id}")
+    logger.debug(f"entity_name : {self.stalker_entity_name}")
 
     layout = self.layout
 
@@ -211,14 +211,14 @@ def draw_stalker_project_menu_item(self, context):
         Sequence.query.filter(Sequence.project == project).order_by(Sequence.name).all()
     )
     for seq in all_seqs:
-        idname = idname_template % (seq.entity_type, seq.id)
+        idname = idname_template.format(seq.entity_type, seq.id)
         layout.menu(idname, text=seq.name)
 
 
 def draw_stalker_sequence_menu_item(self, context):
     """draws one menu item"""
-    logger.debug("entity_id   : %s" % self.stalker_entity_id)
-    logger.debug("entity_name : %s" % self.stalker_entity_name)
+    logger.debug(f"entity_id   : {self.stalker_entity_id}")
+    logger.debug(f"entity_name : {self.stalker_entity_name}")
 
     layout = self.layout
 
@@ -230,14 +230,14 @@ def draw_stalker_sequence_menu_item(self, context):
         # op = layout.operator(StalkerSceneMenu.bl_idname, text=scene.name)
         # op.stalker_entity_id = scene.id
         # op.stalker_entity_name = scene.name
-        idname = idname_template % (scene.entity_type, scene.id)
+        idname = idname_template.format(scene.entity_type, scene.id)
         layout.menu(idname, text=scene.name)
 
 
 def draw_stalker_scene_menu_item(self, context):
     """draws one scene menu item"""
-    logger.debug("entity_id   : %s" % self.stalker_entity_id)
-    logger.debug("entity_name : %s" % self.stalker_entity_name)
+    logger.debug(f"entity_id   : {self.stalker_entity_id}")
+    logger.debug(f"entity_name : {self.stalker_entity_name}")
 
     layout = self.layout
 
@@ -265,18 +265,18 @@ def draw_stalker_scene_menu_item(self, context):
     layout.separator()
 
     # Add From Shots Menu
-    idname = "%s%s" % (
-        idname_template % (scene.entity_type, scene.id),
+    idname = "{}{}".format(
+        idname_template.format(scene.entity_type, scene.id),
         "_add_from_shots_menu",
     )
     layout.menu(idname)
 
 
 def draw_stalker_scene_add_from_shots_menu_item(self, context):
-    """draws one scene/add from shots scene menu item"""
+    """Draw one scene/add from shots scene menu item."""
 
-    logger.debug("entity_id   : %s" % self.stalker_entity_id)
-    logger.debug("entity_name : %s" % self.stalker_entity_name)
+    logger.debug(f"entity_id   : {self.stalker_entity_id}")
+    logger.debug(f"entity_name : {self.stalker_entity_name}")
 
     layout = self.layout
 
@@ -331,14 +331,14 @@ def draw_stalker_scene_add_from_shots_menu_item(self, context):
     if shots_task:
         for shot in shots_task.children:
             # add a shot menu
-            idname = idname_template % (shot.entity_type, shot.id)
+            idname = idname_template.format(shot.entity_type, shot.id)
             layout.menu(idname)
 
 
 def draw_stalker_shot_menu_item(self, context):
-    """draws one menu item"""
-    logger.debug("entity_id   : %s" % self.stalker_entity_id)
-    logger.debug("entity_name : %s" % self.stalker_entity_name)
+    """Draw one menu item."""
+    logger.debug(f"entity_id   : {self.stalker_entity_id}")
+    logger.debug(f"entity_name : {self.stalker_entity_name}")
 
     layout = self.layout
 
@@ -351,7 +351,7 @@ def draw_stalker_shot_menu_item(self, context):
     #     # op = layout.operator(StalkerSceneMenu.bl_idname, text=scene.name)
     #     # op.stalker_entity_id = scene.id
     #     # op.stalker_entity_name = scene.name
-    #     idname = idname_template % (scene.entity_type, scene.id)
+    #     idname = idname_template.format(scene.entity_type, scene.id)
     #     layout.menu(idname, text=scene.name)
 
     # add a menu operator for
@@ -400,7 +400,7 @@ class StalkerAddFromProjectMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         for project in Project.query.order_by(Project.name).all():
-            idname = "stalker.%s_%s_menu" % (project.entity_type, project.id)
+            idname = f"stalker.{project.entity_type}_{project.id}_menu"
             layout.menu(idname)
 
 
@@ -414,12 +414,12 @@ class StalkerSceneAddEverythingOperator(bpy.types.Operator):
     stalker_entity_name = bpy.props.StringProperty(name="stalker_entity_name")
 
     def execute(self, context):
-        logger.debug("inside %s.execute()" % self.__class__.__name__)
+        logger.debug(f"inside {self.__class__.__name__}.execute()")
 
         # get the scene and all the shots under it
         scene = Task.query.get(self.stalker_entity_id)
 
-        logger.debug("scene: %s" % scene)
+        logger.debug(f"scene: {scene}")
 
         # generate storyboard
         strip_gen = StripGenerator()
@@ -452,12 +452,12 @@ class StalkerSceneAddStoryboardOperator(bpy.types.Operator):
     stalker_entity_name = bpy.props.StringProperty(name="stalker_entity_name")
 
     def execute(self, context):
-        logger.debug("inside %s.execute()" % self.__class__.__name__)
+        logger.debug(f"inside {self.__class__.__name__}.execute()")
 
         # get the scene and all the shots under it
         scene = Task.query.get(self.stalker_entity_id)
 
-        logger.debug("scene: %s" % scene)
+        logger.debug(f"scene: {scene}")
 
         # generate storyboard
         strip_gen = StripGenerator()
@@ -476,12 +476,12 @@ class StalkerSceneAddPrevisOperator(bpy.types.Operator):
     stalker_entity_name = bpy.props.StringProperty(name="stalker_entity_name")
 
     def execute(self, context):
-        logger.debug("inside %s.execute()" % self.__class__.__name__)
+        logger.debug(f"inside {self.__class__.__name__}.execute()")
 
         # get the scene and all the shots under it
         scene = Task.query.get(self.stalker_entity_id)
 
-        logger.debug("scene: %s" % scene)
+        logger.debug(f"scene: {scene}")
 
         # generate storyboard
         strip_gen = StripGenerator()
@@ -500,12 +500,12 @@ class StalkerSceneAddAllShotOutputsOperator(bpy.types.Operator):
     stalker_entity_name = bpy.props.StringProperty(name="stalker_entity_name")
 
     def execute(self, context):
-        logger.debug("inside %s.execute()" % self.__class__.__name__)
+        logger.debug(f"inside {self.__class__.__name__}.execute()")
 
         # get the scene and all the shots under it
         scene = Task.query.get(self.stalker_entity_id)
 
-        logger.debug("scene: %s" % scene)
+        logger.debug(f"scene: {scene}")
 
         # find the "Shots" Task and get all the shots under it
         # for each shot add the animation, lighting and comp
@@ -531,12 +531,12 @@ class StalkerSceneAddAllShotPrevisOutputsOperator(bpy.types.Operator):
     stalker_entity_name = bpy.props.StringProperty(name="stalker_entity_name")
 
     def execute(self, context):
-        logger.debug("inside %s.execute()" % self.__class__.__name__)
+        logger.debug(f"inside {self.__class__.__name__}.execute()")
 
         # get the scene and all the shots under it
         scene = Task.query.get(self.stalker_entity_id)
 
-        logger.debug("scene: %s" % scene)
+        logger.debug(f"scene: {scene}")
 
         # find the "Shots" Task and get all the shots under it
         # for each shot add the animation, lighting and comp
@@ -562,12 +562,12 @@ class StalkerSceneAddAllShotAnimationOutputsOperator(bpy.types.Operator):
     stalker_entity_name = bpy.props.StringProperty(name="stalker_entity_name")
 
     def execute(self, context):
-        logger.debug("inside %s.execute()" % self.__class__.__name__)
+        logger.debug(f"inside {self.__class__.__name__}.execute()")
 
         # get the scene and all the shots under it
         scene = Task.query.get(self.stalker_entity_id)
 
-        logger.debug("scene: %s" % scene)
+        logger.debug(f"scene: {scene}")
 
         # find the "Shots" Task and get all the shots under it
         # for each shot add the animation, lighting and comp
@@ -593,12 +593,12 @@ class StalkerSceneAddAllShotLightingOutputsOperator(bpy.types.Operator):
     stalker_entity_name = bpy.props.StringProperty(name="stalker_entity_name")
 
     def execute(self, context):
-        logger.debug("inside %s.execute()" % self.__class__.__name__)
+        logger.debug(f"inside {self.__class__.__name__}.execute()")
 
         # get the scene and all the shots under it
         scene = Task.query.get(self.stalker_entity_id)
 
-        logger.debug("scene: %s" % scene)
+        logger.debug(f"scene: {scene}")
 
         # find the "Shots" Task and get all the shots under it
         # for each shot add the animation, lighting and comp
@@ -624,12 +624,12 @@ class StalkerSceneAddAllShotCompOutputsOperator(bpy.types.Operator):
     stalker_entity_name = bpy.props.StringProperty(name="stalker_entity_name")
 
     def execute(self, context):
-        logger.debug("inside %s.execute()" % self.__class__.__name__)
+        logger.debug(f"inside {self.__class__.__name__}.execute()")
 
         # get the scene and all the shots under it
         scene = Task.query.get(self.stalker_entity_id)
 
-        logger.debug("scene: %s" % scene)
+        logger.debug(f"scene: {scene}")
 
         # find the "Shots" Task and get all the shots under it
         # for each shot add the animation, lighting and comp
@@ -655,12 +655,12 @@ class StalkerShotAddAllTaskOutputsOperator(bpy.types.Operator):
     stalker_entity_name = bpy.props.StringProperty(name="stalker_entity_name")
 
     def execute(self, context):
-        logger.debug("inside %s.execute()" % self.__class__.__name__)
+        logger.debug(f"inside {self.__class__.__name__}.execute()")
 
         # get the scene and all the shots under it
         shot = Shot.query.get(self.stalker_entity_id)
 
-        logger.debug("shot: %s" % shot)
+        logger.debug(f"shot: {shot}")
 
         # find Previs, Animation, Lighting and Comp tasks
 
@@ -684,12 +684,12 @@ class StalkerShotAddPrevisOutputOperator(bpy.types.Operator):
     stalker_entity_name = bpy.props.StringProperty(name="stalker_entity_name")
 
     def execute(self, context):
-        logger.debug("inside %s.execute()" % self.__class__.__name__)
+        logger.debug(f"inside {self.__class__.__name__}.execute()")
 
         # get the scene and all the shots under it
         shot = Shot.query.get(self.stalker_entity_id)
 
-        logger.debug("shot: %s" % shot)
+        logger.debug(f"shot: {shot}")
 
         # find Previs, Animation, Lighting and Comp tasks
 
@@ -710,12 +710,12 @@ class StalkerShotAddAnimationOutputOperator(bpy.types.Operator):
     stalker_entity_name = bpy.props.StringProperty(name="stalker_entity_name")
 
     def execute(self, context):
-        logger.debug("inside %s.execute()" % self.__class__.__name__)
+        logger.debug(f"inside {self.__class__.__name__}.execute()")
 
         # get the scene and all the shots under it
         shot = Shot.query.get(self.stalker_entity_id)
 
-        logger.debug("shot: %s" % shot)
+        logger.debug(f"shot: {shot}")
 
         # find Previs, Animation, Lighting and Comp tasks
 
@@ -736,12 +736,12 @@ class StalkerShotAddLightingOutputOperator(bpy.types.Operator):
     stalker_entity_name = bpy.props.StringProperty(name="stalker_entity_name")
 
     def execute(self, context):
-        logger.debug("inside %s.execute()" % self.__class__.__name__)
+        logger.debug(f"inside {self.__class__.__name__}.execute()")
 
         # get the scene and all the shots under it
         shot = Shot.query.get(self.stalker_entity_id)
 
-        logger.debug("shot: %s" % shot)
+        logger.debug(f"shot: {shot}")
 
         # find Previs, Animation, Lighting and Comp tasks
 
@@ -762,12 +762,12 @@ class StalkerShotAddCompOutputOperator(bpy.types.Operator):
     stalker_entity_name = bpy.props.StringProperty(name="stalker_entity_name")
 
     def execute(self, context):
-        logger.debug("inside %s.execute()" % self.__class__.__name__)
+        logger.debug(f"inside {self.__class__.__name__}.execute()")
 
         # get the scene and all the shots under it
         shot = Shot.query.get(self.stalker_entity_id)
 
-        logger.debug("shot: %s" % shot)
+        logger.debug(f"shot: {shot}")
 
         # find Previs, Animation, Lighting and Comp tasks
 
@@ -825,7 +825,9 @@ def generate_op_class(
     :param draw: The draw function, defaults to draw_stalker_entity_menu_item
     :param label: Label of this menu
     """
-    idname = "%s%s" % (idname_template % (entity.entity_type, entity.id), idpostfix)
+    idname = "{}{}".format(
+        idname_template.format(entity.entity_type, entity.id), idpostfix
+    )
     return type(
         idname,
         (bpy.types.Menu,),

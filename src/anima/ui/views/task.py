@@ -321,7 +321,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                 item = self.find_entity_item(task.project, tree_view)
             else:
                 item = self.find_entity_item(task, tree_view)
-            logger.debug("item for project: %s" % item)
+            logger.debug(f"item for project: {item}")
 
             if item:
                 tree_view.setExpanded(item.index(), True)
@@ -362,7 +362,7 @@ class TaskTreeView(QtWidgets.QTreeView):
 
         indexes = self.get_item_indices_containing_text(entity.name, tree_view)
         model = tree_view.model()
-        logger.debug("items matching name : %s" % indexes)
+        logger.debug(f"items matching name : {indexes}")
         for index in indexes:
             item = model.itemFromIndex(index)
             if item:
@@ -374,7 +374,7 @@ class TaskTreeView(QtWidgets.QTreeView):
     def get_item_indices_containing_text(cls, text, tree_view):
         """returns the indexes of the item indices containing the given text"""
         model = tree_view.model()
-        logger.debug("searching for text : %s" % text)
+        logger.debug(f"searching for text : {text}")
         return model.match(model.index(0, 0), 0, text, -1, QtCore.Qt.MatchRecursive)
 
     def get_selected_items(self):
@@ -386,18 +386,18 @@ class TaskTreeView(QtWidgets.QTreeView):
         from anima.ui.models.task import TaskItem
 
         selection_model = self.selectionModel()
-        logger.debug("selection_model: %s" % selection_model)
+        logger.debug(f"selection_model: {selection_model}")
         indexes = selection_model.selectedIndexes()
-        logger.debug("selected indexes : %s" % indexes)
+        logger.debug(f"selected indexes : {indexes}")
         task_items = []
         if indexes:
             item_model = self.model()
-            logger.debug("indexes: %s" % indexes)
+            logger.debug(f"indexes: {indexes}")
             for index in indexes:
                 current_item = item_model.itemFromIndex(index)
                 if current_item and isinstance(current_item, TaskItem):
                     task_items.append(current_item)
-        logger.debug("task_items: %s" % task_items)
+        logger.debug(f"task_items: {task_items}")
         return task_items
 
     def get_selected_task_ids(self):

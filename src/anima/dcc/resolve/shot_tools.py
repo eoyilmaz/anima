@@ -128,43 +128,43 @@ class ShotManager(object):
             clip_name = media_pool_item.GetClipProperty("Clip Name")
 
             logger.debug("-------------------------")
-            logger.debug("Checking: %s" % clip_name)
+            logger.debug(f"Checking: {clip_name}")
 
             # check if the current clip has a Fusion comp
             fusion_comp_count = clip.GetFusionCompCount()
             fusion_comp_name_list = clip.GetFusionCompNameList()
-            logger.debug("fusion_comp_name_list: %s" % fusion_comp_name_list)
+            logger.debug(f"fusion_comp_name_list: {fusion_comp_name_list}")
             if fusion_comp_count == 0:
-                logger.debug("Fusion comp count: %s" % fusion_comp_count)
+                logger.debug(f"Fusion comp count: {fusion_comp_count}")
                 continue
 
             slate_node = None
             for fusion_comp_name in fusion_comp_name_list:
-                logger.debug("fusion_comp_count: %s" % fusion_comp_count)
+                logger.debug(f"fusion_comp_count: {fusion_comp_count}")
                 fusion_comp = clip.GetFusionCompByName(fusion_comp_name)
 
                 if not fusion_comp:
                     logger.debug("No fusion_comp!")
                     continue
-                logger.debug("fusion_comp: %s" % fusion_comp)
+                logger.debug(f"fusion_comp: {fusion_comp}")
 
                 # switch to Fusion tab
                 slate_node = fusion_comp.FindTool("MainSlate")
                 if slate_node:
-                    logger.debug("found slate on: %s" % fusion_comp_name)
-                    logger.debug("slate_node: %s" % slate_node)
+                    logger.debug(f"found slate on: {fusion_comp_name}")
+                    logger.debug(f"slate_node: {slate_node}")
                     break
                 else:
-                    logger.debug("no slate_node: %s" % fusion_comp_name)
+                    logger.debug(f"no slate_node: {fusion_comp_name}")
 
             if slate_node is None:
-                logger.debug("Still no slate!: %s" % clip_name)
+                logger.debug(f"Still no slate!: {clip_name}")
                 continue
-            logger.debug("slate_node: %s" % slate_node)
+            logger.debug("slate_node: {slate_node}")
 
             # Version Name
             # Use the clip name
-            clip_data.append("%s.mov" % clip_name)
+            clip_data.append(f"{clip_name}.mov")
 
             # Link
             # Find the shot name
@@ -173,7 +173,7 @@ class ShotManager(object):
             clip_data.append(shot.name)
 
             # Scope Of Work
-            clip_data.append('"%s"' % shot.description)
+            clip_data.append(f'"{shot.description}"')
 
             # Vendor
             clip_data.append(vendor)
@@ -184,7 +184,7 @@ class ShotManager(object):
             # Submission Note
             clip_data.append(slate_node.Input11[0].replace("\n", " "))
 
-            logger.debug("clip_data: %s" % clip_data)
+            logger.debug(f"clip_data: {clip_data}")
             data.append(",".join(clip_data))
 
         logger.debug(data)
@@ -205,18 +205,18 @@ class ShotManager(object):
         import glob
         from anima.utils import report
 
-        logger.debug("review_path    : %s" % review_path)
-        logger.debug("csv_output_path: %s" % csv_output_path)
-        logger.debug("vendor         : %s" % vendor)
+        logger.debug(f"review_path    : {review_path}")
+        logger.debug(f"csv_output_path: {csv_output_path}")
+        logger.debug(f"vendor         : {vendor}")
 
         # get all the MOV files
-        mov_files_in_folder = glob.glob("%s/*.mov" % review_path)
+        mov_files_in_folder = glob.glob(f"{review_path}/*.mov")
         logger.debug("mov files in folder")
         logger.debug("\n".join(mov_files_in_folder))
 
         # get all the CSV files
-        csv_files = glob.glob("%s/*.csv" % review_path)
-        logger.debug("csv files: %s" % csv_files)
+        csv_files = glob.glob(f"{review_path}/*.csv")
+        logger.debug(f"csv files: {csv_files}")
 
         mov_files_from_csvs = []
         missing_mov_files_from_csvs = []
@@ -238,8 +238,9 @@ class ShotManager(object):
 
         if missing_mov_files_from_csvs:
             raise RuntimeError(
-                "The following files are missing\n\n%s"
-                % "\n".join(missing_mov_files_from_csvs)
+                "The following files are missing\n\n{}".format(
+                    "\n".join(missing_mov_files_from_csvs)
+                )
             )
 
         # skip all the files that are already listed in the CSV files
@@ -265,7 +266,7 @@ class ShotManager(object):
         combined_csv_data = [
             "Version Name,Link,Scope Of Work,Vendor,Submitting For,Submission Note"
         ]
-        csv_files = glob.glob("%s/*.csv" % review_path)
+        csv_files = glob.glob(f"{review_path}/*.csv")
         for csv_file in csv_files:
             with open(csv_file, "r") as f:
                 csv_data = f.readlines()
@@ -368,8 +369,8 @@ class ShotManager(object):
 
             if clip_name != new_clip_name:
                 print("----")
-                print("clip_name    : %s" % clip_name)
-                print("new_clip_name: %s" % new_clip_name)
+                print(f"clip_name    : {clip_name}")
+                print(f"new_clip_name: {new_clip_name}")
                 media_pool_item.SetClipProperty("Clip Name", new_clip_name)
 
 
@@ -717,7 +718,7 @@ class ShotClip(object):
             # create the scene task
             scene_task = Task(
                 project=self.stalker_project,
-                name="SCN%s" % scene_code,
+                name=f"SCN{scene_code}",
                 type=self.get_type("Scene"),
                 parent=self.stalker_sequence,
                 description="Autocreated by Resolve",
@@ -886,9 +887,9 @@ class ShotClip(object):
 
         result = proj.LoadRenderPreset(preset_name)
         if not result:
-            print("No preset named: %s" % preset_name)
+            print(f"No preset named: {preset_name}")
         else:
-            print("Preset loaded successfully: %s" % preset_name)
+            print(f"Preset loaded successfully: {preset_name}")
 
         # get the shot
         from stalker import Task, Type
@@ -913,7 +914,7 @@ class ShotClip(object):
                     .first()
                 )
             if not plate_task:
-                raise RuntimeError("No plate task in shot: %s" % self.shot_code)
+                raise RuntimeError(f"No plate task in shot: {self.shot_code}")
             main_task = plate_task
         else:
             # use the sound task
@@ -928,7 +929,7 @@ class ShotClip(object):
                     .first()
                 )
             if not sound_task:
-                raise RuntimeError("No sound task in shot: %s" % self.shot_code)
+                raise RuntimeError(f"No sound task in shot: {self.shot_code}")
             main_task = sound_task
 
         # Create a dummy version if there is none
@@ -951,7 +952,9 @@ class ShotClip(object):
 
             resolve = blackmagic.get_resolve()
             version_info = resolve.GetVersion()
-            version.created_with = "Resolve%s.%s" % (version_info[0], version_info[1])
+            version.created_with = "Resolve{}.{}".format(
+                version_info[0], version_info[1]
+            )
             version.update_paths()
 
             DBSession.add(version)
@@ -968,12 +971,14 @@ class ShotClip(object):
         version.update_paths()
         version.extension = extension
 
-        custom_name = "%s." % version_sig_name if not audio_only else version_sig_name
+        custom_name = "{}.".format(
+            version_sig_name if not audio_only else version_sig_name
+        )
         target_dir = os.path.join(
             version.absolute_path,
             "Outputs",
             version.variant_name,
-            "v%03d" % version.version_number,
+            f"v{version.version_number:03d}",
             "wav" if audio_only else "exr",
         )
         # TODO: Add the plate/sound itself as the version output
@@ -1090,8 +1095,7 @@ class ShotClip(object):
                             self._shot_code = "_".join(parts[0:4])
                         else:
                             print(
-                                "clip path doesn't match the shot format: %s"
-                                % clip_name
+                                f"clip path doesn't match the shot format: {clip_name}"
                             )
 
         return self._shot_code
@@ -1117,7 +1121,7 @@ class ShotClip(object):
             duration=1,
         )
 
-        print("result: %s" % result)
+        print(f"result: {result}")
 
     def validate_shot_code(self):
         """validates the shot code"""
@@ -1128,7 +1132,7 @@ class ShotClip(object):
         shot_code = self.shot_code
         match = regex.match(shot_code)
         if not match:
-            raise ValueError("Shot code format is not valid: %s" % shot_code)
+            raise ValueError(f"Shot code format is not valid: {shot_code}")
 
     def create_slate(self, submitting_for="FINAL", submission_note=""):
         """creates slate for this shot
@@ -1151,9 +1155,9 @@ class ShotClip(object):
         ).first()
 
         if not version:
-            print("No version output: %s" % version_output_name)
+            print(f"No version output: {version_output_name}")
             return
-        print("Found version from version_output: %s" % version)
+        print(f"Found version from version_output: {version}")
 
         # we should be in good shape
         # create a new Fusion comp and run the magic commands
@@ -1162,7 +1166,7 @@ class ShotClip(object):
         resolve = blackmagic.get_resolve()
         print("Changing Page to Fusion!")
         current_page = resolve.GetCurrentPage()
-        print("Current Page: %s" % current_page)
+        print(f"Current Page: {current_page}")
 
         print("Setting Page to Edit!")
         resolve.OpenPage("edit")
@@ -1176,21 +1180,21 @@ class ShotClip(object):
         # Remove any previous fusion comps of that clip
         print("Getting fusion comp")
         fusion_comp_count = slate_item.GetFusionCompCount()
-        print("slate_item.GetFusionCompCount(): %s" % fusion_comp_count)
+        print(f"slate_item.GetFusionCompCount(): {fusion_comp_count}")
         if fusion_comp_count != 0:
             print("Deleting all fusion compositions!")
             for fusion_comp_name in slate_item.GetFusionCompNameList():
-                print("Deleting: %s" % fusion_comp_name)
+                print(f"Deleting: {fusion_comp_name}")
                 slate_item.DeleteFusionCompByName(fusion_comp_name)
             print("After deletion!")
             fusion_comp_count = slate_item.GetFusionCompCount()
-            print("slate_item.GetFusionCompCount(): %s" % fusion_comp_count)
+            print(f"slate_item.GetFusionCompCount(): {fusion_comp_count}")
 
         print("Setting page to Fusion!")
         resolve.OpenPage("fusion")
 
         fusion_comp = slate_item.GetFusionCompByIndex(1)
-        print("Created fusion comp: %s" % fusion_comp)
+        print(f"Created fusion comp: {fusion_comp}")
 
         # change clip color to Orange for Slates
         print("Setting slate item color to Orange!")
@@ -1207,7 +1211,7 @@ class ShotClip(object):
         # Set the current timecode
         try:
             resolve.OpenPage("edit")
-            print("Setting current timecode to: %s" % timecode)
+            print(f"Setting current timecode to: {timecode}")
             self.timeline.SetCurrentTimecode(timecode)
         except TypeError:
             # Resolve version is lower than v17.4.0
@@ -1225,7 +1229,7 @@ class ShotClip(object):
         if stalker_shot:
             record_in = self.clip.GetStart()
             stalker_shot.record_in = record_in
-            print("%s: %s" % (stalker_shot.name, record_in))
+            print("{}: {}".format(stalker_shot.name, record_in))
 
             from stalker.db.session import DBSession
 
@@ -1625,9 +1629,9 @@ class ShotManagerUI(object):
             "Update shot record info!",
             "This will update the shot record_in information of:<br/>"
             "<br/>"
-            "%s - %s<br/>"
+            f"{project.name} - {sequence.name}<br/>"
             " <br/>"
-            "Is this ok?" % (project.name, sequence.name),
+            "Is this ok?",
             QtWidgets.QMessageBox.Yes,
             QtWidgets.QMessageBox.No,
         )
@@ -1665,8 +1669,9 @@ class ShotManagerUI(object):
             QtWidgets.QMessageBox.critical(
                 self.parent_widget,
                 "Duplicate Shot Codes!!!",
-                "There are duplicate shot codes:<br>%s"
-                % "<br>".join(duplicate_shot_codes),
+                "There are duplicate shot codes:<br>{}".format(
+                    "<br>".join(duplicate_shot_codes)
+                ),
             )
             return False
         else:
@@ -1683,8 +1688,9 @@ class ShotManagerUI(object):
             QtWidgets.QMessageBox.critical(
                 self.parent_widget,
                 "Invalid shot names!!!",
-                "There are invalid shot codes:<br>%s"
-                % "<br>".join([shot_clip.shot_code for shot_clip in invalid_shots]),
+                "There are invalid shot codes:<br>{}".format(
+                    "<br>".join([shot_clip.shot_code for shot_clip in invalid_shots])
+                ),
             )
             return False
         else:
@@ -1947,7 +1953,7 @@ class ReviewManagerUI(object):
             self.parent_widget, "Choose CSV Path", default_path
         )
 
-        print("csv_folder_path: %s" % csv_folder_path)
+        print(f"csv_folder_path: {csv_folder_path}")
         if not csv_folder_path:
             raise RuntimeError("no folder path chosen!")
 
@@ -1965,7 +1971,7 @@ class ReviewManagerUI(object):
 
         # output to the same folder with the folder name as csv
         dir_name = os.path.basename(csv_folder_path)
-        csv_output_path = os.path.join(csv_folder_path, "%s.csv" % dir_name)
+        csv_output_path = os.path.join(csv_folder_path, f"{dir_name}.csv")
 
         try:
             sm = ShotManager(None, None)
@@ -2040,8 +2046,8 @@ class ReviewManagerUI(object):
             raise RuntimeError("no file path chosen!")
 
         # add .csv extension no matter what filename has been given
-        csv_file_path = "%s.csv" % csv_file_path.split(".")[0]
-        print("csv_file_path: %s" % csv_file_path)
+        csv_file_path = "{}.csv".format(csv_file_path.split(".")[0])
+        print(f"csv_file_path: {csv_file_path}")
 
         # save the path
         with open(default_path_storage, "w") as f:

@@ -1100,14 +1100,14 @@ def test_check_referenced_versions_is_working_properly(
 
     result = maya_env.check_referenced_versions()
 
-    # print('data["version27"]: %s' % data["version27"])
-    # print('data["version38"]: %s' % data["version38"])
-    # print('data["version16"]: %s' % data["version16"])
-    # print('data["shot3_anim_main_v003"]: %s' % data["shot3_anim_main_v003"])
-    # print('data["asset2_model_main_v002"] : %s' % data["asset2_model_main_v002"])
-    # print('data["asset2_model_take1_v001"] : %s' % data["asset2_model_take1_v001"])
-    # print('data["version11"]: %s' % data["version11"])
-    # print('data["version15"]: %s' % data["version15"])
+    # print('data["version27"]: {}'.format(data["version27"]))
+    # print('data["version38"]: {}'.format(data["version38"]))
+    # print('data["version16"]: {}'.format(data["version16"]))
+    # print('data["shot3_anim_main_v003"]: {}'.format(data["shot3_anim_main_v003"]))
+    # print('data["asset2_model_main_v002"] : {}'.format(data["asset2_model_main_v002"]))
+    # print('data["asset2_model_take1_v001"] : {}'.format(data["asset2_model_take1_v001"]))
+    # print('data["version11"]: {}'.format(data["version11"]))
+    # print('data["version15"]: {}'.format(data["version15"]))
     #
     # print(expected_reference_resolution)
     # print('--------------------------')
@@ -1198,10 +1198,10 @@ def test_check_referenced_versions_is_working_properly_case_2(
 
     result = maya_env.check_referenced_versions()
 
-    # print('data["version15"].id: %s' % data["version15"].id)
-    # print('data["version11"].id: %s' % data["version11"].id)
-    # print('data["asset2_model_take1_v001"].id : %s' % data["asset2_model_take1_v001"].id)
-    # print('data["asset2_model_main_v002"].id : %s' % data["asset2_model_main_v002"].id)
+    # print('data["version15"].id: {}'.format(data["version15"].id))
+    # print('data["version11"].id: {}'.format(data["version11"].id))
+    # print('data["asset2_model_take1_v001"].id : {}'.format(data["asset2_model_take1_v001"].id))
+    # print('data["asset2_model_main_v002"].id : {}'.format(data["asset2_model_main_v002"].id))
     #
     # print(expected_reference_resolution)
     # print('--------------------------')s

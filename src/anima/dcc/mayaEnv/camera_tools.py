@@ -191,13 +191,13 @@ def camera_focus_plane_tool(camera):
 
     frustum_geo = create_frustum_geo(camera, shape_type=1)
 
-    exp_focus_distance = """%(camera)s.focusDistance = -%(frustum_geo)s.tz;
-    %(camera)s.aiFocusDistance = %(camera)s.focusDistance;
-    %(camera)s.aiApertureSize = %(camera)s.focalLength / %(camera)s.fStop * 0.1;
-    """ % {
-        "camera": camera_shape.name(),
-        "frustum_geo": frustum_geo.name(),
-    }
+    exp_focus_distance = """{camera}.focusDistance = -{frustum_geo}.tz;
+    {camera}.aiFocusDistance = {camera}.focusDistance;
+    {camera}.aiApertureSize = {camera}.focalLength / {camera}.fStop * 0.1;
+    """.format(
+        camera=camera_shape.name(),
+        frustum_geo=frustum_geo.name(),
+    )
     try:
         pm.expression(s=exp_focus_distance, ae=1, uc="all")
     except RuntimeError:
@@ -245,10 +245,7 @@ def cam_to_chan(start_frame, end_frame):
 
     camera = selection[0]
 
-    template = (
-        "%(frame)s\t%(posx)s\t%(posy)s\t%(posz)s\t"
-        "%(rotx)s\t%(roty)s\t%(rotz)s\t%(vfv)s"
-    )
+    template = "{frame}\t{posx}\t{posy}\t{posz}\t" "{rotx}\t{roty}\t{rotz}\t{vfv}"
 
     lines = []
 
@@ -260,17 +257,16 @@ def cam_to_chan(start_frame, end_frame):
         vfv = pm.camera(camera, q=True, vfv=True)
 
         lines.append(
-            template
-            % {
-                "frame": i,
-                "posx": pos[0],
-                "posy": pos[1],
-                "posz": pos[2],
-                "rotx": rot[0],
-                "roty": rot[1],
-                "rotz": rot[2],
-                "vfv": vfv,
-            }
+            template.format(
+                frame=i,
+                posx=pos[0],
+                posy=pos[1],
+                posz=pos[2],
+                rotx=rot[0],
+                roty=rot[1],
+                rotz=rot[2],
+                vfv=vfv,
+            )
         )
 
     with open(chan_file, "w") as f:
@@ -306,7 +302,7 @@ def import_3de4_points(width, height):
     for point in man.points:
         # create a locator
         loc = create_camera_space_locator(frustum_curve, use_limits=False)
-        loc.rename("p%s" % point.name)
+        loc.rename(f"p{point.name}")
 
         # animate the locator
         for frame in point.data.keys():

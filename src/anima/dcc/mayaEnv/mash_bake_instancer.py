@@ -110,7 +110,8 @@ def mash_bake_instancer(
                 # get the related transform from the instanced_objects
 
                 instanced_transform = [
-                    node for node in instanced_shape.getAllParents()
+                    node
+                    for node in instanced_shape.getAllParents()
                     if node in instanced_transforms
                 ][0]
 
@@ -128,7 +129,9 @@ def mash_bake_instancer(
                     if bake_to_instances_flag:
                         new_node = pm.instance(instanced_transform)[0]
                     else:
-                        new_node = pm.duplicate(instanced_transform, rr=True, un=True)[0]
+                        new_node = pm.duplicate(instanced_transform, rr=True, un=True)[
+                            0
+                        ]
 
                     # rename it to the safe name
                     new_node.rename(new_name, ignoreShape=bake_to_instances_flag)

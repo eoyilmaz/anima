@@ -430,7 +430,7 @@ def initializePlugin(mobject):
             kPluginNodeTypeName, kPluginNodeId, nodeCreator, nodeInitializer
         )
     except:
-        sys.stderr.write("Failed to register node: %s" % kPluginNodeTypeName)
+        sys.stderr.write(f"Failed to register node: {kPluginNodeTypeName}")
         raise
 
 
@@ -440,5 +440,5 @@ def uninitializePlugin(mobject):
     try:
         mplugin.deregisterNode(kPluginNodeId)
     except:
-        sys.stderr.write("Failed to deregister node: %s" % kPluginNodeTypeName)
+        sys.stderr.write(f"Failed to deregister node: {kPluginNodeTypeName}")
         raise

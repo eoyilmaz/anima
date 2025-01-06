@@ -13,7 +13,7 @@ def version_dialog(mode=2):
     import nuke
 
     n = nukeEnv.Nuke()
-    n.name = "nuke%s.%s" % (nuke.NUKE_VERSION_MAJOR, nuke.NUKE_VERSION_MINOR)
+    n.name = "nuke{}.{}".format(nuke.NUKE_VERSION_MAJOR, nuke.NUKE_VERSION_MINOR)
 
     # display only warning messages
     import logging

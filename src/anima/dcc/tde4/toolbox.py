@@ -27,7 +27,7 @@ class Toolbox(object):
 
         camera_name = tde4.getCameraName(camera_id)
         print("==========")
-        print("Camera: %s" % camera_name)
+        print(f"Camera: {camera_name}")
 
         point_ids = tde4.getPointList(pgroup_id, True)
         calc_range = tde4.getCameraCalculationRange(camera_id)

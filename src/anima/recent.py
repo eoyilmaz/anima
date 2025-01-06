@@ -19,7 +19,7 @@ class RecentFileManager(object):
     "Generic" name.
 
     The data is held as a dictionary and the resultant RecentFileManager
-    instance is stored in %HOME/.cache/anima/ folder.
+    instance is stored in $HOME/.cache/anima/ folder.
 
     The RecentFileManager instance is restored from the cache folder when a new
     one is created. So it is kind of a Singleton.

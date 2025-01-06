@@ -175,7 +175,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
         index = self.parent.indexAt(position)
         model = self.parent.model()
         item = model.itemFromIndex(index)
-        logger.debug("itemAt(position) : %s" % item)
+        logger.debug(f"itemAt(position) : {item}")
         task_id = None
         entity = None
 
@@ -392,14 +392,13 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                         change_status_menu_actions_enabled
                     )
 
-                    change_status_menu_action.setObjectName("status_%s" % status_code)
+                    change_status_menu_action.setObjectName(f"status_{status_code}")
 
                     change_status_menu_actions.append(change_status_menu_action)
 
-                    menu_style_sheet = "%s %s" % (
+                    menu_style_sheet = "{} {}".format(
                         menu_style_sheet,
-                        "QMenu#status_%s { background: %s %s %s}"
-                        % (
+                        "QMenu#status_{} {{ background: {} {} {} }}".format(
                             status_code,
                             defaults_status_colors[status_code][0],
                             defaults_status_colors[status_code][1],
@@ -443,7 +442,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                 project_main_dialog.deleteLater()
 
             if entity:
-                url = "http://%s/%ss/%s/view" % (
+                url = "http://{}/{}s/{}/view".format(
                     defaults.stalker_server_internal_address,
                     entity.entity_type.lower(),
                     entity.id,
@@ -456,7 +455,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                         open_browser_in_location(entity.absolute_path)
                     except IOError as e:
                         QtWidgets.QMessageBox.critical(
-                            self.parent, "Error", "%s" % e, QtWidgets.QMessageBox.Ok
+                            self.parent, "Error", f"{e}", QtWidgets.QMessageBox.Ok
                         )
                 elif selected_action is copy_url_action:
                     clipboard = QtWidgets.QApplication.clipboard()
@@ -467,7 +466,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                     QtWidgets.QMessageBox.warning(
                         self.parent,
                         "URL Copied To Clipboard",
-                        "URL:<br><br>%s<br><br>is copied to clipboard!" % url,
+                        f"URL:<br><br>{url}<br><br>is copied to clipboard!",
                         QtWidgets.QMessageBox.Ok,
                     )
                 elif selected_action is copy_id_to_clipboard:
@@ -483,7 +482,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                     QtWidgets.QMessageBox.warning(
                         self.parent,
                         "ID Copied To Clipboard",
-                        "IDs are copied to clipboard!<br>%s" % selected_entity_ids,
+                        f"IDs are copied to clipboard!<br>{selected_entity_ids}",
                         QtWidgets.QMessageBox.Ok,
                     )
 
@@ -532,7 +531,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                     thumbnail_full_path = choose_thumbnail(
                         self.parent,
                         start_path=entity.absolute_path,
-                        dialog_title="Choose Thumbnail For: %s" % entity.name,
+                        dialog_title=f"Choose Thumbnail For: {entity.name}",
                     )
 
                     # if the thumbnail_full_path is empty do not do anything
@@ -590,7 +589,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                                 task,
                                 None,
                                 new_task_name if rename_new_tasks else None,
-                                description="Duplicated from Task(%s)" % task.id,
+                                description=f"Duplicated from Task({task.id})",
                                 user=logged_in_user,
                                 keep_resources=keep_resources,
                                 number_of_copies=number_of_copies,
@@ -615,7 +614,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                     )
                     if answer == QtWidgets.QMessageBox.Yes:
                         tasks = self.parent.get_selected_tasks()
-                        logger.debug("tasks   : %s" % tasks)
+                        logger.debug(f"tasks   : {tasks}")
 
                         task = Task.query.get(item.task.id)
 
@@ -715,9 +714,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                     if isinstance(entity, Task):
                         parent = entity
 
-                    decoder = task_hierarchy_io.StalkerEntityDecoder(
-                        project=project
-                    )
+                    decoder = task_hierarchy_io.StalkerEntityDecoder(project=project)
                     from anima.ui.dialogs.progress_dialog import ProgressDialog
 
                     pdm = ProgressManagerFactory.get_progress_manager(
@@ -741,7 +738,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                             QtWidgets.QMessageBox.critical(
                                 self.parent,
                                 "Error!",
-                                "%s" % e,
+                                f"{e}",
                                 QtWidgets.QMessageBox.Ok,
                             )
                         else:

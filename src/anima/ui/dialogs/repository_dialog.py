@@ -32,7 +32,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if self.repository:
             self.mode = "Update"
 
-        self.dialog_label.setText("%s Repository" % self.mode)
+        self.dialog_label.setText(f"{self.mode} Repository")
 
         self._setup_signals()
 

@@ -137,7 +137,7 @@ class Maya(DCCBase):
 
     """
 
-    name = "Maya%s" % pm.versions.shortName()
+    name = f"Maya{pm.versions.shortName()}"
     representations = ["Base", "GPU", "ASS", "RS"]
     has_publishers = True
 
@@ -311,10 +311,13 @@ workspace -fr "translatorData" "Outputs/data";
 
         end = time.time()
         logger.debug(
-            "set_arnold_texture_search_path() took " "%f seconds" % (end - start)
+            "set_arnold_texture_search_path() took "
+            "{:0.3f} seconds".format(end - start)
         )
 
-    def save_as(self, version, run_pre_publishers=True, allow_external_references=False):
+    def save_as(
+        self, version, run_pre_publishers=True, allow_external_references=False
+    ):
         """The save_as action for maya dccDCC.
 
         It saves the given ``Version`` instance to the Version.absolute_full_path.
@@ -349,7 +352,10 @@ workspace -fr "translatorData" "Outputs/data";
                         pm.confirmDialog(
                             title="PublishError",
                             icon="critical",
-                            message="<b>%s</b><br/><br/>%s" % ("PRE PUBLISH FAILED!!!", e),
+                            message="<b>{}</b><br/><br/>{}".format(
+                                "PRE PUBLISH FAILED!!!",
+                                e,
+                            ),
                             button=["Ok"],
                         )
                     raise e
@@ -386,8 +392,8 @@ workspace -fr "translatorData" "Outputs/data";
 
         # if the new workspace path is not matching the with the previous one
         # update the external paths to absolute version
-        logger.debug("current workspace: %s" % current_workspace_path)
-        logger.debug("next workspace: %s" % workspace_path)
+        logger.debug(f"current workspace: {current_workspace_path}")
+        logger.debug(f"next workspace   : {workspace_path}")
 
         if current_workspace_path != workspace_path:
             logger.debug("changing workspace detected!")
@@ -412,6 +418,7 @@ workspace -fr "translatorData" "Outputs/data";
 
         # set color management
         from anima.dcc.mayaEnv import render
+
         render.MayaColorManagementConfigurator.configure()
 
         # check if this is a shot related task
@@ -527,7 +534,7 @@ workspace -fr "translatorData" "Outputs/data";
                 pm.confirmDialog(
                     title="PublishError",
                     icon="critical",
-                    message="<b>%s</b><br/><br/>%s" % ("POST PUBLISH FAILED!!!", e),
+                    message="<b>{}</b><br/><br/>{}".format("POST PUBLISH FAILED!!!", e),
                     button=["Ok"],
                 )
                 raise e
@@ -535,7 +542,7 @@ workspace -fr "translatorData" "Outputs/data";
             publish_dialog.close()
 
         end = time.time()
-        logger.debug("save_as took %f seconds" % (end - start))
+        logger.debug("save_as took {:0.3f} seconds".format(end - start))
         return True
 
     def export_as(self, version):
@@ -650,14 +657,14 @@ workspace -fr "translatorData" "Outputs/data";
         pm.workspace.open(new_workspace)
 
         # check for unsaved changes
-        logger.info("opening file: %s" % version.absolute_full_path)
+        logger.info(f"opening file: {version.absolute_full_path}")
 
         # set the playblast folder
         self.set_playblast_file_name(version)
         try:
             # switch representations
             if representation and representation != Representation.base_repr_name:
-                logger.info("requested representation: %s" % representation)
+                logger.info(f"requested representation: {representation}")
                 # so we have a representation request
                 pm.openFile(
                     version.absolute_full_path,
@@ -668,7 +675,7 @@ workspace -fr "translatorData" "Outputs/data";
                 )
                 # list all references and switch their paths
                 for ref in pm.listReferences():
-                    logger.debug("switching: %s" % ref.path)
+                    logger.debug(f"switching: {ref.path}")
                     ref.to_repr(representation)
                     # force load reference
                     ref.load()
@@ -684,8 +691,9 @@ workspace -fr "translatorData" "Outputs/data";
                     )
                 else:
                     logger.info(
-                        "using loadReferenceDepth:%s"
-                        % reference_depth_res[reference_depth]
+                        "using loadReferenceDepth:{}".format(
+                            reference_depth_res[reference_depth]
+                        )
                     )
                     pm.openFile(
                         version.absolute_full_path,
@@ -710,6 +718,7 @@ workspace -fr "translatorData" "Outputs/data";
 
         # set color management
         from anima.dcc.mayaEnv import render
+
         render.MayaColorManagementConfigurator.configure()
 
         # set sequence manager related data
@@ -746,9 +755,7 @@ workspace -fr "translatorData" "Outputs/data";
         if use_namespace:
             namespace = os.path.basename(version.filename)
             pm.importFile(
-                version.absolute_full_path,
-                namespace=namespace,
-                preserveReferences=True
+                version.absolute_full_path, namespace=namespace, preserveReferences=True
             )
         else:
             pm.importFile(
@@ -824,7 +831,7 @@ workspace -fr "translatorData" "Outputs/data";
 
         # get the workspace path
         workspace_path = pm.workspace.path
-        logger.debug("workspace_path: %s" % workspace_path)
+        logger.debug(f"workspace_path: {workspace_path}")
 
         versions = self.get_versions_from_path(workspace_path)
         version = None
@@ -832,7 +839,7 @@ workspace -fr "translatorData" "Outputs/data";
         if len(versions):
             version = versions[0]
 
-        logger.debug("version from workspace is: %s" % version)
+        logger.debug(f"version from workspace is: {version}")
         return version
 
     def get_current_version(self):
@@ -846,12 +853,12 @@ workspace -fr "translatorData" "Outputs/data";
 
         # pm.env.sceneName() always uses "/"
         full_path = pm.sceneName()
-        logger.debug("current scene full_path : %s" % full_path)
+        logger.debug(f"current scene full_path: {full_path}")
         # try to get it from the current open scene
         if full_path != "":
             logger.debug("trying to get the version from current file")
             version = self.get_version_from_full_path(full_path)
-            logger.debug("version from current file: %s" % version)
+            logger.debug(f"version from current file: {version}")
 
         return version
 
@@ -893,12 +900,14 @@ workspace -fr "translatorData" "Outputs/data";
             sm.get_shot_name_template()
             sm.set_task_name(version.task.name)
             sm.set_variant_name(version.variant_name)
-            sm.set_version("v%03d" % version.version_number)
+            sm.set_version(f"v{version.version_number:03d}")
 
             for seq in sm.sequences.get():
                 seq.get_sequence_name()
         end = time.time()
-        logger.debug("set_sequence_manager_data() took " "%f seconds" % (end - start))
+        logger.debug(
+            "set_sequence_manager_data() took " "{:0.3f} seconds".format(end - start)
+        )
 
     def set_render_filename(self, version):
         """sets the render file name"""
@@ -932,19 +941,19 @@ workspace -fr "translatorData" "Outputs/data";
         if current_renderer == "redshift":
             # do not use <RenderPass> in Redshift
             output_filename_template = (
-                "%(render_output_folder)s/<RenderLayer>/"
-                "%(version_sig_name)s_<RenderLayer>"
+                "{render_output_folder}/<RenderLayer>/"
+                "{version_sig_name}_<RenderLayer>"
             )
         else:
             output_filename_template = (
-                "%(render_output_folder)s/<RenderLayer>/"
-                "%(version_sig_name)s_<RenderLayer>_<RenderPass>"
+                "{render_output_folder}/<RenderLayer>/"
+                "{version_sig_name}_<RenderLayer>_<RenderPass>"
             )
 
-        render_file_full_path = output_filename_template % {
-            "render_output_folder": render_output_folder,
-            "version_sig_name": version_sig_name,
-        }
+        render_file_full_path = output_filename_template.format(
+            render_output_folder=render_output_folder,
+            version_sig_name=version_sig_name,
+        )
 
         # convert the render_file_full_path to a relative path to the
         # imageFolderFromWS_full_path
@@ -962,7 +971,7 @@ workspace -fr "translatorData" "Outputs/data";
         # defaultRenderGlobals
         dRG = pm.PyNode("defaultRenderGlobals")
         dRG.imageFilePrefix.set(render_file_rel_path)
-        dRG.renderVersion.set("v%03d" % version.version_number)
+        dRG.renderVersion.set(f"v{version.version_number:03d}")
         dRG.animation.set(1)
         dRG.outFormatControl.set(0)
         dRG.extensionPadding.set(4)
@@ -1068,7 +1077,9 @@ workspace -fr "translatorData" "Outputs/data";
 
         pm.optionVar["playblastFile"] = playblast_full_path
         end = time.time()
-        logger.debug("set_playblast_file_name() took %f seconds" % (end - start))
+        logger.debug(
+            "set_playblast_file_name() took {:0.3f} seconds".format(end - start)
+        )
 
     @classmethod
     def set_render_resolution(cls, width, height, pixel_aspect=1.0):
@@ -1127,7 +1138,7 @@ workspace -fr "translatorData" "Outputs/data";
 
         if not os.path.exists(destination_full_path):
             # move the file
-            logger.debug("moving to: %s" % destination_full_path)
+            logger.debug(f"moving to: {destination_full_path}")
             try:
                 shutil.copy(file_path, local_path)
             except IOError:  # no write permission
@@ -1155,9 +1166,9 @@ workspace -fr "translatorData" "Outputs/data";
         for audio in pm.ls(type=pm.nt.Audio):
             path = audio.filename.get()
             path = path.replace("\\", "/")
-            logger.debug("checking path: %s" % path)
+            logger.debug(f"checking path: {path}")
             if path is not None and os.path.isabs(path) and not self.is_in_repo(path):
-                logger.debug("is not in repo: %s" % path)
+                logger.debug(f"is not in repo: {path}")
                 new_path = self.move_to_local(version, path, "Sound")
                 if not new_path:
                     # it was not copied
@@ -1165,16 +1176,16 @@ workspace -fr "translatorData" "Outputs/data";
                 else:
                     # successfully copied
                     # update the path
-                    logger.debug("updating audio path to: %s" % new_path)
+                    logger.debug(f"updating audio path to: {new_path}")
                     audio.filename.set(new_path)
 
         # check for file textures
         for file_texture in pm.ls(type=pm.nt.File):
             path = file_texture.attr("fileTextureName").get()
             path = path.replace("\\", "/")
-            logger.debug("checking path: %s" % path)
+            logger.debug(f"checking path: {path}")
             if path is not None and os.path.isabs(path) and not self.is_in_repo(path):
-                logger.debug("is not in repo: %s" % path)
+                logger.debug(f"is not in repo: {path}")
                 new_path = self.move_to_local(version, path, "Textures")
                 if not new_path:
                     # it was not copied
@@ -1182,16 +1193,16 @@ workspace -fr "translatorData" "Outputs/data";
                 else:
                     # successfully copied
                     # update the path
-                    logger.debug("updating texture path to: %s" % new_path)
+                    logger.debug(f"updating texture path to: {new_path}")
                     file_texture.attr("fileTextureName").set(new_path)
 
         # check for arnold textures
         for arnold_texture in pm.ls(type="aiImage"):
             path = arnold_texture.attr("filename").get()
             path = path.replace("\\", "/")
-            logger.debug("checking path: %s" % path)
+            logger.debug(f"checking path: {path}")
             if path is not None and os.path.isabs(path) and not self.is_in_repo(path):
-                logger.debug("is not in repo: %s" % path)
+                logger.debug(f"is not in repo: {path}")
                 new_path = self.move_to_local(version, path, "Textures")
                 if not new_path:
                     # it was not copied
@@ -1199,7 +1210,7 @@ workspace -fr "translatorData" "Outputs/data";
                 else:
                     # successfully copied
                     # update the path
-                    logger.debug("updating texture path to: %s" % new_path)
+                    logger.debug(f"updating texture path to: {new_path}")
                     arnold_texture.attr("filename").set(new_path)
 
         # check for mentalray textures
@@ -1207,13 +1218,13 @@ workspace -fr "translatorData" "Outputs/data";
             for mr_texture in pm.ls(type=pm.nt.MentalrayTexture):
                 path = mr_texture.attr("fileTextureName").get()
                 path = path.replace("\\", "/")
-                logger.debug("path of %s: %s" % (mr_texture, path))
+                logger.debug(f"path of {mr_texture}: {path}")
                 if (
                     path is not None
                     and os.path.isabs(path)
                     and not self.is_in_repo(path)
                 ):
-                    logger.debug("is not in repo: %s" % path)
+                    logger.debug(f"is not in repo: {path}")
                     new_path = self.move_to_local(version, path, "Textures")
                     if not new_path:
                         # it was not copied
@@ -1221,7 +1232,7 @@ workspace -fr "translatorData" "Outputs/data";
                     else:
                         # successfully copied
                         # update the path
-                        logger.debug("updating texture path to: %s" % new_path)
+                        logger.debug(f"updating texture path to: {new_path}")
                         mr_texture.attr("fileTextureName").set(new_path)
         except AttributeError:  # MentalRay not loaded
             pass
@@ -1231,7 +1242,7 @@ workspace -fr "translatorData" "Outputs/data";
             path = image_plane.attr("imageName").get()
             path = path.replace("\\", "/")
             if path is not None and os.path.isabs(path) and not self.is_in_repo(path):
-                logger.debug("is not in repo: %s" % path)
+                logger.debug(f"is not in repo: {path}")
                 new_path = self.move_to_local(version, path, "ImagePlanes")
                 if not new_path:
                     # it was not copied
@@ -1239,7 +1250,7 @@ workspace -fr "translatorData" "Outputs/data";
                 else:
                     # successfully copied
                     # update the path
-                    logger.debug("updating image plane path to: %s" % new_path)
+                    logger.debug(f"updating image plane path to: {new_path}")
                     image_plane.attr("imageName").set(new_path)
 
         # check for IBL nodes
@@ -1252,7 +1263,7 @@ workspace -fr "translatorData" "Outputs/data";
                     and os.path.isabs(path)
                     and not self.is_in_repo(path)
                 ):
-                    logger.debug("is not in repo: %s" % path)
+                    logger.debug(f"is not in repo: {path}")
                     new_path = self.move_to_local(version, path, "IBL")
                     if not new_path:
                         # it was not copied
@@ -1260,7 +1271,7 @@ workspace -fr "translatorData" "Outputs/data";
                     else:
                         # successfully copied
                         # update the path
-                        logger.debug("updating ibl path to: %s" % new_path)
+                        logger.debug(f"updating ibl path to: {new_path}")
                         ibl.attr("texture").set(new_path)
         except AttributeError:  # mentalray not loaded
             pass
@@ -1277,7 +1288,7 @@ workspace -fr "translatorData" "Outputs/data";
             )
 
         end = time.time()
-        logger.debug("check_external_files took %f seconds" % (end - start))
+        logger.debug("check_external_files took {:0.3f} seconds".format(end - start))
 
     def get_referenced_versions(self, parent_ref=None):
         """Returns the versions those are referenced to the current scene.
@@ -1305,15 +1316,14 @@ workspace -fr "translatorData" "Outputs/data";
             pdm = ProgressManagerFactory.get_progress_manager()
             caller = pdm.register(
                 ref_count,
-                "Maya.get_referenced_versions(%s) %i "
-                "in total" % (parent_ref, ref_count),
+                f"Maya.get_referenced_versions({parent_ref}) {ref_count} " "in total",
             )
 
         prev_path = ""
         versions = []
-        logger.debug("loop through %i references" % ref_count)
+        logger.debug(f"loop through {ref_count} references")
         for ref in refs:
-            logger.debug("checking ref: %s" % ref.path)
+            logger.debug(f"checking ref: {ref.path}")
             path = ref.path
             if path != prev_path:
                 # try to get a version with the given path
@@ -1327,13 +1337,13 @@ workspace -fr "translatorData" "Outputs/data";
                         versions.append(version)
                     prev_path = path
             if caller is not None:
-                caller.step(message="path: %s" % path)
+                caller.step(message=f"path: {path}")
             logger.debug("stepping to next ref")
 
         if caller is not None:
             caller.end_progress()
 
-        logger.debug("result: %s" % versions)
+        logger.debug(f"result: {versions}")
         return versions
 
     def update_first_level_versions(self, reference_resolution):
@@ -1420,7 +1430,7 @@ workspace -fr "translatorData" "Outputs/data";
         # try to find a timeUnit for the given fps
         # prepare the time_to_fps table
         time_to_fps = {}
-        regex = re.compile("[0-9\.]+")
+        regex = re.compile(r"[0-9\.]+")
         time_units = pm.mel.globals["gCurrentTimeCmdValueTable"]
         for time_unit in time_units:
             fps_string = pm.mel.internalTimeUnitStringToDisplayFPSString(
@@ -1447,7 +1457,7 @@ workspace -fr "translatorData" "Outputs/data";
         pm.playbackOptions(min=pMin, max=pMax)
 
         end = time.time()
-        logger.debug("set_fps() took %f seconds" % (end - start))
+        logger.debug("set_fps() took {:0.3f} seconds".format(end - start))
 
     @classmethod
     def load_referenced_versions(cls):
@@ -1513,14 +1523,14 @@ workspace -fr "translatorData" "Outputs/data";
             if "$" in unresolved_path:  # just skip this one
                 logger.debug(
                     "skipping current ref, it is already os "
-                    "independent!: %s" % unresolved_path
+                    f"independent!: {unresolved_path}"
                 )
                 continue
 
             new_ref_path = Repository.to_os_independent_path(unresolved_path)
             if new_ref_path != unresolved_path:
-                logger.info("replacing reference: %s" % ref.path)
-                logger.info("replacing with: %s" % new_ref_path)
+                logger.info(f"replacing reference: {ref.path}")
+                logger.info(f"replacing with: {new_ref_path}")
                 ref.replaceWith(new_ref_path)
                 if not is_loaded:
                     ref.unload()
@@ -1540,20 +1550,24 @@ workspace -fr "translatorData" "Outputs/data";
 
         # Arnold Nodes
         if pm.pluginInfo("mtoa", q=1, loaded=1):
-            types_and_attrs.update({
-                "aiImage": "filename",
-                "aiStandIn": "dso",
-                "aiVolume": "filename",
-            })
+            types_and_attrs.update(
+                {
+                    "aiImage": "filename",
+                    "aiStandIn": "dso",
+                    "aiVolume": "filename",
+                }
+            )
 
         # Redshift Nodes
         if pm.pluginInfo("redshift4maya", q=1, loaded=1):
-            types_and_attrs.update({
-                "RedshiftNormalMap": "tex0",
-                "RedshiftProxyMesh": "fileName",
-                "RedshiftDomeLight": ["tex0", "tex1"],
-                "RedshiftSprite": "tex0",
-            })
+            types_and_attrs.update(
+                {
+                    "RedshiftNormalMap": "tex0",
+                    "RedshiftProxyMesh": "fileName",
+                    "RedshiftDomeLight": ["tex0", "tex1"],
+                    "RedshiftSprite": "tex0",
+                }
+            )
 
         for node_type in types_and_attrs:
             attr_names = types_and_attrs[node_type]
@@ -1571,7 +1585,7 @@ workspace -fr "translatorData" "Outputs/data";
                         # do nothing it is already using an environment variable
                         continue
 
-                    logger.info("replacing file texture: %s" % orig_path)
+                    logger.info(f"replacing file texture: {orig_path}")
 
                     path = os.path.normpath(os.path.expandvars(orig_path)).replace(
                         "\\", "/"
@@ -1587,16 +1601,16 @@ workspace -fr "translatorData" "Outputs/data";
                     new_path = Repository.to_os_independent_path(path)
 
                     if new_path != orig_path:
-                        logger.info("with: %s" % new_path)
+                        logger.info(f"with: {new_path}")
 
                         # check if it has any incoming connections
                         try:
                             inputs = node.attr(attr_name).inputs(p=1)
                         except TypeError as e:
                             inputs = []
-                            print("ignoring this error: %s" % e)
-                            print("node     : %s" % node.name())
-                            print("attr_name: %s" % attr_name)
+                            print(f"ignoring this error: {e}")
+                            print(f"node     : {node.name()}")
+                            print(f"attr_name: {attr_name}")
 
                         if len(inputs):
                             # it has incoming connections
@@ -1620,7 +1634,7 @@ workspace -fr "translatorData" "Outputs/data";
                                 # just skip it
                                 pass
         end = time.time()
-        logger.debug("replace_external_paths took %f seconds" % (end - start))
+        logger.debug("replace_external_paths took {:0.3f} seconds".format(end - start))
 
     def create_workspace_file(self, path):
         """creates the workspace.mel at the given path"""
@@ -1641,7 +1655,7 @@ workspace -fr "translatorData" "Outputs/data";
             workspace_file.write(content)
 
         end = time.time()
-        logger.debug("create_workspace_file() took " "%f seconds" % (end - start))
+        logger.debug("create_workspace_file() took {:0.3f} seconds".format(end - start))
 
     @classmethod
     def create_workspace_folders(cls, path):
@@ -1663,7 +1677,9 @@ workspace -fr "translatorData" "Outputs/data";
                 # dir exists
                 pass
         end = time.time()
-        logger.debug("create_workspace_folders() took %f seconds" % (end - start))
+        logger.debug(
+            "create_workspace_folders() took {:0.3f} seconds".format(end - start)
+        )
 
     def deep_version_inputs_update(self):
         """updates the inputs of the references of the current scene"""
@@ -1676,7 +1692,7 @@ workspace -fr "translatorData" "Outputs/data";
         prev_ref_path = None
         while len(references_list):
             current_ref = references_list.pop(0)
-            logger.debug("current_ref: %s" % current_ref.path)
+            logger.debug(f"current_ref: {current_ref.path}")
             self.update_version_inputs(current_ref)
             # optimize it by only appending one instance of the same referenced
             # file
@@ -1698,8 +1714,8 @@ workspace -fr "translatorData" "Outputs/data";
         dictionary which has three keys called 'leave', 'update' and 'create'.
 
         Each of these keys correspond to a value of a list of
-        :class:`~stalker.model.version.Version`\ s. Where the list in 'leave'
-        key shows the Versions referenced (or deeply referenced) to the
+        :class:`~stalker.model.version.Version` instances. Where the list in
+        'leave' key shows the Versions referenced (or deeply referenced) to the
         current scene which doesn't need to be changed.
 
         The list in 'update' key holds Versions those need to be updated to a
@@ -1763,7 +1779,7 @@ workspace -fr "translatorData" "Outputs/data";
         :return list: A list of :class:`~stalker.models.version.Version`
           instances if created any.
         """
-        logger.debug("updating to new versions with: %s" % reference_resolution)
+        logger.debug(f"updating to new versions with: {reference_resolution}")
 
         from stalker import Repository
 
@@ -1855,7 +1871,7 @@ workspace -fr "translatorData" "Outputs/data";
                 logger.debug("edits has improper character, skipping!!!")
                 all_edits = []
 
-            logger.debug("all_edits: %s" % all_edits)
+            logger.debug(f"all_edits: {all_edits}")
 
             edits_dictionary[i] = {"namespace": ref.fullNamespace, "edits": all_edits}
             if all_edits:
@@ -1894,13 +1910,13 @@ workspace -fr "translatorData" "Outputs/data";
             except KeyError:
                 # there is a problem with this file skip this edit
                 continue
-            logger.debug("re-all_edits: %s" % all_edits)
+            logger.debug(f"re-all_edits: {all_edits}")
 
             old_namespace = edits_dictionary[i]["namespace"]
             new_namespace = ref.fullNamespace
 
-            logger.debug("old_namespace : %s" % old_namespace)
-            logger.debug("new_namespace : %s" % new_namespace)
+            logger.debug(f"old_namespace : {old_namespace}")
+            logger.debug(f"new_namespace : {new_namespace}")
 
             # external edits, edits that are done in another scene
             external_edits = reference_query(ref, es=1, scs=1)
@@ -1914,12 +1930,12 @@ workspace -fr "translatorData" "Outputs/data";
                 if updated_edit in external_edits:
                     continue
 
-                logger.debug("updated_edit: %s" % updated_edit)
+                logger.debug(f"updated_edit: {updated_edit}")
                 # so this is an edit done in current scene
                 try:
                     pm.mel.eval(updated_edit)
                 except RuntimeError:
-                    logger.debug("There is a RuntimeError in : %s" % updated_edit)
+                    logger.debug(f"There is a RuntimeError in : {updated_edit}")
                     pass
 
         return updated_namespaces
@@ -2008,18 +2024,18 @@ workspace -fr "translatorData" "Outputs/data";
             for path in to_update_paths:
                 vers = self.get_version_from_full_path(path)
 
-                logger.debug("vers: %s" % vers)
+                logger.debug(f"vers: {vers}")
                 if not vers:
                     continue
 
                 # use the latest published version instead of the referenced
                 # one, so we also do updates on the other hand
                 vers = vers.latest_published_version
-                logger.debug("vers.latest_published_version: %s" % vers)
+                logger.debug(f"vers.latest_published_version: {vers}")
 
                 updated_namespaces = self.update_reference_edits(vers)
 
-                logger.debug("updated_namespaces : %s" % updated_namespaces)
+                logger.debug(f"updated_namespaces : {updated_namespaces}")
                 if updated_namespaces:
                     # if we have changed the namespace we should create a new
                     # version
@@ -2032,7 +2048,7 @@ workspace -fr "translatorData" "Outputs/data";
                     )
                     new_version.is_published = True
                     created_versions.append(new_version)
-                    logger.debug("new_version : %s" % new_version)
+                    logger.debug(f"new_version : {new_version}")
                     self.save_as(new_version)
                     # pm.saveFile()
 
@@ -2086,10 +2102,10 @@ workspace -fr "translatorData" "Outputs/data";
         """
         malicious_node_names = ["vaccine_gene", "breed_gene"]
         for node_name in malicious_node_names:
-            malicious_nodes = pm.ls("*%s*" % node_name)
+            malicious_nodes = pm.ls(f"*{node_name}*")
             for node in malicious_nodes:
                 try:
-                    print("Found malicious node: %s" % node_name)
+                    print(f"Found malicious node: {node_name}")
                     node.unlock()
                     pm.delete(node)
                     print("Deleted malicious node!")
@@ -2097,7 +2113,7 @@ workspace -fr "translatorData" "Outputs/data";
                     pass
 
         # delete vaccine.py, userSetup.py
-        user_app_dir = "%s/scripts" % pm.internalVar(userAppDir=True)
+        user_app_dir = "{}/scripts".format(pm.internalVar(userAppDir=True))
         malicious_script_file_names = [
             "vaccine.py",
             "vaccine.pyc",
@@ -2111,7 +2127,7 @@ workspace -fr "translatorData" "Outputs/data";
             )
             try:
                 os.remove(malicious_script_file_full_path)
-                print("Removed: %s" % malicious_script_file_full_path)
+                print(f"Removed: {malicious_script_file_full_path}")
                 removed_malicious_script_file = True
             except OSError:
                 pass

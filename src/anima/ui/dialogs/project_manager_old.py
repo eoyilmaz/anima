@@ -89,10 +89,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _setup_ui(self):
         """Create the UI widgets."""
-        self.setWindowTitle("%s v%s" % (self.__app_name__, self.__version__))
+        self.setWindowTitle(f"{self.__app_name__} v{self.__version__}")
 
         # set application icon
-        logger.debug("ui.__path__: %s" % ui.__path__[0])
+        logger.debug(f"ui.__path__: {ui.__path__[0]}")
 
         app_icon_path = os.path.join(ui.__path__[0], "images", "app_icon.png")
         self.setWindowIcon(QtGui.QIcon(app_icon_path))

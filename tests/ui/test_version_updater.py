@@ -522,7 +522,7 @@ class VersionUpdaterTester(unittest.TestCase):
             logger.debug('creating a new QApplication')
             self.app = QtGui.QApplication(sys.argv)
         else:
-            logger.debug('using the present QApplication: %s' % QtGui.qApp)
+            logger.debug('using the present QApplication: {}'.format(QtGui.qApp))
             # self.app = QtGui.qApp
             self.app = QtGui.QApplication.instance()
 
@@ -547,12 +547,7 @@ class VersionUpdaterTester(unittest.TestCase):
                 shutil.rmtree(f, True)
 
     def test_test_setup(self):
-        """testing if the test setup is correct
-        """
-        # print("version2  : %s" % self.version2)
-        # print("version5  : %s" % self.version5)
-        # print("version12 : %s" % self.version12)
-        # print("version15 : %s" % self.version15)
+        """testing if the test setup is correct."""
 
         # check the setup
         visited_versions = []

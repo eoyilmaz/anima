@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from stalker import Group, StatusList, User
 from stalker.config import Config as ConfigBase
+from stalker.db.session import DBSession
 
 
 class Config(ConfigBase):
-    """configurator"""
+    """Configurator."""
 
     extra_config_values = dict(
         # stalker_server_internal_address=
@@ -26,7 +28,7 @@ class Config(ConfigBase):
         normal_users_group_names=["Normal Users"],
         power_users_group_names=["Power Users", "admins"],
         # environment variable template for repositories
-        repo_env_template="REPO%(id)s",
+        repo_env_template="REPO{code}",
         anima_env_var="ANIMAPATH",
         env_var_file_name="env.json",
         # some media
@@ -62,12 +64,11 @@ class Config(ConfigBase):
 
     @property
     def status_colors_by_id(self):
-        """fills the _status_colors_by_id dictionary"""
+        """Fill the _status_colors_by_id dictionary."""
         if not self._status_colors_by_id:
             from anima.utils import do_db_setup
 
             do_db_setup()
-            from stalker import StatusList
 
             task_status_list = StatusList.query.filter(
                 StatusList.target_entity_type == "Task"
@@ -81,24 +82,24 @@ class Config(ConfigBase):
 
     @property
     def user_names_lut(self):
-        """fills the _user_names_lut"""
+        """Fill the _user_names_lut."""
         if not self._user_names_lut:
             from anima.utils import do_db_setup
 
             do_db_setup()
-            from stalker import User
-            from stalker.db.session import DBSession
 
             for result in DBSession.query(User.id, User.name).all():
                 self._user_names_lut.__setitem__(result.id, result.name)
         return self._user_names_lut
 
-    def is_power_user(self, user):
-        """A predicate that returns if the user is a power user"""
+    def is_power_user(self, user) -> bool:
+        """Check if the given user is a power user.
+
+        Returns:
+            bool: True if the given user is a power user, False otherwise.
+        """
         if not user:
             return False
-
-        from stalker import Group
 
         power_users_groups = Group.query.filter(
             Group.name.in_(self.power_users_group_names)

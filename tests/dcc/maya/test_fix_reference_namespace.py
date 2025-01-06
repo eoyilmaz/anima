@@ -209,7 +209,7 @@ def test_fix_reference_namespace_is_working_properly_with_duplicate_refs(
     )
 
     # the second copy
-    assert all_refs[3].namespace == "%s1" % data["version11"].filename.replace(".", "_")
+    assert all_refs[3].namespace == "{}1".format(data["version11"].filename.replace(".", "_"))
     assert all_refs[4].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
         ".", "_"
     )
@@ -370,7 +370,7 @@ def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_re
     )
 
     # the second copy
-    assert all_refs[2].namespace == "%s%s" % (
+    assert all_refs[2].namespace == "{}{}".format(
         data["asset2_lookdev_take1_v001"].filename.replace(".", "_"),
         all_refs[2].copyNumberList()[1],
     )
@@ -379,7 +379,7 @@ def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_re
     )
 
     # the third copy
-    assert all_refs[4].namespace == "%s%s" % (
+    assert all_refs[4].namespace == "{}{}".format(
         data["asset2_lookdev_take1_v001"].filename.replace(".", "_"),
         all_refs[4].copyNumberList()[2],
     )
@@ -388,7 +388,7 @@ def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_re
     )
 
     # the forth copy
-    assert all_refs[6].namespace == "%s%s" % (
+    assert all_refs[6].namespace == "{}{}".format(
         data["asset2_lookdev_take1_v001"].filename.replace(".", "_"),
         all_refs[6].copyNumberList()[3],
     )

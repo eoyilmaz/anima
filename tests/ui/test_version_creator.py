@@ -277,7 +277,7 @@ class VersionCreatorTester(unittest.TestCase):
             logger.debug('creating a new QApplication')
             cls.app = QtGui.QApplication(sys.argv)
         else:
-            logger.debug('using the present QApplication: %s' % QtGui.qApp)
+            logger.debug('using the present QApplication: {}'.format(QtGui.qApp))
             # self.app = QtGui.qApp
             cls.app = QtGui.QApplication.instance()
 

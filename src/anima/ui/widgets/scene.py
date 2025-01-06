@@ -41,8 +41,9 @@ class SceneComboBox(QtWidgets.QComboBox):
 
         if sequence and not isinstance(sequence, Sequence):
             raise TypeError(
-                "%s.sequence should be a Stalker Sequence instance, not %s"
-                % (self.__class__.__name__, sequence.__class__.__name__)
+                "{}.sequence should be a Stalker Sequence instance, not {}".format(
+                    self.__class__.__name__, sequence.__class__.__name__
+                )
             )
 
         self._sequence = sequence

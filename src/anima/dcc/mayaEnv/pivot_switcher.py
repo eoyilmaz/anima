@@ -82,7 +82,7 @@ class PivotSwitcher(object):
 
         # connect futurePivot node
         pm.connectAttr(
-            "%s%s" % (self._futurePivot.name(), ".message"),
+            "{}{}".format(self._futurePivot.name(), ".message"),
             self._object.attr("pivotData.futurePivot"),
             f=True,
         )

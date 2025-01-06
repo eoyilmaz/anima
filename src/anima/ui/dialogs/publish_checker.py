@@ -205,9 +205,11 @@ class PublisherElement(object):
         m.setWindowTitle("Continue?")
         m.setText(
             "This command will try to fix<br/>"
-            "[ <b>%s</b> ] issue<br/>"
+            "[ <b>{}</b> ] issue<br/>"
             "automatically.<br/><br/>"
-            "Confirm ? <b>(BETA)</b>" % self.publisher.__doc__.split("\n")[0].strip()
+            "Confirm ? <b>(BETA)</b>".format(
+                self.publisher.__doc__.split("\n")[0].strip()
+            )
         )
         m.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         m.setDefaultButton(QtWidgets.QMessageBox.Yes)
@@ -215,7 +217,7 @@ class PublisherElement(object):
         m.exec_()
 
         if m.clickedButton() == m.defaultButton():
-            fix_def_name = "%s%s" % (self.publisher.__name__, self.fix_identifier)
+            fix_def_name = "{}{}".format(self.publisher.__name__, self.fix_identifier)
             try:
                 from anima.dcc.mayaEnv import publish
 
@@ -343,7 +345,7 @@ class PublisherElement(object):
 
             # set performance label
             self.duration = end - start
-            self.performance_label.setText("%0.1f sec" % self.duration)
+            self.performance_label.setText("{:0.1f} sec".format(self.duration))
             self.check_push_button.setText("Check")
             self.check_push_button.setEnabled(True)
 
@@ -353,7 +355,9 @@ class PublisherElement(object):
                 self.fix_push_button.setStyleSheet("background-color: None")
             else:
                 # disable fix button if fix definition does not exist
-                fix_def_name = "%s%s" % (self.publisher.__name__, self.fix_identifier)
+                fix_def_name = "{}{}".format(
+                    self.publisher.__name__, self.fix_identifier
+                )
 
                 from anima.dcc.mayaEnv import publish
 
@@ -493,7 +497,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.check_all_push_button.setText("CHECK ALL")
         if self.version and self.version.task.type:
             self.check_all_push_button.setText(
-                "CHECK ALL for %s" % self.version.task.type.name
+                "CHECK ALL for {}".format(self.version.task.type.name)
             )
 
         self.main_layout.addWidget(self.check_all_push_button)
@@ -637,10 +641,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         if minute:
             self.duration_label.setText(
-                "Publishers run in: %i min %i sec!" % (int(minute), int(seconds))
+                "Publishers run in: {:d} min {:d} sec!".format(
+                    int(minute), int(seconds)
+                )
             )
         else:
-            self.duration_label.setText("Publishers run in: %0.1f sec!" % seconds)
+            self.duration_label.setText(
+                "Publishers run in: {:0.1f} sec!".format(seconds)
+            )
 
     def check_publisher_states(self):
         """check publisher states"""

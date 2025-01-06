@@ -43,13 +43,13 @@ def repeat_last(call_data):
 
     command = (
         'print \\"\\";python(\\"from anima.dcc.mayaEnv.toolbox import '
-        'repeater; repeater(%s);\\");' % index
+        f'repeater; repeater({index});\\");'
     )
 
-    repeat_last_command = 'repeatLast -ac "%(command)s" -acl "%(label)s";' % {
-        "command": command,
-        "label": callable_.__name__,
-    }
+    repeat_last_command = 'repeatLast -ac "{command}" -acl "{label}";'.format(
+        command=command,
+        label=callable_.__name__,
+    )
     print(repeat_last_command)
 
     pm.mel.eval(repeat_last_command)
@@ -1951,10 +1951,8 @@ def UI():
             color.next()
             pm.button(
                 "delete_orphan_shot_nodes_button",
-                l='Delete Orphan Shot nodes',
-                c=repeated_callback(
-                    Previs.delete_orphan_shot_nodes
-                ),
+                l="Delete Orphan Shot nodes",
+                c=repeated_callback(Previs.delete_orphan_shot_nodes),
                 ann=Previs.delete_orphan_shot_nodes.__doc__,
                 bgc=color.color,
             )
@@ -2607,9 +2605,9 @@ def UI():
             ]
             for attr_name in attr_names:
                 with pm.rowLayout(nc=4, rat=(1, "both", 0), adj=1):
-                    pm.text("%s_text" % attr_name, l=attr_name, bgc=color.color)
+                    pm.text(f"{attr_name}_text", l=attr_name, bgc=color.color)
                     pm.button(
-                        "set_%s_ON_button" % attr_name,
+                        f"set_{attr_name}_ON_button",
                         l="ON",
                         c=repeated_callback(
                             set_shape_attribute_wrapper,
@@ -2619,13 +2617,13 @@ def UI():
                         bgc=(0, 1, 0),
                     )
                     pm.button(
-                        "set_%s_OFF_button" % attr_name,
+                        f"set_{attr_name}_OFF_button",
                         l="OFF",
                         c=repeated_callback(set_shape_attribute_wrapper, attr_name, 0),
                         bgc=(1, 0, 0),
                     )
                     pm.button(
-                        "set_%s_REMOVE_button" % attr_name,
+                        f"set_{attr_name}_REMOVE_button",
                         l="REM",
                         ann="Remove Override",
                         c=repeated_callback(set_shape_attribute_wrapper, attr_name, -1),

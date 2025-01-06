@@ -178,23 +178,23 @@ def nodeInitializer():
     oyCenterOfMass.attributeAffects(oyCenterOfMass.aEndFrame, oyCenterOfMass.aCOMPos)
 
 
-def initializePlugn(mobject):
-    """plugin initializer"""
+def initializePlugin(mobject):
+    """Initialize plugin"""
     mplugin = OpenMayaMPx.MFnPlugin(mobject, "E. Ozgur Yilmaz", __version__, "Any")
     try:
         mplugin.registerNode(
             kPluginNodeTypeName, kPluginNodeId, nodeCreator, nodeInitializer
         )
     except:
-        sys.stderr.write("Failed to register node: %s" % kPluginNodeTypeName)
+        sys.stderr.write(f"Failed to register node: {kPluginNodeTypeName}")
         raise
 
 
-def uninitializerPlugin(mobject):
-    """plugin uninitializer"""
+def uninitializePlugin(mobject):
+    """Uninitialize the plugin."""
     mplugin = OpenMayaMPx.MFnPlugin(mobject)
     try:
         mplugin.deregisterNode(kPluginNodeId)
     except:
-        sys.stderr.write("Failed to deregister node: %s" % kPluginNodeTypeName)
+        sys.stderr.write(f"Failed to deregister node: {kPluginNodeTypeName}")
         raise

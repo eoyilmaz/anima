@@ -73,7 +73,7 @@ class ExternalDCC(DCCBase):
 
         for i, extension in enumerate(extensions):
             if not extension.startswith("."):
-                extension = ".%s" % extension
+                extension = f".{extension}"
                 extensions[i] = extension
 
         return extensions
@@ -94,8 +94,8 @@ class ExternalDCC(DCCBase):
         """
         if not isinstance(name, str):
             raise TypeError(
-                "%s.name should be an instance of str, not %s"
-                % (self.__class__.__name__, name.__class__.__name__)
+                f"{self.__class__.__name__}.name should be an instance of str, "
+                f"not {name.__class__.__name__}"
             )
         return name
 
@@ -128,55 +128,54 @@ class ExternalDCC(DCCBase):
 
         if not isinstance(structure, list):
             raise TypeError(
-                "%s.structure should be a list of strings, "
-                "showing the folder structure, not %s"
-                % (self.__class__.__name__, structure.__class__.__name__)
+                f"{self.__class__.__name__}.structure should be a list of "
+                "strings, showing the folder structure, "
+                f"not {structure.__class__.__name__}: '{structure}'"
             )
 
         for item in structure:
             if not isinstance(item, str):
                 raise TypeError(
-                    "All items in %s.structure should be an "
-                    "instance of str, an not %s"
-                    % (self.__class__.__name__, item.__class__.__name__)
+                    f"All items in {self.__class__.__name__}.structure should "
+                    f"be a str, not {item.__class__.__name__}: '{item}'"
                 )
 
         return structure
 
     @property
-    def structure(self):
-        """the structure property getter
+    def structure(self) -> str:
+        """Return the structure attribute value.
 
-        :return: str
+        Returns:
+            str: The structure attribute value.
         """
         return self._structure
 
     @structure.setter
-    def structure(self, structure):
-        """the structure property setter
+    def structure(self, structure) -> None:
+        """Set the structure attribute value.
 
-        :param list structure: A list of string showing the desired folders on that DCC
-        :return: None
+        Args:
+            structure (List[str]): A list of strings showing the desired
+                folders on that DCC.
         """
         self._structure = self._validate_structure(structure)
 
     def conform(self, version):
-        """Conforms the version to this DCC by setting its extension."""
+        """Conform the version to this DCC by setting its extension."""
         logger.debug("conforming version")
         from stalker import Version
 
         if not isinstance(version, Version):
             raise TypeError(
-                "version argument should be a "
-                "stalker.version.Version instance, not %s" % version.__class__.__name__
+                "version argument should be a stalker.version.Version instance, "
+                f"not {version.__class__.__name__}: '{version}'"
             )
         version.update_paths()
         version.extension = self.extensions[0]
         version.created_with = self.name
-        logger.debug("version.absolute_full_path : %s" % version.absolute_full_path)
-        logger.debug(
-            "finished conforming version extension to: %s" % self.extensions[0]
-        )
+        logger.debug(f"version.absolute_full_path : {version.absolute_full_path}")
+        logger.debug(f"finished conforming version extension to: {self.extensions[0]}")
 
     def initialize_structure(self, version):
         """Initializes the DCC folder structure
@@ -188,9 +187,10 @@ class ExternalDCC(DCCBase):
 
         if not isinstance(version, Version):
             raise TypeError(
-                '"version" argument in %s.initialize_structureshould be a '
-                "stalker.version.Version instance, not %s"
-                % (self.__class__.__name__, version.__class__.__name__)
+                '"version" argument in '
+                f"{self.__class__.__name__}.initialize_structure should be a "
+                "stalker.version.Version instance, "
+                f"not {version.__class__.__name__}: '{version}'"
             )
 
         # create the folder in version.absolute_path
@@ -199,7 +199,7 @@ class ExternalDCC(DCCBase):
         version.extension = extension
         for folder in self.structure:
             folder_path = os.path.join(version.absolute_path, folder)
-            logger.debug("creating: %s" % folder_path)
+            logger.debug(f"creating: {folder_path}")
             try:
                 os.makedirs(folder_path)
             except OSError:
@@ -240,10 +240,11 @@ class ExternalDCC(DCCBase):
 
         if not isinstance(version, Version):
             raise TypeError(
-                '"version" argument in %s.append_to_recent_files '
+                '"version" argument in '
+                f"{self.__class__.__name__}.append_to_recent_files "
                 "method should be an instance of "
-                "stalker.models.version.Version, not %s"
-                % (self.__class__.__name__, version.__class__.__name__)
+                "stalker.models.version.Version, "
+                f"not {version.__class__.__name__}: '{version}'"
             )
         last_version_file_full_path = self.get_settings_file_path()
         try:
@@ -275,28 +276,31 @@ class ExternalDCCFactory(object):
     """
 
     @classmethod
-    def get_env_names(cls, name_format="%n"):
-        """returns a list of DCC names which it is possible to create one DCC.
+    def get_env_names(cls, name_format="{name}"):
+        """Return a list of DCC names which it is possible to create one DCC.
 
-        :param str name_format: A string showing the format of the output
-          variables:
-            %n : the name of the Environment
-            %e : the extension of the Environment
+        Args:
+            name_format (str): A string showing the format of the output
+                variables:
+                    {name} : the name of the Environment
+                    {extension} : the extension of the Environment
 
-        :return list: list
+        Returns:
+            List[str]: A list of str showing DCC names.
         """
         env_names = []
         for env_name in list(external_dccs.keys()):
             env_data = external_dccs[env_name]
             env_names.append(
-                name_format.replace("%n", env_data["name"]).replace(
-                    "%e", env_data["extensions"][0]
+                name_format.format(
+                    name=env_data["name"],
+                    extension=env_data["extensions"][0],
                 )
             )
         return env_names
 
     @classmethod
-    def get_env(cls, name, name_format="%n"):
+    def get_env(cls, name, name_format="{name}"):
         """Create a DCC with the given name.
 
         Args:
@@ -309,20 +313,21 @@ class ExternalDCCFactory(object):
         """
         if not isinstance(name, str):
             raise TypeError(
-                '"name" argument in %s.get_env() should be an '
-                "instance of str, not %s" % (cls.__name__, name.__class__.__name__)
+                f'"name" argument in {cls.__name__}.get_env() should be an '
+                f"instance of str, not {name.__class__.__name__}: '{name}'"
             )
 
         # filter the name
         import re
 
-        # replace anything that doesn't start with '%' with [\s\(\)\-]+
-        pattern = re.sub(r"[^%\w]+", r"[\\s\\(\\)\\-]+", name_format)
+        # replace anything that doesn't start with '{' with [\s\(\)\-]+
+        pattern = re.sub(r"[^{\w}]+", r"[\\s\\(\\)\\-]+", name_format)
 
-        pattern = pattern.replace("%n", r"(?P<name>[\w\s]+)").replace(
-            "%e", r"(?P<extension>\.\w+)"
+        pattern = pattern.replace("{name}", r"(?P<name>[\w\s]+)").replace(
+            "{extension}", r"(?P<extension>\.\w+)"
         )
         logger.debug("pattern : {}".format(pattern))
+        print("pattern : {}".format(pattern))
 
         match = re.search(pattern, name)
         dcc_name = None
@@ -331,9 +336,9 @@ class ExternalDCCFactory(object):
 
         if dcc_name not in external_dccs:
             raise ValueError(
-                "%s is not in "
+                f"{name} is not in "
                 "anima.dcc.externalEnv.environment_names list, "
-                "please supply a value from %s" % (name, list(external_dccs.keys()))
+                f"please supply a value from {list(external_dccs.keys())}"
             )
 
         dcc = external_dccs[dcc_name]

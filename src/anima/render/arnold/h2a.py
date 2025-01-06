@@ -33,9 +33,8 @@ class Buffer(object):
         self.str_buffer_size = str_buffer_size
 
     def flush(self):
-        """flushes the data to the StringIO buffer and resets the counter
-        """
-        self.file_str_write(' '.join(self.str_buffer))
+        """flushes the data to the StringIO buffer and resets the counter"""
+        self.file_str_write(" ".join(self.str_buffer))
         self.str_buffer = []
         self.i = 0
 
@@ -50,32 +49,39 @@ class Buffer(object):
         self.str_buffer_append(str(data))
 
     def getvalue(self):
-        """returns the string data
-        """
+        """returns the string data"""
         # do a last flush
         self.flush()
         return self.file_str.getvalue()
 
 
 def geometry2ass(
-        path, name, min_pixel_width, mode, export_type, export_motion,
-        export_color, render_type, double_sided=True, invert_normals=False, **kwargs
+    path,
+    name,
+    min_pixel_width,
+    mode,
+    export_type,
+    export_motion,
+    export_color,
+    render_type,
+    double_sided=True,
+    invert_normals=False,
+    **kwargs,
 ):
-    """exports geometry to ass format
-    """
+    """exports geometry to ass format"""
     ass_path = path
     start_time = time.time()
 
     parts = os.path.splitext(ass_path)
     extension = parts[1]
     use_gzip = False
-    if extension == '.gz':
+    if extension == ".gz":
         use_gzip = True
         basename = os.path.splitext(parts[0])[0]
     else:
         basename = parts[0]
 
-    asstoc_path = '%s.asstoc' % basename
+    asstoc_path = f"{basename}.asstoc"
 
     node = hou.pwd()
 
@@ -90,7 +96,7 @@ def geometry2ass(
     except OSError:  # path exists
         pass
 
-    data = ''
+    data = ""
     if export_type == 0:
         data = curves2ass(node, name, min_pixel_width, mode, export_motion)
     elif export_type == 1:
@@ -106,35 +112,42 @@ def geometry2ass(
         data = particle2ass(node, name, export_motion, export_color, render_type)
 
     write_start = time.time()
-    ass_file = file_handler(ass_path, 'w')
+    ass_file = file_handler(ass_path, "w")
     ass_file.write(data)
     ass_file.close()
     write_end = time.time()
 
-    print('Writing to file              : %3.3f' % (write_end - write_start))
+    print("Writing to file              : {:3.3f}".format(write_end - write_start))
 
     bounding_min = node.geometry().attribValue("bound_min")
     bounding_max = node.geometry().attribValue("bound_max")
 
-    bounding_box_info = 'bounds %s %s %s %s %s %s' % (
-        bounding_min[0], bounding_min[1], bounding_min[2],
-        bounding_max[0], bounding_max[1], bounding_max[2]
+    bounding_box_info = "bounds {} {} {} {} {} {}".format(
+        bounding_min[0],
+        bounding_min[1],
+        bounding_min[2],
+        bounding_max[0],
+        bounding_max[1],
+        bounding_max[2],
     )
 
-    with open(asstoc_path, 'w') as asstoc_file:
+    with open(asstoc_path, "w") as asstoc_file:
         asstoc_file.write(bounding_box_info)
 
     end_time = time.time()
-    print('All Conversion took          : %3.3f sec' % (end_time - start_time))
-    print('******************************************************************')
+    print("All Conversion took          : {:3.3f} sec".format(end_time - start_time))
+    print("******************************************************************")
 
 
 def polygon2ass(
-        node, name, export_motion=False, export_color=False, double_sided=True,
-        invert_normals=False
+    node,
+    name,
+    export_motion=False,
+    export_color=False,
+    double_sided=True,
+    invert_normals=False,
 ):
-    """exports polygon geometry to ass format
-    """
+    """exports polygon geometry to ass format"""
     sample_count = 2 if export_motion else 1
 
     # visibility flags
@@ -154,29 +167,29 @@ def polygon2ass(
     base_template = """
 polymesh
 {
- name %(name)s
- nsides %(primitive_count)i 1 UINT
-%(number_of_points_per_primitive)s
- vidxs %(vertex_count)s 1 UINT
-%(vertex_ids)s
- vlist %(point_count)s %(sample_count)s b85POINT
-%(point_positions)s
+ name {name}
+ nsides {primitive_count:d} 1 UINT
+{number_of_points_per_primitive}
+ vidxs {vertex_count} 1 UINT
+{vertex_ids}
+ vlist {point_count} {sample_count} b85POINT
+{point_positions}
  smoothing on
  visibility 255
- sidedness %(sidedness)s
- invert_normals %(invert_normals)s
+ sidedness {sidedness}
+ invert_normals {invert_normals}
  receive_shadows on
  self_shadows on
  opaque on
  matrix
-%(matrix)s
+{matrix}
  id 683108022
-%(color_template)s
+{color_template}
 }"""
-    #  uvidxs %(vertex_count)s 1 UINT
-    #%(uv_ids)s
-    # uvlist %(vertex_count)s 1 b85POINT2
-    #%(vertex_uvs)s
+    #  uvidxs {vertex_count} 1 UINT
+    # {uv_ids}
+    # uvlist {vertex_count} 1 b85POINT2
+    # {vertex_uvs}
 
     skip_normals = False
     skip_uvs = False
@@ -184,9 +197,9 @@ polymesh
 
     intrinsic_values = geo.intrinsicValueDict()
 
-    primitive_count = intrinsic_values['primitivecount']
-    point_count = intrinsic_values['pointcount']
-    vertex_count = intrinsic_values['vertexcount']
+    primitive_count = intrinsic_values["primitivecount"]
+    point_count = intrinsic_values["pointcount"]
+    vertex_count = intrinsic_values["vertexcount"]
 
     number_of_points_per_primitive = []
     vertex_ids = []
@@ -226,7 +239,9 @@ polymesh
         i += 1
         if i > 500:
             i = 0
-            combined_number_of_points_per_primitive.append(' '.join(number_of_points_per_primitive))
+            combined_number_of_points_per_primitive.append(
+                " ".join(number_of_points_per_primitive)
+            )
             number_of_points_per_primitive = []
         for vertex in prim.vertices():
             point = vertex.point()
@@ -239,7 +254,7 @@ polymesh
             j += 1
             if j > 500:
                 j = 0
-                combined_vertex_ids.append(' '.join(vertex_ids))
+                combined_vertex_ids.append(" ".join(vertex_ids))
                 vertex_ids = []
                 # combined_vertex_normals.append(' '.join(map(str, vertex_normals)))
                 # vertex_normals = []
@@ -247,10 +262,12 @@ polymesh
 
     # join for a last time
     if number_of_points_per_primitive:
-        combined_number_of_points_per_primitive.append(' '.join(number_of_points_per_primitive))
+        combined_number_of_points_per_primitive.append(
+            " ".join(number_of_points_per_primitive)
+        )
 
     if vertex_ids:
-        combined_vertex_ids.append(' '.join(vertex_ids))
+        combined_vertex_ids.append(" ".join(vertex_ids))
 
     # if vertex_normals:
     #     combined_vertex_normals.append(' '.join(map(str, vertex_normals)))
@@ -266,18 +283,18 @@ polymesh
     # )
     # splitted_vertex_uvs = split_data(encoded_vertex_uvs, 500)
 
-    point_positions = geo.pointFloatAttribValuesAsString('P')
+    point_positions = geo.pointFloatAttribValuesAsString("P")
 
     if export_motion:
-        point_prime_positions = geo.pointFloatAttribValuesAsString('pprime')
-        point_positions = '%s%s' % (point_positions, point_prime_positions)
+        point_prime_positions = geo.pointFloatAttribValuesAsString("pprime")
+        point_positions = "{}{}".format(point_positions, point_prime_positions)
 
     try:
-        point_colors = geo.pointFloatAttribValuesAsString('color')
+        point_colors = geo.pointFloatAttribValuesAsString("color")
     except hou.OperationFailed:
         # no color attribute skip it
         skip_colors = True
-        point_colors = ''
+        point_colors = ""
 
     # try:
     #    point_normals = geo.pointFloatAttribValuesAsString('N')
@@ -299,9 +316,11 @@ polymesh
     #         )
     #     )
     # )
-    encoded_number_of_points_per_primitive = '\n'.join(combined_number_of_points_per_primitive)
+    encoded_number_of_points_per_primitive = "\n".join(
+        combined_number_of_points_per_primitive
+    )
     encode_end = time.time()
-    print('Encoding Number of Points  : {:3.3f}'.format(encode_end - encode_start))
+    print("Encoding Number of Points  : {:3.3f}".format(encode_end - encode_start))
 
     split_start = time.time()
     # splitted_number_of_points_per_primitive = \
@@ -314,7 +333,7 @@ polymesh
     # splitted_number_of_points_per_primitive = ' '.join(encoded_number_of_points_per_primitive)
     splitted_number_of_points_per_primitive = encoded_number_of_points_per_primitive
     split_end = time.time()
-    print('Splitting Number of Points : %3.3f' % (split_end - split_start))
+    print("Splitting Number of Points : {:3.3f}".format(split_end - split_start))
 
     #
     # Point Positions
@@ -323,12 +342,12 @@ polymesh
     # encoded_point_positions = base85.arnold_b85_encode_multithreaded(point_positions)
     encoded_point_positions = base85.arnold_b85_encode(point_positions)
     encode_end = time.time()
-    print('Encoding Point Position    : %3.3f' % (encode_end - encode_start))
+    print("Encoding Point Position    : {:3.3f}".format(encode_end - encode_start))
 
     split_start = time.time()
     splitted_point_positions = split_data(encoded_point_positions, 500)
     split_end = time.time()
-    print('Splitting Point Positions : %3.3f' % (split_end - split_start))
+    print("Splitting Point Positions : {:3.3f}".format(split_end - split_start))
 
     # #
     # # Vertex Normals
@@ -336,7 +355,7 @@ polymesh
     # encode_start = time.time()
     # encoded_vertex_normals = '\n'.join(combined_vertex_normals)#base85.arnold_b85_encode(point_normals)
     # encode_end = time.time()
-    # print('Encoding Point Normals     : %3.3f' % (encode_end - encode_start))
+    # print('Encoding Point Normals     : {:3.3f}'.format(encode_end - encode_start))
     #
     # split_start = time.time()
     # # splitted_vertex_normals = re.sub("(.{500})", "\\1\n", encoded_point_normals, 0)
@@ -352,7 +371,7 @@ polymesh
     # #
     # # splitted_point_normals = ' '.join(map(str, splitted_point_normals))
     # split_end = time.time()
-    # print('Splitting Vertex Normals    : %3.3f' % (split_end - split_start))
+    # print('Splitting Vertex Normals    : {:3.3f}'.format(split_end - split_start))
 
     # #
     # # Vertex Colors
@@ -361,12 +380,12 @@ polymesh
     encode_start = time.time()
     encoded_point_colors = base85.arnold_b85_encode(point_colors)
     encode_end = time.time()
-    print('Encoding Point colors     : %3.3f' % (encode_end - encode_start))
+    print("Encoding Point colors     : {:3.3f}".format(encode_end - encode_start))
 
     split_start = time.time()
     splitted_point_colors = split_data(encoded_point_colors, 100)
     split_end = time.time()
-    print('Splitting Vertex Colors    : %3.3f' % (split_end - split_start))
+    print("Splitting Vertex Colors    : {:3.3f}".format(split_end - split_start))
 
     #
     # Vertex Ids
@@ -380,9 +399,9 @@ polymesh
     #         )
     #     )
     # )
-    encoded_vertex_ids = '\n'.join(combined_vertex_ids)
+    encoded_vertex_ids = "\n".join(combined_vertex_ids)
     encode_end = time.time()
-    print('Encoding Vertex Ids        : %3.3f' % (encode_end - encode_start))
+    print("Encoding Vertex Ids        : {:3.3f}".format(encode_end - encode_start))
 
     split_start = time.time()
     # splitted_vertex_ids = re.sub(
@@ -394,7 +413,7 @@ polymesh
     # splitted_vertex_ids = ' '.join(encoded_vertex_ids)
     splitted_vertex_ids = encoded_vertex_ids
     split_end = time.time()
-    print('Splitting Vertex Ids       : %3.3f' % (split_end - split_start))
+    print("Splitting Vertex Ids       : {:3.3f}".format(split_end - split_start))
 
     matrix = """1 0 0 0
 0 1 0 0
@@ -404,56 +423,55 @@ polymesh
     if export_motion:
         matrix += matrix
 
-    color_template = ''
+    color_template = ""
     if export_color:
         color_template = """
             declare colorSet1 varying RGBA
-            colorSet1 %(point_count)s 1 b85RGBA
-            %(splitted_point_colors)s
+            colorSet1 {point_count} 1 b85RGBA
+            {splitted_point_colors}
         """
 
-        color_template = color_template % {
-            'point_count': point_count,
-            'splitted_point_colors':splitted_point_colors
-        }
+        color_template = color_template.format(
+            point_count=point_count,
+            splitted_point_colors=splitted_point_colors,
+        )
 
-    data = base_template % {
-        'name': name,
-        'point_count': point_count,
-        'vertex_count': vertex_count,
-        'primitive_count': primitive_count,
-        'sample_count': sample_count,
-        'number_of_points_per_primitive': splitted_number_of_points_per_primitive,
-        'vertex_ids': splitted_vertex_ids,
-        'point_positions': splitted_point_positions,
-        'matrix': matrix,
-        'color_template': color_template,
-        'sidedness': 255 if double_sided else 0,
-        'invert_normals': 'on' if invert_normals else 'off',
-        # 'uv_ids': uv_ids,
-        # 'vertex_uvs': splitted_vertex_uvs,
-        # 'normal_count': vertex_count,
-        # 'vertex_normals': splitted_vertex_normals,
-    }
+    data = base_template.format(
+        name=name,
+        point_count=point_count,
+        vertex_count=vertex_count,
+        primitive_count=primitive_count,
+        sample_count=sample_count,
+        number_of_points_per_primitive=splitted_number_of_points_per_primitive,
+        vertex_ids=splitted_vertex_ids,
+        point_positions=splitted_point_positions,
+        matrix=matrix,
+        color_template=color_template,
+        sidedness=255 if double_sided else 0,
+        invert_normals="on" if invert_normals else "off",
+        # uv_ids=uv_ids,
+        # vertex_uvs=splitted_vertex_uvs,
+        # normal_count=vertex_count,
+        # vertex_normals=splitted_vertex_normals,
+    )
 
     return data
 
 
 def particle2ass(node, name, export_motion=False, export_color=False, render_type=0):
-    """exports polygon geometry to ass format
-    """
+    """exports polygon geometry to ass format"""
     sample_count = 2 if export_motion else 1
 
     geo = node.geometry()
     base_template = """
 points
 {
- name %(name)s
- points %(point_count)s %(sample_count)s b85POINT
-%(point_positions)s
- radius %(point_count)s 1 b85FLOAT
-%(point_radius)s
- mode %(render_as)s
+ name {name}
+ points {point_count} {sample_count} b85POINT
+{point_positions}
+ radius {point_count} 1 b85FLOAT
+{point_radius}
+ mode {render_as}
  min_pixel_width 0
  step_size 0
  visibility 243
@@ -463,12 +481,12 @@ points
  opaque on
  matte off
  id -838484804
-%(color_template)s
+{color_template}
 }"""
-    #  uvidxs %(vertex_count)s 1 UINT
-    #%(uv_ids)s
-    # uvlist %(vertex_count)s 1 b85POINT2
-    #%(vertex_uvs)s
+    #  uvidxs {vertex_count} 1 UINT
+    # {uv_ids}
+    # uvlist {vertex_count} 1 b85POINT2
+    # {vertex_uvs}
 
     skip_normals = False
     skip_uvs = False
@@ -477,7 +495,7 @@ points
 
     intrinsic_values = geo.intrinsicValueDict()
 
-    point_count = intrinsic_values['pointcount']
+    point_count = intrinsic_values["pointcount"]
 
     # i = 0
     # j = 0
@@ -488,45 +506,45 @@ points
     #
     # Point Positions
     #
-    point_positions = geo.pointFloatAttribValuesAsString('P')
+    point_positions = geo.pointFloatAttribValuesAsString("P")
     if export_motion:
-        point_prime_positions = geo.pointFloatAttribValuesAsString('pprime')
-        point_positions = '%s%s' % (point_positions, point_prime_positions)
+        point_prime_positions = geo.pointFloatAttribValuesAsString("pprime")
+        point_positions = f"{point_positions}{point_prime_positions}"
         del point_prime_positions
 
     encode_start = time.time()
     # encoded_point_positions = base85.arnold_b85_encode_multithreaded(point_positions)
     encoded_point_positions = base85.arnold_b85_encode(point_positions)
     encode_end = time.time()
-    print('Encoding Point Position    : %3.3f' % (encode_end - encode_start))
+    print("Encoding Point Position    : {:3.3}".format(encode_end - encode_start))
     del point_positions
 
     split_start = time.time()
     splitted_point_positions = split_data(encoded_point_positions, 500)
     split_end = time.time()
-    print('Splitting Point Positions : %3.3f' % (split_end - split_start))
+    print("Splitting Point Positions : {:3.3f}".format(split_end - split_start))
     del encoded_point_positions
 
     #
     # Point Radius
     #
     try:
-        point_radius = geo.pointFloatAttribValuesAsString('pscale')
+        point_radius = geo.pointFloatAttribValuesAsString("pscale")
     except hou.OperationFailed:
-       # no radius attribute skip it
+        # no radius attribute skip it
         skip_radius = True
-        point_radius = ''
+        point_radius = ""
 
     encode_start = time.time()
     encoded_point_radius = base85.arnold_b85_encode(point_radius)
     encode_end = time.time()
-    print('Encoding Point Radius    : %3.3f' % (encode_end - encode_start))
+    print("Encoding Point Radius    : {:3.3f}".format(encode_end - encode_start))
     del point_radius
 
     split_start = time.time()
     splitted_point_radius = split_data(encoded_point_radius, 500)
     split_end = time.time()
-    print('Splitting Point Radius : %3.3f' % (split_end - split_start))
+    print("Splitting Point Radius : {:3.3f}".format(split_end - split_start))
     del encoded_point_radius
 
     render_type = render_type
@@ -540,56 +558,56 @@ points
     # #
     # # Vertex Colors
     # #
-    color_template = ''
+    color_template = ""
     if export_color:
         try:
-            point_colors = geo.pointFloatAttribValuesAsString('particle_color')
+            point_colors = geo.pointFloatAttribValuesAsString("particle_color")
         except hou.OperationFailed:
-           # no color attribute skip it
+            # no color attribute skip it
             skip_colors = True
-            point_colors = ''
+            point_colors = ""
 
         encode_start = time.time()
         encoded_point_colors = base85.arnold_b85_encode(point_colors)
         encode_end = time.time()
-        print('Encoding Point colors     : %3.3f' % (encode_end - encode_start))
+        print("Encoding Point colors     : {:3.3f}".format(encode_end - encode_start))
         del point_colors
 
         split_start = time.time()
         splitted_point_colors = split_data(encoded_point_colors, 100)
         split_end = time.time()
-        print('Splitting Point Colors : %3.3f' % (split_end - split_start))
+        print("Splitting Point Colors : {:3.3f}".format(split_end - split_start))
         del encoded_point_colors
 
         color_template = """
             declare rgbPP uniform RGB
-            rgbPP %(point_count)s 1 b85RGB
-            %(splitted_point_colors)s
+            rgbPP {point_count} 1 b85RGB
+            {splitted_point_colors}
         """
 
-        color_template = color_template % {
-            'point_count': point_count,
-            'splitted_point_colors': splitted_point_colors
-        }
+        color_template = color_template.format(
+            point_count=point_count,
+            splitted_point_colors=splitted_point_colors,
+        )
 
-    data = base_template % {
-        'name': name,
-        'point_count': point_count,
-        'sample_count': sample_count,
-        'render_as': render_as,
-        'point_radius': splitted_point_radius,
-        'point_positions': splitted_point_positions,
-        'color_template': color_template,
-    }
+    data = base_template.format(
+        name=name,
+        point_count=point_count,
+        sample_count=sample_count,
+        render_as=render_as,
+        point_radius=splitted_point_radius,
+        point_positions=splitted_point_positions,
+        color_template=color_template,
+    )
     del splitted_point_radius
     del splitted_point_positions
     return data
 
 
-def curves2ass(node, hair_name, min_pixel_width=0.5, mode='ribbon',
-               export_motion=False):
-    """exports the node content to ass file
-    """
+def curves2ass(
+    node, hair_name, min_pixel_width=0.5, mode="ribbon", export_motion=False
+):
+    """exports the node content to ass file"""
     sample_count = 2 if export_motion else 1
     template_vars = dict()
     geo = node.geometry()
@@ -597,37 +615,37 @@ def curves2ass(node, hair_name, min_pixel_width=0.5, mode='ribbon',
     base_template = """
 curves
 {
- name %(name)s
- num_points %(curve_count)i %(sample_count)s UINT
-  %(number_of_points_per_curve)s
- points %(point_count)s %(sample_count)s b85POINT
- %(point_positions)s
+ name {name}
+ num_points {curve_count:d} {sample_count} UINT
+  {number_of_points_per_curve}
+ points {point_count} {sample_count} b85POINT
+ {point_positions}
 
- radius %(radius_count)s 1 b85FLOAT
- %(radius)s
+ radius {radius_count} 1 b85FLOAT
+ {radius}
  basis "catmull-rom"
- mode "%(mode)s"
- min_pixel_width %(min_pixel_width)s
+ mode "{mode}"
+ min_pixel_width {min_pixel_width}
  visibility 65535
  receive_shadows on
  self_shadows on
- matrix 1 %(sample_count)s MATRIX
-  %(matrix)s
+ matrix 1 {sample_count} MATRIX
+  {matrix}
  opaque on
  declare uparamcoord uniform FLOAT
- uparamcoord %(curve_count)i %(sample_count)s b85FLOAT
- %(uparamcoord)s
+ uparamcoord {curve_count:d} {sample_count} b85FLOAT
+ {uparamcoord}
  declare vparamcoord uniform FLOAT
- vparamcoord %(curve_count)i %(sample_count)s b85FLOAT
- %(vparamcoord)s
+ vparamcoord {curve_count:d} {sample_count} b85FLOAT
+ {vparamcoord}
  declare curve_id uniform UINT
- curve_id %(curve_count)i %(sample_count)s UINT
-  %(curve_ids)s
+ curve_id {curve_count:d} {sample_count} UINT
+  {curve_ids}
 }
 """
 
-    number_of_curves = geo.intrinsicValue('primitivecount')
-    real_point_count = geo.intrinsicValue('pointcount')
+    number_of_curves = geo.intrinsicValue("primitivecount")
+    real_point_count = geo.intrinsicValue("pointcount")
 
     # The root and tip points are going to be used twice for the start and end tangents
     # so there will be 2 extra points per curve
@@ -640,7 +658,7 @@ curves
     number_of_points_in_one_curve = real_number_of_points_in_one_curve + 2
     number_of_points_per_curve = [str(number_of_points_in_one_curve)] * number_of_curves
 
-    curve_ids = ' '.join(str(id_) for id_ in range(number_of_curves))
+    curve_ids = " ".join(str(id_) for id_ in range(number_of_curves))
 
     radius = None
 
@@ -648,10 +666,10 @@ curves
 
     # try to find the width as a point attribute to speed things up
     getting_radius_start = time.time()
-    radius_attribute = geo.findPointAttrib('width')
+    radius_attribute = geo.findPointAttrib("width")
     if radius_attribute:
         # this one works 100 times faster then iterating over each vertex
-        radius = geo.pointFloatAttribValuesAsString('width')
+        radius = geo.pointFloatAttribValuesAsString("width")
     else:
         # no radius in points, so iterate over each vertex
         radius_i = 0
@@ -665,112 +683,125 @@ curves
             # radius
             radius_i += real_number_of_points_in_one_curve
             if radius_i >= 1000:
-                radius_file_str_write(''.join(radius_str_buffer))
+                radius_file_str_write("".join(radius_str_buffer))
                 radius_str_buffer = []
                 radius_str_buffer_append = radius_str_buffer.append
                 radius_i = 0
 
             for vertex in prim_vertices:
-                radius_str_buffer_append(pack('f', vertex.attribValue('width')))
+                radius_str_buffer_append(pack("f", vertex.attribValue("width")))
 
         # do flushes again before getting the values
-        radius_file_str_write(''.join(radius_str_buffer))
+        radius_file_str_write("".join(radius_str_buffer))
         radius = radius_file_str.getvalue()
     getting_radius_end = time.time()
-    print('Getting Radius Info          : %3.3f' %
-          (getting_radius_end - getting_radius_start))
+    print(
+        "Getting Radius Info          : {:3.3f}".format(
+            getting_radius_end - getting_radius_start
+        )
+    )
 
     # point positions
     encode_start = time.time()
 
     # for motion blur use pprime
     getting_point_positions_start = time.time()
-    point_positions = geo.pointFloatAttribValuesAsString('P')
+    point_positions = geo.pointFloatAttribValuesAsString("P")
 
     if export_motion:
-        point_prime_positions = geo.pointFloatAttribValuesAsString('pprime')
-        point_positions = '%s%s' % (point_positions, point_prime_positions)
+        point_prime_positions = geo.pointFloatAttribValuesAsString("pprime")
+        point_positions = f"{point_positions}{point_prime_positions}"
 
     getting_point_positions_end = time.time()
-    print('Getting Point Position       : %3.3f' %
-          (getting_point_positions_end - getting_point_positions_start))
+    print(
+        "Getting Point Position       : {:3.3f}".format(
+            getting_point_positions_end - getting_point_positions_start
+        )
+    )
 
     # repeat every first and last point coordinates
     # (3 value each 3 * 4 = 12 characters) of every curve
     zip_start = time.time()
-    point_positions = ''.join(
+    point_positions = "".join(
         map(
-            lambda x: '%s%s%s' % (x[:12], x, x[-12:]),
+            lambda x: "{}{}{}".format(x[:12], x, x[-12:]),
             map(
-                ''.join,
-                zip(*[iter(point_positions)] * (real_number_of_points_in_one_curve*4*3)))
+                "".join,
+                zip(
+                    *[iter(point_positions)]
+                    * (real_number_of_points_in_one_curve * 4 * 3)
+                ),
+            ),
         )
     )
     zip_end = time.time()
-    print('Zipping Point Position       : %3.3f' % (zip_end - zip_start))
+    print("Zipping Point Position       : {:3.3f}".format(zip_end - zip_start))
 
     # encoded_point_positions = base85.arnold_b85_encode_multithreaded(point_positions)
     encoded_point_positions = base85.arnold_b85_encode(point_positions)
     encode_end = time.time()
-    print('Encoding Point Position      : %3.3f' % (encode_end - encode_start))
+    print("Encoding Point Position      : {:3.3f}".format(encode_end - encode_start))
 
     split_start = time.time()
     splitted_point_positions = split_data(encoded_point_positions, 500)
     split_end = time.time()
-    print('Splitting Point Positions    : %3.3f' % (split_end - split_start))
+    print("Splitting Point Positions    : {:3.3f}".format(split_end - split_start))
 
     # radius
     encode_start = time.time()
     encoded_radius = base85.arnold_b85_encode(radius)
     encode_end = time.time()
-    print('Radius encode                : %3.3f' % (encode_end - encode_start))
+    print("Radius encode                : {:3.3f}".format(encode_end - encode_start))
 
     split_start = time.time()
     splitted_radius = split_data(encoded_radius, 500)
     # extend for motion blur
     # if export_motion:
-    #     splitted_radius = '%(data)s%(data)s' % {'data': splitted_radius}
+    #     splitted_radius = '{data}{data}'.format(data=splitted_radius)
     split_end = time.time()
-    print('Splitting Radius             : %3.3f' % (split_end - split_start))
+    print("Splitting Radius             : {:3.3f}".format(split_end - split_start))
 
     # uv
     getting_uv_start = time.time()
-    u = geo.primFloatAttribValuesAsString('uv_u')
-    v = geo.primFloatAttribValuesAsString('uv_v')
+    u = geo.primFloatAttribValuesAsString("uv_u")
+    v = geo.primFloatAttribValuesAsString("uv_v")
     getting_uv_end = time.time()
-    print('Getting uv                   : %3.3f' %
-          (getting_uv_end - getting_uv_start))
+    print(
+        "Getting uv                   : {:3.3f}".format(
+            getting_uv_end - getting_uv_start
+        )
+    )
 
     encode_start = time.time()
     encoded_u = base85.arnold_b85_encode(u)
     encode_end = time.time()
-    print('Encoding UParamcoord         : %3.3f' % (encode_end - encode_start))
+    print("Encoding UParamcoord         : {:3.3f}".format(encode_end - encode_start))
 
     split_start = time.time()
     splitted_u = split_data(encoded_u, 500)
     if export_motion:
-        splitted_u = '%(data)s%(data)s' % {'data': splitted_u}
+        splitted_u = "{data}{data}".format(data=splitted_u)
     split_end = time.time()
-    print('Splitting UParamCoord        : %3.3f' % (split_end - split_start))
+    print("Splitting UParamCoord        : {:3.3f}".format(split_end - split_start))
 
     encode_start = time.time()
     encoded_v = base85.arnold_b85_encode(v)
     encode_end = time.time()
-    print('Encoding VParamcoord         : %3.3f' % (encode_end - encode_start))
+    print("Encoding VParamcoord         : {:3.3f}".format(encode_end - encode_start))
 
     split_start = time.time()
     splitted_v = split_data(encoded_v, 500)
     if export_motion:
-        splitted_v = '%(data)s%(data)s' % {'data': splitted_v}
+        splitted_v = "{data}{data}".format(data=splitted_v)
     split_end = time.time()
-    print('Splitting VParamCoord        : %3.3f' % (split_end - split_start))
+    print("Splitting VParamCoord        : {:3.3f}".format(split_end - split_start))
 
-    print('len(encoded_point_positions) : %s' % len(encoded_point_positions))
-    print('(p + 2 * c) * 5 * 3          : %s' % (point_count * 5 * 3))
-    print('len(encoded_radius)          : %s' % len(encoded_radius))
-    print('len(uv)                      : %s' % len(u))
-    print('len(encoded_u)               : %s' % len(encoded_u))
-    print('len(encoded_v)               : %s' % len(encoded_v))
+    print("len(encoded_point_positions) : {}".format(len(encoded_point_positions)))
+    print("(p + 2 * c) * 5 * 3          : {}".format((point_count * 5 * 3)))
+    print("len(encoded_radius)          : {}".format(len(encoded_radius)))
+    print("len(uv)                      : {}".format(len(u)))
+    print("len(encoded_u)               : {}".format(len(encoded_u)))
+    print("len(encoded_v)               : {}".format(len(encoded_v)))
 
     # extend for motion blur
     matrix = """1 0 0 0
@@ -782,25 +813,27 @@ curves
         number_of_points_per_curve.extend(number_of_points_per_curve)
         matrix += matrix
 
-    template_vars.update({
-        'name': node.path().replace('/', '_'),
-        'curve_count': number_of_curves,
-        'real_point_count': real_point_count,
-        'number_of_points_per_curve': ' '.join(number_of_points_per_curve),
-        'point_count': point_count,
-        'point_positions': splitted_point_positions,
-        'radius': splitted_radius,
-        'radius_count': radius_count,
-        'curve_ids': curve_ids,
-        'uparamcoord': splitted_u,
-        'vparamcoord': splitted_v,
-        'min_pixel_width': min_pixel_width,
-        'mode': mode,
-        'sample_count': sample_count,
-        'matrix': matrix
-    })
+    template_vars.update(
+        {
+            "name": node.path().replace("/", "_"),
+            "curve_count": number_of_curves,
+            "real_point_count": real_point_count,
+            "number_of_points_per_curve": " ".join(number_of_points_per_curve),
+            "point_count": point_count,
+            "point_positions": splitted_point_positions,
+            "radius": splitted_radius,
+            "radius_count": radius_count,
+            "curve_ids": curve_ids,
+            "uparamcoord": splitted_u,
+            "vparamcoord": splitted_v,
+            "min_pixel_width": min_pixel_width,
+            "mode": mode,
+            "sample_count": sample_count,
+            "matrix": matrix,
+        }
+    )
 
-    rendered_curve_data = base_template % template_vars
+    rendered_curve_data = base_template.format(**template_vars)
 
     del geo
 
@@ -816,5 +849,5 @@ def split_data(data, chunk_size):
     """
     list_splitted_data = []
     for i in range(0, len(data), chunk_size):
-        list_splitted_data.append(data[i:i + chunk_size])
-    return '\n'.join(list_splitted_data)
+        list_splitted_data.append(data[i : i + chunk_size])
+    return "\n".join(list_splitted_data)

@@ -9,9 +9,11 @@ CONVERSION_SPEC_SHEET = {
         # rsMaterial
         "node_type": "RedshiftMaterial",
         "secondary_type": "shader",
-        "call_after": lambda x, y: y.outColor >> x.outputs(type="shadingEngine", p=1)[0]
-        if x.outputs(type="shadingEngine", p=1)
-        else None,
+        "call_after": lambda x, y: (
+            y.outColor >> x.outputs(type="shadingEngine", p=1)[0]
+            if x.outputs(type="shadingEngine", p=1)
+            else None
+        ),
         # aiStandard material attributes
         "attributes": {
             "color": [
@@ -36,17 +38,15 @@ CONVERSION_SPEC_SHEET = {
             "specularDistribution": "refl_brdf",
             "specularFresnel": {
                 # set it do "Color + Edge Tint"
-                "refl_fresnel_mode": lambda x: 1
-                if x == 1
-                else 3
+                "refl_fresnel_mode": lambda x: 1 if x == 1 else 3
             },
             "Ksn": {
                 # setting the ref_reflectivity to 0 kills all the
                 # reflection, so set it to a very small number instead
                 # to mimic Arnold's fresnel
-                "refl_reflectivity": lambda x: (x, x, x)
-                if x > 0
-                else (0.001, 0.001, 0.001),
+                "refl_reflectivity": lambda x: (
+                    (x, x, x) if x > 0 else (0.001, 0.001, 0.001)
+                ),
                 "refl_edge_tint": (1, 1, 1),
             },
             # Extended Controls for Specular
@@ -89,9 +89,11 @@ CONVERSION_SPEC_SHEET = {
         # rsMaterial
         "node_type": "RedshiftMaterial",
         "secondary_type": "shader",
-        "call_after": lambda x, y: y.outColor >> x.outputs(type="shadingEngine", p=1)[0]
-        if x.outputs(type="shadingEngine", p=1)
-        else None,
+        "call_after": lambda x, y: (
+            y.outColor >> x.outputs(type="shadingEngine", p=1)[0]
+            if x.outputs(type="shadingEngine", p=1)
+            else None
+        ),
         # aiStandard material attributes
         "attributes": {
             "baseColor": [
@@ -176,9 +178,11 @@ CONVERSION_SPEC_SHEET = {
         # rsMaterial
         "node_type": "RedshiftSkin",
         "secondary_type": "shader",
-        "call_after": lambda x, y: y.outColor >> x.outputs(type="shadingEngine", p=1)[0]
-        if x.outputs(type="shadingEngine", p=1)
-        else None,
+        "call_after": lambda x, y: (
+            y.outColor >> x.outputs(type="shadingEngine", p=1)[0]
+            if x.outputs(type="shadingEngine", p=1)
+            else None
+        ),
         # aiSkin material attributes
         "attributes": {
             "sssWeight": "overall_scale",
@@ -280,9 +284,11 @@ CONVERSION_SPEC_SHEET = {
             "aiSamples": {"shadowRays": 1},
             "aiDecayType": {"decayRate": lambda x: 0 if x == 0 else 2},
             "aiColorTemperature": {
-                "color": lambda x, y: pm.arnoldTemperatureToColor(x)
-                if y.getAttr("aiUseColorTemperature")
-                else y.getAttr("color")
+                "color": lambda x, y: (
+                    pm.arnoldTemperatureToColor(x)
+                    if y.getAttr("aiUseColorTemperature")
+                    else y.getAttr("color")
+                )
             },
             "color": "color",
         }
@@ -292,11 +298,11 @@ CONVERSION_SPEC_SHEET = {
         "secondary_type": "light",
         "attributes": {
             "color": {
-                "tex0": lambda x, y: y.attr("color")
-                .inputs()[0]
-                .getAttr("fileTextureName")
-                if y.type() == "file"
-                else y.attr("color").inputs()[0].getAttr("filename")
+                "tex0": lambda x, y: (
+                    y.attr("color").inputs()[0].getAttr("fileTextureName")
+                    if y.type() == "file"
+                    else y.attr("color").inputs()[0].getAttr("filename")
+                )
             }
         },
     },
@@ -306,9 +312,11 @@ CONVERSION_SPEC_SHEET = {
             "aiSamples": {"shadowRays": 1},
             "aiDecayType": {"decayRate": lambda x: 0 if x == 0 else 2},
             "aiColorTemperature": {
-                "color": lambda x, y: pm.arnoldTemperatureToColor(x)
-                if y.getAttr("aiUseColorTemperature")
-                else y.getAttr("color")
+                "color": lambda x, y: (
+                    pm.arnoldTemperatureToColor(x)
+                    if y.getAttr("aiUseColorTemperature")
+                    else y.getAttr("color")
+                )
             },
             "aiRadius": "lightRadius",
             "color": "color",
@@ -319,9 +327,11 @@ CONVERSION_SPEC_SHEET = {
             "aiExposure": {"intensity": lambda x: 2**x},
             "aiSamples": {"shadowRays": 1},
             "aiColorTemperature": {
-                "color": lambda x, y: pm.arnoldTemperatureToColor(x)
-                if y.getAttr("aiUseColorTemperature")
-                else y.getAttr("color")
+                "color": lambda x, y: (
+                    pm.arnoldTemperatureToColor(x)
+                    if y.getAttr("aiUseColorTemperature")
+                    else y.getAttr("color")
+                )
             },
             "aiAngle": "lightAngle",
             "color": "color",

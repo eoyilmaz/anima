@@ -462,7 +462,7 @@ class SequenceManagerExtension(object):
                         f = clip.file
                         pathurl = f.pathurl.replace("file://localhost/", "")
                         if ":" not in pathurl:  # not windows, keep '/'
-                            pathurl = "/%s" % pathurl
+                            pathurl = f"/{pathurl}"
                         shot.output.set(pathurl)
 
                     shot.track.set(i + 1)
@@ -477,8 +477,8 @@ class SequenceManagerExtension(object):
         """
         if not isinstance(path, str):
             raise TypeError(
-                "path argument in %s.from_xml should be a string, not %s"
-                % (self.__class__.__name__, path.__class__.__name__)
+                f"path argument in {self.__class__.__name__}.from_xml should "
+                f"be a string, not {path.__class__.__name__}: '{path}'"
             )
 
         from xml.etree import ElementTree
@@ -506,8 +506,8 @@ class SequenceManagerExtension(object):
         """
         if not isinstance(path, str):
             raise TypeError(
-                "path argument in %s.from_edl should be a string, not %s"
-                % (self.__class__.__name__, path.__class__.__name__)
+                f"path argument in {self.__class__.__name__}.from_edl should "
+                f"be a string, not {path.__class__.__name__}: '{path}'"
             )
 
         from anima.dcc.mayaEnv import Maya
@@ -595,7 +595,7 @@ class SequenceManagerExtension(object):
 
             f.duration = shot.duration + 2 * shot.handle.get()
 
-            f.pathurl = str("file://localhost/%s" % shot.output.get())
+            f.pathurl = f"file://localhost/{shot.output.get()}"
 
             clip.file = f
 
@@ -737,27 +737,31 @@ class SequencerExtension(object):
         sequence_name,
         padding=4,
         increment=10,
-        template="%(sequence_name)s_%(shot_name)_%(version_number)03d",
+        template="{sequence_name}_{shot_name}_{version_number:03d}",
     ):
-        """Sets all shot names according to the given template.
+        """Set all shot names according to the given template.
 
-        :param sequence_name: The sequence name
-        :param padding: Shot number padding
-        :param increment: Shot number increment
-        :param template: The final shot name template
-        :return:
+        Args:
+        sequence_name (str): The sequence name.
+        padding (str): Shot number padding.
+        increment (str): Shot number increment.
+        template (str): The final shot name template.
         """
         raise NotImplementedError()
 
     @extends(pm.nodetypes.Sequencer)
     def create_shot(self, name="", handle=default_handle_count):
-        """Creates a new shot.
+        """Create a new shot.
 
-        :param str name: A string value for the newly created shot name, if
-          skipped or given empty, the next empty shot name will be generated.
-        :param int handle: An integer value for the handle attribute. Default
-          is 10.
-        :returns: The created :class:`~pm.nt.Shot` instance
+        Args:
+            name (str): A string value for the newly created shot name, if
+                skipped or given empty, the next empty shot name will be
+                generated.
+            handle (int): An integer value for the handle attribute. Default is
+                10.
+
+        Returns:
+            :class:`~pm.nt.Shot`: The created :class:`~pm.nt.Shot` instance
         """
         shot = pm.createNode("shot")
         shot.shotName.set(name)
@@ -960,7 +964,7 @@ class ShotExtension(object):
 
         try:
             movie_full_path = os.path.join(
-                tempfile.gettempdir(), "%s.mov" % self.full_shot_name
+                tempfile.gettempdir(), f"{self.full_shot_name}.mov"
             ).replace("\\", "/")
         except AttributeError:
             # this is an error I keep getting, somehow the extension is not
@@ -976,25 +980,25 @@ class ShotExtension(object):
 
             # replace template variables
             template = (
-                template.replace("<Sequence>", "%(sequence)s")
-                .replace("<Shot>", "%(shot)s")
-                .replace("<Task>", "%(task)s")
-                .replace("<Take>", "%(take)s")
-                .replace("<Version>", "%(version)s")
-                .replace("<Camera>", "%(camera)s")
+                template.replace("<Sequence>", "{sequence}")
+                .replace("<Shot>", "{shot}")
+                .replace("<Task>", "{task}")
+                .replace("<Take>", "{take}")
+                .replace("<Version>", "{version}")
+                .replace("<Camera>", "{camera}")
             )
 
-            rendered_template = template % {
-                "shot": self.shotName.get(),
-                "sequence": seq.sequence_name.get(),
-                "task": task,
-                "take": take,
-                "version": version,
-                "camera": camera.name() if camera else None,
-            }
+            rendered_template = template.format(
+                shot=self.shotName.get(),
+                sequence=seq.sequence_name.get(),
+                task=task,
+                take=take,
+                version=version,
+                camera=camera.name() if camera else None,
+            )
 
             movie_full_path = os.path.join(
-                tempfile.gettempdir(), "%s.mov" % rendered_template
+                tempfile.gettempdir(), f"{rendered_template}.mov"
             ).replace("\\", "/")
 
         # set the output of this shot
@@ -1047,10 +1051,12 @@ class ShotExtension(object):
                     "video": pm.playblast(**default_options),
                     "audio": {
                         "node": audio_node,
-                        "offset": default_options.get("startTime", 0)
-                        - audio_node.offset.get()
-                        if audio_node
-                        else 0,
+                        "offset": (
+                            default_options.get("startTime", 0)
+                            - audio_node.offset.get()
+                            if audio_node
+                            else 0
+                        ),
                         "duration": (
                             default_options.get("endTime", 0)
                             - default_options.get("startTime", 0)
@@ -1087,19 +1093,16 @@ class ShotExtension(object):
         """
         if not isinstance(handle, int):
             raise TypeError(
-                '"handle" argument in %(class)s.set_handle() should be '
-                "a non negative integer, not %(handle_class)s"
-                % {
-                    "class": self.__class__.__name__,
-                    "handle_class": handle.__class__.__name__,
-                }
+                f"handle argument in {self.__class__.__name__}.set_handle() "
+                "should be a non negative integer, "
+                f"not {handle.__class__.__name__}: '{handle}'"
             )
 
         if handle < 0:
             raise ValueError(
-                '"handle" argument in %(class)s.set_handle() should be '
-                "a non negative integer, not %(handle)s"
-                % {"class": self.__class__.__name__, "handle": handle}
+                "handle argument in "
+                f"{self.__class__.__name__}.set_handle() should be "
+                f"a non negative integer, not {handle}"
             )
 
         # create "handle" attribute in each shot and set the value
@@ -1170,21 +1173,21 @@ class ShotExtension(object):
 
         # replace template variables
         template = (
-            template.replace("<Sequence>", "%(sequence)s")
-            .replace("<Shot>", "%(shot)s")
-            .replace("<Task>", "%(task)s")
-            .replace("<Take>", "%(take)s")
-            .replace("<Version>", "%(version)s")
-            .replace("<Camera>", "%(camera)s")
+            template.replace("<Sequence>", "{sequence}")
+            .replace("<Shot>", "{shot}")
+            .replace("<Task>", "{task}")
+            .replace("<Take>", "{take}")
+            .replace("<Version>", "{version}")
+            .replace("<Camera>", "{camera}")
         )
 
-        rendered_template = template % {
-            "shot": self.shotName.get(),
-            "sequence": seq.sequence_name.get(),
-            "task": task,
-            "take": take,
-            "version": version,
-            "camera": camera.name() if camera else None,
-        }
+        rendered_template = template.format(
+            shot=self.shotName.get(),
+            sequence=seq.sequence_name.get(),
+            task=task,
+            take=take,
+            version=version,
+            camera=camera.name() if camera else None,
+        )
 
         return rendered_template

@@ -416,8 +416,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 # sort the task labels
                 all_tasks = sorted(
                     all_tasks,
-                    key=lambda task: "%s | %s"
-                    % (
+                    key=lambda task: "{} | {}".format(
                         task.project.name.lower(),
                         " | ".join(map(lambda x: x.name.lower(), task.parents)),
                     ),
@@ -535,7 +534,7 @@ order by cast("TimeLogs".start as date)
             .fetchall()
         )
         # end = time.time()
-        # print('getting data from sql: %0.3f sec' % (end - start))
+        # print("getting data from sql: {:0.3f} sec".format(end - start))
 
         # TODO: Remove this in a later version
 
@@ -558,9 +557,13 @@ order by cast("TimeLogs".start as date)
             ) // 60
 
             tool_tip_text_data = [
-                "Total: %i h %i min logged" % (daily_logged_hours, daily_logged_minutes)
-                if daily_logged_hours
-                else "Total: %i min logged" % daily_logged_minutes
+                (
+                    "Total: {:d} h {:d} min logged".format(
+                        daily_logged_hours, daily_logged_minutes
+                    )
+                    if daily_logged_hours
+                    else "Total: {:d} min logged".format(daily_logged_minutes)
+                )
             ]
 
             for task_name, start, end in sorted(
@@ -609,8 +612,12 @@ order by cast("TimeLogs".start as date)
         selected_date = self.calendar_widget.selectedDate()
         assert isinstance(selected_date, QtCore.QDate)
 
-        day_name = selected_date.longDayName(selected_date.dayOfWeek()).encode("utf-8", "replace")
-        month_name = selected_date.longMonthName(selected_date.month()).encode("utf-8", "replace")
+        day_name = selected_date.longDayName(selected_date.dayOfWeek()).encode(
+            "utf-8", "replace"
+        )
+        month_name = selected_date.longMonthName(selected_date.month()).encode(
+            "utf-8", "replace"
+        )
 
         date_format = """<div>
     <div style="width: 100px; height: 100px; font-size: 60pt; float: initial">
@@ -694,19 +701,19 @@ order by cast("TimeLogs".start as date)
         Returns:
             QtCore.QTime: Rounded QTime instance.
         """
-        logger.debug("q_time(RAW)    : %s" % q_time)
+        logger.debug(f"q_time(RAW)      : {q_time}")
 
         start_of_today = QtCore.QTime(0, 0)
         secs = start_of_today.secsTo(q_time)
 
-        logger.debug("secs       : %s" % secs)
-        logger.debug("TIMING_RESOLUTION: %s" % TIMING_RESOLUTION)
+        logger.debug(f"secs             : {secs}")
+        logger.debug(f"TIMING_RESOLUTION: {TIMING_RESOLUTION}")
         rounded_secs = (secs // (TIMING_RESOLUTION * 60)) * TIMING_RESOLUTION * 60
 
-        logger.debug("rounded_secs: %s" % rounded_secs)
+        logger.debug("rounded_secs: {}".format(rounded_secs))
         rounded_q_time = start_of_today.addSecs(rounded_secs)
 
-        logger.debug("q_time(Rounded): %s" % rounded_q_time)
+        logger.debug("q_time(Rounded): {}".format(rounded_q_time))
 
         return rounded_q_time
 
@@ -735,10 +742,10 @@ order by cast("TimeLogs".start as date)
         end_time = self.end_time_edit.time()
 
         secs = start_time.secsTo(end_time)
-        logger.debug("secs: %s" % secs)
+        logger.debug(f"secs: {secs}")
         new_time = QtCore.QTime(0, 0)
         new_time = new_time.addSecs(secs)
-        logger.debug("new_time: %s" % new_time)
+        logger.debug(f"new_time: {new_time}")
         logger.debug("updating end_time with set_time")
         self.effort_time_edit.setTime(new_time)
         logger.debug("updated end_time with set_time")
@@ -777,10 +784,10 @@ order by cast("TimeLogs".start as date)
         start_time = self.start_time_edit.time()
         end_time = self.end_time_edit.time()
         secs = start_time.secsTo(end_time)
-        logger.debug("secs: %s" % secs)
+        logger.debug(f"secs: {secs}")
         new_time = QtCore.QTime(0, 0)
         new_time = new_time.addSecs(secs)
-        logger.debug("new_time: %s" % new_time)
+        logger.debug(f"new_time: {new_time}")
         self.effort_time_edit.setTime(new_time)
 
         self.updating_timings = False
@@ -886,7 +893,9 @@ order by cast("TimeLogs".start as date)
         minutes = (remaining_seconds - hours * 3600) // 60
         if self.no_time_left:
             self.info_area_label.setText(
-                '<b style="color: red;">%i h %i min</b> extra time.' % (hours, minutes)
+                '<b style="color: red;">{:d} h {:d} min</b> extra time.'.format(
+                    hours, minutes
+                )
             )
             # self.show_revision_fields()
             self.extended_hours = hours
@@ -894,8 +903,8 @@ order by cast("TimeLogs".start as date)
         else:
             # self.hide_revision_fields()
             self.info_area_label.setText(
-                '<b style="color: green;">%i h %i min</b> will remain to '
-                "complete this task." % (hours, minutes)
+                '<b style="color: green;">{:d} h {:d} min</b> will remain to '
+                "complete this task.".format(hours, minutes)
             )
             self.extended_hours = None
             self.extended_minutes = None
@@ -919,7 +928,7 @@ order by cast("TimeLogs".start as date)
             state (bool): Bool argument that controls the visibility of the related
                 time controls.
         """
-        logger.debug("state: %s" % state)
+        logger.debug(f"state: {state}")
         if state:
             self.start_time_edit.show()
             self.start_time_label.show()
@@ -997,7 +1006,7 @@ order by cast("TimeLogs".start as date)
                 )
             except (OverBookedError, DependencyViolationError) as e:
                 # inform the user that it can not do that
-                QtWidgets.QMessageBox.critical(self, "Error", "%s" % e)
+                QtWidgets.QMessageBox.critical(self, "Error", f"{e}")
                 DBSession.rollback()
                 return
 
@@ -1008,7 +1017,7 @@ order by cast("TimeLogs".start as date)
             except IntegrityError as e:
                 DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
-                    self, "Error", "Database Error!!!" "<br>" "%s" % e
+                    self, "Error", f"Database Error!!!<br>{e}"
                 )
                 return
         else:
@@ -1031,8 +1040,9 @@ order by cast("TimeLogs".start as date)
 
             # also create a Note
             new_note = Note(
-                content="Extending timing of the task <b>%s h %s min.</b>"
-                % (self.extended_hours, self.extended_minutes),
+                content="Extending timing of the task <b>{} h {} min.</b>".format(
+                    self.extended_hours, self.extended_minutes
+                ),
                 # type=revision_type,
                 created_by=self.logged_in_user,
                 date_created=utc_now,
@@ -1044,7 +1054,7 @@ order by cast("TimeLogs".start as date)
                 DBSession.commit()
             except IntegrityError as e:
                 QtWidgets.QMessageBox.critical(
-                    self, "Error", "Database Error!!!" "<br>" "%s" % e
+                    self, "Error", f"Database Error!!!<br>{e}"
                 )
                 DBSession.rollback()
                 return
@@ -1063,7 +1073,7 @@ order by cast("TimeLogs".start as date)
                 DBSession.commit()
             except IntegrityError as e:
                 QtWidgets.QMessageBox.critical(
-                    self, "Error", "Database Error!!!" "<br>" "%s" % e
+                    self, "Error", f"Database Error!!!<br>{e}"
                 )
                 DBSession.rollback()
                 return
@@ -1075,10 +1085,10 @@ order by cast("TimeLogs".start as date)
                 review.date_created = utc_now
                 review.date_updated = utc_now
 
-                review.description = "<b>%(resource_name)s:</b> %(note)s" % {
-                    "resource_name": self.logged_in_user.name,
-                    "note": "Created with TimeLog dialog",
-                }
+                review.description = "<b>{resource_name}:</b> {note}".format(
+                    resource_name=self.logged_in_user.name,
+                    note="Created with TimeLog dialog",
+                )
 
             DBSession.add_all(reviews)
 
@@ -1103,7 +1113,7 @@ order by cast("TimeLogs".start as date)
             except IntegrityError as e:
                 DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
-                    self, "Error", "Database Error!!!" "<br>" "%s" % e
+                    self, "Error", f"Database Error!!!<br>{e}"
                 )
                 return
 
@@ -1113,9 +1123,7 @@ order by cast("TimeLogs".start as date)
             DBSession.commit()
         except IntegrityError as e:
             DBSession.rollback()
-            QtWidgets.QMessageBox.critical(
-                self, "Error", "Database Error!!!" "<br>" "%s" % e
-            )
+            QtWidgets.QMessageBox.critical(self, "Error", f"Database Error!!!<br>{e}")
             return
 
         # if nothing bad happens close the dialog

@@ -6,7 +6,6 @@ from anima.ui.lib import QtWidgets
 from stalker import Task, Sequence, Shot
 
 
-
 class ShotComboBox(QtWidgets.QComboBox):
     """A QComboBox variant for Stalker Shot instances"""
 
@@ -33,8 +32,7 @@ class ShotComboBox(QtWidgets.QComboBox):
             )
         else:
             shots_task = (
-                Task.query
-                .filter(Task.parent == self.scene)
+                Task.query.filter(Task.parent == self.scene)
                 .filter(Task.name == "Shots")
                 .first()
             )
@@ -59,8 +57,9 @@ class ShotComboBox(QtWidgets.QComboBox):
         """
         if sequence and not isinstance(sequence, Sequence):
             raise TypeError(
-                "%s.sequence should be a Stalker Sequence instance, not %s"
-                % (self.__class__.__name__, sequence.__class__.__name__)
+                "{}.sequence should be a Stalker Sequence instance, not {}".format(
+                    self.__class__.__name__, sequence.__class__.__name__
+                )
             )
 
         self._sequence = sequence
@@ -80,8 +79,9 @@ class ShotComboBox(QtWidgets.QComboBox):
         """
         if scene and not isinstance(scene, Task):
             raise TypeError(
-                "%s.scene should be a Stalker Task instance, not %s"
-                % (self.__class__.__name__, scene.__class__.__name__)
+                "{}.scene should be a Stalker Task instance, not {}".format(
+                    self.__class__.__name__, scene.__class__.__name__
+                )
             )
 
         self._scene = scene

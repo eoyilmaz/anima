@@ -156,7 +156,7 @@ def open_browser_in_location(path):
     if os.path.exists(path):
         subprocess.Popen(command, shell=True)
     else:
-        raise IOError("%s doesn't exists!" % path)
+        raise IOError(f"{path} doesn't exists!")
 
 
 def md5_checksum(path):
@@ -194,17 +194,19 @@ class StalkerThumbnailCache(object):
         """
         # look up in the cache first
         filename = os.path.basename(thumbnail_full_path)
-        logger.debug("filename : %s" % filename)
+        logger.debug(f"filename : {filename}")
 
         cache_path = os.path.expanduser(defaults.local_cache_folder)
         cached_file_full_path = os.path.join(cache_path, filename)
 
-        url = "%s/%s" % (defaults.stalker_server_internal_address, thumbnail_full_path)
-        login_url = "%s/login" % defaults.stalker_server_internal_address
+        url = "{}/{}".format(
+            defaults.stalker_server_internal_address, thumbnail_full_path
+        )
+        login_url = "{}/login".format(defaults.stalker_server_internal_address)
 
-        logger.debug("cache_path            : %s" % cache_path)
-        logger.debug("cached_file_full_path : %s" % cached_file_full_path)
-        logger.debug("url                   : %s" % url)
+        logger.debug(f"cache_path            : {cache_path}")
+        logger.debug(f"cached_file_full_path : {cached_file_full_path}")
+        logger.debug(f"url                   : {url}")
 
         if not os.path.exists(cached_file_full_path) and login and password:
             # download the file and put it on to the cache
@@ -554,8 +556,8 @@ class MediaManager(object):
             # at this stage we should have enough info, may not be correct but
             # we should have something
             # calculate nb_frames
-            logger.debug("duration  : %s" % duration)
-            logger.debug("frame_rate: %s" % frame_rate)
+            logger.debug(f"duration  : {duration}")
+            logger.debug(f"frame_rate: {frame_rate}")
             nb_frames = int(duration * frame_rate)
         nb_frames = int(nb_frames)
 
@@ -583,7 +585,7 @@ class MediaManager(object):
         self.ffmpeg(
             **{
                 "i": file_full_path,
-                "vf": "select='eq(n,%s)'" % mid_frame,
+                "vf": f"select='eq(n,{mid_frame})'",
                 "vframes": 1,
                 "o": mid_thumb_path,
             }
@@ -592,7 +594,7 @@ class MediaManager(object):
         self.ffmpeg(
             **{
                 "i": file_full_path,
-                "vf": "select='eq(n,%s)'" % end_frame,
+                "vf": f"select='eq(n,{end_frame})'",
                 "vframes": 1,
                 "o": end_thumb_path,
             }
@@ -625,12 +627,13 @@ class MediaManager(object):
         self.ffmpeg(
             **{
                 "i": [start_thumb_path, mid_thumb_path, end_thumb_path],
-                "filter_complex": "[0:0]scale=3*%(tw)s/4:-1,pad=%(tw)s:%(th)s[s];"
-                "[1:0]scale=3*%(tw)s/4:-1,fade=out:300:30:alpha=1[m];"
-                "[2:0]scale=3*%(tw)s/4:-1,fade=out:300:30:alpha=1[e];"
-                "[s][e]overlay=%(tw)s/4:%(th)s-h[x];"
-                "[x][m]overlay=%(tw)s/8:%(th)s/2-h/2"
-                % {"tw": self.thumbnail_width, "th": self.thumbnail_height},
+                "filter_complex": "[0:0]scale=3*{tw}/4:-1,pad={tw}:{th}[s];"
+                "[1:0]scale=3*{tw}/4:-1,fade=out:300:30:alpha=1[m];"
+                "[2:0]scale=3*{tw}/4:-1,fade=out:300:30:alpha=1[e];"
+                "[s][e]overlay={tw}/4:{th}-h[x];"
+                "[x][m]overlay={tw}/8:{th}/2-h/2".format(
+                    tw=self.thumbnail_width, th=self.thumbnail_height
+                ),
                 "o": thumbnail_path,
             }
         )
@@ -689,8 +692,8 @@ class MediaManager(object):
 
         # not an image nor a video so no thumbnail, raise RuntimeError
         raise RuntimeError(
-            "%s is not an image nor a video file, can not "
-            "generate a thumbnail for it!" % file_full_path
+            f"{file_full_path} is not an image nor a video file, can not "
+            "generate a thumbnail for it!"
         )
 
     def generate_media_for_web(self, file_full_path):
@@ -717,7 +720,7 @@ class MediaManager(object):
             return self.generate_video_for_web(file_full_path)
 
         # not an image nor a video so no thumbnail, raise RuntimeError
-        raise RuntimeError("%s is not an image nor a video file!" % file_full_path)
+        raise RuntimeError(f"{file_full_path} is not an image nor a video file!")
 
     @classmethod
     def generate_local_file_path(cls, extension=""):
@@ -831,7 +834,7 @@ class MediaManager(object):
         # first process the -start_number flag
         if "start_number" in kwargs:
             key = "start_number"
-            flag = "-%s" % key
+            flag = f"-{key}"
             # use pop to remove the key
             value = kwargs.pop(key)
             # append the flag
@@ -844,7 +847,7 @@ class MediaManager(object):
         # interpretted in a wrong manner
         if "framerate" in kwargs:
             key = "framerate"
-            flag = "-%s" % key
+            flag = f"-{key}"
             # use pop to remove the key
             value = kwargs.pop(key)
             # append the flag
@@ -855,10 +858,10 @@ class MediaManager(object):
         # first process the -i flag
         if "i" in kwargs:
             ss_key = "ss"
-            ss_flag = "-%s" % ss_key
+            ss_flag = f"-{ss_key}"
             ss_value = None
             to_key = "to"
-            to_flag = "-%s" % to_key
+            to_flag = f"-{to_key}"
             to_value = None
             if ss_key in kwargs:
                 # seek for each input
@@ -870,7 +873,7 @@ class MediaManager(object):
                 to_value = kwargs.pop(to_key)
 
             key = "i"
-            flag = "-%s" % key
+            flag = f"-{key}"
             # use pop to remove the key
             value = kwargs.pop(key)
             if not isinstance(value, list):
@@ -934,14 +937,14 @@ class MediaManager(object):
         if output != "" and output is not None:  # for info only
             args.append(output)
 
-        logger.debug("calling ffmpeg with args: %s" % args)
+        logger.debug(f"calling ffmpeg with args: {args}")
 
         startupinfo = None
         if os.name == "nt":
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
-        print("ffmpeg command: %s" % " ".join(args))
+        print("ffmpeg command: {}".format(" ".join(args)))
 
         process = subprocess.Popen(
             args, stderr=subprocess.PIPE, startupinfo=startupinfo
@@ -994,7 +997,7 @@ class MediaManager(object):
                     args.append(flag)
                     args.append(str(v))
 
-        logger.debug("calling ffprobe with args: %s" % args)
+        logger.debug(f"calling ffprobe with args: {args}")
 
         startupinfo = None
         if os.name == "nt":
@@ -1041,7 +1044,7 @@ class MediaManager(object):
             options = {}
 
         # change the extension to mp4
-        output_path = "%s%s" % (os.path.splitext(output_path)[0], ".mp4")
+        output_path = "{}{}".format(os.path.splitext(output_path)[0], ".mp4")
 
         conversion_options = {
             "i": input_path,
@@ -1072,12 +1075,12 @@ class MediaManager(object):
             options = {}
 
         # change the extension to webm
-        output_path = "%s%s" % (os.path.splitext(output_path)[0], ".webm")
+        output_path = "{}{}".format(os.path.splitext(output_path)[0], ".webm")
 
         conversion_options = {
             "i": input_path,
             "vcodec": "libvpx",
-            "b:v": "%sk" % self.web_video_bitrate,
+            "b:v": "{}k".format(self.web_video_bitrate),
             "o": output_path,
         }
         conversion_options.update(options)
@@ -1101,7 +1104,7 @@ class MediaManager(object):
             options = {}
 
         # change the extension to webm
-        output_path = "%s%s" % (os.path.splitext(output_path)[0], ".mov")
+        output_path = "{}{}".format(os.path.splitext(output_path)[0], ".mov")
 
         conversion_options = {
             "i": input_path,
@@ -1135,7 +1138,7 @@ class MediaManager(object):
             options = {}
 
         # change the extension to webm
-        output_path = "%s%s" % (os.path.splitext(output_path)[0], ".mov")
+        output_path = "{}{}".format(os.path.splitext(output_path)[0], ".mov")
 
         # ffmpeg -y
         # -probesize 5000000
@@ -1181,7 +1184,7 @@ class MediaManager(object):
             options = {}
 
         # change the extension to gif
-        output_path = "%s%s" % (os.path.splitext(output_path)[0], ".gif")
+        output_path = "{}{}".format(os.path.splitext(output_path)[0], ".gif")
 
         conversion_options = {"i": input_path, "o": output_path}
         conversion_options.update(options)
@@ -1240,8 +1243,8 @@ class MediaManager(object):
 
         # generate uuid4 sequence until there is no file with that name
         def generate():
-            random_part = "_%s" % uuid.uuid4().hex[:4]
-            return os.path.join(path, "%s%s%s" % (basename, random_part, extension))
+            random_part = "_{}".format(uuid.uuid4().hex[:4])
+            return os.path.join(path, "{}{}{}".format(basename, random_part, extension))
 
         random_file_full_path = generate()
         # generate until we have something unique
@@ -1301,7 +1304,7 @@ class MediaManager(object):
 
         # replace ' ' with '_'
         basename, extension = os.path.splitext(filename)
-        filename = "%s%s" % (
+        filename = "{}{}".format(
             re.sub(r'[\s\.\\/:\*\?"<>|=,+]+', "_", basename),
             extension,
         )
@@ -1338,7 +1341,7 @@ class MediaManager(object):
             file_full_path = self.randomize_file_name(file_full_path)
 
         # write down to a temp file first
-        temp_file_full_path = "%s~" % file_full_path
+        temp_file_full_path = f"{file_full_path}~"
 
         # create folders
         try:
@@ -1411,7 +1414,7 @@ class MediaManager(object):
         )
         web_version_extension = os.path.splitext(web_version_temp_full_path)[-1]
 
-        web_version_file_name = "%s%s" % (
+        web_version_file_name = "{}{}".format(
             reference_file_base_name,
             web_version_extension,
         )
@@ -1437,7 +1440,9 @@ class MediaManager(object):
         # finally generate a Thumbnail
         thumbnail_temp_full_path = self.generate_thumbnail(reference_file_full_path)
         thumbnail_extension = os.path.splitext(thumbnail_temp_full_path)[-1]
-        thumbnail_file_name = "%s%s" % (reference_file_base_name, thumbnail_extension)
+        thumbnail_file_name = "{}{}".format(
+            reference_file_base_name, thumbnail_extension
+        )
 
         thumbnail_full_path = os.path.join(
             os.path.dirname(reference_file_full_path), "Thumbnail", thumbnail_file_name
@@ -1487,7 +1492,9 @@ class MediaManager(object):
         if variant_name is None:
             variant_name = defaults.version_variant_name
 
-        v = Version(task=task, variant_name=variant_name, created_with="Stalker Pyramid")
+        v = Version(
+            task=task, variant_name=variant_name, created_with="Stalker Pyramid"
+        )
         v.update_paths()
         v.extension = extension
 
@@ -1800,7 +1807,7 @@ def generate_unique_shot_name(project, base_name, shot_name_increment=10):
         name_parts[-1] = str(i).zfill(padding)
         shot_name = "_".join(name_parts)
         if is_unique_shot_name(project, shot_name):
-            logger.debug("generated unique shot name: %s" % shot_name)
+            logger.debug(f"generated unique shot name: {shot_name}")
             return shot_name
         i += shot_name_increment
 
@@ -1913,12 +1920,12 @@ def walk_and_duplicate_task_hierarchy(task, user, keep_resources=False):
         stalker.Task: The newly created (duplicate) stalker.Task instance.
     """
     # start from the given task
-    logger.debug("duplicating task : %s" % task)
-    logger.debug("task.children    : %s" % task.children)
+    logger.debug(f"duplicating task : {task}")
+    logger.debug(f"task.children    : {task.children}")
     dup_task = duplicate_task(task, user, keep_resources=keep_resources)
     task.duplicate = dup_task
     for child in task.children:
-        logger.debug("duplicating child : %s" % child)
+        logger.debug(f"duplicating child : {child}")
         duplicated_child = walk_and_duplicate_task_hierarchy(
             child, user, keep_resources=keep_resources
         )
@@ -1938,13 +1945,13 @@ def update_dependencies_in_duplicated_hierarchy(task):
         duplicated_task = task.duplicate
     except AttributeError:
         # not a duplicated task
-        logger.debug("task has no duplicate: %s" % task)
+        logger.debug(f"task has no duplicate: {task}")
         return
 
     for dependent_task in task.depends:
         if hasattr(dependent_task, "duplicate"):
             logger.debug("there is a duplicate!")
-            logger.debug("dependent_task.duplicate : %s" % dependent_task.duplicate)
+            logger.debug(f"dependent_task.duplicate : {dependent_task.duplicate}")
             duplicated_task.depends.append(dependent_task.duplicate)
         else:
             logger.debug("there is no duplicate!")
@@ -2103,8 +2110,8 @@ def get_actual_start_time(task):
     """
     if not isinstance(task, Task):
         raise TypeError(
-            "task should be an instance of stalker.models.task.Task, not %s"
-            % task.__class__.__name__
+            "task should be an instance of stalker.models.task.Task, "
+            f"not {task.__class__.__name__}"
         )
 
     first_time_log = (
@@ -2141,8 +2148,8 @@ def get_actual_end_time(task):
     """
     if not isinstance(task, Task):
         raise TypeError(
-            "task should be an instance of stalker.models.task.Task, not %s"
-            % task.__class__.__name__
+            "task should be an instance of stalker.models.task.Task, "
+            "not {task.__class__.__name__}"
         )
 
     end_time_log = (
@@ -2325,10 +2332,11 @@ def ldap_authenticate(login, password, ldap_server_address=None, ldap_base_dn=No
         ldap_server = Server(ldap_server_address)
         ldap_connection = Connection(server=ldap_server, user=login, password=password)
         success = ldap_connection.bind()
-        logger.debug("ldap_connection.bind(): %s" % success)
+        logger.debug(f"ldap_connection.bind(): {success}")
         logger.debug(
-            "ldap_connection.extend.standard.who_am_i(): %s"
-            % ldap_connection.extend.standard.who_am_i()
+            "ldap_connection.extend.standard.who_am_i(): {}".format(
+                ldap_connection.extend.standard.who_am_i()
+            )
         )
 
         if success:
@@ -2366,7 +2374,7 @@ def create_user_with_ldap_info(ldap_connection, ldap_base_dn, login, password):
     # login = login
     # generate a dummy email for now
     # TODO: Get a proper email address from the LDAP server
-    email = "%s@%s" % (
+    email = "{}@{}".format(
         login,
         ".".join([DC.split("=")[1] for DC in ldap_base_dn.split(",")]),
     )
@@ -2422,7 +2430,7 @@ def get_user_attributes_from_ldap(ldap_connection, ldap_base_dn, login, attribut
     """
     result = []
     if ldap_connection:
-        ldap_filter = "(sAMAccountName=%s)" % login
+        ldap_filter = f"(sAMAccountName={login})"
 
         result = ldap_connection.search(
             ldap_base_dn,
@@ -2490,7 +2498,7 @@ def milliseconds_to_tc(milliseconds):
     residual_milliseoncds = residual_seconds - seconds * 1000
     milliseconds = int(residual_milliseoncds)
 
-    return "%02i:%02i:%02i.%03i" % (hours, minutes, seconds, milliseconds)
+    return "{:02d}:{:02d}:{:02d}.{:03d}".format(hours, minutes, seconds, milliseconds)
 
 
 def upload_thumbnail(task, thumbnail_full_path):
@@ -2508,7 +2516,7 @@ def upload_thumbnail(task, thumbnail_full_path):
 
     # move the file to the task thumbnail folder
     # and mimic StalkerPyramids output format
-    thumbnail_original_file_name = "thumbnail%s" % extension
+    thumbnail_original_file_name = f"thumbnail{extension}"
     thumbnail_final_full_path = os.path.join(
         task.absolute_path, "Thumbnail", thumbnail_original_file_name
     )
@@ -2578,7 +2586,7 @@ def text_splitter(input_text, max_line_length=32):
         word = words.pop(0)
         current_line_length = len(temp_line)
         if current_line_length + len(word) <= max_line_length:
-            temp_line = "%s %s" % (temp_line, word)
+            temp_line = f"{temp_line} {word}"
         else:
             lines.append(temp_line)
             temp_line = word
@@ -2679,13 +2687,17 @@ def convert_to_partial_project(project=None):
     subquery = DBSession.query(inner_tasks.c.id).filter(
         inner_tasks.c.project_id == Project.id
     )
-    return DBSession.query(
-        Project.id,
-        Project.name,
-        Project.entity_type,
-        Project.status_id,
-        subquery.exists().label("has_children"),
-    ).filter(Project.id==project.id).first()
+    return (
+        DBSession.query(
+            Project.id,
+            Project.name,
+            Project.entity_type,
+            Project.status_id,
+            subquery.exists().label("has_children"),
+        )
+        .filter(Project.id == project.id)
+        .first()
+    )
 
 
 def partial_task_query(parent_task=None):
@@ -2766,14 +2778,14 @@ def get_task_hierarchy_name(task):
         str: Task hierarchy name.
     """
     if task.parents:
-        path = "%s | %s" % (
+        path = "{} | {}".format(
             task.project.code,
             " | ".join(map(lambda x: x.name, task.parents)),
         )
     else:
         path = task.project.code
 
-    return "%s (%s) (%s)" % (task.name, path, task.id)
+    return "{} ({}) ({})".format(task.name, path, task.id)
 
 
 def get_unique_variant_names(task_id, include_reprs=False):
@@ -2787,13 +2799,13 @@ def get_unique_variant_names(task_id, include_reprs=False):
     Returns:
         list: A list of strings of unique take names.
     """
-    query = (
-        DBSession.query(Version.variant_name)
-        .filter(Version.task_id == task_id)
-    )
+    query = DBSession.query(Version.variant_name).filter(Version.task_id == task_id)
     if not include_reprs:
         from anima.representation import Representation
-        query = query.filter(~Version.variant_name.contains(Representation.repr_separator))
+
+        query = query.filter(
+            ~Version.variant_name.contains(Representation.repr_separator)
+        )
 
     return [t[0] for t in query.distinct().order_by(Version.variant_name).all()]
 
@@ -2810,9 +2822,11 @@ def get_project_from_path(path):
         Union[Project, None]: If found, the stalker.Project instance, or None.
     """
     from stalker import Repository
+
     path = Repository.to_os_independent_path(path)
     project_code = path.split("/")[1]
     # This is only true for the default configuration
     # but this is 99.99% of the times okay
     from stalker import Project
+
     return Project.query.filter(Project.code == project_code).first()

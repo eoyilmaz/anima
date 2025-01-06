@@ -426,7 +426,7 @@ def test_get_env_names_method_will_return_complex_environment_names_properly(
     return all the DCC names as a list of strings in desired format
     when environment_name_format is set
     """
-    name_format = "%e - %n"
+    name_format = "{extension} - {name}"
     expected_result = [
         ".ztl - ZBrush",
         ".mud - MudBox",
@@ -480,13 +480,13 @@ def test_get_env_method_will_return_desired_environment_even_with_complex_format
     """
     ext_env_factory = ExternalDCCFactory()
 
-    zbrush = ext_env_factory.get_env("ZBrush (.ztl)", name_format="%n (%e)")
+    zbrush = ext_env_factory.get_env("ZBrush (.ztl)", name_format="{name} ({extension})")
     assert isinstance(zbrush, ExternalDCC)
     assert zbrush.name == "ZBrush"
     assert zbrush.extensions == [".ztl"]
     assert zbrush.structure == ["Outputs"]
 
-    mudbox = ext_env_factory.get_env("MudBox (.mud)", name_format="%n (%e)")
+    mudbox = ext_env_factory.get_env("MudBox (.mud)", name_format="{name} ({extension})")
     assert isinstance(mudbox, ExternalDCC)
     assert mudbox.name == "MudBox"
     assert mudbox.extensions == [".mud"]
@@ -500,14 +500,14 @@ def test_get_env_method_will_return_desired_environment_even_with_custom_formats
     ExternalEnvironment instance even with names like "MudBox (.mud)"
     """
     ext_env_factory = ExternalDCCFactory()
-    name_format = "(%e) - %n"
-    zbrush = ext_env_factory.get_env("(.ztl) - ZBrush", name_format=name_format)
+    name_format = "({extension}) - {name}"
+    zbrush = ext_env_factory.get_env("(.ztl) ZBrush", name_format=name_format)
     assert isinstance(zbrush, ExternalDCC)
     assert zbrush.name == "ZBrush"
     assert zbrush.extensions == [".ztl"]
     assert zbrush.structure == ["Outputs"]
 
-    mudbox = ext_env_factory.get_env("(.mud) - MudBox", name_format=name_format)
+    mudbox = ext_env_factory.get_env("(.mud) MudBox", name_format=name_format)
     assert isinstance(mudbox, ExternalDCC)
     assert mudbox.name == "MudBox"
     assert mudbox.extensions == [".mud"]

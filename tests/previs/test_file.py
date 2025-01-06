@@ -174,5 +174,5 @@ class FileTestCase(unittest.TestCase):
         # and it should be a file element with just the id attribute
         self.assertEqual(
             call2,
-            '<file id="%s"/>' % f.id
+            f'<file id="{f.id}"/>'
         )

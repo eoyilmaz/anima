@@ -57,11 +57,10 @@ def create_bake_setup():
     # Python node
     python_node = parent_node.createNode("python")
     python_node.parm("python").set(
-        """# run only in batch mode
+        f"""# run only in batch mode
 if hou.applicationName() == 'hbatch':
-    rs_node = hou.node("../%s")
+    rs_node = hou.node("../{rs_proxy_output.name()}")
     rs_node.parm("execute").pressButton()"""
-        % rs_proxy_output.name()
     )
     python_node.setInput(0, attr_wrangle_node)
     nodes_created.append(python_node)
@@ -72,8 +71,8 @@ if hou.applicationName() == 'hbatch':
     block_end_node.parm("method").set(1)  # Merge Each Iteration
     block_end_node.parm("class").set(0)  # Primitives
     block_end_node.parm("useattrib").set(0)  # Use Piece Attrib
-    block_end_node.parm("blockpath").set("../%s" % block_begin_node.name())
-    block_end_node.parm("templatepath").set("../%s" % block_begin_node.name())
+    block_end_node.parm("blockpath").set(f"../{block_begin_node.name()}")
+    block_end_node.parm("templatepath").set(f"../{block_begin_node.name()}")
     block_end_node.parm("stopcondition").set(0)
     block_end_node.setInput(0, python_node)
     nodes_created.append(block_end_node)
@@ -81,15 +80,15 @@ if hou.applicationName() == 'hbatch':
     # The second block begin node
     metadata_node = parent_node.createNode("block_begin")
     metadata_node.parm("method").set(2)  # Fetch Metadata
-    metadata_node.parm("blockpath").set("../%s" % block_end_node.name())
+    metadata_node.parm("blockpath").set(f"../{block_end_node.name()}")
     # also set the block path of the block_begin_node
-    block_begin_node.parm("blockpath").set("../%s" % block_end_node.name())
+    block_begin_node.parm("blockpath").set(f"../{block_end_node.name()}")
     nodes_created.append(metadata_node)
 
     from anima.dcc.houdini import auxiliary
 
     # Create space input0 for rs proxy output node
-    auxiliary.create_spare_input(rs_proxy_output, "../%s" % metadata_node.name())
+    auxiliary.create_spare_input(rs_proxy_output, f"../{metadata_node.name()}")
 
     # delete node
     delete_node = parent_node.createNode("delete")
@@ -178,11 +177,10 @@ def create_render_setup():
 
     attr_wrangle_node2 = parent_node.createNode("attribwrangle")
     attr_wrangle_node2.parm("snippet").set(
-        """int material_ids[] = {1,2,3,4,5,6,7,8,9,10};
-int material_id = material_ids[sample_discrete(len(material_ids), rand(@ptnum + %0.3f))];
+        f"""int material_ids[] = {{1,2,3,4,5,6,7,8,9,10}};
+int material_id = material_ids[sample_discrete(len(material_ids), rand(@ptnum + {random.random():0.3f}))];
 s@shop_materialpath = concat("/mat/Material", itoa(material_id));
 """
-        % random.random()
     )
     attr_wrangle_node2.setInput(0, attr_wrangle_node)
     nodes_created.append(attr_wrangle_node2)

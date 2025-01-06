@@ -447,6 +447,9 @@ class GenericTools(object):
         "%{Clip Base Name}_Denoised",
         "%{Timeline Name}_CL%{Clip #}_v001",
     ]
+    """The "%" sign is needed for Resolve, it is not Python formatting.
+    So please don't replace it!.
+    """
 
     @classmethod
     def per_clip_output_generator(
@@ -505,31 +508,33 @@ class GenericTools(object):
 
             clip_start = clip.GetStart()
             clip_end = clip.GetEnd()
-            if clip_start >= start_frame and clip_end <= end_frame:
-                if use_relative_clip_index:
-                    calculated_clip_number = start_clip_number + clip_number_by * i
-                    i += 1
-                else:
-                    calculated_clip_number = start_clip_number + clip_number_by * (
-                        int(clip_index) - 1
-                    )
+            if clip_start < start_frame or clip_end > end_frame:
+                continue
 
-                calculated_clip_number_as_str = "%s" % calculated_clip_number
-                resolve_template_vars["Clip #"] = calculated_clip_number_as_str.zfill(
-                    padding
+            if use_relative_clip_index:
+                calculated_clip_number = start_clip_number + clip_number_by * i
+                i += 1
+            else:
+                calculated_clip_number = start_clip_number + clip_number_by * (
+                    int(clip_index) - 1
                 )
-                cls.clip_output_generator_by_clip_index(
-                    clip_index=clip_index,
-                    filename_template=template.format_resolve_template(
-                        filename_template, resolve_template_vars
-                    ),
-                    location_template=template.format_resolve_template(
-                        location_template, resolve_template_vars
-                    ),
-                    extend_start=extend_start,
-                    extend_end=extend_end,
-                    render_preset=render_preset,
-                )
+
+            calculated_clip_number_as_str = f"{calculated_clip_number}"
+            resolve_template_vars["Clip #"] = calculated_clip_number_as_str.zfill(
+                padding
+            )
+            cls.clip_output_generator_by_clip_index(
+                clip_index=clip_index,
+                filename_template=template.format_resolve_template(
+                    filename_template, resolve_template_vars
+                ),
+                location_template=template.format_resolve_template(
+                    location_template, resolve_template_vars
+                ),
+                extend_start=extend_start,
+                extend_end=extend_end,
+                render_preset=render_preset,
+            )
 
     @classmethod
     def clip_output_generator_by_clip_index(
@@ -541,15 +546,15 @@ class GenericTools(object):
         extend_end=0,
         render_preset="",
     ):
-        """Generators
+        """Generate render tasks for the clip with the given index.
 
-        :param int clip_index:
-        :param str filename_template: The filename template.
-        :param str location_template: The output location template.
-        :param int extend_start:
-        :param int extend_end:
-        :param str render_preset: Render preset name.
-        :return:
+        Args:
+            clip_index (int): The clip index.
+            filename_template (str): The filename template.
+            location_template (str): The output location template.
+            extend_start (int):
+            extend_end (int):
+            render_preset (str): Render preset name.
         """
         from anima.dcc import blackmagic
 
@@ -582,7 +587,7 @@ class GenericTools(object):
         render_preset="",
         padding=4,
     ):
-        """Generate render tasks for the clip with the given index.
+        """Generate render tasks for the given clip.
 
         Args:
             clip (TimelineItem): A Resolve TimelineItem
@@ -652,9 +657,9 @@ class GenericTools(object):
 
         result = proj.LoadRenderPreset(render_preset)
         if not result:
-            print("No preset named: %s" % render_preset)
+            print(f"No preset named: {render_preset}")
         else:
-            print("Preset loaded successfully: %s" % render_preset)
+            print(f"Preset loaded successfully: {render_preset}")
 
         # create a new render output for each clip
         proj.SetRenderSettings(

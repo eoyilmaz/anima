@@ -87,7 +87,7 @@ def ffmpeg(**kwargs):
     # append the output
     args.append(output)
 
-    logger.debug("calling real ffmpeg with args: %s" % args)
+    logger.debug(f"calling real ffmpeg with args: {args}")
     process = subprocess.Popen(args, stderr=subprocess.PIPE)
 
     # loop until process finishes and capture stderr output

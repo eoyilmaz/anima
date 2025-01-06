@@ -146,7 +146,7 @@ def initializePlugin(obj):
             OpenMayaMPx.MPxNode.kDeformerNode,
         )
     except:
-        sys.stderr.write("Failed to register node: %s" % node_type_name)
+        sys.stderr.write(f"Failed to register node: {node_type_name}")
 
 
 def uninitializePlugin(mobject):
@@ -155,5 +155,5 @@ def uninitializePlugin(mobject):
     try:
         plugin.deregisterNode(plugin_id)
     except:
-        sys.stderr.write("Failed to deregister node: %s" % node_type_name)
+        sys.stderr.write(f"Failed to deregister node: {node_type_name}")
         raise

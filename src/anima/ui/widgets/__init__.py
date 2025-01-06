@@ -256,9 +256,7 @@ class TakesListWidget(QtWidgets.QListWidget):
         elif selected_action == copy_take_action:
             if item:
                 clipboard = QtWidgets.QApplication.clipboard()
-                clipboard.setText(
-                    os.path.normpath(item.text())
-                )
+                clipboard.setText(os.path.normpath(item.text()))
 
     def show_add_take_dialog(self):
         """runs when the add_take_toolButton clicked"""
@@ -304,7 +302,7 @@ class TakesListWidget(QtWidgets.QListWidget):
         self._variant_names.insert(0, main)
 
         # clear the list and new items
-        logger.debug("adding supplied take names: %s" % self._variant_names)
+        logger.debug(f"adding supplied take names: {self._variant_names}")
         self.addItems(self._variant_names)
 
         # select the first item
@@ -344,7 +342,7 @@ class TakesListWidget(QtWidgets.QListWidget):
     @current_variant_name.setter
     def current_variant_name(self, variant_name):
         """sets the current take name"""
-        logger.debug("finding take with name: %s" % variant_name)
+        logger.debug(f"finding take with name: {variant_name}")
         items = self.findItems(variant_name, QtCore.Qt.MatchExactly)
         if items:
             self.setCurrentItem(items[0])
@@ -385,7 +383,7 @@ class TakesComboBox(QtWidgets.QComboBox):
         self._variant_names.insert(0, main)
 
         # clear the list and new items
-        logger.debug("adding supplied take names: %s" % self._variant_names)
+        logger.debug(f"adding supplied take names: {self._variant_names}")
         self.addItems(self._variant_names)
 
         # select the first item
@@ -419,7 +417,7 @@ class TakesComboBox(QtWidgets.QComboBox):
     @current_variant_name.setter
     def current_variant_name(self, variant_name):
         """sets the current take name"""
-        logger.debug("finding take with name: %s" % variant_name)
+        logger.debug(f"finding take with name: {variant_name}")
         index = self.findText(variant_name, QtCore.Qt.MatchExactly)
         if index:
             self.setCurrentIndex(index)
@@ -442,35 +440,42 @@ class TaskComboBox(QtWidgets.QComboBox):
         super(TaskComboBox, self).showPopup(*args, **kwargs)
 
     @classmethod
-    def generate_task_name(cls, task):
-        """Generates task names
-        :param task:
-        :return:
+    def generate_task_name(cls, task) -> str:
+        """Generate task names.
+
+        Args:
+            task (Task): A Stalker Task.
+
+        Returns:
+            str: The formatted task name.
         """
-        if task:
-            return "%s (%s)" % (
-                task.name,
-                "%s | %s"
-                % (task.project.name, " | ".join(map(lambda x: x.name, task.parents))),
-            )
-        else:
+        if not task:
             return ""
 
-    def addTasks(self, tasks):
-        """Overridden addItems method
+        return "{} ({})".format(
+            task.name,
+            "{} | {}".format(
+                task.project.name, " | ".join(map(lambda x: x.name, task.parents))
+            ),
+        )
 
-        :param tasks: A list of Tasks
-        :return:
+    def addTasks(self, tasks):
+        """Override addItems method.
+
+        Args:
+            tasks (List[Task]): A list of Tasks.
         """
-        # prepare task labels
-        task_labels = []
         for task in tasks:
             # this is dirty
             task_label = self.generate_task_name(task)
             self.addItem(task_label, task)
 
     def currentTask(self):
-        """returns the current task"""
+        """Return the current task.
+
+        Returns:
+            Task: The current task.
+        """
         return self.itemData(self.currentIndex())
 
     def setCurrentTask(self, task):

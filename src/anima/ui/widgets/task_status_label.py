@@ -54,13 +54,14 @@ class TaskStatusLabel(QtWidgets.QLabel):
             status_color = self.status_colors[self.task.status.code]
             self.setStyleSheet(
                 """
-                    background-color: %s;
+                    background-color: {};
                     color: white;
                     text-align: center;
                     padding-left: 0.5em;
                     padding-right: 0.5em;
-                """
-                % status_color
+                """.format(
+                    status_color
+                )
             )
             self.setText(self.task.status.name)
         else:

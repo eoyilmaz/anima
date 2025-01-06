@@ -77,7 +77,7 @@ class ArchiverBase(object):
             path=tempdir, name=project_name
         )
 
-        logger.debug("creating new default project at: %s" % default_project_path)
+        logger.debug("creating new default project at: {}".format(default_project_path))
 
         ref_paths = []
         for path in paths:
@@ -100,7 +100,7 @@ class ArchiverBase(object):
                 self.exclude_mask
                 and os.path.splitext(ref_path)[-1] in self.exclude_mask
             ):
-                logger.debug("skipping: %s" % ref_path)
+                logger.debug(f"skipping: {ref_path}")
                 continue
 
             # fix different OS paths
@@ -166,7 +166,7 @@ class ArchiverBase(object):
             tempdir = tempfile.gettempdir()
 
         dir_name = os.path.basename(path)
-        zip_path = os.path.join(tempdir, "%s.zip" % dir_name)
+        zip_path = os.path.join(tempdir, f"{dir_name}.zip")
 
         parent_path = os.path.dirname(path) + "/"
 
@@ -275,11 +275,11 @@ def archive_versions(
     for version in versions:
         task = version.task
         paths.append(version.absolute_full_path)
-        version_upload_link = "%s/tasks/%s/versions/list" % (
+        version_upload_link = "{}/tasks/{}/versions/list".format(
             anima.defaults.stalker_server_external_address,
             task.id,
         )
-        request_review_link = "%s/tasks/%s/view" % (
+        request_review_link = "{}/tasks/{}/view".format(
             anima.defaults.stalker_server_external_address,
             task.id,
         )

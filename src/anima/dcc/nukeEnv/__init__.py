@@ -8,7 +8,7 @@ from anima.dcc.base import DCCBase
 class Nuke(DCCBase):
     """the nuke DCC class"""
 
-    name = "nuke%s" % nuke.NUKE_VERSION_MAJOR
+    name = f"nuke{nuke.NUKE_VERSION_MAJOR}"
     extensions = [".nk"]
 
     def __init__(self, name="", version=None):
@@ -241,13 +241,13 @@ class Nuke(DCCBase):
         if not found_format:
             # create a new format
             found_format = nuke.addFormat(
-                "%s %s" % (image_format.width, image_format.height)
+                "{} {}".format(image_format.width, image_format.height)
             )
             found_format.setName(image_format.name)
 
         # set the current format to that value
         root = self.get_root_node()
-        root["format"].setValue("%s" % image_format.name)
+        root["format"].setValue(f"{image_format.name}")
 
     def get_main_write_nodes(self):
         """Returns the main write node in the scene or None."""
@@ -291,12 +291,16 @@ class Nuke(DCCBase):
                 main_write_node["colorspace"].setValue(104)  # Output - Rec.709
 
             # set the output path
-            output_file_name = "%s_v%03d" % (version.nice_name, version.version_number)
+            output_file_name = "{}_v{:03d}".format(
+                version.nice_name, version.version_number
+            )
 
             if output_format_enum == "mov":
-                output_file_name = "%s.%s" % (output_file_name, output_format_enum)
+                output_file_name = "{}.{}".format(output_file_name, output_format_enum)
             else:
-                output_file_name = "%s.####.%s" % (output_file_name, output_format_enum)
+                output_file_name = "{}.####.{}".format(
+                    output_file_name, output_format_enum
+                )
 
             # check if it is a stereo comp
             # if it is enable separate view rendering
@@ -306,7 +310,7 @@ class Nuke(DCCBase):
                 version.absolute_path,
                 "Outputs",
                 version.variant_name,
-                "v%03d" % version.version_number,
+                "v{:03d}".format(version.version_number),
                 output_format_enum,
                 output_file_name,
             ).replace("\\", "/")

@@ -98,9 +98,9 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
                 GeneralTools.export_rsproxy_data_as_json()
             except (BaseException, hou.OperationFailed) as e:
                 QtWidgets.QMessageBox.critical(
-                    main_tab_widget, "Export", "Error!<br><br>{}".format(
-                        traceback.format_exc()
-                    )
+                    main_tab_widget,
+                    "Export",
+                    "Error!<br><br>{}".format(traceback.format_exc()),
                 )
             else:
                 QtWidgets.QMessageBox.information(
@@ -374,7 +374,7 @@ class GeneralTools(object):
             # Use RSMaterial for now
 
             # first check if the shader exists
-            shader = hou.node("/mat/%s" % shader_name)
+            shader = hou.node(f"/mat/{shader_name}")
 
             if not shader:
                 # create an RSMaterial
@@ -385,14 +385,14 @@ class GeneralTools(object):
 
             # create entries in the Material SOP
             # set group field
-            material_sop_node.parm("group%s" % (i + 1)).set(
+            material_sop_node.parm(f"group{i + 1}").set(
                 " ".join(
-                    map(lambda x: "@path=%s" % x, shader_assignment_data[shader_name])
+                    map(lambda x: f"@path={x}", shader_assignment_data[shader_name])
                 )
             )
 
             # set material field
-            material_sop_node.parm("shop_materialpath%s" % (i + 1)).set(shader.path())
+            material_sop_node.parm(f"shop_materialpath{i + 1}").set(shader.path())
 
     @classmethod
     def create_focus_plane(cls):
@@ -434,7 +434,7 @@ class GeneralTools(object):
         # connect the tz parameter of the grid node to the cameras focus distance
         focus_plane_node.setInput(0, camera)
         focus_plane_node.parm("tz").set(-1)
-        camera.parm("focus").setExpression('-ch("../%s/tz")' % focus_plane_node.name())
+        camera.parm("focus").setExpression(f'-ch("../{focus_plane_node.name()}/tz")')
 
         # align the nodes
         from anima.dcc.houdini import auxiliary
