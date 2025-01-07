@@ -25,10 +25,12 @@ import os
 import stat
 import tempfile
 
-from stalker import SimpleEntity, Project
 
-from anima.version import __version__
+from anima import extension  # extend Stalker classes
 from anima.config import Config
+from anima.version import __version__
+
+from stalker.log import get_logger, set_level
 
 
 ALEMBIC = "Alembic"
@@ -37,86 +39,14 @@ CACHE_FORMAT_DATA = {
     ALEMBIC: {"output_dir": "alembic", "file_extension": ".abc"},
     USD: {"output_dir": "usd", "file_extension": ".usd"},
 }
-
-
-def get_generic_text_attr(self, attr):
-    """Return the value of the attribute from the generic text.
-
-    Args:
-        attr (str): The name of the attribute.
-
-    Returns:
-        Any: The corresponding value for the given attr.
-    """
-    import json
-
-    attr_value = None
-    if self.generic_text:
-        data = json.loads(self.generic_text)
-        attr_value = data.get(attr)
-    return attr_value
-
-
-def set_generic_text_attr(self, attr, value):
-    """Set the value of the attribute in the generic text.
-
-    Args:
-        attr (str): The name of the attribute.
-        value (Any): The value to set to.
-    """
-    import json
-
-    data = {}
-    if self.generic_text:
-        data = json.loads(self.generic_text)
-    data[attr] = value
-    self.generic_text = json.dumps(data)
-
-
-SimpleEntity.get_generic_text_attr = get_generic_text_attr
-SimpleEntity.set_generic_text_attr = set_generic_text_attr
-
-
-# Patch Stalker.Project
-@property
-def is_managed(self) -> bool:
-    """Return True if this is a managed project.
-
-    Returns:
-        bool: True if this is a managed project, False otherwise.
-    """
-    project_repo = self.repository
-    return not os.path.exists(
-        os.path.join(project_repo.path, self.code, "unmanaged_project")
-    )
-
-
-@property
-def cache_format(self) -> str:
-    """Return the project cache format.
-
-    By default it is Alembic.
-
-    Returns:
-        str: The cache format name.
-    """
-    project_repo = self.repository
-
-    if os.path.exists(os.path.join(project_repo.path, self.code, "use_usd")):
-        return USD
-    else:
-        return ALEMBIC
-
-
-Project.is_managed = is_managed
-Project.cache_format = cache_format
+TIMING_RESOLUTION = 10  # in minutes
 
 
 # create logger
 # logging.basicConfig()
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 logging_level = logging.ERROR
-logger.setLevel(logging_level)
+set_level(logging_level)
 
 # create formatter
 logging_formatter = logging.Formatter(
@@ -131,8 +61,6 @@ log_file_handler.setFormatter(logging_formatter)
 # add file handler
 logger.addHandler(log_file_handler)
 
-# set stalker to use the same logger
-
 # fix file mod for log file
 os.chmod(
     log_file_path,
@@ -143,7 +71,5 @@ os.chmod(
     - stat.S_IXGRP
     - stat.S_IXOTH,
 )
-
-TIMING_RESOLUTION = 10  # in minutes
 
 defaults = Config()
