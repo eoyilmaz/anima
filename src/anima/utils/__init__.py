@@ -16,11 +16,9 @@ import sys
 import tempfile
 import uuid
 
-from anima import defaults, logger
-
 import exifread
-
 import pytz
+
 
 from sqlalchemy import and_, exists, or_
 from sqlalchemy.exc import UnboundExecutionError
@@ -44,6 +42,9 @@ from stalker import (
 from stalker.db.session import DBSession
 from stalker.models.auth import AuthenticationLog, LOGIN, LocalSession
 from stalker.models.task import Task_Resources
+
+from anima import defaults
+from anima.log import logger
 
 
 def all_equal(elements):

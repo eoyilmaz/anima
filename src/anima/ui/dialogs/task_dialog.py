@@ -2,7 +2,7 @@
 
 import re
 
-from anima import logger
+from anima.log import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtWidgets
 from anima.utils import get_task_hierarchy_name

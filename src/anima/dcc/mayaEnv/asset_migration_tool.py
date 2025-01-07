@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import shutil
 
-from anima import logger
+from anima.log import logger
 from anima.dcc import mayaEnv
 
 from stalker import Asset, Repository, Sequence, Shot, Task, Version

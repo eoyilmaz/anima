@@ -3,7 +3,7 @@
 """
 import os
 
-from anima import logger
+from anima.log import logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 import qtawesome

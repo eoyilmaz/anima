@@ -4,7 +4,8 @@
 import sys
 
 from stalker import LocalSession
-from anima.ui.utils import logger
+
+from anima.log import logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 

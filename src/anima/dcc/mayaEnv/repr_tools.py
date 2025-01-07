@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 import uuid
 
-from anima import logger
+from anima.log import logger
 from anima.dcc.mayaEnv import auxiliary
 from anima.representation import Representation
 

@@ -2,7 +2,7 @@
 
 import os
 
-from anima import logger, log_file_handler
+from anima.log import logger
 from anima.recent import RecentFileManager
 from anima.utils.progress import ProgressManagerFactory
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from anima import logger
 from anima.dcc import empty_reference_resolution
+from anima.log import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.models.version import VersionTreeModel
 from anima.ui.lib import QtCore, QtWidgets

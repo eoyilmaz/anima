@@ -3,7 +3,7 @@ import os
 
 import bpy
 
-from anima import logger
+from anima.log import logger
 from anima.dcc.base import DCCBase
 
 

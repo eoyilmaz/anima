@@ -11,7 +11,8 @@ project_manager.ui_caller(None, None, project_manager.MainWindow)
 """
 import os
 
-from anima import ui, logger
+from anima import ui
+from anima.log import logger
 from anima.ui.base import ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.utils import set_widget_style

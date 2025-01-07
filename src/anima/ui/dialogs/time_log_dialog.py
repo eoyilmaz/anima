@@ -2,9 +2,10 @@
 """TimeLog dialog."""
 
 import datetime
-from distutils.version import LooseVersion
+from packaging.version import Version as LooseVersion
 
-from anima import TIMING_RESOLUTION, logger
+from anima import TIMING_RESOLUTION
+from anima.log import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.widgets.common import TaskComboBox, TimeEdit

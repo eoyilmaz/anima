@@ -5,7 +5,7 @@ import os
 import re
 import shutil
 
-from anima import logger
+from anima.log import logger
 from anima.utils.archive import ArchiverBase
 
 from stalker import Project, Task, Version

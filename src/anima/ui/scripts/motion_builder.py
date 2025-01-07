@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from anima import logger
+from anima.log import logger
 
 
 def version_dialog(logging_level=logging.WARNING):

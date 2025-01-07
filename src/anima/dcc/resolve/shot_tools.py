@@ -13,9 +13,9 @@ clip = timeline.GetCurrentVideoItem()
 """
 import os
 
-from anima import logger
 from anima.dcc import blackmagic
 from anima.dcc.base import DCCBase
+from anima.log import logger
 from anima.ui.lib import QtCore, QtWidgets
 from anima.ui.utils import ColorList, set_widget_bg_color
 

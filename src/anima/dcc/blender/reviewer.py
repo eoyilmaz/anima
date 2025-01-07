@@ -3,7 +3,7 @@ import os
 import bpy
 
 from stalker import Project, Task, Version, Sequence, Shot
-from anima import logger
+from anima.log import logger
 
 bl_info = {
     "name": "Stalker Reviewer",

@@ -6,7 +6,7 @@ import tempfile
 import zipfile
 
 import anima
-from anima import logger
+from anima.log import logger
 from anima.utils import open_browser_in_location
 
 from stalker import Repository

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Custom UI items and models are here."""
 
-from anima import defaults, logger
+from anima import defaults
+from anima.log import logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.utils import get_cached_icon
 from anima.utils import (

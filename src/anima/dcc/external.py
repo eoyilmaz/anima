@@ -2,8 +2,8 @@
 
 import os
 
-from anima import logger
 from anima.dcc.base import DCCBase
+from anima.log import logger
 
 
 external_dccs = {

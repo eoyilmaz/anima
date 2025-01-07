@@ -4,7 +4,7 @@ import platform
 import subprocess
 import threading
 
-from anima import logger
+from anima.log import logger
 
 
 def update_outputs():

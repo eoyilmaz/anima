@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*
 """Common UI widgets are situated here."""
 
-
-from anima import logger
 import os
+
+from anima.log import logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 

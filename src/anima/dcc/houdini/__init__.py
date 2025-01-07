@@ -3,7 +3,7 @@
 import os
 
 from anima.dcc.base import DCCBase
-from anima import logger
+from anima.log import logger
 
 import hou
 

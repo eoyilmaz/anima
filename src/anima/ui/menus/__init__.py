@@ -4,7 +4,8 @@ import os
 import webbrowser
 from functools import partial
 
-from anima import defaults, logger
+from anima import defaults
+from anima.log import logger
 from anima.ui.lib import QtCore, QtWidgets
 from anima.ui.utils import choose_thumbnail, get_cached_icon
 from anima.utils import (

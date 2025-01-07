@@ -18,8 +18,8 @@ Usage is as follows:
 """
 import os
 
-from anima import logger
 from anima import ui
+from anima.log import logger
 from anima.ui.base import ui_caller
 from anima.ui.dialogs import login_dialog
 from anima.ui.dialogs import project_dialog

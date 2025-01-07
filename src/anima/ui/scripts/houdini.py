@@ -3,7 +3,7 @@
 
 import hou
 
-from anima import logger
+from anima.log import logger
 from anima.dcc.houdini.utils import Executor
 from anima.utils import do_db_setup
 

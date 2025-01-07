@@ -2,7 +2,7 @@
 
 import logging
 
-from anima import logger
+from anima.log import logger
 
 
 def version_dialog(lib="PySide", logging_level=logging.WARNING, parent=None):

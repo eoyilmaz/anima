@@ -15,7 +15,7 @@ blender.version_dialog()
 
 import logging
 
-from anima import logger
+from anima.log import logger
 
 
 def version_dialog(logging_level=logging.WARNING, mode=2):

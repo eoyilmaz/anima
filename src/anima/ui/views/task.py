@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Task related views."""
 
-from anima import logger
+from anima.log import logger
 from anima.ui.lib import QtCore, QtWidgets
 from anima.ui.menus import TaskDataContextMenuHandler
 from anima.ui.models.task import TaskTreeModel

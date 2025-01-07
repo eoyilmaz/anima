@@ -6,7 +6,8 @@ the system python.
 import os
 import glob
 
-from anima import utils, logger
+from anima import utils
+from anima.log import logger
 
 
 # PyQt4

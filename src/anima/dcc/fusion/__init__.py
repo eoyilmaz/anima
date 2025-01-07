@@ -18,10 +18,10 @@ except exceptions:
     bmf = bmd.get_bmd()
 
 
-from anima import logger
 from anima.dcc import empty_reference_resolution
 from anima.dcc.base import DCCBase
 from anima.dcc.fusion.utils import NodeUtils
+from anima.log import logger
 from anima.recent import RecentFileManager
 
 

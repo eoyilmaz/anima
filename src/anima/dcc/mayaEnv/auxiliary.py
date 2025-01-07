@@ -6,9 +6,10 @@ import os
 import re
 import tempfile
 
+from anima.log import logger
 import pymel.core as pm
 
-from anima import logger, ALEMBIC, USD, CACHE_FORMAT_DATA
+from anima import ALEMBIC, USD, CACHE_FORMAT_DATA
 import anima.utils
 from anima.utils.progress import ProgressManagerFactory
 
