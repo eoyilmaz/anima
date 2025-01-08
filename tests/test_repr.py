@@ -1,197 +1,274 @@
 # -*- coding: utf-8 -*-
-import shutil
 import tempfile
-
-import unittest
-import os
 
 import pytest
 
-from anima.representation import Representation
+from stalker import Link, Type, Version
+from stalker.db.session import DBSession
+
+from anima.representation import (
+    BASE_REPR_NAME,
+    REPR_TYPE_NAME,
+    Representation,
+    get_repr_type,
+)
 
 
 temp_repo_path = tempfile.mkdtemp()
 remove_these_files_buffer = []
 
 
-def test_list_all_lists_all_representations(repr_test_setup):
-    """testing if Representation.list_all() returns a list of strings
-    showing the repr names.
-    """
-    expected_result = ['Base', 'BBox', 'ASS', 'GPU']
-    rep = Representation(repr_test_setup["version1"])
-    result = rep.list_all()
-    assert sorted(expected_result) == sorted(result)
+def test_base_repr_name_is_base():
+    """BASE_REPR_NAME is "Base"."""
+    assert BASE_REPR_NAME == "Base"
 
 
-def test_list_all_lists_all_representations_from_non_base_version(repr_test_setup):
-    """testing if Representation.list_all() returns a list of strings
-    showing the repr names by using non base version.
-    """
-    expected_result = ['Base', 'Hires', 'Midres', 'Lores']
-    rep = Representation(repr_test_setup["version10"])
-    result = rep.list_all()
-    assert sorted(expected_result) == sorted(result)
+def test_get_repr_type_is_working_as_expected(repr_test_setup):
+    """get_repr_type() function is returning the repr type."""
+    repr_type = get_repr_type()
+    assert isinstance(repr_type, Type)
+    assert repr_type.name == REPR_TYPE_NAME
+    assert repr_type.target_entity_type == "Link"
 
 
-def test_find_method_finds_the_given_representation(repr_test_setup):
-    """testing if Representation.find() finds the latest version with the
-    given representation.
-    """
-    rep = Representation(repr_test_setup["version1"])
-    result = rep.find('BBox')
-    assert repr_test_setup["version5"] == result
+#
+# Version Extensions
+#
 
 
-def test_find_method_finds_the_given_repr_from_different_repr(repr_test_setup):
-    """testing if Representation.find() finds the latest version with the
-    given representation from a different representation than the base one.
-    """
-    rep = Representation(repr_test_setup["version4"])
-    result = rep.find('ASS')
-    assert repr_test_setup["version7"] == result
+def test_get_representation_names_method_exists():
+    """Version.get_representation_names() method exists."""
+    assert hasattr(Version, "get_representation_names") is True
 
 
-def test_find_method_returns_none_for_invalid_repr_name(repr_test_setup):
-    """testing if Representation.find() returns None for invalid or
-    nonexistent repr name
-    """
-    rep = Representation(repr_test_setup["version4"])
-    assert rep.find('NonExists') is None
+def test_get_representation_names_returns_all_representation_names_as_a_list(
+    repr_test_setup,
+):
+    """Version.get_representation_names() returns a list of repr names."""
+    data = repr_test_setup
+    expected_result = [BASE_REPR_NAME, "Bounding Box", "Arnold Scene Source", "GPU"]
+    result = data["version2"].get_representation_names()
+    assert isinstance(result, list)
+    assert len(result) == len(expected_result)
+    assert sorted(result) == sorted(expected_result)
 
 
-def test_has_any_repr_method_is_working_properly(repr_test_setup):
-    """testing if Representation.has_any_repr() method is working properly
-    """
-    rep = Representation(repr_test_setup["version1"])
-    assert rep.has_any_repr()
-
-    rep.version = repr_test_setup["version17"]
-    assert rep.has_any_repr()
-
-    rep.version = repr_test_setup["version19"]
-    assert not rep.has_any_repr()
+def test_get_representation_method_exists():
+    """Version.get_representation() method exists."""
+    assert hasattr(Version, "get_representation") is True
 
 
-def test_has_repr_method_is_working_properly(repr_test_setup):
-    """testing if Representation.has_repr() method is working properly
-    """
-    rep = Representation(repr_test_setup["version1"])
-    assert rep.has_repr('BBox') is True
-
-    rep.version = repr_test_setup["version17"]
-    assert rep.has_repr('Lores') is True
-
-    rep.version = repr_test_setup["version19"]
-    assert rep.has_repr('BBox') is False
-
-
-def test_get_base_take_name_is_working_properly(repr_test_setup):
-    """testing if the Representation.get_base_take_name() method is working
-    properly
-    """
-    rep = Representation()
-    assert 'Main' == rep.get_base_take_name(repr_test_setup["version1"])
-    assert 'alt1' == rep.get_base_take_name(repr_test_setup["version10"])
-    assert 'alt1' == rep.get_base_take_name(repr_test_setup["version12"])
-    assert 'NoRepr' == rep.get_base_take_name(repr_test_setup["version18"])
-
-
-def test_version_argument_is_skipped(repr_test_setup):
-    """testing if it is possible to skip the version argument
-    """
-    rep = Representation()
-    assert rep.version is None
-
-
-def test_version_argument_is_none(repr_test_setup):
-    """testing if the version argument can be None
-    """
-    rep = Representation(None)
-    assert rep.version is None
-
-
-def test_version_attribute_is_set_to_none(repr_test_setup):
-    """testing if setting the version attribute to None is possible
-    """
-    rep = Representation(repr_test_setup["version1"])
-    assert rep.version is not None
-    rep.version = None
-    assert rep.version is None
-
-
-def test_version_argument_is_not_a_version_instance(repr_test_setup):
-    """testing if a TypeError will be raised when the version argument is
-    not a Version instance
-    """
+def test_get_representation_repr_name_is_skipped(repr_test_setup):
+    """Version.get_representation() repr_name is skipped."""
+    data = repr_test_setup
+    v = data["version2"]
     with pytest.raises(TypeError) as cm:
-        Representation('not a version')
+        v.get_representation()
 
-    assert (
-        'Representation.version should be a '
-        'stalker.models.version.Version instance, not str' == str(cm.value)
+    assert str(cm.value) == (
+        "get_representation() missing 1 required positional argument: " "'repr_name'"
     )
 
 
-def test_version_attribute_is_not_a_version_instance(repr_test_setup):
-    """testing if a TypeError will be raised when the version attribute is
-    set to a value other then None and a Version instance
-    """
-    rep = Representation()
+def test_get_representation_repr_name_is_not_a_str(repr_test_setup):
+    """Version.get_representation() repr_name is not a str."""
+    data = repr_test_setup
+    v = data["version2"]
     with pytest.raises(TypeError) as cm:
-        rep.version = 'not a version'
+        v.get_representation(12345)
 
-    assert (
-        'Representation.version should be a '
-        'stalker.models.version.Version instance, not str' == str(cm.value)
+    assert str(cm.value) == ("repr_name should be a str, not int: '12345'")
+
+
+def test_get_representation_finds_the_given_representation(repr_test_setup):
+    """Version.get_representation() finds the latest Link with the given representation."""
+    data = repr_test_setup
+    repr_name = "Bounding Box"
+    v = data["version3"]
+    repr = v.get_representation(repr_name)
+    assert isinstance(repr, Link)
+    assert repr in data["version3"].outputs
+    assert repr.name == repr_name
+
+
+def test_get_representation_cannot_find_the_latest_representation(repr_test_setup):
+    """Version.get_representation() can only return repr from the current Version."""
+    data = repr_test_setup
+    rep = data["version1"].get_representation("Bounding Box")
+    assert rep is None
+
+
+def test_get_representation_method_returns_none_for_invalid_repr_name(repr_test_setup):
+    """Version.get_representation() returns None for invalid or nonexistent repr name."""
+    data = repr_test_setup
+    v = data["version4"]
+    assert v.get_representation("Does not exists") is None
+
+
+def test_has_representations_method_exists():
+    """Version.has_representations() method exists."""
+    assert hasattr(Version, "has_representations") is True
+
+
+def test_has_representations_method_is_working_as_expected(repr_test_setup):
+    """Version.has_representations() method is working as expected."""
+    data = repr_test_setup
+    v = data["version1"]
+    assert v.has_representations() is False
+
+    v = data["version2"]
+    assert v.has_representations() is True
+
+    v = data["version3"]
+    assert v.has_representations() is True
+
+
+def test_has_representation_method_exists():
+    """Version.has_representation() method exists."""
+    assert hasattr(Version, "has_representation") is True
+
+
+def test_has_representation_repr_name_is_skipped(repr_test_setup):
+    """Version.has_representation() repr_name is skipped."""
+    data = repr_test_setup
+    v = data["version2"]
+    with pytest.raises(TypeError) as cm:
+        v.has_representation()
+
+    assert str(cm.value) == (
+        "has_representation() missing 1 required positional argument: " "'repr_name'"
     )
 
 
-def test_version_argument_is_working_properly(repr_test_setup):
-    """testing if the version argument value is correctly passed to the
-    version attribute
-    """
-    rep = Representation(repr_test_setup["version1"])
-    assert rep.version == repr_test_setup["version1"]
+def test_has_representation_repr_name_is_not_a_str(repr_test_setup):
+    """Version.has_representation() repr_name is not a str raises TypeError."""
+    data = repr_test_setup
+    v = data["version2"]
+    with pytest.raises(TypeError) as cm:
+        v.has_representation(12345)
+
+    assert str(cm.value) == ("repr_name should be a str, not int: '12345'")
 
 
-def test_version_attribute_is_working_properly(repr_test_setup):
-    """testing if the version attribute is working properly
-    """
-    rep = Representation(repr_test_setup["version1"])
-    assert rep.version != repr_test_setup["version2"]
-    rep.version = repr_test_setup["version2"]
-    assert rep.version == repr_test_setup["version2"]
+def test_has_representation_method_is_working_as_expected(repr_test_setup):
+    """Version.has_representation() method is working as expected."""
+    data = repr_test_setup
+    v = data["version2"]
+    assert v.has_representation("Bounding Box") is True
+
+    v = data["version4"]
+    assert v.has_representation("LOD100") is True
+
+    v = data["version5"]
+    assert v.has_representation("Bounding Box") is False
 
 
-def test_is_base_method_is_working_properly(repr_test_setup):
-    """testing if Representation.is_base() method is working properly
-    """
-    rep = Representation(repr_test_setup["version1"])
-    assert rep.is_base() is True
-
-    rep = Representation(repr_test_setup["version4"])
-    assert rep.is_base() is False
+def test_get_base_representation_exists():
+    """Version.get_base_representation() method exists."""
+    assert hasattr(Version, "get_base_representation") is True
 
 
-def test_is_repr_method_is_working_properly(repr_test_setup):
-    """testing if Representation.is_repr() method is working properly
-    """
-    rep = Representation(repr_test_setup["version1"])
-    assert rep.is_repr('Base') is True
-
-    rep = Representation(repr_test_setup["version4"])
-    assert rep.is_repr('Base') is False
-
-    rep = Representation(repr_test_setup["version4"])
-    assert rep.is_repr('BBox') is True
+def test_get_base_representation_returns_the_base_representation(repr_test_setup):
+    """Version.get_base_representation() returns the base representation."""
+    data = repr_test_setup
+    v = data["version1"]
+    repr = v.get_base_representation()
+    assert isinstance(repr, Link)
+    assert repr in v.outputs
+    assert repr.name == BASE_REPR_NAME
 
 
-def test_repr_property_is_working_properly(repr_test_setup):
-    """testing if Representation.repr property is working properly
-    """
-    rep = Representation(repr_test_setup["version1"])
-    assert rep.repr == 'Base'
+def test_create_representation_exists():
+    """Version.create_representation() exists."""
+    assert hasattr(Version, "create_representation")
 
-    rep = Representation(repr_test_setup["version4"])
-    assert rep.repr == 'BBox'
+
+def test_create_representation_repr_name_is_not_a_str(repr_test_setup):
+    """Version.create_representation() repr_name is not a str raises TypeError."""
+    data = repr_test_setup
+    v = data["version1"]
+    with pytest.raises(TypeError) as cm:
+        _ = v.create_representation(1234)
+
+    assert str(cm.value) == ("repr_name should be a str, not int: '1234'")
+
+
+def test_create_representation_repr_name_exists_already(repr_test_setup):
+    """Version.create_representation() repr_name exists already."""
+    data = repr_test_setup
+    v = data["version2"]
+    with pytest.raises(ValueError) as cm:
+        _ = v.create_representation("Bounding Box")
+
+    assert str(cm.value) == (
+        "'Bounding Box' representation already exists in this Version"
+    )
+
+
+def test_create_representation_is_working_as_expected(repr_test_setup):
+    """Version.create_representation() is working as expected."""
+    data = repr_test_setup
+    v = data["version1"]
+    test_value = "Bounding Box"
+    l = v.create_representation(test_value)
+    assert isinstance(l, Link)
+    assert l.name == test_value
+    assert l.type is not None
+    assert l.type.name == REPR_TYPE_NAME
+    assert l in v.outputs
+
+
+#
+# Link Representation
+#
+
+
+def test_is_representation_method_exists():
+    """Link.is_representation() method does exist."""
+    assert hasattr(Link, "is_representation")
+
+
+def test_is_representation_method_is_working_as_expected_for_repr(repr_test_setup):
+    """Link.is_representation() is working as expected."""
+    data = repr_test_setup
+    v = data["version1"]
+    repr = v.outputs[0]
+    assert isinstance(repr, Link)
+    assert repr.is_representation() is True
+
+
+def test_is_representation_method_is_working_as_expected_for_non_repr(repr_test_setup):
+    """Link.is_representation() is working as expected."""
+    # test not representation
+    l = Link()
+    DBSession.save(l)
+    assert l.is_representation() is False
+
+
+def test_is_base_representation_method_exists():
+    """Link.is_base_representation() does exist."""
+    assert hasattr(Link, "is_base_representation")
+
+
+def test_is_base_representation_method_is_working_as_expected(repr_test_setup):
+    """Link.is_base_representation() is working as expected."""
+    data = repr_test_setup
+    v = data["version2"]
+    repr = None
+    for link in v.outputs:
+        if link.name == BASE_REPR_NAME:
+            repr = link
+            break
+    assert repr is not None
+    assert isinstance(repr, Link)
+    assert repr.name == BASE_REPR_NAME
+    assert repr.is_base_representation() is True
+
+    not_base_repr = None
+    for link in v.outputs:
+        if link.name != BASE_REPR_NAME:
+            not_base_repr = link
+            break
+    assert not_base_repr is not None
+    assert isinstance(not_base_repr, Link)
+    assert not_base_repr.is_base_representation() is False

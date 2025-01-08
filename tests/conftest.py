@@ -3,16 +3,40 @@ import json
 import os
 import shutil
 import tempfile
+from typing import Optional, List
 
 import pytest
 
 # set log level to DEBUG
 import logging
-from anima import logger
-from anima.publish import clear_publishers
 
-from stalker import db, User, LocalSession
+from anima.log import logger
+from anima.publish import clear_publishers
+from anima.recent import RecentFileManager
+from anima.representation import BASE_REPR_NAME
+
+from stalker import (
+    Asset,
+    FilenameTemplate,
+    ImageFormat,
+    Link,
+    LocalSession,
+    Project,
+    Repository,
+    Sequence,
+    Shot,
+    Status,
+    StatusList,
+    Structure,
+    Task,
+    Type,
+    User,
+    Variant,
+    Version,
+)
 from stalker.db import setup
+from stalker.db.session import DBSession
+
 
 logger.setLevel(logging.WARNING)
 
@@ -55,14 +79,6 @@ def create_test_db():
 @pytest.fixture(scope="function")
 def create_empty_project():
     """creates empty project test data"""
-    from stalker.db.session import DBSession
-    from stalker import (
-        FilenameTemplate,
-        Repository,
-        Project,
-        Structure,
-    )
-
     repo = Repository(
         name="Test Repository",
         code="TR",
@@ -139,22 +155,7 @@ def create_empty_project():
 
 @pytest.fixture(scope="function")
 def create_project():
-    """creates test data"""
-    from stalker.db.session import DBSession
-    from stalker import (
-        Asset,
-        FilenameTemplate,
-        ImageFormat,
-        Project,
-        Repository,
-        Sequence,
-        Shot,
-        Structure,
-        Task,
-        Type,
-        Version,
-    )
-
+    """Create test data."""
     repo = Repository(
         name="Test Repository",
         code="TR",
@@ -651,72 +652,81 @@ def prepare_publishers():
 
 @pytest.fixture(scope="function")
 def prepare_recent_file_cache_path():
-    """Setup a themporary recent file cache file."""
+    """Setup a temporary recent file cache file."""
     from anima import defaults
 
     defaults.local_cache_folder = tempfile.gettempdir()
     yield
-    from anima.recent import RecentFileManager
 
     os.remove(RecentFileManager.cache_file_full_path())
 
 
-def create_version(task, take_name):
+def create_version(variant: Variant, repr_names: Optional[List[str]] = None) -> Version:
     """A helper method for creating a new version.
 
-    :param task: the task
-    :param take_name: the take_name name
-    :return: the version
-    """
-    from stalker import Version
-    from stalker.db.session import DBSession
+    Args:
+        variant (Variant): The Variant instance.
+        repr_names (Optional[List[str]]): The representation names.
 
-    v = Version(task=task, take_name=take_name)
-    DBSession.add(v)
-    DBSession.commit()
+    Returns:
+        Version: The version.
+    """
+    if repr_names is None or len(repr_names) == 0:
+        repr_names = [BASE_REPR_NAME]
+
+    if BASE_REPR_NAME not in repr_names:
+        repr_names.insert(0, BASE_REPR_NAME)
+
+    # get a Type with the name "Representation", create otherwise
+    repr_type = (
+        Type.query.filter(Type.name == "Representation")
+        .filter(Type.target_entity_type == "Link")
+        .first()
+    )
+    if not repr_type:
+        repr_type = Type(name="Representation", target_entity_type="Link")
+        DBSession.save(repr_type)
+
+    v = Version(task=variant)
+    DBSession.save(v)
+
+    for repr_name in repr_names:
+        repr = Link(name=repr_name, type=repr_type)
+        DBSession.save(repr)
+        v.outputs.append(repr)
+        DBSession.commit()
+
     return v
 
 
 @pytest.fixture(scope="module")
 def repr_test_setup():
-    """Repreentation test setup."""
+    """Representation test setup."""
     # -----------------------------------------------------------------
     # start of the setUp
     # create the environment variable and point it to a temp directory
-    from stalker import db
-
     database_url = "sqlite:///:memory:"
-    db.setup({"sqlalchemy.url": database_url})
-    db.init()
+    setup.setup({"sqlalchemy.url": database_url})
+    setup.init()
 
-    fixture_data = dict()
-    fixture_data["temp_repo_path"] = tempfile.mkdtemp()
-
-    from stalker import User
-
-    fixture_data["user1"] = User(
+    data = dict()
+    data["temp_repo_path"] = tempfile.mkdtemp()
+    data["user1"] = User(
         name="User 1", login="user1", email="user1@users.com", password="12345"
     )
-
-    from stalker import Repository
-
-    fixture_data["repo1"] = Repository(
+    data["repo1"] = Repository(
         name="Test Project Repository",
         code="TP",
-        linux_path=fixture_data["temp_repo_path"],
-        windows_path=fixture_data["temp_repo_path"],
-        osx_path=fixture_data["temp_repo_path"],
+        linux_path=data["temp_repo_path"],
+        windows_path=data["temp_repo_path"],
+        osx_path=data["temp_repo_path"],
     )
 
-    from stalker import Status
+    data["status_new"] = Status.query.filter_by(code="NEW").first()
+    data["status_wip"] = Status.query.filter_by(code="WIP").first()
+    data["status_comp"] = Status.query.filter_by(code="CMPL").first()
 
-    fixture_data["status_new"] = Status.query.filter_by(code="NEW").first()
-    fixture_data["status_wip"] = Status.query.filter_by(code="WIP").first()
-    fixture_data["status_comp"] = Status.query.filter_by(code="CMPL").first()
-
-    from stalker import FilenameTemplate
-
-    fixture_data["task_template"] = FilenameTemplate(
+    data["task_template"] = FilenameTemplate(
         name="Task Template",
         target_entity_type="Task",
         path="{{project.code}}/"
@@ -726,129 +736,104 @@ def repr_test_setup():
         filename="{{version.nice_name}}" '_v{{"%03d"|format(version.version_number)}}',
     )
 
-    from stalker import Structure
-
-    fixture_data["structure"] = Structure(
-        name="Project Struture", templates=[fixture_data["task_template"]]
+    data["structure"] = Structure(
+        name="Project Structure", templates=[data["task_template"]]
     )
 
-    from stalker import StatusList
-
-    fixture_data["project_status_list"] = StatusList.query.filter_by(
+    data["project_status_list"] = StatusList.query.filter_by(
         target_entity_type="Project"
     ).first()
 
-    from stalker import ImageFormat
-
-    fixture_data["image_format"] = ImageFormat(
+    data["image_format"] = ImageFormat(
         name="HD 1080", width=1920, height=1080, pixel_aspect=1.0
     )
 
     # create a test project
-    from stalker import Project
-
-    fixture_data["project"] = Project(
+    data["project"] = Project(
         name="Test Project",
         code="TP",
-        repositories=[fixture_data["repo1"]],
-        status_list=fixture_data["project_status_list"],
-        structure=fixture_data["structure"],
-        image_format=fixture_data["image_format"],
+        repositories=[data["repo1"]],
+        status_list=data["project_status_list"],
+        structure=data["structure"],
+        image_format=data["image_format"],
     )
 
-    fixture_data["task_status_list"] = StatusList.query.filter_by(
+    data["task_status_list"] = StatusList.query.filter_by(
         target_entity_type="Task"
     ).first()
 
-    from stalker import Type
-
-    fixture_data["character_type"] = Type(
+    data["character_type"] = Type(
         name="Character", code="CHAR", target_entity_type="Asset"
     )
 
-    from stalker import Task
+    data["representation_type"] = Type(
+        name="Representation", code="REPR", target_entity_type="Link"
+    )
 
     # create a test series of root task
-    fixture_data["task1"] = Task(name="Test Task 1", project=fixture_data["project"])
-    fixture_data["task2"] = Task(name="Test Task 2", project=fixture_data["project"])
+    data["task1"] = Task(name="Test Task 1", project=data["project"])
+    data["task2"] = Task(name="Test Task 2", project=data["project"])
 
     # commit everything
-    from stalker.db.session import DBSession
-
-    DBSession.add_all(
+    DBSession.save(
         [
-            fixture_data["repo1"],
-            fixture_data["status_new"],
-            fixture_data["status_wip"],
-            fixture_data["status_comp"],
-            fixture_data["project_status_list"],
-            fixture_data["project"],
-            fixture_data["task_status_list"],
-            fixture_data["task1"],
-            fixture_data["task2"],
-            fixture_data["task_template"],
+            data["character_type"],
+            data["representation_type"],
+            data["repo1"],
+            data["status_new"],
+            data["status_wip"],
+            data["status_comp"],
+            data["project_status_list"],
+            data["project"],
+            data["task_status_list"],
+            data["task1"],
+            data["task2"],
+            data["task_template"],
         ]
     )
-    DBSession.commit()
 
-    fixture_data["version1"] = create_version(fixture_data["task1"], "Main")
-    fixture_data["version2"] = create_version(fixture_data["task1"], "Main")
-    fixture_data["version3"] = create_version(fixture_data["task1"], "Main")
+    data["main_variant"] = Variant(parent=data["task1"], name="Main")
+    DBSession.save(data["main_variant"])
+    data["alt1_variant"] = Variant(parent=data["task1"], name="Alt1")
+    DBSession.save(data["alt1_variant"])
+    data["no_repr_variant"] = Variant(parent=data["task1"], name="NoRepr")
+    DBSession.save(data["no_repr_variant"])
 
-    # create other reprs
-    # BBOX
-    fixture_data["version4"] = create_version(fixture_data["task1"], "Main@BBox")
-    fixture_data["version5"] = create_version(fixture_data["task1"], "Main@BBox")
-    fixture_data["version5"].is_published = True
-    DBSession.commit()
-
-    # ASS
-    fixture_data["version6"] = create_version(fixture_data["task1"], "Main@ASS")
-    fixture_data["version7"] = create_version(fixture_data["task1"], "Main@ASS")
-    fixture_data["version7"].is_published = True
-    DBSession.commit()
-
-    # GPU
-    fixture_data["version8"] = create_version(fixture_data["task1"], "Main@GPU")
-    fixture_data["version9"] = create_version(fixture_data["task1"], "Main@GPU")
+    data["version1"] = create_version(data["main_variant"])  # no repr for this one
+    data["version2"] = create_version(
+        data["main_variant"], ["Bounding Box", "Arnold Scene Source", "GPU"]
+    )
+    data["version3"] = create_version(
+        data["main_variant"], ["Bounding Box", "Arnold Scene Source", "GPU"]
+    )
 
     # Non default take name
-    fixture_data["version10"] = create_version(fixture_data["task1"], "alt1")
-    fixture_data["version11"] = create_version(fixture_data["task1"], "alt1")
-
-    # Hires
-    fixture_data["version12"] = create_version(fixture_data["task1"], "alt1@Hires")
-    fixture_data["version13"] = create_version(fixture_data["task1"], "alt1@Hires")
-
-    # Midres
-    fixture_data["version14"] = create_version(fixture_data["task1"], "alt1@Midres")
-    fixture_data["version15"] = create_version(fixture_data["task1"], "alt1@Midres")
-
-    # Lores
-    fixture_data["version16"] = create_version(fixture_data["task1"], "alt1@Lores")
-    fixture_data["version17"] = create_version(fixture_data["task1"], "alt1@Lores")
-    fixture_data["version17"].is_published = True
+    data["version4"] = create_version(
+        data["alt1_variant"], ["LOD500", "LOD300", "LOD100"]
+    )
+    data["version5"] = create_version(
+        data["alt1_variant"], ["LOD500", "LOD300", "LOD100"]
+    )
+    data["version5"].is_published = True
 
     # No Repr
-    fixture_data["version18"] = create_version(fixture_data["task1"], "NoRepr")
-    fixture_data["version19"] = create_version(fixture_data["task1"], "NoRepr")
+    data["version6"] = create_version(data["no_repr_variant"])
+    data["version7"] = create_version(data["no_repr_variant"])
     DBSession.commit()
 
     # create a buffer for extra created files, which are to be removed
-    fixture_data["remove_these_files_buffer"] = []
+    data["remove_these_files_buffer"] = []
 
-    yield fixture_data
+    yield data
 
     # Clean up
     # set the db.session to None
-    from stalker.db.session import DBSession
-
     DBSession.remove()
 
     # delete the temp folder
-    shutil.rmtree(fixture_data["temp_repo_path"], ignore_errors=True)
+    shutil.rmtree(data["temp_repo_path"], ignore_errors=True)
 
-    for f in fixture_data["remove_these_files_buffer"]:
+    for f in data["remove_these_files_buffer"]:
         if os.path.isfile(f):
             os.remove(f)
         elif os.path.isdir(f):
