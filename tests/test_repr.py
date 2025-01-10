@@ -272,3 +272,30 @@ def test_is_base_representation_method_is_working_as_expected(repr_test_setup):
     assert not_base_repr is not None
     assert isinstance(not_base_repr, Link)
     assert not_base_repr.is_base_representation() is False
+
+
+def test_representation_of_attribute_exists():
+    """representation_of attribute exists."""
+    assert hasattr(Link, "representation_of")
+
+
+def test_representation_of_attr_returns_related_version_if_is_repr(repr_test_setup):
+    """Link.representation_of attr returns the related Version if this is a repr."""
+    data = repr_test_setup
+    v = data["version1"]
+    l = v.outputs[0]
+    assert l.representation_of == v
+    v = data["version2"]
+
+    assert all(l.representation_of == v for l in v.outputs)
+
+
+def test_representation_of_attr_returns_none_if_it_is_not_a_repr(repr_test_setup):
+    """Link.representation_of attr returns None if Link is not a repr."""
+    data = repr_test_setup
+    v = data["version1"]
+    l = Link()
+    DBSession.save(l)
+    v.outputs.append(l)
+    DBSession.commit()
+    assert l.representation_of is None

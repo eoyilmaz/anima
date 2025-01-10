@@ -427,3 +427,21 @@ def is_base_representation(self) -> bool:
         bool: True if this is the base representation.
     """
     return self.name == BASE_REPR_NAME and self.is_representation()
+
+
+@extends(Link)
+@property
+def representation_of(self) -> Union[None, Version]:
+    """Return the related Version if this is a representation.
+
+    Returns:
+        Union[None, Version]: If this is a version return the related Version,
+            None otherwise.
+    """
+    if not self.is_representation():
+        return None
+
+    with DBSession.no_autoflush:
+        v = Version.query.filter(Version.outputs.contains(self)).first()
+
+    return v
