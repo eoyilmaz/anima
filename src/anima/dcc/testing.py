@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from anima.dcc import empty_reference_resolution
+from anima.dcc.base import generate_empty_reference_resolution
 from anima.dcc.base import DCCBase
 from anima.testing import count_calls
 
@@ -78,7 +78,7 @@ class TestEnvironment(DCCBase):
         # reverse walk in DFS
         dfs_version_references = []
         version = self.get_current_version()
-        resolution_dictionary = empty_reference_resolution(
+        resolution_dictionary = generate_empty_reference_resolution(
             root=self.get_referenced_versions()
         )
 

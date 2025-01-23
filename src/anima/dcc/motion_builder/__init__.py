@@ -62,9 +62,9 @@ class MotionBuilder(DCCBase):
         """
         self.app.FileOpen(str(version.absolute_full_path))
 
-        from anima.dcc import empty_reference_resolution
+        from anima.dcc.base import generate_empty_reference_resolution
 
-        return empty_reference_resolution()
+        return generate_empty_reference_resolution()
 
     def save_as(self, version, run_pre_publishers=True):
         """The overridden save method

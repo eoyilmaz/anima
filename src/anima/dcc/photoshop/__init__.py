@@ -5,7 +5,7 @@ from _ctypes import COMError
 
 import comtypes.client
 
-from anima.dcc import empty_reference_resolution
+from anima.dcc.base import generate_empty_reference_resolution
 from anima.dcc.base import DCCBase
 from anima.log import logger
 from anima.recent import RecentFileManager
@@ -136,7 +136,7 @@ class Photoshop(DCCBase):
         rfm = RecentFileManager()
         rfm.add(self.name, version.absolute_full_path)
 
-        return empty_reference_resolution()
+        return generate_empty_reference_resolution()
 
     def get_current_version(self):
         """Finds the Version instance from the current ActiveDocument.

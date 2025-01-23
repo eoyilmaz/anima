@@ -1,7 +1,17 @@
 # -*- coding: utf-8 -*-
+"""Autodesk Max related functionality is situated here."""
+
+import os
 
 import MaxPlus
-from anima.dcc.base import DCCBase
+
+import pymxs
+from pymxs import runtime as rt
+
+from stalker import Shot
+from stalker.db.session import DBSession
+
+from anima.dcc.base import DCCBase, generate_empty_reference_resolution
 
 
 def get_max_version():
@@ -47,16 +57,19 @@ class Max(DCCBase):
         reference_depth=0,
         skip_update_check=False,
     ):
-        """Opens the given version file
+        """Open the given version file.
 
-        :param version: The Stalker version instance
-        :param force: force open, so don't care if there are any unsaved
-          changes in the current scene.
-        :param representation: The desired representation for the XRef files
-          (Not Implemented)
-        :param reference_depth: (Not Implemented)
-        :param skip_update_check: (Not Implemented)
-        :return: Returns a reference resolution that shows what to update.
+        Args:
+            version (Version): The Stalker version instance.
+            force (bool): force open, so don't care if there are any unsaved
+                changes in the current scene.
+            representation (str): The desired representation for the XRef files
+                (Not Implemented).
+            reference_depth (int): (Not Implemented)
+            skip_update_check (bool): (Not Implemented)
+
+        Returns:
+            dict: Returns a reference resolution that shows what to update.
         """
         # before open: set the system units and gamma settings to their
         # defaults
@@ -73,9 +86,7 @@ class Max(DCCBase):
             # check the referenced versions for any possible updates
             return self.check_referenced_versions()
         else:
-            from anima.dcc import empty_reference_resolution
-
-            return empty_reference_resolution()
+            return generate_empty_reference_resolution()
 
     def save_as(self, version, run_pre_publishers=True):
         """Saves the current scene under the given version.
@@ -103,8 +114,6 @@ class Max(DCCBase):
         # check if this is a shot related task
         is_shot_related_task = False
         shot = None
-        from stalker import Shot
-
         for task in version.task.parents:
             if isinstance(task, Shot):
                 is_shot_related_task = True
@@ -152,8 +161,6 @@ class Max(DCCBase):
 
         # create the folders beforehand
         try:
-            import os
-
             os.makedirs(version.absolute_path)
         except OSError:
             pass
@@ -163,8 +170,6 @@ class Max(DCCBase):
         # update the parent info
         if version != current_version:  # prevent CircularDependencyError
             version.parent = current_version
-
-        from stalker.db.session import DBSession
 
         DBSession.add(version)
 
@@ -179,8 +184,6 @@ class Max(DCCBase):
 
     def export_as(self, version):
         """the export action for max DCC"""
-        import MaxPlus
-
         # check if there is something selected
         if MaxPlus.SelectionManager.GetCount() < 1:
             raise RuntimeError("There is nothing selected to export")
@@ -205,8 +208,6 @@ class Max(DCCBase):
         version.created_with = self.name
 
         # create the folder if it doesn't exists
-        import os
-
         try:
             os.makedirs(version.absolute_path)
         except OSError:
@@ -223,8 +224,6 @@ class Max(DCCBase):
         MaxPlus.FileManager.SaveSelected(version.absolute_full_path)
 
         # save the version to database
-        from stalker.db.session import DBSession
-
         DBSession.add(version)
         DBSession.commit()
 
@@ -241,28 +240,23 @@ class Max(DCCBase):
           :class:`~stalker.models.version.Version` to be imported
         :param bool use_namespace: use namespace or not.
         """
-        from pymxs import runtime as rt
-
         rt.mergeMAXFile(version.absolute_full_path)
         return True
 
     def reference(self, version, use_namespace=True):
         """Creates an XRef for the given version in the current scene.
 
-        :param version: The Stalker Verison instance.
-        :param bool use_namespace: Use a namespace or not.
-        :return:
-        """
-        import os
-        from anima.representation import Representation
-        import pymxs
+        Args:
+            version (Version): The Stalker Version instance.
+            use_namespace (bool): Use a namespace or not.
 
+        Returns:
+            xref: 
+        """
         rt = pymxs.runtime
 
         file_full_path = version.absolute_full_path
         namespace = os.path.basename(version.nice_name)
-
-        namespace = namespace.split(Representation.repr_separator)[0]
 
         xref_objects = rt.getMAXFileObjectNames(file_full_path)
         xref = rt.xrefs.addNewXRefObject(
@@ -276,8 +270,6 @@ class Max(DCCBase):
         current_version = self.get_current_version()
         if current_version:
             current_version.inputs.append(version)
-            from stalker.db.session import DBSession
-
             DBSession.commit()
 
         # append it to reference path
@@ -296,8 +288,6 @@ class Max(DCCBase):
 
         :return:
         """
-        from pymxs import runtime as rt
-
         xref_file_names = []
         versions = []
 
@@ -356,7 +346,6 @@ class Max(DCCBase):
           instances if created any.
         """
         # # list only first level references
-        # from pymxs import runtime as rt
         # references = sorted([
         #     xref
         #     for xref in rt.objXRefs.getAllXRefObjects()
@@ -388,8 +377,6 @@ class Max(DCCBase):
         # return []  # no new version will be created with the current version
 
         # list only first level references
-        from pymxs import runtime as rt
-
         record_count = rt.objXRefMgr.recordCount
         references = []
         for i in range(record_count):
@@ -425,8 +412,6 @@ class Max(DCCBase):
         empty record.
         This removes any empty records
         """
-        from pymxs import runtime as rt
-
         record_count = rt.objXRefMgr.recordCount
         print(f"record count: {record_count}")
         records = []
@@ -453,8 +438,6 @@ class Max(DCCBase):
 
     def set_render_filename(self, version):
         """sets the render file name"""
-        import os
-
         render_output_folder = os.path.join(
             version.absolute_path,
             "Outputs",
@@ -477,8 +460,6 @@ class Max(DCCBase):
 
         # also set any RenderElement to the same path so a MultiPart OpenEXR
         # file is written (saving to a different file is not working for now)
-        from pymxs import runtime as rt
-
         rem = rt.maxOps.GetCurRenderElementMgr()
         if rem:
             num_res = rem.NumRenderElements()
@@ -488,8 +469,6 @@ class Max(DCCBase):
         rs.UpdateDialogParameters()
 
         # create the output folder
-        import os
-
         try:
             os.makedirs(os.path.dirname(render_file_full_path))
         except OSError:
@@ -561,8 +540,6 @@ class Max(DCCBase):
 
         :return:
         """
-        import pymxs
-
         rt = pymxs.runtime
         metric = rt.name("metric")
         rt.units.SystemType = metric

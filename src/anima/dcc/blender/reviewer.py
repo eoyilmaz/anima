@@ -53,11 +53,11 @@ class StripGenerator(object):
 
         found_output = False
         for v in versions:
-            if len(v.outputs):
-                # get all outputs of this version
-                for output in v.outputs:
-                    output_absolute_full_path = os.path.expandvars(output.full_path)
-                    self.add_output(output_absolute_full_path)
+            if len(v.files):
+                # get all files of this version
+                for file in v.files:
+                    file_absolute_full_path = os.path.expandvars(file.full_path)
+                    self.add_output(file_absolute_full_path)
                     found_output = True
                     break
 

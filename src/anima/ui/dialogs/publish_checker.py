@@ -234,12 +234,7 @@ class PublisherElement(object):
             m = QtWidgets.QMessageBox()
             m.setWindowTitle("Help")
 
-            import sys
-
-            if sys.version_info.major > 2:
-                stringify = str
-            else:
-                stringify = unicode
+            stringify = str
 
             # cleanup exception message format
             import re

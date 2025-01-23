@@ -3,8 +3,13 @@ import os
 
 import bpy
 
+from stalker.db.session import DBSession
+
+from anima.dcc.base import DCCBase, generate_empty_reference_resolution
+from anima.exc import PublishError
 from anima.log import logger
-from anima.dcc.base import DCCBase
+from anima.publish import staging, run_publishers, POST_PUBLISHER_TYPE
+from anima.utils import open_browser_in_location
 
 
 RENDER_FILE_PATH_STORAGE = ""
@@ -73,8 +78,6 @@ class Blender(DCCBase):
         # finally save the file
         bpy.ops.wm.save_as_mainfile(filepath=version.absolute_full_path)
 
-        from stalker.db.session import DBSession
-
         DBSession.add(version)
 
         # append it to the recent file list
@@ -95,9 +98,6 @@ class Blender(DCCBase):
                 type_name = version.task.type.name
 
             # before running use the staging area to store the current version
-            from anima.publish import staging, run_publishers, POST_PUBLISHER_TYPE
-            from anima.exc import PublishError
-
             staging["version"] = version
             try:
                 run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
@@ -127,12 +127,10 @@ class Blender(DCCBase):
         if not skip_update_check:
             return self.check_referenced_versions()
         else:
-            from anima.dcc import empty_reference_resolution
-
-            return empty_reference_resolution
+            return generate_empty_reference_resolution
 
     def import_(self, version, use_namespace=False):
-        """the imports the given version"""
+        """Import the given version."""
         if not version:
             return
 
@@ -185,7 +183,7 @@ class Blender(DCCBase):
                 )
 
     def reference(self, version, use_namespace=True):
-        """References/Links another Blend file
+        """Reference/Link another Blend file.
 
         :param version:
         :param use_namespace:
@@ -460,8 +458,6 @@ class Blender(DCCBase):
             ]
 
             # and open the file path
-            from anima.utils import open_browser_in_location
-
             movie_file_rel_path = rendered_output_filename.replace(
                 "#",
                 "{}-{}".format(

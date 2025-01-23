@@ -137,9 +137,9 @@ class Nuke(DCCBase):
 
         # return True to specify everything was ok and an empty list
         # for the versions those needs to be updated
-        from anima.dcc import empty_reference_resolution
+        from anima.dcc.base import generate_empty_reference_resolution
 
-        return empty_reference_resolution()
+        return generate_empty_reference_resolution()
 
     def import_(self, version, use_namespace=True):
         """the import action for nuke DCC"""

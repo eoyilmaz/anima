@@ -2632,6 +2632,29 @@ class MayaColorManagementConfigurator(object):
                 },
             },
         },
+        "2025": {
+            "default": "ACEScg",
+            "configs": {
+                "ACEScg": {
+                    "cmEnabled": True,
+                    "configFilePath": "<MAYA_RESOURCES>/OCIO-configs/Maya2022-default/config.ocio",
+                    "renderingSpaceName": "ACEScg",
+                    "displayName": "sRGB",
+                    "outputUseViewTransform": True,
+                    "viewTransformName": "ACES 1.0 SDR-video (sRGB)",
+                },
+                "scene-linear Rec.709-sRGB": {
+                    "cmEnabled": True,
+                    "configFilePath": "<MAYA_RESOURCES>/OCIO-configs/Maya2022-default/config.ocio",
+                    "renderingSpaceName": "scene-linear Rec.709-sRGB",
+                    "displayName": "sRGB",
+                    "outputUseViewTransform": True,
+                    "viewTransformName": "Un-tone-mapped (sRGB)",
+                },
+            },
+        },
+
+
     }
 
     @classmethod

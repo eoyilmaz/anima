@@ -110,12 +110,13 @@ class ShotManager(object):
         return shots
 
     def generate_review_csv(self, output_path="", vendor=""):
-        """Generates review CSV from the current timeline
+        """Generate review CSV from the current timeline
 
         It searches for Fusion Clips and gathers information from the AnimaSlate nodes.
 
-        :param str output_path: The path to output the CSV to.
-        :param str vendor: The name of the vendor
+        Args:
+            output_path (str): The path to output the CSV to.
+            vendor (str): The name of the vendor
         """
         from anima.utils import report
 

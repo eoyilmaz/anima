@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 
 import os
-
-from anima.dcc.base import DCCBase
-from anima.log import logger
+import re
 
 import hou
+
+from stalker import Repository, Shot, Version
+from stalker.db.session import DBSession
+
+from anima.dcc.base import DCCBase, generate_empty_reference_resolution
+from anima.dcc.houdini import auxiliary
+from anima.log import logger
 
 
 class Houdini(DCCBase):
@@ -32,8 +37,6 @@ class Houdini(DCCBase):
         """the save action for houdini DCC"""
         if not version:
             return
-
-        from stalker import Version
 
         assert isinstance(version, Version)
 
@@ -75,8 +78,6 @@ class Houdini(DCCBase):
         self.set_render_filename(version)
 
         # set the fps
-        from stalker import Shot
-
         shot = version.task.parent
         if version and isinstance(shot, Shot):
             # set to shot.fps if this is a shot related scene
@@ -107,8 +108,6 @@ class Houdini(DCCBase):
             version.parent = current_version
 
             # update database with new version info
-            from stalker.db.session import DBSession
-
             DBSession.commit()
 
         # create a local copy
@@ -147,12 +146,10 @@ class Houdini(DCCBase):
         # update flipbook settings
         self.update_flipbook_settings()
 
-        from anima.dcc import empty_reference_resolution
-
-        return empty_reference_resolution()
+        return generate_empty_reference_resolution()
 
     def import_(self, version, use_namespace=True):
-        """the import action for houdini DCC"""
+        """Import another houdini scene file."""
         hou.hipFile.merge(str(version.absolute_full_path))
         return True
 
@@ -185,8 +182,6 @@ class Houdini(DCCBase):
                 When the version is None the repository environment variables are still
                 set properly.
         """
-        from stalker import Repository
-
         # re initialize repo vars
         for repo in Repository.query.all():
             env_var_name = repo.env_var
@@ -244,8 +239,6 @@ class Houdini(DCCBase):
     @classmethod
     def update_flipbook_settings(cls):
         """Update the flipbook settings."""
-        from anima.dcc.houdini import auxiliary
-
         scene_viewer = auxiliary.get_scene_viewer()
         if not scene_viewer:
             return
@@ -255,8 +248,6 @@ class Houdini(DCCBase):
         fs.output(f"{flipbook_path}/$HIPNAME.$F4.jpg")
 
         # create the output folder
-        import os
-
         try:
             os.makedirs(os.path.expandvars(flipbook_path))
         except OSError:
@@ -275,11 +266,7 @@ class Houdini(DCCBase):
         """returns the frame range of the"""
         # use the hscript commands to get the frame range
         time_info = hou.hscript("tset")[0].split("\n")
-
         pattern = r"[-0-9\.]+"
-
-        import re
-
         start_frame = int(
             hou.timeToFrame(float(re.search(pattern, time_info[2]).group(0)))
         )
@@ -373,8 +360,6 @@ class Houdini(DCCBase):
         shot_node.parm("proj").set(project.name)
         shot_node.parm("projs").set(project.code)
 
-        from stalker import Shot
-
         image_format = project.image_format
         if task.parent and isinstance(task.parent, Shot):
             shot = task.parent
@@ -406,8 +391,6 @@ class Houdini(DCCBase):
         # HIPNAME is not working well with Afanasy
         # So use the scene base name again
         # output_filename = '$HIP/Outputs/renders/Main/$OS/`$HIPNAME`_$OS.$F4.exr'
-        import os
-
         output_filename = "$HIP/Outputs/renders/{}/v{:03d}/$OS/{}_$OS.$F4.exr".format(
             version.variant_name,
             version.version_number,
@@ -491,8 +474,6 @@ class Houdini(DCCBase):
                 else:  # no shot node, no qlib
                     # so use the shot nodes resolution if this is a shot related node
                     # set the fps
-                    from stalker import Shot
-
                     shot = version.task.parent
                     project = version.task.project
                     imf = project.image_format

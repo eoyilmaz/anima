@@ -3,11 +3,7 @@
 import os
 import sys
 
-exceptions = None
-if sys.version_info[0] >= 3:
-    exceptions = (ImportError, ModuleNotFoundError)
-else:
-    exceptions = ImportError
+exceptions = (ImportError, ModuleNotFoundError)
 
 try:
     # for Fusion inside Resolve
@@ -18,7 +14,7 @@ except exceptions:
     bmf = bmd.get_bmd()
 
 
-from anima.dcc import empty_reference_resolution
+from anima.dcc.base import generate_empty_reference_resolution
 from anima.dcc.base import DCCBase
 from anima.dcc.fusion.utils import NodeUtils
 from anima.log import logger
@@ -91,11 +87,7 @@ class Fusion(DCCBase):
 
         # instead of lock/unlock disable AutoClipBrowse temporarily
         auto_browse = NodeUtils.disable_auto_clip_browse()
-        self.comp.Save(
-            version_full_path
-            if sys.version_info[0] >= 3
-            else version_full_path.encode()
-        )
+        self.comp.Save(version_full_path)
         NodeUtils.set_auto_clip_browse(auto_browse)
 
         # create a local copy
@@ -205,11 +197,7 @@ class Fusion(DCCBase):
         # for comp_ in comps:
         #     comp_.Close()
 
-        self.fusion.LoadComp(
-            version_full_path
-            if sys.version_info[0] >= 3
-            else version_full_path.encode()
-        )
+        self.fusion.LoadComp(version_full_path)
 
         # instead of lock/unlock disable AutoClipBrowse temporarily
         auto_browse = NodeUtils.disable_auto_clip_browse()
@@ -234,7 +222,7 @@ class Fusion(DCCBase):
 
         # return True to specify everything was ok and an empty list
         # for the versions those needs to be updated
-        return empty_reference_resolution()
+        return generate_empty_reference_resolution()
 
     def import_(self, version):
         """the import action for nuke DCC"""
@@ -544,10 +532,7 @@ class Fusion(DCCBase):
         )
 
         # set the output path
-        if sys.version_info[0] >= 3:
-            return os.path.normpath(output_file_full_path)
-        else:
-            return os.path.normpath(output_file_full_path).encode()
+        return os.path.normpath(output_file_full_path)
 
     def output_node_name_generator(self, file_format):
         return "{}_{}".format(self._main_output_node_name, file_format)
@@ -1161,11 +1146,7 @@ class Fusion(DCCBase):
         self.comp.SetPrefs(
             {
                 "Comp.Paths.Map": {
-                    "Project:": (
-                        project_directory_in
-                        if sys.version_info[0] >= 3
-                        else project_directory_in.encode()
-                    )
+                    "Project:": project_directory_in
                 }
             }
         )

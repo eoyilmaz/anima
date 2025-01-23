@@ -2,7 +2,7 @@
 
 from typing import List, Union
 
-from stalker import Link, Type, Version
+from stalker import File, Type, Version
 from stalker.db.session import DBSession
 
 from anima.extension import extends
@@ -22,7 +22,7 @@ def get_repr_type() -> Union[None, Type]:
     with DBSession.no_autoflush:
         repr_type = (
             Type.query.filter(Type.name == REPR_TYPE_NAME)
-            .filter(Type.target_entity_type == "Link")
+            .filter(Type.target_entity_type == "File")
             .first()
         )
     return repr_type
@@ -42,24 +42,24 @@ class RepresentationManager(object):
 class Representation(object):
     """A single representation related to a Version.
 
-    A representation is basically a Link instance, created as an output to a
-    Version. The content of the file that the Link is representing can be a
-    Maya scene that contains a hires polygonal model (LOD500, LOD300, LOD100
-    etc), a delayed load archive suitable for the render engine(i.e Arnold
-    Scene Source (*.ass) or a Redshift Proxy (*.rs) file) or a geometry with
-    only one bounding box.
+    A representation is basically a File instance, created as an output to a
+    Version. The content of the file that the File instance is representing can
+    be a Maya scene that contains a hires polygonal model (LOD500, LOD300,
+    LOD100 etc), a delayed load archive suitable for the render engine(i.e
+    Arnold Scene Source (*.ass) or a Redshift Proxy (*.rs) file) or a geometry
+    with only one bounding box.
 
-    In Anima Pipeline, different representations are managed through Link
-    instances stored in `Version.outputs` list. Each `Link` that is a
-    representation has a `Type.name=="Representation"` and the `Link.name`
+    In Anima Pipeline, different representations are managed through File
+    instances stored in `Version.files` attribute. Each `File` that is a
+    representation has a `Type.name=="Representation"` and the `File.name`
     attribute stores the name of the representation. So, by looking at the
-    outputs of a `Version` instance through the `Version.outputs` list, the
-    `Link` instances with
-    `Link.type==(Type(name=="Representation", target_entity_type=="Link")` is
+    files of a `Version` instance through the `Version.files` list, the
+    `File` instances with
+    `File.type==(Type(name=="Representation", target_entity_type=="File")` is
     considered as a representation of the related `Version` instance.
 
     Args:
-        link: The related Link instance.
+        file: The related File instance.
     """
 
     base_repr_name = "Base"
@@ -262,29 +262,29 @@ def get_representation_names(self) -> List[str]:
     with DBSession.no_autoflush:
         repr_type = (
             Type.query.filter(Type.name == REPR_TYPE_NAME)
-            .filter(Type.target_entity_type == "Link")
+            .filter(Type.target_entity_type == "File")
             .first()
         )
     repr_names = []
     if repr_type is None:
         return repr_names
 
-    for link in self.outputs:
-        if link.type == repr_type:
-            repr_names.append(link.name)
+    for file in self.files:
+        if file.type == repr_type:
+            repr_names.append(file.name)
 
     return list(set(repr_names))
 
 
 @extends(Version)
-def get_representation(self, repr_name: str) -> Union[None, Link]:
+def get_representation(self, repr_name: str) -> Union[None, File]:
     """Return the representation with the given name.
 
     Args:
         repr_name (str): The representation name in query.
 
     Returns:
-        Union[None, Link]: The representation if available, None otherwise.
+        Union[None, File]: The representation if available, None otherwise.
     """
     # validate repr_name arg
     if not isinstance(repr_name, str):
@@ -296,24 +296,24 @@ def get_representation(self, repr_name: str) -> Union[None, Link]:
     with DBSession.no_autoflush:
         repr_type = (
             Type.query.filter(Type.name == REPR_TYPE_NAME)
-            .filter(Type.target_entity_type == "Link")
+            .filter(Type.target_entity_type == "File")
             .first()
         )
     if repr_type is None:
         return
 
-    for link in self.outputs:
-        if link.type == repr_type and link.name == repr_name:
-            return link
+    for file in self.files:
+        if file.type == repr_type and file.name == repr_name:
+            return file
     return
 
 
 @extends(Version)
-def get_base_representation(self) -> Union[None, Link]:
+def get_base_representation(self) -> Union[None, File]:
     """Return the base representation.
 
     Returns:
-        Union[None, Link]:
+        Union[None, File]:
     """
     return self.get_representation(BASE_REPR_NAME)
 
@@ -328,16 +328,14 @@ def has_representations(self) -> bool:
     with DBSession.no_autoflush:
         repr_type = (
             Type.query.filter(Type.name == REPR_TYPE_NAME)
-            .filter(Type.target_entity_type == "Link")
+            .filter(Type.target_entity_type == "File")
             .first()
         )
     if repr_type is None:
         return False
 
-    print(f"self.outputs: {self.outputs}")
-
-    for link in self.outputs:
-        if link.type == repr_type and link.name != BASE_REPR_NAME:
+    for file in self.files:
+        if file.type == repr_type and file.name != BASE_REPR_NAME:
             return True
     return False
 
@@ -358,14 +356,14 @@ def has_representation(self, repr_name: str) -> bool:
 
 
 @extends(Version)
-def create_representation(self, repr_name: str) -> Link:
+def create_representation(self, repr_name: str) -> File:
     """Create and return a representation with the given name.
 
     Args:
         repr_name (str): The representation name.
 
     Returns:
-        Link: The newly created representation.
+        File: The newly created representation.
     """
     # validate repr_name
     if not isinstance(repr_name, str):
@@ -381,26 +379,26 @@ def create_representation(self, repr_name: str) -> Link:
     with DBSession.no_autoflush:
         repr_type = (
             Type.query.filter(Type.name == REPR_TYPE_NAME)
-            .filter(Type.target_entity_type == "Link")
+            .filter(Type.target_entity_type == "File")
             .first()
         )
     if repr_type is None:
         return
 
-    repr = Link(name=repr_name, type=repr_type)
+    repr = File(name=repr_name, type=repr_type)
     DBSession.save(repr)
-    self.outputs.append(repr)
+    self.files.append(repr)
     DBSession.commit()
 
     return repr
 
 
 #
-# Link extensions
+# File extensions
 #
 
 
-@extends(Link)
+@extends(File)
 def is_representation(self) -> bool:
     """Return True if this is a representation.
 
@@ -411,7 +409,7 @@ def is_representation(self) -> bool:
     with DBSession.no_autoflush:
         repr_type = (
             Type.query.filter(Type.name == REPR_TYPE_NAME)
-            .filter(Type.target_entity_type == "Link")
+            .filter(Type.target_entity_type == "File")
             .first()
         )
     if repr_type is None:
@@ -419,7 +417,7 @@ def is_representation(self) -> bool:
     return self.type is not None and self.type == repr_type
 
 
-@extends(Link)
+@extends(File)
 def is_base_representation(self) -> bool:
     """Return True if this is the base representation.
 
@@ -429,7 +427,7 @@ def is_base_representation(self) -> bool:
     return self.name == BASE_REPR_NAME and self.is_representation()
 
 
-@extends(Link)
+@extends(File)
 @property
 def representation_of(self) -> Union[None, Version]:
     """Return the related Version if this is a representation.
@@ -442,6 +440,6 @@ def representation_of(self) -> Union[None, Version]:
         return None
 
     with DBSession.no_autoflush:
-        v = Version.query.filter(Version.outputs.contains(self)).first()
+        v = Version.query.filter(Version.files.contains(self)).first()
 
     return v

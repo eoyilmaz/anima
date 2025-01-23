@@ -3,7 +3,7 @@ import tempfile
 
 import pytest
 
-from stalker import Link, Type, Version
+from stalker import File, Type, Version
 from stalker.db.session import DBSession
 
 from anima.representation import (
@@ -28,7 +28,7 @@ def test_get_repr_type_is_working_as_expected(repr_test_setup):
     repr_type = get_repr_type()
     assert isinstance(repr_type, Type)
     assert repr_type.name == REPR_TYPE_NAME
-    assert repr_type.target_entity_type == "Link"
+    assert repr_type.target_entity_type == "File"
 
 
 #
@@ -81,13 +81,13 @@ def test_get_representation_repr_name_is_not_a_str(repr_test_setup):
 
 
 def test_get_representation_finds_the_given_representation(repr_test_setup):
-    """Version.get_representation() finds the latest Link with the given representation."""
+    """Version.get_representation() finds the latest File with the given representation."""
     data = repr_test_setup
     repr_name = "Bounding Box"
     v = data["version3"]
     repr = v.get_representation(repr_name)
-    assert isinstance(repr, Link)
-    assert repr in data["version3"].outputs
+    assert isinstance(repr, File)
+    assert repr in data["version3"].files
     assert repr.name == repr_name
 
 
@@ -173,8 +173,8 @@ def test_get_base_representation_returns_the_base_representation(repr_test_setup
     data = repr_test_setup
     v = data["version1"]
     repr = v.get_base_representation()
-    assert isinstance(repr, Link)
-    assert repr in v.outputs
+    assert isinstance(repr, File)
+    assert repr in v.files
     assert repr.name == BASE_REPR_NAME
 
 
@@ -210,92 +210,92 @@ def test_create_representation_is_working_as_expected(repr_test_setup):
     data = repr_test_setup
     v = data["version1"]
     test_value = "Bounding Box"
-    l = v.create_representation(test_value)
-    assert isinstance(l, Link)
-    assert l.name == test_value
-    assert l.type is not None
-    assert l.type.name == REPR_TYPE_NAME
-    assert l in v.outputs
+    f = v.create_representation(test_value)
+    assert isinstance(f, File)
+    assert f.name == test_value
+    assert f.type is not None
+    assert f.type.name == REPR_TYPE_NAME
+    assert f in v.files
 
 
 #
-# Link Representation
+# File Representation
 #
 
 
 def test_is_representation_method_exists():
-    """Link.is_representation() method does exist."""
-    assert hasattr(Link, "is_representation")
+    """File.is_representation() method does exist."""
+    assert hasattr(File, "is_representation")
 
 
 def test_is_representation_method_is_working_as_expected_for_repr(repr_test_setup):
-    """Link.is_representation() is working as expected."""
+    """File.is_representation() is working as expected."""
     data = repr_test_setup
     v = data["version1"]
-    repr = v.outputs[0]
-    assert isinstance(repr, Link)
+    repr = v.files[0]
+    assert isinstance(repr, File)
     assert repr.is_representation() is True
 
 
 def test_is_representation_method_is_working_as_expected_for_non_repr(repr_test_setup):
-    """Link.is_representation() is working as expected."""
+    """File.is_representation() is working as expected."""
     # test not representation
-    l = Link()
-    DBSession.save(l)
-    assert l.is_representation() is False
+    f = File()
+    DBSession.save(f)
+    assert f.is_representation() is False
 
 
 def test_is_base_representation_method_exists():
-    """Link.is_base_representation() does exist."""
-    assert hasattr(Link, "is_base_representation")
+    """File.is_base_representation() does exist."""
+    assert hasattr(File, "is_base_representation")
 
 
 def test_is_base_representation_method_is_working_as_expected(repr_test_setup):
-    """Link.is_base_representation() is working as expected."""
+    """File.is_base_representation() is working as expected."""
     data = repr_test_setup
     v = data["version2"]
     repr = None
-    for link in v.outputs:
-        if link.name == BASE_REPR_NAME:
-            repr = link
+    for file in v.files:
+        if file.name == BASE_REPR_NAME:
+            repr = file
             break
     assert repr is not None
-    assert isinstance(repr, Link)
+    assert isinstance(repr, File)
     assert repr.name == BASE_REPR_NAME
     assert repr.is_base_representation() is True
 
     not_base_repr = None
-    for link in v.outputs:
-        if link.name != BASE_REPR_NAME:
-            not_base_repr = link
+    for file in v.files:
+        if file.name != BASE_REPR_NAME:
+            not_base_repr = file
             break
     assert not_base_repr is not None
-    assert isinstance(not_base_repr, Link)
+    assert isinstance(not_base_repr, File)
     assert not_base_repr.is_base_representation() is False
 
 
 def test_representation_of_attribute_exists():
     """representation_of attribute exists."""
-    assert hasattr(Link, "representation_of")
+    assert hasattr(File, "representation_of")
 
 
 def test_representation_of_attr_returns_related_version_if_is_repr(repr_test_setup):
-    """Link.representation_of attr returns the related Version if this is a repr."""
+    """File.representation_of attr returns the related Version if this is a repr."""
     data = repr_test_setup
     v = data["version1"]
-    l = v.outputs[0]
+    l = v.files[0]
     assert l.representation_of == v
     v = data["version2"]
 
-    assert all(l.representation_of == v for l in v.outputs)
+    assert all(l.representation_of == v for l in v.files)
 
 
 def test_representation_of_attr_returns_none_if_it_is_not_a_repr(repr_test_setup):
-    """Link.representation_of attr returns None if Link is not a repr."""
+    """File.representation_of attr returns None if File is not a repr."""
     data = repr_test_setup
     v = data["version1"]
-    l = Link()
-    DBSession.save(l)
-    v.outputs.append(l)
+    f = File()
+    DBSession.save(f)
+    v.files.append(f)
     DBSession.commit()
-    assert l.representation_of is None
+    assert f.representation_of is None

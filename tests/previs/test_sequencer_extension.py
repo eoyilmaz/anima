@@ -66,7 +66,7 @@ class SequencerExtensionTestCase(unittest.TestCase):
 
         self.assertEqual(
             s,
-            shot.message.outputs()[0]
+            shot.message.files()[0]
         )
 
     def test_all_shots_property_is_working_properly(self):

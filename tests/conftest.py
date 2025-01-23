@@ -17,9 +17,9 @@ from anima.representation import BASE_REPR_NAME
 
 from stalker import (
     Asset,
+    File,
     FilenameTemplate,
     ImageFormat,
-    Link,
     LocalSession,
     Project,
     Repository,
@@ -680,20 +680,20 @@ def create_version(variant: Variant, repr_names: Optional[List[str]] = None) -> 
     # get a Type with the name "Representation", create otherwise
     repr_type = (
         Type.query.filter(Type.name == "Representation")
-        .filter(Type.target_entity_type == "Link")
+        .filter(Type.target_entity_type == "File")
         .first()
     )
     if not repr_type:
-        repr_type = Type(name="Representation", target_entity_type="Link")
+        repr_type = Type(name="Representation", target_entity_type="File")
         DBSession.save(repr_type)
 
     v = Version(task=variant)
     DBSession.save(v)
 
     for repr_name in repr_names:
-        repr = Link(name=repr_name, type=repr_type)
+        repr = File(name=repr_name, type=repr_type)
         DBSession.save(repr)
-        v.outputs.append(repr)
+        v.files.append(repr)
         DBSession.commit()
 
     return v
@@ -767,7 +767,7 @@ def repr_test_setup():
     )
 
     data["representation_type"] = Type(
-        name="Representation", code="REPR", target_entity_type="Link"
+        name="Representation", code="REPR", target_entity_type="File"
     )
 
     # create a test series of root task

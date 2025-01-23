@@ -8,23 +8,27 @@ import pymel.core as pm
 import maya.cmds as mc
 import time
 
-from anima.dcc import empty_reference_resolution
-from anima.dcc.base import DCCBase
+
+from stalker import Repository, Version
+from stalker.db.session import DBSession
+
+
+from anima import utils
+from anima.dcc.base import generate_empty_reference_resolution, DCCBase
+from anima.dcc.mayaEnv import auxiliary
 from anima.dcc.mayaEnv import extension  # register extensions
-from anima.log import logger
-from anima.exc import PublishError
-from anima.representation import Representation
-from anima.utils.progress import ProgressDialogBase, ProgressManagerFactory
-
-# empty publishers first
 from anima.dcc.mayaEnv import publish as publish_scripts  # register publishers
-
+from anima.dcc.mayaEnv import render
 from anima.publish import (
     run_publishers,
     staging,
     PRE_PUBLISHER_TYPE,
     POST_PUBLISHER_TYPE,
 )
+from anima.exc import PublishError
+from anima.log import logger
+from anima.representation import Representation
+from anima.utils.progress import ProgressDialogBase, ProgressManagerFactory
 
 
 def get_maya_main_window():
@@ -33,14 +37,10 @@ def get_maya_main_window():
 
     ref: https://stackoverflow.com/questions/22331337/how-to-get-maya-main-window-pointer-using-pyside
     """
-    import sys
     from anima.ui.lib import QtWidgets, QtCore
     from maya import OpenMayaUI
 
     ptr_conv_func = int
-    if sys.version_info.major == 2:
-        ptr_conv_func = long
-
     ptr = OpenMayaUI.MQtUtil.mainWindow()
     if ptr is not None:
         from anima.ui.lib import IS_PYQT4, IS_PYSIDE, IS_PYSIDE2, IS_PYSIDE6
@@ -271,13 +271,22 @@ workspace -fr "translatorData" "Outputs/data";
         self.set_arnold_texture_search_path()
 
     @property
-    def use_progress_window(self):
-        """Return use progress window state."""
+    def use_progress_window(self) -> bool:
+        """Return use progress window state.
+
+        Returns:
+            bool: The use progress window state.
+        """
         return self._use_progress_window
 
     @use_progress_window.setter
     def use_progress_window(self, use_progress_window):
-        """Set use_progress_window attribute."""
+        """Set use_progress_window attribute.
+
+        Args:
+            use_progress_window (bool): Set the state of the
+                `use_progress_window` attribute.
+        """
         self._use_progress_window = use_progress_window
         pdm = ProgressManagerFactory.get_progress_manager()
         if not self._use_progress_window:
@@ -289,9 +298,8 @@ workspace -fr "translatorData" "Outputs/data";
 
     @classmethod
     def set_arnold_texture_search_path(cls):
-        """sets environment defaults"""
+        """Set environment defaults."""
         start = time.time()
-        from stalker import Repository
 
         all_repos = Repository.query.all()
 
@@ -317,15 +325,21 @@ workspace -fr "translatorData" "Outputs/data";
 
     def save_as(
         self, version, run_pre_publishers=True, allow_external_references=False
-    ):
-        """The save_as action for maya dccDCC.
+    ) -> bool:
+        """Save the current scene as the "Base" representation for the given Version.
 
-        It saves the given ``Version`` instance to the Version.absolute_full_path.
+        Save the given ``Version`` instance to the Version.absolute_full_path.
 
-        :param Version version: Stalker Version instance.
-        :param bool run_pre_publishers: Runs pre-publishers, True by default.
-        :param bool allow_external_references: Allows external references which are
-          unknown to Stalker. False by default.
+        Args:
+            version (Version): Stalker Version instance showing the new
+                location.
+            run_pre_publishers (bool): If `True` run the pre-publishers, `True`
+                by default.
+            allow_external_references (bool): Allow external references which
+                are unknown to Stalker. `False` by default.
+
+        Returns:
+            bool: True if success, False otherwise.
         """
         # clean malware
         self.clean_malware()
@@ -334,9 +348,7 @@ workspace -fr "translatorData" "Outputs/data";
         if version.is_published:
             if run_pre_publishers:
                 # before doing anything run all publishers
-                type_name = ""
-                if version.task.type:
-                    type_name = version.task.type.name
+                type_name = version.task.type.name if version.task.type else ""
 
                 # before running use the staging area to store the current
                 # version
@@ -417,8 +429,6 @@ workspace -fr "translatorData" "Outputs/data";
         pm.currentUnit(l="cm", a="deg")
 
         # set color management
-        from anima.dcc.mayaEnv import render
-
         render.MayaColorManagementConfigurator.configure()
 
         # check if this is a shot related task
@@ -472,8 +482,6 @@ workspace -fr "translatorData" "Outputs/data";
 
         # go to master layer for Maya 2017
         # to prevent __untitled__ collection creation
-        from anima.dcc.mayaEnv import auxiliary
-
         current_render_layer = auxiliary.get_current_render_layer()
         if int(pm.about(v=1)) >= 2017:
             auxiliary.switch_to_default_render_layer()
@@ -492,8 +500,6 @@ workspace -fr "translatorData" "Outputs/data";
         # update the reference list
         # IMPORTANT: without this, the update workflow is not able to do
         # updates correctly, so do not disable this
-        from stalker.db.session import DBSession
-
         DBSession.add(version)
 
         self.update_version_inputs()
@@ -587,8 +593,6 @@ workspace -fr "translatorData" "Outputs/data";
         )
 
         # save the version to database
-        from stalker.db.session import DBSession
-
         DBSession.add(version)
         DBSession.commit()
 
@@ -607,43 +611,43 @@ workspace -fr "translatorData" "Outputs/data";
         prompt=True,
         clean_malware=True,
     ):
-        """The open action for Maya DCC.
+        """Open the given Version and set the workspace etc.
 
-        Opens the given Version file, sets the workspace etc.
-
-        Returns a tuple of Bool and a Dictionary. The Bool value shows if
+        Return a tuple of Bool and a Dictionary. The Bool value shows if
         everything went alright and the scene is opened without any problem.
-        The Dictionary is called the Reference Resolution Dictionary, and has
-        three keys ['leave', 'update', 'create'] and each of the keys is
+        The Dictionary is called the **Reference Resolution Dictionary**, and
+        has three keys ['leave', 'update', 'create'] and each of the keys is
         related with a list of Version instances. These Version instances are
-        gathered from all the references in the opened scene no matter how
-        deeply they've been referenced. So passing this dictionary to
+        gathered from the first level of references in the opened scene.
+        Passing this dictionary to :meth:`.update_versions` will update or
+        create new versions as necessary. You can also modify this dictionary
+        before passing it to :meth:`.update_versions`, so only desired version
+        instances are updated or a new version is created for them.
 
-        :param version: The Stalker Version instance to open.
-        :meth:`.update_versions` will update or create new versions as
-        necessary. You can also modify this dictionary before passing it to
-        :meth:`.update_versions`, so only desired version instances are updated
-        or a new version is created for them.
+        Args:
+            version (Union[Version, File]): The Stalker `Version` instance to
+                open. If a `Version` is given, the "Base" representation will
+                be opened. If a `File` is given, if it is a representation it
+                will be opened directly.
+            force (bool): Force open the file.
+            representation (str): Open the given version with the given
+                representations.
+            reference_depth (int): An integer parameter for defining the
+                preferred reference depth to be loaded. Should be one of 0, 1,
+                2, 3 mapping the values of:
 
-        :param bool force: Force open the file.
-        :param representation: Opens the given version with the given
-          representations.
-        :param int reference_depth: An integer parameter for defining the
-         preferred reference depth to be loaded. Should be one of 0, 1, 2, 3
-         mapping the values of:
+                    0: saved state
+                    1: all
+                    2: topOnly
+                    3: none
 
-          0: saved state
-          1: all
-          2: topOnly
-          3: none
+            skip_update_check (bool): Skip update check if True.
+            prompt (bool): prompts for missing references
+            clean_malware (bool): Cleans the malware if True (default).
 
-        :param bool skip_update_check: Skip update check if True.
-
-        :param bool prompt: prompts for missing references
-
-        :param bool clean_malware: Cleans the malware if True (default).
-
-        :returns: (Bool, Dictionary)
+        Returns:
+            Tuple[Bool, Dictionary]: A tuple of a bool and a reference
+                resolution dictionary.
         """
         reference_depth_res = [None, "all", "topOnly", "none"]
 
@@ -717,8 +721,6 @@ workspace -fr "translatorData" "Outputs/data";
         pm.currentUnit(l="cm", a="deg")
 
         # set color management
-        from anima.dcc.mayaEnv import render
-
         render.MayaColorManagementConfigurator.configure()
 
         # set sequence manager related data
@@ -742,15 +744,18 @@ workspace -fr "translatorData" "Outputs/data";
             # check the referenced versions for any possible updates
             return self.check_referenced_versions()
         else:
-            return empty_reference_resolution()
+            return generate_empty_reference_resolution()
 
     def import_(self, version, use_namespace=True):
-        """Imports the content of the given Version instance to the current
-        scene.
+        """Import the content of the given Version instance to the current scene.
 
-        :param version: The desired
-          :class:`~stalker.models.version.Version` to be imported
-        :param bool use_namespace: use namespace or not. Default is True.
+        Args:
+            version (Version): The desired :class:`~stalker.Version` to be
+                imported.
+            use_namespace (bool): use namespace or not. Default is True.
+
+        Returns:
+            bool:
         """
         if use_namespace:
             namespace = os.path.basename(version.filename)
@@ -813,8 +818,6 @@ workspace -fr "translatorData" "Outputs/data";
         current_version = self.get_current_version()
         if current_version:
             current_version.inputs.append(version)
-            from stalker.db.session import DBSession
-
             DBSession.commit()
 
         # also update version.inputs for the referenced input
@@ -957,8 +960,6 @@ workspace -fr "translatorData" "Outputs/data";
 
         # convert the render_file_full_path to a relative path to the
         # imageFolderFromWS_full_path
-        from anima import utils
-
         render_file_rel_path = utils.relpath(
             image_folder_from_ws_full_path, render_file_full_path, sep="/"
         )
@@ -1365,8 +1366,6 @@ workspace -fr "translatorData" "Outputs/data";
 
         updated_references = False
 
-        from stalker import Repository
-
         for reference in references:
             path = reference.path
             if path == previous_ref_path:
@@ -1513,8 +1512,6 @@ workspace -fr "translatorData" "Outputs/data";
         # *********************************************************************
         # References
         # replace reference paths with os independent absolute path
-        from stalker import Repository
-
         for ref in pm.listReferences():
             is_loaded = ref.isLoaded()
             unresolved_path = os.path.normpath(ref.unresolvedPath()).replace("\\", "/")
@@ -1781,8 +1778,6 @@ workspace -fr "translatorData" "Outputs/data";
         """
         logger.debug(f"updating to new versions with: {reference_resolution}")
 
-        from stalker import Repository
-
         # just create a list from  first level references
         # and only update those references
         references_list = pm.listReferences()
@@ -2018,8 +2013,6 @@ workspace -fr "translatorData" "Outputs/data";
             caller = pdm.register(
                 len(to_update_paths), "Maya.fix_reference_namespaces()"
             )
-
-            from stalker import Version
 
             for path in to_update_paths:
                 vers = self.get_version_from_full_path(path)

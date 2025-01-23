@@ -2,14 +2,19 @@
 
 import copy
 import json
+import glob
 import os
 import re
 import tempfile
+from typing import List
 
-from anima.log import logger
+from stalker import File, LocalSession, Repository, Shot, Task, Type, Version
+from stalker.db.session import DBSession
+
 import pymel.core as pm
 
 from anima import ALEMBIC, USD, CACHE_FORMAT_DATA
+from anima.log import logger
 import anima.utils
 from anima.utils.progress import ProgressManagerFactory
 
@@ -918,14 +923,10 @@ def run_pre_publishers():
             raise e
 
         # update updated_by field of the current version
-        from stalker import LocalSession
-
         ls = LocalSession()
         logged_in_user = ls.logged_in_user
         if logged_in_user:
             version.updated_by = logged_in_user
-            from stalker.db.session import DBSession
-
             DBSession.commit()
 
 
@@ -1487,8 +1488,6 @@ class Playblaster(object):
 
         self.logged_in_user = None
         if not self.batch_mode:
-            from stalker import LocalSession
-
             local_session = LocalSession()
             self.logged_in_user = local_session.logged_in_user
 
@@ -2347,14 +2346,14 @@ class Playblaster(object):
 
     @classmethod
     def upload_output(cls, version, output_file_full_path):
-        """sets the given file as the output of the given version, also
-        generates a thumbnail and a web version if it is a movie file
+        """Set the given file as the output of the given version.
 
-        :param version: The stalker version instance
-        :param output_file_full_path: the path of the media file
+        Also generate a thumbnail and a web version if it is a movie file.
+
+        Args:
+            version (Version): The stalker version instance.
+            output_file_full_path (str): The path of the media file.
         """
-        from stalker import Version
-
         if not isinstance(version, Version):
             raise RuntimeError("version should be a stalker version instance!")
 
@@ -2362,12 +2361,8 @@ class Playblaster(object):
         webres_extension = ".webm"
         thumbnail_extension = ".png"
 
-        import os
-
         if not os.path.exists(output_file_full_path):
             raise RuntimeError(f"Output file does not exits: {output_file_full_path}")
-
-        import os
 
         output_file_name = os.path.basename(output_file_full_path)
 
@@ -2447,35 +2442,32 @@ class Playblaster(object):
         project = task.project
         repo = project.repository
 
-        from stalker import Link
-        from stalker.db.session import DBSession
-
         # try to find a file with the same name assigned to the version as
         # output
         found = None
         hires_os_independent_path = repo.to_os_independent_path(hires_path)
-        for output in version.outputs:
-            if output.full_path == hires_os_independent_path:
+        for file in version.files:
+            if file.full_path == hires_os_independent_path:
                 found = True
                 break
 
         # if we found a file with the same name as the output, just overwrite
         # it
         if not found:
-            l_hires = Link(
+            l_hires = File(
                 full_path=repo.to_os_independent_path(hires_path),
                 original_filename=hires_output_file_name,
             )
 
-            l_for_web = Link(
+            l_for_web = File(
                 full_path=repo.to_os_independent_path(webres_path),
                 original_filename=hires_output_file_name,
             )
 
             l_hires.thumbnail = l_for_web
-            version.outputs.append(l_hires)
+            version.files.append(l_hires)
 
-            l_thumb = Link(
+            l_thumb = File(
                 full_path=repo.to_os_independent_path(thumbnail_path),
                 original_filename=hires_output_file_name,
             )
@@ -2916,13 +2908,19 @@ def export_cache_of_nodes(
     return output_full_paths
 
 
-def add_outputs_to_current_version(output_full_paths, output_type_name):
-    """Add the given file as a Link to the current version.
+def add_outputs_to_current_version(
+    output_full_paths: List[str],
+    output_type_name: str
+) -> List[File]:
+    """Add the given file as a File to the current version.
 
-    :param list output_full_paths: A list of file paths.
-    :param str output_type_name: The output type, e.g Alembic, USD, Image, Video, Audio
-        etc.
-    :return: List of Link instances that are newly created
+    Args:
+        output_full_paths (List[str]): A list of file paths.
+        output_type_name (str): The output type, e.g Alembic, USD, Image,
+            Video, Audio etc.
+
+    Returns:
+        List[File]: List of File instances that are newly created.
     """
     from anima.dcc import mayaEnv
 
@@ -2932,33 +2930,31 @@ def add_outputs_to_current_version(output_full_paths, output_type_name):
     if current_version is None:
         return
 
-    import os
-    from stalker import Link, Repository, Type, LocalSession
-    from stalker.db.session import DBSession
-
     # get Alembic type
     with DBSession.no_autoflush:
         output_type = Type.query.filter(Type.name == output_type_name).first()
 
     if not output_type:
         output_type = Type(
-            name=output_type_name, code=output_type_name, target_entity_type="Link"
+            name=output_type_name,
+            code=output_type_name,
+            target_entity_type="File",
         )
 
     local_session = LocalSession()
     with DBSession.no_autoflush:
         logged_in_user = local_session.logged_in_user
 
-    # Create a Link with the output file and link it to the current version
+    # Create a File with the output file and add it to the current version files
     for output_file_path in output_full_paths:
-        new_link = Link(
+        new_file = File(
             full_path=Repository.to_os_independent_path(output_file_path),
             original_filename=os.path.basename(output_file_path),
             type=output_type,
             created_by=logged_in_user,
         )
-        DBSession.add(new_link)
-        current_version.outputs.append(new_link)
+        DBSession.add(new_file)
+        current_version.files.append(new_file)
     DBSession.commit()
 
 
@@ -3079,9 +3075,7 @@ def auto_reference_caches(cache_type=ALEMBIC):
     # update all references first
     update_cache_references(cache_type=cache_type)
 
-    import glob
     from anima.dcc import mayaEnv
-    from stalker import Shot, Task, Type, Version
 
     m = mayaEnv.Maya()
     v = m.get_current_version()
@@ -3915,9 +3909,6 @@ def orphan_rig_finder(project):
 
     :param project: A Stalker Project instance to look in to.
     """
-    from stalker import Task, Type, Version
-    from stalker.db.session import DBSession
-
     # get all the rig tasks
     rig_type = Type.query.filter(Type.name == "Rig").first()
     look_dev_type = Type.query.filter(Type.name == "Look Development").first()

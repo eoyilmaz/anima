@@ -120,7 +120,7 @@ class StalkerEntityEncoder(json.JSONEncoder):
         "inputs",
         "latest_published_version",
         "latest_version",
-        "link_id",
+        "reference_id",
         "max_version_number",
         "naming_parents",
         "task",

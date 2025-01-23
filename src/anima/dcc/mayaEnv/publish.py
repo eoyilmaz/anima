@@ -3001,10 +3001,10 @@ def export_edl_and_xml(progress_controller=None):
 
     # we also should already have a video output created by another publisher
     playblast_file = None
-    for output in current_version.outputs:
-        extension = os.path.splitext(output.full_path)[-1]
+    for file in current_version.files:
+        extension = os.path.splitext(file.full_path)[-1]
         if extension in [".mov", ".avi", ".mp4"]:
-            playblast_file = output
+            playblast_file = file
             break
 
     if not playblast_file:
@@ -3029,8 +3029,8 @@ def export_edl_and_xml(progress_controller=None):
     progress_controller.increment()
 
     with open(edl_file_full_path, "r") as f:
-        link = mm.upload_version_output(current_version, f, edl_file_name)
-        DBSession.add(link)
+        file = mm.upload_version_output(current_version, f, edl_file_name)
+        DBSession.add(file)
     progress_controller.increment()
 
     # XML
@@ -3040,11 +3040,11 @@ def export_edl_and_xml(progress_controller=None):
     progress_controller.increment()
 
     with open(xml_file_full_path, "r") as f:
-        link = mm.upload_version_output(current_version, f, xml_file_name)
-        DBSession.add(link)
+        file = mm.upload_version_output(current_version, f, xml_file_name)
+        DBSession.add(file)
     progress_controller.increment()
 
-    # add the link to database
+    # add the file to database
     DBSession.commit()
     progress_controller.increment()
 

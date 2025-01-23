@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from anima.dcc import empty_reference_resolution
+from anima.dcc.base import generate_empty_reference_resolution
 from anima.log import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.models.version import VersionTreeModel
@@ -56,7 +56,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 reference_resolution = self.environment.check_referenced_versions()
             else:
                 # create an empty one
-                reference_resolution = empty_reference_resolution()
+                reference_resolution = generate_empty_reference_resolution()
         self.reference_resolution = reference_resolution
 
         self.fill_ui()
@@ -321,7 +321,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         :return: dictionary
         """
-        generated_reference_resolution = empty_reference_resolution()
+        generated_reference_resolution = generate_empty_reference_resolution()
 
         # append anything that is checked
 

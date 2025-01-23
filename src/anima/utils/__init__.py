@@ -15,10 +15,13 @@ import subprocess
 import sys
 import tempfile
 import uuid
+from http.cookiejar import CookieJar
+from urllib.request import build_opener
+from urllib.parse import urlencode
+from urllib.request import HTTPCookieProcessor
 
 import exifread
 import pytz
-
 
 from sqlalchemy import and_, exists, or_
 from sqlalchemy.exc import UnboundExecutionError
@@ -28,7 +31,7 @@ from sqlalchemy.sql.functions import array_agg
 
 from stalker import (
     Asset,
-    Link,
+    File,
     Project,
     Repository,
     Sequence,
@@ -211,18 +214,6 @@ class StalkerThumbnailCache(object):
 
         if not os.path.exists(cached_file_full_path) and login and password:
             # download the file and put it on to the cache
-            if sys.version_info[0] >= 3:
-                # Python 3
-                from http.cookiejar import CookieJar
-                from urllib.request import build_opener
-                from urllib.parse import urlencode
-                from urllib.request import HTTPCookieProcessor
-            else:
-                # Python 2
-                from cookielib import CookieJar
-                from urllib import urlencode
-                from urllib2 import build_opener, HTTPCookieProcessor
-
             cj = CookieJar()
             opener = build_opener(HTTPCookieProcessor(cj))
             login_data = urlencode(
@@ -314,7 +305,7 @@ class MediaManager(object):
     also for image files it will generate thumbnails and versions to be viewed
     from web.
 
-    It can handle image sequences, and will create only one Link object per
+    It can handle image sequences, and will create only one File instance per
     image sequence. The thumbnail of an image sequence will be a gif image.
 
     It will generate a zip file to serve all the images in an image sequence.
@@ -511,7 +502,7 @@ class MediaManager(object):
         return thumbnail_path
 
     def generate_video_thumbnail(self, file_full_path):
-        """Generate a thumbnail for the given video link.
+        """Generate a thumbnail for the given video file.
 
         Args:
             file_full_path (str): A string showing the full path of the video file.
@@ -671,7 +662,7 @@ class MediaManager(object):
         return web_version_full_path
 
     def generate_thumbnail(self, file_full_path):
-        """Generate a thumbnail for the given link.
+        """Generate a thumbnail for the given file.
 
         Args:
             file_full_path (str): Generates a thumbnail for the given file in the given
@@ -1366,9 +1357,9 @@ class MediaManager(object):
     def upload_reference(self, task, file_object, filename):
         """Upload a reference for the given task.
 
-        Upload to the Task.path/References/Stalker_Pyramid/ folder and create a Link
-        object to there. Again the Link object will have a Repository root relative
-        path.
+        Upload to the Task.path/References/Stalker_Pyramid/ folder and create a
+        File instance to there. Again the File instance will have a Repository
+        root relative path.
 
         It will also create a thumbnail under
         {{Task.absolute_path}}/References/Stalker_Pyramid/Thumbs folder and a
@@ -1383,7 +1374,7 @@ class MediaManager(object):
             filename (str): The original filename.
 
         Returns:
-            stalker.Link: A :class:`stalker.Link` instance.
+            stalker.File: A :class:`stalker.File` instance.
         """
         ############################################################
         # ORIGINAL
@@ -1396,12 +1387,12 @@ class MediaManager(object):
         reference_file_file_name = os.path.basename(reference_file_full_path)
         reference_file_base_name = os.path.splitext(reference_file_file_name)[0]
 
-        # create a Link instance and return it.
+        # create a File instance and return it.
         # use a Repository relative path
         repo = task.project.repository
         relative_full_path = repo.make_relative(reference_file_full_path)
 
-        link = Link(full_path=relative_full_path, original_filename=filename)
+        file = File(full_path=relative_full_path, original_filename=filename)
 
         # create a thumbnail for the given reference
         # don't forget that the first thumbnail is the Web viewable version
@@ -1423,7 +1414,7 @@ class MediaManager(object):
             os.path.dirname(reference_file_full_path), "ForWeb", web_version_file_name
         )
         web_version_repo_relative_full_path = repo.make_relative(web_version_full_path)
-        web_version_link = Link(
+        web_version_file = File(
             full_path=web_version_repo_relative_full_path,
             original_filename=web_version_file_name,
         )
@@ -1449,7 +1440,7 @@ class MediaManager(object):
             os.path.dirname(reference_file_full_path), "Thumbnail", thumbnail_file_name
         )
         thumbnail_repo_relative_full_path = repo.make_relative(thumbnail_full_path)
-        thumbnail_link = Link(
+        thumbnail_file = File(
             full_path=thumbnail_repo_relative_full_path,
             original_filename=thumbnail_file_name,
         )
@@ -1462,15 +1453,15 @@ class MediaManager(object):
         shutil.move(thumbnail_temp_full_path, thumbnail_full_path)
 
         ############################################################
-        # LINK Objects
+        # File Objects
         ############################################################
         # link them
         # assign it as a reference to the given task
-        task.references.append(link)
-        link.thumbnail = web_version_link
-        web_version_link.thumbnail = thumbnail_link
+        task.references.append(file)
+        file.thumbnail = web_version_file
+        web_version_file.thumbnail = thumbnail_file
 
-        return link
+        return file
 
     def upload_version(self, task, file_object, variant_name=None, extension=""):
         """Upload versions to the Task.path folder and create a Version object.
@@ -1523,7 +1514,7 @@ class MediaManager(object):
             filename (str): The original filename.
 
         Returns:
-            stalker.Link: stalker.Link instance.
+            stalker.File: stalker.File instance.
         """
         ############################################################
         # ORIGINAL
@@ -1540,13 +1531,13 @@ class MediaManager(object):
         version_output_file_name = os.path.basename(version_output_file_full_path)
         version_output_base_name = os.path.splitext(version_output_file_name)[0]
 
-        # create a Link instance and return it.
+        # create a File instance and return it.
         # use a Repository relative path
         repo = version.task.project.repository
 
         full_path = str(version_output_file_full_path)
 
-        link = Link(
+        file = File(
             full_path=repo.to_os_independent_path(full_path),
             original_filename=str(filename),
         )
@@ -1558,7 +1549,7 @@ class MediaManager(object):
         ############################################################
         # WEB VERSION
         ############################################################
-        web_version_link = None
+        web_version_file = None
         try:
             web_version_temp_full_path = self.generate_media_for_web(
                 version_output_file_full_path
@@ -1570,7 +1561,7 @@ class MediaManager(object):
                 version_output_base_name + web_version_extension,
             )
 
-            web_version_link = Link(
+            web_version_file = File(
                 full_path=repo.to_os_independent_path(web_version_full_path),
                 original_filename=filename,
             )
@@ -1589,7 +1580,7 @@ class MediaManager(object):
         # THUMBNAIL
         ############################################################
         # finally generate a Thumbnail
-        thumbnail_link = None
+        thumbnail_file = None
         try:
             thumbnail_temp_full_path = self.generate_thumbnail(
                 version_output_file_full_path
@@ -1602,7 +1593,7 @@ class MediaManager(object):
                 version_output_base_name + thumbnail_extension,
             )
 
-            thumbnail_link = Link(
+            thumbnail_file = File(
                 full_path=repo.to_os_independent_path(thumbnail_full_path),
                 original_filename=filename,
             )
@@ -1618,17 +1609,17 @@ class MediaManager(object):
             pass
 
         ############################################################
-        # LINK Objects
+        # File Instances
         ############################################################
         # link them
         # assign it as an output to the given version
-        version.outputs.append(link)
-        if web_version_link:
-            link.thumbnail = web_version_link
-            if thumbnail_link:
-                web_version_link.thumbnail = thumbnail_link
+        version.files.append(file)
+        if web_version_file:
+            file.thumbnail = web_version_file
+            if thumbnail_file:
+                web_version_file.thumbnail = thumbnail_file
 
-        return link
+        return file
 
 
 class Exposure(object):
@@ -2543,15 +2534,15 @@ def upload_thumbnail(task, thumbnail_full_path):
     thumbnail_os_independent_path = Repository.to_os_independent_path(
         thumbnail_final_full_path
     )
-    l_thumb = Link.query.filter(Link.full_path == thumbnail_os_independent_path).first()
+    f_thumb = File.query.filter(File.full_path == thumbnail_os_independent_path).first()
 
-    if not l_thumb:
-        l_thumb = Link(
+    if not f_thumb:
+        f_thumb = File(
             full_path=thumbnail_os_independent_path,
             original_filename=thumbnail_original_file_name,
         )
 
-    task.thumbnail = l_thumb
+    task.thumbnail = f_thumb
 
     # get a version of this Task
 
@@ -2559,10 +2550,10 @@ def upload_thumbnail(task, thumbnail_full_path):
     if v:
         for naming_parent in v.naming_parents:
             if not naming_parent.thumbnail:
-                naming_parent.thumbnail = l_thumb
+                naming_parent.thumbnail = f_thumb
                 DBSession.add(naming_parent)
 
-    DBSession.add(l_thumb)
+    DBSession.add(f_thumb)
     DBSession.commit()
 
     return True

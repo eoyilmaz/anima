@@ -62,9 +62,9 @@ class TDE4(DCCBase):
 
         tde4.loadProject(version.absolute_full_path)
         self.append_to_recent_files(version.absolute_full_path)
-        from anima.dcc import empty_reference_resolution
+        from anima.dcc.base import generate_empty_reference_resolution
 
-        return empty_reference_resolution()
+        return generate_empty_reference_resolution()
 
     def get_current_version(self):
         """Return the current version from environment

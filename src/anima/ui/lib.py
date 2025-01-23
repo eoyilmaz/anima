@@ -3,8 +3,6 @@ import os
 
 from qtpy import QtCore, QtGui, QtWidgets
 
-from anima.ui import qt_api
-
 # Choose the Qt library
 PYSIDE = "pyside"
 PYSIDE2 = "pyside2"

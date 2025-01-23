@@ -1,25 +1,41 @@
 # -*- coding: utf-8 -*-
 
+import functools
 import sys
 import os
 import logging
 from collections import namedtuple
 
-import anima.utils
-from anima.log import logger
-from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui.lib import QtCore, QtGui, QtWidgets
+from sqlalchemy import alias
 
+from stalker import File, LocalSession, Project, Status, SimpleEntity, Task, Version
+from stalker.db.session import DBSession
+
+import anima
+from anima import defaults
+from anima.dcc.base import DCCBase
+from anima.dcc.external import ExternalDCCFactory
+from anima.exc import PublishError
+from anima.log import logger
+from anima.recent import RecentFileManager
+from anima.representation import Representation
+from anima.ui import utils as ui_utils
+from anima.ui.base import AnimaDialogBase, ui_caller
+from anima.ui.dialogs import publish_checker, version_updater
+from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.views.task import TaskTreeView
 from anima.ui.widgets.common import RecentFilesComboBox, TakesListWidget
 from anima.ui.widgets.version import VersionsTableWidget
 
-from anima.utils import get_unique_variant_names
+from anima.utils import (
+    MediaManager,
+    get_unique_variant_names,
+    open_browser_in_location,
+    upload_thumbnail
+)
 
-if sys.version_info.major > 2:
-    exceptionMessageGenerator = lambda e: str(e)
-else:
-    exceptionMessageGenerator = lambda e: e.message
+
+exceptionMessageGenerator = lambda e: str(e)
 
 ref_depth_res = ["As Saved", "All", "Top Level Only", "None"]
 
@@ -771,8 +787,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
     def update_window_title(self):
         """updates the window title depending on the DCC and mode"""
-        import anima
-
         window_title = f"Anima Pipeline v{anima.__version__} "
 
         if self.dcc:
@@ -957,8 +971,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
     def logout(self):
         """log the current user out"""
-        from stalker import LocalSession
-
         lsession = LocalSession()
         lsession.delete()
         self.close()
@@ -977,8 +989,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if item:
             index = item.row()
             version = self.previous_versions_table_widget.versions[index]
-            from stalker import Version
-
             version = Version.query.get(version.id)
 
         # create the menu
@@ -1014,8 +1024,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             if version.is_published:
                 publish_action.setText("Un-Publish")
 
-            from anima import defaults
-
             if (
                 logged_in_user not in version.task.responsible
                 and not defaults.is_power_user(logged_in_user)
@@ -1035,7 +1043,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     # publish it
                     version.is_published = True
                     version.updated_by = logged_in_user
-                    from stalker.db.session import DBSession
 
                     DBSession.add(version)
                     DBSession.commit()
@@ -1045,8 +1052,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 elif choice == "Un-Publish":
                     # allow the user un-publish this version if it is not used
                     # by any other versions
-                    from stalker import Version
-
                     versions_using_this_versions = Version.query.filter(
                         Version.inputs.contains(version)
                     ).all()
@@ -1069,7 +1074,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     else:
                         version.is_published = False
                         version.updated_by = logged_in_user
-                        from stalker.db.session import DBSession
 
                         DBSession.add(version)
                         DBSession.commit()
@@ -1108,10 +1112,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                             QtWidgets.QMessageBox.No,
                         )
                         if answer == QtWidgets.QMessageBox.Yes:
-                            from stalker.db.session import DBSession
-
                             # remove any parent data
-
                             try:
                                 DBSession.delete(version)
                                 DBSession.commit()
@@ -1124,12 +1125,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         else:
                             return
 
-            from anima import utils
-
             if choice == "Browse Path...":
                 path = os.path.expandvars(os.path.expandvars(version.full_path))
                 try:
-                    utils.open_browser_in_location(path)
+                    open_browser_in_location(path)
                 except IOError:
                     QtWidgets.QMessageBox.critical(
                         self, "Error", f"Path doesn't exists:\n{path}"
@@ -1139,7 +1138,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     os.path.dirname(os.path.expandvars(version.full_path)), "Outputs"
                 )
                 try:
-                    utils.open_browser_in_location(path)
+                    open_browser_in_location(path)
                 except IOError:
                     QtWidgets.QMessageBox.critical(
                         self, "Error", f"Path doesn't exists:\n{path}"
@@ -1151,8 +1150,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 result = dialog.getOpenFileName()
                 file_path = result[0]
                 if file_path:
-                    from anima.utils import MediaManager
-
                     with open(file_path) as f:
                         MediaManager.upload_version_output(
                             version, f, os.path.basename(file_path)
@@ -1173,8 +1170,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     if ok:
                         # change the description of the version
                         version.description = new_description
-
-                        from stalker.db.session import DBSession
 
                         DBSession.add(version)
                         DBSession.commit()
@@ -1197,8 +1192,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 version.extension = self.dcc.extensions[0]
                 version.created_with = self.dcc.name
 
-                from stalker.db.session import DBSession
-
                 try:
                     DBSession.commit()
                 except BaseException:
@@ -1219,13 +1212,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     #     QtWidgets.QMessageBox.No
                     # )
                     # if answer == QtWidgets.QMessageBox.Yes:
-                    from stalker import Version
-
                     assert isinstance(version, Version)
                     ext = version.extension
                     version.update_paths()
                     version.extension = ext
-                    from stalker.db.session import DBSession
 
                     try:
                         DBSession.commit()
@@ -1237,8 +1227,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def clear_recent_files(self):
         """clears the recent files"""
         if self.dcc:
-            from anima.recent import RecentFileManager
-
             rfm = RecentFileManager()
             rfm[self.dcc.name] = []
             rfm.save()
@@ -1269,8 +1257,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # update recent files list
         if self.dcc:
-            from anima.recent import RecentFileManager
-
             rfm = RecentFileManager()
             try:
                 recent_files = rfm[self.dcc.name]
@@ -1319,9 +1305,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """wrapper for the tasks_tree_view.fill_ui() method"""
         self.tasks_tree_view.show_completed_projects = show_completed_projects
 
-        from sqlalchemy import alias
-        from stalker import Task, Project, Status
-        from stalker.db.session import DBSession
 
         inner_tasks = alias(Task.__table__)
         subquery = DBSession.query(inner_tasks.c.id).filter(
@@ -1379,9 +1362,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             logger.debug("clear takes widget")
             self.takes_list_widget.clear()
 
-            from stalker import SimpleEntity
-            from stalker.db.session import DBSession
-
             entity_type = (
                 DBSession.query(SimpleEntity.entity_type)
                 .filter(SimpleEntity.id == task_id)
@@ -1391,16 +1371,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             if entity_type == "Project":
                 return
 
-            from stalker import Task
-            from stalker.db.session import DBSession
-
             children_count = (
                 DBSession.query(Task.id).filter(Task.parent_id == task_id).count()
             )
 
             if children_count == 0:
-                from sqlalchemy import text
-
                 takes = get_unique_variant_names(
                     task_id,
                     include_reprs=self.repr_as_separate_takes_check_box.isChecked(),
@@ -1472,8 +1447,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.search_task_line_edit.setVisible(False)
 
         # fill programs list
-        from anima.dcc.external import ExternalDCCFactory
-
         env_factory = ExternalDCCFactory()
         env_names = env_factory.get_env_names(name_format=self.environment_name_format)
         self.dcc_combo_box.addItems(env_names)
@@ -1530,8 +1503,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if entity is None:
             return
 
-        from stalker import Task, Version
-
         version = None
         task = None
         if isinstance(entity, Version):
@@ -1560,8 +1531,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         if not self.dcc:
             # set the environment_comboBox
-            from anima.dcc.external import ExternalDCCFactory
-
             dcc_factory = ExternalDCCFactory()
             try:
                 dcc = dcc_factory.get_env(version.created_with)
@@ -1592,8 +1561,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         logger.debug("update_previous_versions_table_widget is started")
         self.previous_versions_table_widget.clear()
 
-        from stalker import Task
-
         task_id = None
         task_ids = self.tasks_tree_view.get_selected_task_ids()
         if task_ids:
@@ -1603,8 +1570,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return
 
         # do not display any version for a container task
-        from stalker.db.session import DBSession
-
         children_count = (
             DBSession.query(Task.id).filter(Task.parent_id == task_id).count()
         )
@@ -1622,8 +1587,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return
 
         # query the Versions of this type and take
-        from stalker import Version
-
         query = (
             DBSession.query(
                 # use only the necessary fields
@@ -1661,8 +1624,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :returns: :class:`~stalker.models.version.Version` instance
         """
         # create a new version
-        from stalker import Task
-
         task_id = None
         task_ids = self.tasks_tree_view.get_selected_task_ids()
         if task_ids:
@@ -1670,8 +1631,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         if not task_id:
             return None
-
-        from stalker.db.session import DBSession
 
         with DBSession.no_autoflush:
             task = Task.query.get(task_id)
@@ -1690,10 +1649,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         description = self.description_text_edit.toPlainText()
         # published = self.publish_checkBox.isChecked()
-
-        from stalker.db.session import DBSession
-        from stalker import Version
-
         try:
             version = Version(
                 task=task,
@@ -1736,7 +1691,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 error_message = f"{e}"
                 print(error_message)
                 QtWidgets.QMessageBox.critical(self, "Error", error_message)
-                from stalker.db.session import DBSession
 
                 DBSession.rollback()
                 return
@@ -1759,9 +1713,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
     def publisher_rejected(self, version=None):
         """runs when the publisher is rejected"""
-        from stalker import Version
-        from stalker.db.session import DBSession
-
         if version and isinstance(version, Version):
             if version:
                 DBSession.delete(version)
@@ -1781,14 +1732,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if answer == QtWidgets.QMessageBox.Yes:
             new_version = self.get_new_version(publish=True)
             if self.dcc and self.dcc.has_publishers:
-                import functools
-
                 callback = functools.partial(
                     self.save_as_wrapper, version=new_version, run_pre_publishers=False
                 )
                 # create the publish window
-                from anima.ui.dialogs import publish_checker
-
                 self.close()
                 dialog = publish_checker.UI(
                     environment=self.dcc,
@@ -1827,15 +1774,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return
 
         # call the environments save_as method
-        from stalker.db.session import DBSession
-
         is_external_env = False
         dcc = self.dcc
         if not dcc:
             # get the environment
             dcc_name = self.dcc_combo_box.currentText()
-            from anima.dcc.external import ExternalDCCFactory
-
             dcc_factory = ExternalDCCFactory()
             dcc = dcc_factory.get_env(dcc_name, self.environment_name_format)
             is_external_env = True
@@ -1887,8 +1830,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 DBSession.rollback()
                 return
 
-        from anima.exc import PublishError
-
         try:
             dcc.save_as(new_version, **kwargs)
         except (RuntimeError, PublishError) as e:
@@ -1926,8 +1867,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # check if the new version is pointing to a valid file
         # save the new version to the database
-        from stalker import Version
-
         new_version = Version.query.get(new_version.id)
         if not os.path.exists(new_version.absolute_full_path):
             # raise an error
@@ -1958,8 +1897,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not version_id:
             return
 
-        from stalker import Version
-
         self.chosen_version = Version.query.get(version_id)
 
         if self.chosen_version:
@@ -1974,8 +1911,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # get the new version
         old_version = self.previous_versions_table_widget.current_version
         skip_update_check = not self.check_updates_check_box.isChecked()
-
-        from stalker import Version
 
         old_version = Version.query.get(old_version.id)
 
@@ -2032,8 +1967,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # check the reference_resolution to update old versions
             if reference_resolution["create"] or reference_resolution["update"]:
                 # invoke the version_updater for this scene
-                from anima.ui.dialogs import version_updater
-
                 version_updater_main_dialog = version_updater.MainDialog(
                     environment=self.dcc,
                     parent=self,
@@ -2089,8 +2022,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             )
             return
 
-        from stalker import Version
-
         previous_version = Version.query.get(previous_version.id)
 
         if not self.check_version_file_exists(previous_version):
@@ -2116,8 +2047,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 # ask which one to reference
                 repr_message_box = QtWidgets.QMessageBox()
                 repr_message_box.setText("Which Repr.?")
-                from anima.representation import Representation
-
                 base_button = repr_message_box.addButton(
                     Representation.base_repr_name, QtWidgets.QMessageBox.ActionRole
                 )
@@ -2176,9 +2105,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """runs when the import_pushButton clicked"""
         # get the previous version
         previous_version_id = self.previous_versions_table_widget.current_version.id
-
-        from stalker import Version
-
         previous_version = Version.query.get(previous_version_id)
 
         if not self.check_version_file_exists(previous_version):
@@ -2205,13 +2131,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 )
 
     def clear_thumbnail(self):
-        """clears the thumbnail_graphicsView"""
-        from anima.ui import utils as ui_utils
-
+        """Clear the thumbnail_graphicsView."""
         ui_utils.clear_thumbnail(self.thumbnail_graphics_view)
 
     def update_thumbnail(self):
-        """updates the thumbnail for the selected task"""
+        """Update the thumbnail for the selected task."""
         # get the current task
         self.clear_thumbnail_push_button.setEnabled(False)
         task_id = None
@@ -2220,9 +2144,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             task_id = task_ids[0]
 
         if task_id:
-            from anima.ui import utils as ui_utils
-            from stalker import Task
-
             task = Task.query.get(task_id)
             if task and task.thumbnail:
                 self.clear_thumbnail_push_button.setEnabled(True)
@@ -2241,14 +2162,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not task_id:
             return
 
-        from stalker import Task
-
         task = Task.query.get(task_id)
 
         if not task:
             return
-
-        from anima.ui import utils as ui_utils
 
         thumbnail_full_path = ui_utils.choose_thumbnail(
             self,
@@ -2260,7 +2177,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if thumbnail_full_path == "":
             return
 
-        anima.utils.upload_thumbnail(task, thumbnail_full_path)
+        upload_thumbnail(task, thumbnail_full_path)
 
         # update the thumbnail
         self.update_thumbnail()
@@ -2282,9 +2199,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not task_id:
             return
 
-        from stalker import SimpleEntity
-        from stalker.db.session import DBSession
-
         result = (
             DBSession.query(SimpleEntity.thumbnail_id)
             .filter(SimpleEntity.id == task_id)
@@ -2305,9 +2219,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         if answer == QtWidgets.QMessageBox.Yes:
             # remove the thumbnail and its thumbnail and its thumbnail
-            from stalker import Task, Link
-
-            t = Link.query.filter(Link.id == thumb_id).first()
+            t = File.query.filter(File.id == thumb_id).first()
             task = Task.query.get(task_id)
             task.thumbnail = None
             if t.thumbnail:
@@ -2328,15 +2240,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :param path:
         :return:
         """
-        from anima.dcc.base import DCCBase
-
         dcc = DCCBase()
         if path:
             if path.isdigit():
                 # path is task id
                 task_id = int(path)
-                from stalker import Task
-
                 task = Task.query.filter(Task.id == task_id).first()
                 self.restore_ui(task)
             else:

@@ -1,10 +1,40 @@
 # -*- coding: utf-8 -*-
 
 import os
+from typing import List, Union
 
+from stalker import File, Project, Repository, Shot, Version
+from stalker.db.session import DBSession
+
+
+from anima import defaults
+from anima import representation  # extend Stalker classes
 from anima.log import logger
 from anima.recent import RecentFileManager
 from anima.utils.progress import ProgressManagerFactory
+
+
+def generate_empty_reference_resolution(root=None, leave=None, update=None, create=None):
+    """Generate an empty reference_resolution dictionary.
+
+    Generate a ``Reference Resolution`` dictionary, where there are keys like
+    'root', 'leave', 'update', 'create' showing:
+
+        root: the versions referenced directly to the root,
+        leave: Versions those doesn't have any new versions,
+        update: Versions does have an updated version,
+        create: Versions that should be updated by creating a new published version
+            because its references has updated versions.
+
+    Returns:
+        dict: The reference resolution dictionary.
+    """
+    return {
+        "root": [] if root is None else root,
+        "leave": [] if leave is None else leave,
+        "update": [] if update is None else update,
+        "create": [] if create is None else create,
+    }
 
 
 class DCCBase(object):
@@ -12,39 +42,34 @@ class DCCBase(object):
 
     In Anima Pipeline, a DCC is a host application like Maya, Nuke, Houdini etc.
 
-    Generally a GUI for the end user is given a DCCBase derived class instance
-    which helps the QtGui to be able to open, save, import or export a Version
-    without knowing the details of the DCC.
+    Generally a GUI for the end user is given a class instance which is derived
+    from DCCBase which helps the UI to be able to open, save, import or export
+    a Version without knowing the details of the DCC.
 
-    The DCC object supplies **methods** like ``open``, ``save``,
+    The DCC instance supplies **methods** like ``open``, ``save``,
     ``export``,  ``import`` or ``reference``. The main duty of the DCC
     object is to introduce the host application (Maya, Houdini, Nuke, etc.) to
     Stalker and let it to open, save, export, import or reference a file.
 
-    It is the pipeline developers duty to create the DCC classes for the
-    applications used in the studio by instantiating this class and overriding
-    the methods as necessary.
+    It is the pipeline developers duty to create the DCC class implementation
+    for the applications used in the studio by deriving a new class from
+    DCCBase and overriding its methods as necessary.
 
     Here is a brief example for creating an DCC for a generic program::
 
-        from Stalker import DCCBase
+        from anima.dcc.base import DCCBase
 
         class MyProgramEnv(DCCBase):
-            \"""This is a class which will be used by the UI
-            \"""
+            '''This is a class which will be used by the UI'''
 
             def open():
-                \"""uses the programs own Python API to open a version of an
-                asset
-                \"""
+                '''Use the Python API of the DCC to open a version.'''
 
                 # do anything that needs to be done before opening the file
                 my_programs_own_python_api.open(filepath=self.version.full_path)
 
-            def save():
-                \"""uses the programs own Python API to save the current file
-                as a new version.
-                \"""
+            def save_as():
+                '''Use the Python API of the DCC to save the current scene.'''
 
                 # do anything that needs to be done before saving the file
                 my_programs_own_python_api.save(filepath=self.version.full_path)
@@ -53,8 +78,8 @@ class DCCBase(object):
 
     and that is it.
 
-    The DCC class by default has a property called ``version``. Holding
-    the current open Version. It is None for a new scene and a
+    The DCC class by default has a property called ``version``. Holding the
+    current open Version. It is None for a new scene and a
     :class:`~stalker.models.version.Version` instance in any other case.
     """
 
@@ -90,47 +115,54 @@ class DCCBase(object):
         self._name = name
 
     def save_as(self, version, run_pre_publishers=True):
-        """The save as action of this DCC. It should save the current
-        scene or file to the given version.full_path
+        """The save as action of this DCC.
 
-        :param version: stalker.models.version.Version instance.
-        :param bool run_pre_publishers: Run pre publishers of this DCC
-          or not. Default value is True
+        It should save the current scene or file to the given `version.full_path`
+
+        Args:
+            version (Version): The :class:`~stalker.models.version.Version`
+                instance to save.
+            run_pre_publishers (bool): Run pre publishers of this DCC or not.
+                Default value is True.
         """
         raise NotImplementedError("save_as is not implemented")
 
-    def export_as(self, version):
-        """Exports the contents of the open document as the given version.
+    def export_as(self, version: Version):
+        """Export the contents of the open document as the given version.
 
-        :param version: A :class:`~stalker.models.version.Version` instance
-          holding the desired version.
+        Args:
+            version (Version): A :class:`~stalker.models.version.Version` instance
+                holding the desired version.
         """
         raise NotImplementedError("export_as is not implemented")
 
     def open(
         self,
-        version,
-        force=False,
-        representation=None,
-        reference_depth=0,
-        skip_update_check=False,
+        version: Version,
+        force: bool = False,
+        representation: str = None,
+        reference_depth: int = 0,
+        skip_update_check: bool = False,
     ):
-        """the open action"""
+        """Open the given Version."""
         raise NotImplementedError("open is not implemented")
 
-    def import_(self, version):
-        """the import action"""
+    def import_(self, version: Version):
+        """Import the given Version."""
         raise NotImplementedError("import_ is not implemented")
 
-    def reference(self, version, use_namespace=True):
-        """the reference action"""
+    def reference(self, version: Version, use_namespace: bool = True):
+        """Reference the given Version."""
         raise NotImplementedError("reference is not implemented")
 
-    def trim_repo_path(self, path):
-        """Trims the repository path value from the given path
+    def trim_repo_path(self, path: str) -> str:
+        """Trim the repository path value from the given path.
 
-        :param path: The path that wanted to be trimmed
-        :return: str
+        Args:
+            path (str): The path that wanted to be trimmed.
+
+        Returns:
+            str: The trimmed path.
         """
         # get the repo first
         repo = self.find_repo(path)
@@ -150,49 +182,48 @@ class DCCBase(object):
         return path
 
     @classmethod
-    def find_repo(cls, path):
-        """returns the repository from the given path
+    def find_repo(cls, path: str) -> Union[None, Repository]:
+        """Return the repository from the given path.
 
-        :param str path: path in a repository
-        :return: stalker.models.repository.Repository
+        Args:
+            path (str): Path in a repository.
+
+        Returns:
+            stalker.models.repository.Repository: The 
         """
         # first find the repository
-        from stalker import Repository
-
         return Repository.find_repo(path)
 
-    def get_versions_from_path(self, path):
-        """Finds Version instances from the given path value.
+    def get_versions_from_path(self, path: str) -> List[Version]:
+        """Find Version instances from the given path value.
 
-        Finds and returns the :class:`~stalker.models.version.Version`
+        Find and return the :class:`~stalker.models.version.Version`
         instances from the given path value.
 
-        Returns an empty list if it can't find any matching.
+        Return an empty list if it can't find any matching.
 
-        This method is different than
-        :meth:`~anima.dcc.base.DCCBase.get_version_from_full_path`
-        because it returns a list of
-        :class:`~stalker.models.version.Version` instances which are
-        residing in that path. The list is ordered by the ``id`` s of the
-        instances.
+        This method is different than :meth:`~.get_version_from_full_path`
+        because it returns a list of :class:`~stalker.Version` instances which
+        are residing in that path. The list is ordered by the ``id`` values of
+        the instances.
 
-        :param path: A path which has possible
-            :class:`~stalker.models.version.Version` instances.
+        Args:
+            path (str): A path which has possible :class:`~stalker.File`
+                instances that are related to the Version that is being looked
+                for.
 
-        :return: A list of :class:`~stalker.models.version.Version` instances.
+        Returns:
+            List[Version]: A list of :class:`~stalker.models.version.Version`
+                instances.
         """
         if not path:
             return []
 
         # convert '\\' to '/'
         path = os.path.normpath(path).replace("\\", "/")
-        from stalker import Repository
 
         os_independent_path = Repository.to_os_independent_path(path)
         logger.debug("os_independent_path: {}".format(os_independent_path))
-
-        from stalker import Version
-        from stalker.db.session import DBSession
 
         # try to get all versions with that info
         with DBSession.no_autoflush:
@@ -203,18 +234,19 @@ class DCCBase(object):
         return versions
 
     @classmethod
-    def get_version_from_full_path(cls, full_path):
-        """Finds the Version instance from the given full_path value.
+    def get_version_from_full_path(cls, full_path: str) -> Version:
+        """Find the Version instance from the given full_path value.
 
-        Finds and returns a :class:`~stalker.models.version.Version` instance
+        Find and return a :class:`~stalker.models.version.Version` instance
         from the given full_path value.
 
         Returns None if it can't find any matching.
 
-        :param full_path: The full_path of the desired
-            :class:`~stalker.models.version.Version` instance.
+        Args:
+            full_path (str): The full_path of the desired `Version` instance.
 
-        :return: :class:`~stalker.models.version.Version`
+        Returns:
+            Union[None, Version]: Return the Version if it is found.
         """
         if full_path is None or full_path == "":
             return
@@ -224,37 +256,41 @@ class DCCBase(object):
         full_path = os.path.normpath(os.path.expandvars(full_path)).replace("\\", "/")
 
         # trim repo path
-        from stalker import Repository, Version
-
         os_independent_path = Repository.to_os_independent_path(full_path)
 
         # try to get a version with that info
         logger.debug(f"getting a version with path: {full_path}")
 
-        version = Version.query.filter(Version.full_path == os_independent_path).first()
+        repr = File.query.filter(File.full_path == os_independent_path).first()
+        # finding the repr
+        if repr is None:
+            return
+
+        version = Version.query.filter(Version.files.contains(repr)).first()
+
         logger.debug(f"version: {version}")
         return version
 
-    def get_current_version(self):
+    def get_current_version(self) -> Union[None, Version]:
         """Returns the current Version instance from the DCC.
 
         :returns: :class:`~stalker.models.version.Version` instance or None
         """
         raise NotImplementedError("get_current_version is not implemented")
 
-    def append_to_recent_files(self, path):
+    def append_to_recent_files(self, path: str):
         """appends the given path to the recent files list"""
         # add the file to the recent file list
         rfm = RecentFileManager()
         rfm.add(self.name, path)
 
-    def get_version_from_recent_files(self):
-        """This will try to create a :class:`.Version` instance by looking at
-        the recent files list.
+    def get_version_from_recent_files(self) -> Version:
+        """Try to return a `Version` instance from the recent files list.
 
         It will return None if it can not find one.
 
-        :return: :class:`.Version`
+        Returns:
+            Union[None, Version]: The recent Version if possible or None. 
         """
         version = None
 
@@ -280,8 +316,8 @@ class DCCBase(object):
 
         return version
 
-    def get_last_version(self):
-        """Returns the last opened Version instance from the DCC.
+    def get_last_version(self) -> Union[None, Version]:
+        """Return the last opened Version instance from the DCC.
 
         * It first looks at the current open file full path and tries to match
           it with a Version instance.
@@ -291,7 +327,8 @@ class DCCBase(object):
           its path
         * Still not able to find any Version instances returns None
 
-        :returns: :class:`~stalker.models.version.Version` instance or None.
+        Returns:
+            Version: The Version or None.
         """
         version = self.get_current_version()
 
@@ -301,7 +338,7 @@ class DCCBase(object):
 
         return version
 
-    def get_project(self):
+    def get_project(self) -> Project:
         """returns the current project from DCC"""
         raise NotImplementedError("get_project is not implemented")
 
@@ -313,11 +350,12 @@ class DCCBase(object):
         raise NotImplementedError("set_project is not implemented")
 
     def update_version_inputs(self, parent_ref=None):
-        """updates the references list of the current version
+        """Update the references list of the current version.
 
-        :param parent_ref: the parent ref, if given will override the given
-          version argument and a Version instance will be get from the given
-          parent_ref.path.
+        Args:
+            parent_ref: The parent ref, if given will override the given
+                version argument and a Version instance will be get from the
+                given parent_ref.path.
         """
         logger.debug(f"parent_ref: {parent_ref}")
 
@@ -329,26 +367,25 @@ class DCCBase(object):
             logger.debug("have a parent_ref")
             version = self.get_version_from_full_path(parent_ref.path)
 
-        if version:
-            logger.debug(f"got a version: {version.absolute_full_path}")
-            # use the original version if it is a Repr version
-            from anima.representation import Representation
+        if version is None:
+            return
 
-            if Representation.repr_separator in version.variant_name and version.parent:
-                version = version.parent
-                logger.debug(
-                    f"this is a representation switching to its parent: {version}"
-                )
+        logger.debug(f"got a version: {version.absolute_full_path}")
+        # use the base representation if it is not
 
-            # update the reference list
-            referenced_versions = self.get_referenced_versions(parent_ref)
-            version.inputs = referenced_versions
+        if version.variant_name and version.parent:
+            version = version.parent
+            logger.debug(
+                f"this is a representation switching to its parent: {version}"
+            )
 
-            # commit data to the database
-            from stalker.db.session import DBSession
+        # update the reference list
+        referenced_versions = self.get_referenced_versions(parent_ref)
+        version.inputs = referenced_versions
 
-            DBSession.add(version)
-            DBSession.commit()
+        # commit data to the database
+        DBSession.add(version)
+        DBSession.commit()
 
     def deep_version_inputs_update(self):
         """Updates the inputs of the references of the current scene"""
@@ -359,8 +396,8 @@ class DCCBase(object):
         dictionary which has three keys called 'leave', 'update' and 'create'.
 
         Each of these keys correspond to a value of a list of
-        :class:`~stalker.model.version.Version` instances. Where the list in 'leave'
-        key shows the Versions referenced (or deeply referenced) to the
+        :class:`~stalker.model.version.Version` instances. Where the list in
+        'leave' key shows the Versions referenced (or deeply referenced) to the
         current scene which doesn't need to be changed.
 
         The list in 'update' key holds Versions those need to be updated to a
@@ -392,9 +429,7 @@ class DCCBase(object):
         if caller:
             caller.step()
 
-        from anima.dcc import empty_reference_resolution
-
-        reference_resolution = empty_reference_resolution(
+        reference_resolution = generate_empty_reference_resolution(
             root=self.get_referenced_versions()
         )
 
@@ -483,15 +518,13 @@ class DCCBase(object):
             # so append this v to the related action list
             reference_resolution[action].append(v)
 
-            # from stalker import Version
-            # assert isinstance(v, Version)
             caller.step(message=v.nice_name)
 
         caller.end_progress()
 
         return reference_resolution
 
-    def get_referenced_versions(self, parent_ref=None):
+    def get_referenced_versions(self, parent_ref=None) -> List[File]:
         """Returns the :class:`~stalker.models.version.Version` instances which
         are referenced in to the current scene
 
@@ -621,8 +654,6 @@ class DCCBase(object):
         :return:
         """
         # use the user home directory .stalker_local_backup
-        from anima import defaults
-
         return os.path.normpath(
             os.path.expanduser(f"{defaults.local_cache_folder}/projects_backup")
         ).replace("\\", "/")
@@ -631,8 +662,6 @@ class DCCBase(object):
         """creates the project structure
         :param version: Stalker version
         """
-        import os
-
         project_path = version.absolute_path
         for path in self.project_structure:
             # TODO: use exist_ok=True for Python 3.x
@@ -686,8 +715,6 @@ class DCCBase(object):
 
     @classmethod
     def get_shot(cls, version):
-        from stalker import Shot
-
         for task in version.task.parents:
             if isinstance(task, Shot):
                 return task
