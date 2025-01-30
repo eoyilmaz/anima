@@ -16,7 +16,7 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
+class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     """A simple dialog for creating Shots in bulk."""
 
     # TODO: Make this configurable with config.py
@@ -57,8 +57,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     }
 
     def __init__(self, parent=None, project=None, parent_task=None):
-        super(MainDialog, self).__init__(parent)
-
+        QtWidgets.QDialog.__init__(self, parent=parent)
         self._setup()
 
     def _setup(self):

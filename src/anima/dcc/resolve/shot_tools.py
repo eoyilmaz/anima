@@ -16,6 +16,7 @@ import os
 from anima.dcc import blackmagic
 from anima.dcc.base import DCCBase
 from anima.log import logger
+from anima.ui.base import AnimaDialogBase
 from anima.ui.lib import QtCore, QtWidgets
 from anima.ui.utils import ColorList, set_widget_bg_color
 
@@ -1713,8 +1714,6 @@ class ShotManagerUI(object):
             return
 
         # get logged in user
-        from anima.ui.base import AnimaDialogBase
-
         anima_dialog_base = AnimaDialogBase()
         anima_dialog_base.get_logged_in_user()
 

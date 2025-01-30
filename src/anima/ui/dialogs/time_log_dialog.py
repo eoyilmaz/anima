@@ -38,12 +38,12 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
+class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     """The TimeLog Dialog."""
 
     def __init__(self, parent=None, task=None, timelog=None):
         logger.debug("initializing the interface")
-        super(MainDialog, self).__init__(parent)
+        QtWidgets.QDialog.__init__(self, parent=parent)
 
         # store the logged in user
         self.logged_in_user = None

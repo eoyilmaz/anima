@@ -25,8 +25,8 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
-    """The Task Dialog"""
+class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
+    """The Task Dialog."""
 
     __company_name__ = "Erkan Ozgur Yilmaz"
     __app_name__ = "Project Dialog"
@@ -36,7 +36,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
     def __init__(self, parent=None, parent_task=None, tasks=None):
         logger.debug("initializing the interface")
-        super(MainDialog, self).__init__(parent)
+        QtWidgets.QDialog.__init__(self, parent=parent)
 
         # store the logged in user
         self.logged_in_user = None

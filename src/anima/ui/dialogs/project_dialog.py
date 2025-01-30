@@ -2,6 +2,8 @@
 
 import re
 
+from stalker import Status, StatusList
+
 from anima.log import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtWidgets
@@ -19,14 +21,14 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
+class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     """The Project Dialog"""
 
     max_project_name_length = 32
 
     def __init__(self, parent=None, project=None):
         logger.debug("initializing the interface")
-        super(MainDialog, self).__init__(parent)
+        QtWidgets.QDialog.__init__(self, parent=parent)
 
         # store the logged in user
         self.logged_in_user = None
@@ -387,17 +389,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.fill_repository_combo_box()
         self.fill_structure_combo_box()
 
-        # fill status field
-        sql = """select
-        "SimpleEntities".id,
-        "SimpleEntities".name
-    from "Statuses"
-    join "SimpleEntities" on "Statuses".id = "SimpleEntities".id
-    join "StatusList_Statuses" on "Statuses".id = "StatusList_Statuses".status_id
-    join "StatusLists" on "StatusLists".id = "StatusList_Statuses".status_list_id
-    where "StatusLists".target_entity_type = 'Project'"""
-
-        all_project_statuses = DBSession.connection().execute(sql).fetchall()
+        project_status_list = StatusList.query.filter(StatusList.target_entity_type == 'Project').first()
+        all_project_statuses = [(status.id, status.name) for status in project_status_list.statuses]
 
         for st_id, st_name in all_project_statuses:
             self.status_combo_box.addItem(st_name, st_id)

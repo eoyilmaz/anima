@@ -4,17 +4,17 @@
 import sys
 
 from stalker import LocalSession
+from stalker.db.session import DBSession
 
 from anima.log import logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 
 class AnimaDialogBase(object):
-    """A simple class to hold basic common functions for dialogs"""
+    """A simple class to hold basic common functions for dialogs."""
 
     def center_window(self):
-        """centers the window to the main application window"""
-
+        """Center the window to the main application window."""
         # if there is no main application then fall back to centering to the
         # screen that the mouse pointer is in
         parent = self.parent()
@@ -36,7 +36,7 @@ class AnimaDialogBase(object):
         self.move(left, top)
 
     def center_window_to_screen(self):
-        """centers the window to the screen that the mouse pointer is in"""
+        """Center the window to the screen that the mouse pointer is in."""
         desktop = QtWidgets.QApplication.desktop()
         cursor_pos = QtGui.QCursor.pos()
         desktop_number = desktop.screenNumber(cursor_pos)
@@ -50,15 +50,13 @@ class AnimaDialogBase(object):
         )
 
     def get_logged_in_user(self):
-        """returns the logged in user"""
+        """Return the logged in user."""
         # Fix issues about this method being a part of a QLayout instead of a QDialog
         parent = None
         if isinstance(self, QtWidgets.QDialog):
             parent = self
 
         local_session = LocalSession()
-        from stalker.db.session import DBSession
-
         with DBSession.no_autoflush:
             logged_in_user = local_session.logged_in_user
 

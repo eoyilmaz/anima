@@ -16,11 +16,11 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
+class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     """Conformer MainDialog"""
 
     def __init__(self, *args, **kwargs):
-        super(MainDialog, self).__init__(*args, **kwargs)
+        QtWidgets.QDialog.__init__(self, *args, **kwargs)
         self.vertical_layout = None
         self._setup_ui()
 

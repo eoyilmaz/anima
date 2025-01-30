@@ -23,7 +23,7 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
+class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     """The main dialog of the version updater system
 
     The version_tuple list consist of a Version instance and a reference
@@ -34,7 +34,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """
 
     def __init__(self, environment=None, parent=None, reference_resolution=None):
-        super(MainDialog, self).__init__(parent)
+        QtWidgets.QDialog.__init__(self, parent)
         self.new_versions = []
         self.versions_tree_view = None
         self.select_none_push_button = None

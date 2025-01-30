@@ -22,11 +22,11 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, ToolboxDialog, **kwargs)
 
 
-class ToolboxDialog(QtWidgets.QDialog, AnimaDialogBase):
+class ToolboxDialog(AnimaDialogBase, QtWidgets.QDialog):
     """The toolbox dialog"""
 
     def __init__(self, environment=None, parent=None):
-        super(ToolboxDialog, self).__init__(parent)
+        QtWidgets.QDialog.__init__(self, parent)
         self._setup_ui()
 
     def _setup_ui(self):

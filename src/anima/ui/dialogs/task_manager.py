@@ -16,7 +16,7 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
+class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     """Bulk Task Manager Dialog to manage tasks in bulk.
 
     This UI filters parent tasks and displays the child tasks in a
@@ -24,7 +24,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """
 
     def __init__(self, parent=None):
-        super(MainDialog, self).__init__(parent=parent)
+        QtWidgets.QDialog.__init__(self, parent=parent)
 
         self.generic_selection_text = "== ALL =="
 

@@ -18,14 +18,14 @@ def UI(app_in=None, executor=None):
     return ui_caller(app_in, executor, MainDialog)
 
 
-class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
+class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     """This is a simple login dialog which connects to Stalker to authenticate
     the username/password couple.
     """
 
     def __init__(self, parent=None):
         logger.debug("initializing the interface")
-        super(MainDialog, self).__init__(parent)
+        QtWidgets.QDialog.__init__(self, parent=parent)
         self.success = False
         self.login_or_email_label = None
         self.login_or_email_line_edit = None

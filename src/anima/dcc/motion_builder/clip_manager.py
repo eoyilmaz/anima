@@ -248,7 +248,7 @@ class ClipFieldGrp(object):
             self.next_field.update_cut_in_out_from_neighbours()
 
 
-class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
+class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     """Bulk Task Manager Dialog to manage tasks in bulk.
 
     This UI filters parent tasks and displays the child tasks in a
@@ -256,7 +256,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """
 
     def __init__(self, parent=None):
-        super(MainDialog, self).__init__(parent=parent)
+        QtWidgets.QDialog.__init__(self, parent=parent)
 
         self.clip_fields = []
         self._setup_ui()

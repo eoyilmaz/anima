@@ -18,11 +18,11 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
+class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     """The structure Dialog"""
 
     def __init__(self, parent=None, structure=None):
-        super(MainDialog, self).__init__(parent=parent)
+        QtWidgets.QDialog.__init__(self, parent=parent)
         self.structure = structure
         self.mode = "Create"
         if self.structure:

@@ -27,7 +27,7 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, VersionMover, **kwargs)
 
 
-class VersionMover(QtWidgets.QDialog, AnimaDialogBase):
+class VersionMover(AnimaDialogBase, QtWidgets.QDialog):
     """Moves versions from one task to other.
 
     It is capable of moving the files or just copying and creating a new
@@ -35,7 +35,7 @@ class VersionMover(QtWidgets.QDialog, AnimaDialogBase):
     """
 
     def __init__(self, parent=None):
-        super(VersionMover, self).__init__(parent)
+        QtWidgets.QDialog.__init__(self, parent)
 
         self.vertical_layout = None
         self.horizontal_layout = None

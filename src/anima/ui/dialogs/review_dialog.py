@@ -29,11 +29,11 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, ReviewDialog, **kwargs)
 
 
-class ReviewDialog(QtWidgets.QDialog, AnimaDialogBase):
+class ReviewDialog(AnimaDialogBase, QtWidgets.QDialog):
     """review dialog"""
 
     def __init__(self, task=None, reviewer=None, review_type=None, parent=None):
-        super(ReviewDialog, self).__init__(parent=parent)
+        QtWidgets.QDialog.__init__(self, parent=parent)
         self.task = task
         self.reviewer = reviewer
         self.review_type = review_type

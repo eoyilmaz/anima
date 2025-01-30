@@ -377,7 +377,7 @@ class PublisherRunner(threading.Thread):
             publisher.run_publisher()
 
 
-class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
+class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     """Runs publishers in a neat way.
 
     This UI filters parent tasks and displays the child tasks in a
@@ -387,7 +387,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def __init__(
         self, parent=None, environment=None, publish_callback=None, version=None
     ):
-        super(MainDialog, self).__init__(parent=parent)
+        QtWidgets.QDialog.__init__(self, parent=parent)
         self.environment = environment
         self.publishers = []
         self.publish_callback = publish_callback

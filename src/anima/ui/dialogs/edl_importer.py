@@ -56,7 +56,7 @@ class LineEdit(QtWidgets.QLineEdit):
         self.setText(path)
 
 
-class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
+class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     """The Main Window for EDL Importer.
 
     This is mainly written for AVID Media Composer. It makes it easy to import
@@ -67,7 +67,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """
 
     def __init__(self):
-        super(MainDialog, self).__init__()
+        QtWidgets.QDialog.__init__(self)
         self.media_files_path_line_edit = None
         self.edl_path_line_edit = None
         self.edl_preview_plain_text_edit = None

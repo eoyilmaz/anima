@@ -19,7 +19,7 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
+class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     """The task picker dialog for easy task selection.
 
     This dialog is created to help users easily pick tasks in a complex task
@@ -32,7 +32,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """
 
     def __init__(self, parent=None, project=None, allow_multi_selection=False):
-        super(MainDialog, self).__init__(parent)
+        QtWidgets.QDialog.__init__(self, parent=parent)
         self._setup_ui()
 
         # create the custom task tree view
