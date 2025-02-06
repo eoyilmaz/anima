@@ -337,9 +337,9 @@ This system will be updated in Afanasy."""
     def generate_job_name(cls):
         """generates a job name according to the current scene"""
         # first check if it is a Stalker Project
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
-        m = mayaEnv.Maya()
+        m = mayaDCC.Maya()
         v = m.get_current_version()
         if v is not None:
             from stalker import Version

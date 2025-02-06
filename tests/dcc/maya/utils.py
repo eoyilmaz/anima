@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pymel.core as pm
-from anima.dcc.mayaEnv import Maya
+from anima.dcc.mayaDCC import Maya
 from stalker import Version
 from stalker.db.session import DBSession
 

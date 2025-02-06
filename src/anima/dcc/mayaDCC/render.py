@@ -6,7 +6,7 @@ import re
 import tempfile
 
 import anima
-from anima.dcc.mayaEnv import auxiliary
+from anima.dcc.mayaDCC import auxiliary
 from anima.utils.progress import ProgressManagerFactory
 
 from maya import cmds as cmds, mel as mel
@@ -107,7 +107,7 @@ class Render(object):
         """sets up a the necessary locator for teh Vertigo effect for the
         selected camera
         """
-        from anima.dcc.mayaEnv import vertigo
+        from anima.dcc.mayaDCC import vertigo
 
         cam = pm.ls(sl=1)[0]
         vertigo.setup_look_at(cam)
@@ -115,7 +115,7 @@ class Render(object):
     @classmethod
     def vertigo_setup_vertigo(cls):
         """sets up a Vertigo effect for the selected camera"""
-        from anima.dcc.mayaEnv import vertigo
+        from anima.dcc.mayaDCC import vertigo
 
         cam = pm.ls(sl=1)[0]
         vertigo.setup_vertigo(cam)
@@ -123,7 +123,7 @@ class Render(object):
     @classmethod
     def vertigo_delete(cls):
         """deletes the Vertigo setup for the selected camera"""
-        from anima.dcc.mayaEnv import vertigo
+        from anima.dcc.mayaDCC import vertigo
 
         cam = pm.ls(sl=1)[0]
         vertigo.delete(cam)
@@ -149,7 +149,7 @@ class Render(object):
         """Deletes the display layers in the current scene"""
         # switch to default render layer before deleting anything
         # this will prevent layers to be non-deletable
-        from anima.dcc.mayaEnv import auxiliary
+        from anima.dcc.mayaDCC import auxiliary
 
         auxiliary.switch_to_default_render_layer()
         pm.delete(pm.ls(type=["displayLayer"]))
@@ -159,7 +159,7 @@ class Render(object):
         """Deletes the render layers in the current scene"""
         # switch to default render layer before deleting anything
         # this will prevent layers to be non-deletable
-        from anima.dcc.mayaEnv import auxiliary
+        from anima.dcc.mayaDCC import auxiliary
 
         auxiliary.switch_to_default_render_layer()
         pm.delete(pm.ls(type=["renderLayer"]))
@@ -188,9 +188,9 @@ class Render(object):
         It does that by adding the repository environment variable to the file
         paths.
         """
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
-        m = mayaEnv.Maya()
+        m = mayaDCC.Maya()
         m.replace_external_paths()
 
     @classmethod
@@ -686,9 +686,9 @@ class Render(object):
     @classmethod
     def update_render_settings(cls):
         """updates render settings for current renderer"""
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
-        m = mayaEnv.Maya()
+        m = mayaDCC.Maya()
         v = m.get_current_version()
         if v:
             m.set_render_filename(version=v)
@@ -696,7 +696,7 @@ class Render(object):
     @classmethod
     def afanasy_job_submitter(cls):
         """Opens the Afanasy job sumitter UI"""
-        from anima.dcc.mayaEnv import afanasy
+        from anima.dcc.mayaDCC import afanasy
 
         ui = afanasy.UI()
         ui.show()
@@ -704,7 +704,7 @@ class Render(object):
     @classmethod
     def auto_convert_to_redshift(cls):
         """converts the current scene to Redshift"""
-        from anima.dcc.mayaEnv import ai2rs
+        from anima.dcc.mayaDCC import ai2rs
 
         cm = ai2rs.ConversionManager()
         cm.auto_convert()
@@ -712,7 +712,7 @@ class Render(object):
     @classmethod
     def convert_nodes_to_redshift(cls):
         """converts the selected nodes to Redshift"""
-        from anima.dcc.mayaEnv import ai2rs
+        from anima.dcc.mayaDCC import ai2rs
 
         cm = ai2rs.ConversionManager()
         for node in pm.selected():
@@ -1951,7 +1951,7 @@ class Render(object):
     def dummy_window_light_plane(cls):
         """creates or updates the dummy window plane for the given area light"""
         area_light_list = pm.selected()
-        from anima.dcc.mayaEnv import auxiliary
+        from anima.dcc.mayaDCC import auxiliary
 
         for light in area_light_list:
             dwl = auxiliary.DummyWindowLight()
@@ -2282,7 +2282,7 @@ class Render(object):
     def generate_reflection_curve(self):
         """Generates a curve which helps creating specular at the desired point"""
         from maya.OpenMaya import MVector
-        from anima.dcc.mayaEnv import auxiliary
+        from anima.dcc.mayaDCC import auxiliary
 
         vtx = pm.ls(sl=1)[0]
         normal = vtx.getNormal(space="world")
@@ -2453,10 +2453,10 @@ class Render(object):
         import os
         import tempfile
         import shutil
-        from anima.dcc.mayaEnv import auxiliary
-        from anima.dcc import mayaEnv
+        from anima.dcc.mayaDCC import auxiliary
+        from anima.dcc import mayaDCC
 
-        m = mayaEnv.Maya()
+        m = mayaDCC.Maya()
         v = m.get_current_version()
 
         nodes = pm.ls(sl=1)
@@ -2763,9 +2763,9 @@ class MayaColorManagementConfigurator(object):
     @classmethod
     def get_project_color_management_pref_name(cls):
         """Return the current project's color management profile name."""
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
-        m = mayaEnv.Maya()
+        m = mayaDCC.Maya()
         v = m.get_current_version()
         maya_specific_config = cls.get_maya_specific_config()
         if not v:
@@ -3195,10 +3195,10 @@ class LightingSceneBuilder(object):
             )
 
         # open the animation version
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
         # get the current version
-        m = mayaEnv.Maya()
+        m = mayaDCC.Maya()
         # store the current version to open later on
         lighting_version = m.get_current_version()
         m.open(
@@ -3375,10 +3375,10 @@ class LightingSceneBuilder(object):
 
         :return:
         """
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
         # get the current version
-        m = mayaEnv.Maya()
+        m = mayaDCC.Maya()
         v = m.get_current_version()
         if not v:
             raise RuntimeError(
@@ -3518,7 +3518,7 @@ class LightingSceneBuilder(object):
             look_dev_root_node.v.set(0)
 
             if transfer_uvs and cache_root_nodes:
-                from anima.dcc.mayaEnv import modeling
+                from anima.dcc.mayaDCC import modeling
 
                 pm.select(None)
                 pm.select([look_dev_root_node, cache_root_nodes[0]])

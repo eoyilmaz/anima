@@ -30,10 +30,10 @@ except NameError as e:
 
 env_paths = [
     "../../../",
-    "../../../mayaEnv",
-    "../../../mayaEnv/config",
-    "../../../mayaEnv/config/{}".format(cmds.about(v=1)),
-    "../../../mayaEnv/plugins" "../../../mayaEnv/plugins/{}".format(cmds.about(v=1)),
+    "../../../mayaDCC",
+    "../../../mayaDCC/config",
+    "../../../mayaDCC/config/{}".format(cmds.about(v=1)),
+    "../../../mayaDCC/plugins" "../../../mayaDCC/plugins/{}".format(cmds.about(v=1)),
 ]
 
 for path in env_paths:
@@ -112,11 +112,11 @@ if not pm.general.about(batch=1):
                 log_print(f"loading shelf: {shelf_path}")
                 shelf_name = os.path.splitext(os.path.basename(shelf_path))[0][6:]
                 pm.evalDeferred(
-                    "from anima.dcc.mayaEnv import auxiliary; "
+                    "from anima.dcc.mayaDCC import auxiliary; "
                     f'auxiliary.delete_shelf_tab("{shelf_name}", confirm=False);'
                 )
                 pm.evalDeferred(
-                    "from anima.dcc.mayaEnv import auxiliary; "
+                    "from anima.dcc.mayaDCC import auxiliary; "
                     f'auxiliary.load_shelf_tab("{shelf_path}");'
                 )
     else:
@@ -150,7 +150,7 @@ if not pm.general.about(batch=1):
         )
         pm.menuItem(divider=True)
         pm.menuItem(
-            label="Toolbox", c="from anima.dcc.mayaEnv import toolbox; toolbox.UI();"
+            label="Toolbox", c="from anima.dcc.mayaDCC import toolbox; toolbox.UI();"
         )
 
     mayautils.executeDeferred(create_menus)
@@ -167,7 +167,7 @@ if "ANIMA_TEST_SETUP" not in os.environ:
 
             # patch auto-tx option in arnold for Maya 2017
             if pymel.versions.current() >= 201700:
-                from anima.dcc.mayaEnv.config import arnold_patches
+                from anima.dcc.mayaDCC.config import arnold_patches
                 from mtoa.ui.globals import settings
 
                 settings.createArnoldTextureSettings = (
@@ -216,12 +216,12 @@ def setup_maya_color_management():
     # set color management
     log_print("Setting up Color Management Preferences.")
     # be sure the color management is not set to legacy
-    from anima.dcc.mayaEnv.render import MayaColorManagementConfigurator
+    from anima.dcc.mayaDCC.render import MayaColorManagementConfigurator
 
     MayaColorManagementConfigurator.configure()
 
 
-pm.evalDeferred("from anima.dcc import mayaEnv; mayaEnv.Maya.clean_malware();")
+pm.evalDeferred("from anima.dcc import mayaDCC; mayaDCC.Maya.clean_malware();")
 
 # create environment variables for each Repository
 pm.evalDeferred(

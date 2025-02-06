@@ -577,7 +577,7 @@ proc string assembleCmd( string $shots )
 global proc string performPlayblastShot (int $action, string $shots )
 {
     // The patched version
-    python("from anima.dcc.mayaEnv import auxiliary; pb = auxiliary.perform_playblast_shot(" + $shots + ")");
+    python("from anima.dcc.mayaDCC import auxiliary; pb = auxiliary.perform_playblast_shot(" + $shots + ")");
 
     return "";
 }
@@ -585,7 +585,7 @@ global proc string performPlayblastShot (int $action, string $shots )
 
 global proc set_range_from_shot(string $shot)
 {
-    python("from anima.dcc.mayaEnv import auxiliary; shot=pm.PyNode(\"" + $shot + "\"); auxiliary.set_range_from_shot(shot);");
+    python("from anima.dcc.mayaDCC import auxiliary; shot=pm.PyNode(\"" + $shot + "\"); auxiliary.set_range_from_shot(shot);");
 }
 
 

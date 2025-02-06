@@ -7,10 +7,10 @@ to related Animation Tasks with single shot in relation with the Camera Sequence
 
 import os
 
-import anima.dcc.mayaEnv.animation
+import anima.dcc.mayaDCC.animation
 import pymel.core as pm
 from stalker import LocalSession
-from anima.dcc import mayaEnv
+from anima.dcc import mayaDCC
 
 
 class ShotExporter2(object):
@@ -26,7 +26,7 @@ class ShotExporter2(object):
         self.sequencer = self.sm.sequences.get()[0]
         self.shot_list = self.sequencer.shots.get()
 
-        self.m_env = mayaEnv.Maya()
+        self.m_env = mayaDCC.Maya()
 
     def check_shot_existence(self):
         """checks if there are shot tasks for all of the shots"""
@@ -470,10 +470,10 @@ class ShotExporter(object):
     def __init__(self):
         from anima.utils import do_db_setup
         from stalker import Type, LocalSession
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
         do_db_setup()
-        m = mayaEnv.Maya()
+        m = mayaDCC.Maya()
 
         local_session = LocalSession()
         self.logged_in_user = local_session.logged_in_user
@@ -783,7 +783,7 @@ class ShotExporter(object):
     def set_sequencer_name(self):
         """set sequencer name for publish"""
         from anima.exc import PublishError
-        import anima.dcc.mayaEnv.publish as oy_publish
+        import anima.dcc.mayaDCC.publish as oy_publish
 
         try:
             oy_publish.check_sequence_name()
@@ -949,7 +949,7 @@ class ShotExporter(object):
         # from anima.publish import run_publishers
         # run_publishers('previs') # DetachedInstanceError: attribute refresh operation cannot proceed
 
-        import anima.dcc.mayaEnv.publish as oy_publish
+        import anima.dcc.mayaDCC.publish as oy_publish
 
         oy_publish.check_sequencer()
         oy_publish.check_shot_nodes()
@@ -981,14 +981,14 @@ class ShotExporter(object):
                         if shot_node.getShotName() == shot_number:
                             shots_to_export.append([shot_node, task, shot_number])
 
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
         from stalker import Version
         from anima.utils.progress import ProgressManagerFactory
 
         pdm = ProgressManagerFactory.get_progress_manager()
         pdm.end_progress()
 
-        m_env = mayaEnv.Maya()
+        m_env = mayaDCC.Maya()
 
         versions = []
         description = "Auto Created By Shot Exporter"
@@ -1037,7 +1037,7 @@ class ShotExporter(object):
             len(shots_to_export),
             "Batch Saving Previs Shot Nodes to Animation Shot Tasks...",
         )
-        from anima.dcc.mayaEnv import toolbox
+        from anima.dcc.mayaDCC import toolbox
         from stalker.db.session import DBSession
 
         for shot_info in shots_to_export:
@@ -1056,7 +1056,7 @@ class ShotExporter(object):
                 self.clear_scene(except_this_shot)
 
                 # set frame range before save
-                anima.dcc.mayaEnv.animation.Animation.set_range_from_shot()
+                anima.dcc.mayaDCC.animation.Animation.set_range_from_shot()
 
                 # update shot.cut_in and shot.cut_out info
                 cut_in = pm.playbackOptions(q=1, min=1)
@@ -1117,7 +1117,7 @@ class Previs(object):
 
         new_cameras = []
 
-        from anima.dcc.mayaEnv import camera_tools
+        from anima.dcc.mayaDCC import camera_tools
 
         for cam in selection:
             cut_info = camera_tools.find_cut_info(cam)
@@ -1248,13 +1248,13 @@ class Previs(object):
     @classmethod
     def save_previs_to_shots(cls):
         """exports previs to animation shots"""
-        from anima.dcc import mayaEnv
-        from anima.dcc.mayaEnv import previs
+        from anima.dcc import mayaDCC
+        from anima.dcc.mayaDCC import previs
 
         se = previs.ShotExporter()
 
         # use previs scene variant_name
-        m = mayaEnv.Maya()
+        m = mayaDCC.Maya()
         v = m.get_current_version()
         se.save_previs_to_shots(v.variant_name)
 

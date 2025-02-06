@@ -16,10 +16,10 @@ from stalker.db.session import DBSession
 
 from anima import utils
 from anima.dcc.base import generate_empty_reference_resolution, DCCBase
-from anima.dcc.mayaEnv import auxiliary
-from anima.dcc.mayaEnv import extension  # register extensions
-from anima.dcc.mayaEnv import publish as publish_scripts  # register publishers
-from anima.dcc.mayaEnv import render
+from anima.dcc.mayaDCC import auxiliary
+from anima.dcc.mayaDCC import extension  # register extensions
+from anima.dcc.mayaDCC import publish as publish_scripts  # register publishers
+from anima.dcc.mayaDCC import render
 from anima.publish import (
     run_publishers,
     staging,

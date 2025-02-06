@@ -2,7 +2,7 @@
 
 import functools
 
-from anima.dcc.mayaEnv.camera_tools import cam_to_chan
+from anima.dcc.mayaDCC.camera_tools import cam_to_chan
 from pymel import core as pm
 
 
@@ -399,9 +399,9 @@ class Animation(object):
             max_frame = shot.getAttr("endFrame")
         else:
             # check if this is a shot related scene
-            from anima.dcc import mayaEnv
+            from anima.dcc import mayaDCC
 
-            m = mayaEnv.Maya()
+            m = mayaDCC.Maya()
             v = m.get_current_version()
             if v:
                 t = v.task
@@ -428,7 +428,7 @@ class Animation(object):
     @classmethod
     def export_alembics_on_farm(cls):
         """Submits alembic export jobs to Afanasy"""
-        from anima.dcc.mayaEnv import Maya, afanasy_publisher
+        from anima.dcc.mayaDCC import Maya, afanasy_publisher
 
         m = Maya()
         v = m.get_current_version()
@@ -442,7 +442,7 @@ class Animation(object):
     @classmethod
     def playblast_on_farm(cls):
         """Submits playblast creation jobs to Afanasy"""
-        from anima.dcc.mayaEnv import Maya, afanasy_publisher
+        from anima.dcc.mayaDCC import Maya, afanasy_publisher
 
         m = Maya()
         v = m.get_current_version()

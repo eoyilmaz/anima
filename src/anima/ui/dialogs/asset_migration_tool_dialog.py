@@ -1556,7 +1556,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
         pprint.pprint(migration_recipe, indent=4)
 
         # create the AssetMigrationTool
-        from anima.dcc.mayaEnv import asset_migration_tool
+        from anima.dcc.mayaDCC import asset_migration_tool
 
         amt = asset_migration_tool.AssetMigrationTool()
         amt.migration_recipe = migration_recipe

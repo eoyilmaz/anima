@@ -25,7 +25,7 @@ class SelectionSet(object):
 
     Ex::
 
-      from anima.dcc.mayaEnv import selection_manager
+      from anima.dcc.mayaDCC import selection_manager
 
       selM1 = selection_manager.SelectionSet()
       selM1.name = 'My_Sel_List'

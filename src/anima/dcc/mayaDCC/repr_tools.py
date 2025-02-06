@@ -10,7 +10,7 @@ import tempfile
 import uuid
 
 from anima.log import logger
-from anima.dcc.mayaEnv import auxiliary
+from anima.dcc.mayaDCC import auxiliary
 from anima.representation import Representation
 
 import pymel.core as pm
@@ -254,7 +254,7 @@ class RepresentationGenerator(object):
         if not self.logged_in_user:
             raise RuntimeError("Please login first!")
 
-        from anima.dcc.mayaEnv import Maya
+        from anima.dcc.mayaDCC import Maya
 
         self.maya_env = Maya()
 
@@ -1587,7 +1587,7 @@ class RepresentationGenerator(object):
                 )
             )
 
-        # from anima.dcc.mayaEnv.redshift import RedShiftTextureProcessor
+        # from anima.dcc.mayaDCC.redshift import RedShiftTextureProcessor
         if self.is_model_task(task):
             # convert all children of the root node
             # to an empty rs node

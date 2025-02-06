@@ -4,9 +4,9 @@ import logging
 import os
 import tempfile
 
-from anima.dcc.mayaEnv.archive import Archiver
+from anima.dcc.mayaDCC.archive import Archiver
 
-logger = logging.getLogger("anima.dcc.mayaEnv.archive")
+logger = logging.getLogger("anima.dcc.mayaDCC.archive")
 logger.setLevel(logging.WARNING)
 
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from anima.dcc.mayaEnv import auxiliary
+from anima.dcc.mayaDCC import auxiliary
 from pymel import core as pm
 
 
@@ -252,7 +252,7 @@ class Modeling(object):
 
     @classmethod
     def hierarchy_instancer(cls):
-        from anima.dcc.mayaEnv import hierarchy_instancer
+        from anima.dcc.mayaDCC import hierarchy_instancer
 
         new_nodes = []
 
@@ -264,7 +264,7 @@ class Modeling(object):
 
     @classmethod
     def relax_vertices(cls):
-        from anima.dcc.mayaEnv import relax_vertices
+        from anima.dcc.mayaDCC import relax_vertices
 
         relax_vertices.relax()
 

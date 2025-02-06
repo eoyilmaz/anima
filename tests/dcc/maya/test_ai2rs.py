@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Tests for anima.dcc.mayaEnv.ai2rs classes."""
+"""Tests for anima.dcc.mayaDCC.ai2rs classes."""
 import glob
 import os
 
 import pytest
 
 # prepare for test
-from anima.dcc.mayaEnv import ai2rs
+from anima.dcc.mayaDCC import ai2rs
 
 
 HERE = os.path.dirname(__file__)

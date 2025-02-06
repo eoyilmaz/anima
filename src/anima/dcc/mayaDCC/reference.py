@@ -145,10 +145,10 @@ class Reference(object):
         from stalker import Task, Version, Type, LocalSession
         from stalker.db.session import DBSession
         from anima import defaults
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
         do_db_setup()
-        m = mayaEnv.Maya()
+        m = mayaDCC.Maya()
 
         local_session = LocalSession()
         logged_in_user = local_session.logged_in_user
@@ -280,9 +280,9 @@ class Reference(object):
                 return
 
         from stalker import LocalSession
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
-        m = mayaEnv.Maya()
+        m = mayaDCC.Maya()
 
         local_session = LocalSession()
         logged_in_user = local_session.logged_in_user
@@ -302,9 +302,9 @@ class Reference(object):
     def fix_reference_paths(cls):
         """Fixe reference paths that are not using environment vars."""
         # list current scene references
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
-        m_env = mayaEnv.Maya()
+        m_env = mayaDCC.Maya()
         current_version = m_env.get_current_version()
 
         all_refs = pm.listReferences(recursive=True)
@@ -372,8 +372,8 @@ class Reference(object):
         """Create a ZIP file containing the current scene and its references in a flat
         Maya default project folder structure.
         """
-        from anima.dcc.mayaEnv import Maya
-        from anima.dcc.mayaEnv.archive import Archiver
+        from anima.dcc.mayaDCC import Maya
+        from anima.dcc.mayaDCC.archive import Archiver
         from anima.utils.archive import archive_versions
 
         m_env = Maya()
@@ -395,10 +395,10 @@ class Reference(object):
         """
         # get all reference paths
         import os
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
         from stalker import Repository, Task, Project, Version
 
-        m = mayaEnv.Maya()
+        m = mayaDCC.Maya()
         current_version = m.get_current_version()
 
         # get the current project
@@ -590,7 +590,7 @@ class Reference(object):
                 if ref is not None and ref not in references:
                     references.append(ref)
 
-            from anima.dcc.mayaEnv.repr_tools import RepresentationGenerator
+            from anima.dcc.mayaDCC.repr_tools import RepresentationGenerator
 
             # now go over each reference
             for ref in references:
@@ -643,7 +643,7 @@ class Reference(object):
         cls, generate_gpu=True, generate_ass=True, generate_rs=True, skip_existing=False
     ):
         """generates desired representations of this scene"""
-        from anima.dcc.mayaEnv import Maya, repr_tools
+        from anima.dcc.mayaDCC import Maya, repr_tools
 
         response = pm.confirmDialog(
             title="Do Create Representations?",
@@ -723,7 +723,7 @@ class Reference(object):
         cls, generate_gpu=True, generate_ass=True, generate_rs=True, skip_existing=False
     ):
         """generates all representations of all references of this scene"""
-        from anima.dcc.mayaEnv import Maya, repr_tools
+        from anima.dcc.mayaDCC import Maya, repr_tools
 
         paths_visited = []
         versions_to_visit = []

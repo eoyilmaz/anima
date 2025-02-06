@@ -12,9 +12,9 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
     do_db_setup()
 
     from anima.ui.dialogs import version_dialog as vd
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m = mayaEnv.Maya()
+    m = mayaDCC.Maya()
 
     import pymel
 
@@ -23,7 +23,7 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
     logger.setLevel(logging_level)
 
     # set the parent object to the maya main window
-    vd.UI(dcc=m, parent=mayaEnv.get_maya_main_window(), mode=mode)
+    vd.UI(dcc=m, parent=mayaDCC.get_maya_main_window(), mode=mode)
 
 
 def version_updater(logging_level=logging.WARNING):
@@ -34,9 +34,9 @@ def version_updater(logging_level=logging.WARNING):
     do_db_setup()
 
     from anima.ui.dialogs import version_updater as vu
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m = mayaEnv.Maya()
+    m = mayaDCC.Maya()
 
     import pymel
 
@@ -52,7 +52,7 @@ def version_updater(logging_level=logging.WARNING):
     #     version_updater_dialog.show()
 
     # set the parent object to the maya main window
-    vu.UI(dcc=m, parent=mayaEnv.get_maya_main_window())
+    vu.UI(dcc=m, parent=mayaDCC.get_maya_main_window())
 
 
 def version_mover():
@@ -87,13 +87,13 @@ def archiver_dialog(logging_level=logging.WARNING, mode=2):
 
     do_db_setup()
 
-    from anima.dcc import mayaEnv
-    from anima.dcc.mayaEnv import archive
+    from anima.dcc import mayaDCC
+    from anima.dcc.mayaDCC import archive
     from anima.ui.base import ui_caller
     from anima.ui.dialogs import archiver_dialog
     import pymel
 
-    m = mayaEnv.Maya()
+    m = mayaDCC.Maya()
     m.name = "Maya{}".format(str(pymel.versions.current())[0:4])
 
     logger.setLevel(logging_level)
@@ -104,6 +104,6 @@ def archiver_dialog(logging_level=logging.WARNING, mode=2):
         None,
         archiver_dialog.MultiVersionSelectDialog,
         dcc=m,
-        parent=mayaEnv.get_maya_main_window(),
+        parent=mayaDCC.get_maya_main_window(),
         archiver=archive.Archiver(),
     )

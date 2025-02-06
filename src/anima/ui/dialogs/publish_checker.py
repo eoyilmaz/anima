@@ -222,7 +222,7 @@ class PublisherElement(object):
         if m.clickedButton() == m.defaultButton():
             fix_def_name = "{}{}".format(self.publisher.__name__, self.fix_identifier)
             try:
-                from anima.dcc.mayaEnv import publish
+                from anima.dcc.mayaDCC import publish
 
                 fix_func = publish.__dict__[fix_def_name]
                 fix_func()
@@ -357,7 +357,7 @@ class PublisherElement(object):
                     self.publisher.__name__, self.fix_identifier
                 )
 
-                from anima.dcc.mayaEnv import publish
+                from anima.dcc.mayaDCC import publish
 
                 # disable by default
                 self.fix_push_button.setDisabled(True)

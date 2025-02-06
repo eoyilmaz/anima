@@ -52,7 +52,7 @@ def submit_alembic_job(path, project_code="", host_mask=""):
     command += [
         "-c",
         '"import pymel.core as pm;'
-        "from anima.dcc.mayaEnv import afanasy_publisher;"
+        "from anima.dcc.mayaDCC import afanasy_publisher;"
         "afanasy_publisher.export_alembics('{path}');\"".format(path=path),
     ]
     submit_job(job_name, block_name, command, host_mask=host_mask)
@@ -72,7 +72,7 @@ def submit_playblast_job(path, project_code="", host_mask=""):
         "mayapy{}".format(os.getenv("MAYA_VERSION", "")),
         "-c",
         '"import pymel.core as pm;'
-        "from anima.dcc.mayaEnv import afanasy_publisher;"
+        "from anima.dcc.mayaDCC import afanasy_publisher;"
         "afanasy_publisher.export_playblast('{path}');\"".format(path=path),
     ]
     submit_job(job_name, block_name, command, host_mask=host_mask)
@@ -84,9 +84,9 @@ def export_alembics(path):
     Args:
         path (str): The path of the file version.
     """
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m = mayaEnv.Maya()
+    m = mayaDCC.Maya()
     m.use_progress_window = False  # Maya sets that automatically but let's be sure!
     v = m.get_version_from_full_path(path)
     if not v:
@@ -94,11 +94,11 @@ def export_alembics(path):
 
     m.open(v, force=True, skip_update_check=True, prompt=False)
 
-    from anima.dcc.mayaEnv import animation
+    from anima.dcc.mayaDCC import animation
 
     animation.Animation.set_range_from_shot()
 
-    from anima.dcc.mayaEnv import auxiliary
+    from anima.dcc.mayaDCC import auxiliary
 
     auxiliary.export_cache_of_all_cacheable_nodes(
         handles=1, isolate=False, unload_refs=False
@@ -112,12 +112,12 @@ def export_playblast(path, force_batch_mode=False, reference_depth=0):
     Args:
         path (str): The path of the file version.
         force_batch_mode (bool): Force to run in batch mode.
-        reference_depth (int): See anima.dcc.mayaEnv.Maya.open().
+        reference_depth (int): See anima.dcc.mayaDCC.Maya.open().
     """
     import pymel.core as pm
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m = mayaEnv.Maya()
+    m = mayaDCC.Maya()
     m.use_progress_window = False  # Maya sets that automatically but let's be sure!
     v = m.get_version_from_full_path(path)
     if not v:
@@ -131,7 +131,7 @@ def export_playblast(path, force_batch_mode=False, reference_depth=0):
         reference_depth=reference_depth,
     )
 
-    from anima.dcc.mayaEnv import animation
+    from anima.dcc.mayaDCC import animation
 
     animation.Animation.set_range_from_shot()
 
@@ -162,7 +162,7 @@ def export_playblast(path, force_batch_mode=False, reference_depth=0):
                 light_tra.t.set(0, 0, 0)
                 light_tra.r.set(0, 0, 0)
 
-    from anima.dcc.mayaEnv import auxiliary
+    from anima.dcc.mayaDCC import auxiliary
 
     default_view_options = auxiliary.get_default_playblast_view_options()
     auxiliary.perform_playblast(

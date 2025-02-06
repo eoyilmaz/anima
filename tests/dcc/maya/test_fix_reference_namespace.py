@@ -1645,7 +1645,7 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
     # now do the edits here
     # we need to do some edits
     # there should be only one locator in the current scene
-    from anima.dcc.mayaEnv import auxiliary
+    from anima.dcc.mayaDCC import auxiliary
 
     ref_root_nodes = auxiliary.get_root_nodes(ref)
     # parent it to something else

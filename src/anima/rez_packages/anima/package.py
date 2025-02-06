@@ -77,26 +77,26 @@ def commands():
         )
         env.PATH.append("{}/bin".format(pylibs_base_path))
         env.PYTHONPATH.append("{}/lib/python/site-packages".format(pylibs_base_path))
-        env.PYTHONPATH.append("${ANIMA_PATH}/anima/dcc/mayaEnv/config")
+        env.PYTHONPATH.append("${ANIMA_PATH}/anima/dcc/mayaDCC/config")
         env.PYTHONPATH.append(
-            "${ANIMA_PATH}/anima/dcc/mayaEnv/config/${REZ_MAYA_MAJOR_VERSION}"
+            "${ANIMA_PATH}/anima/dcc/mayaDCC/config/${REZ_MAYA_MAJOR_VERSION}"
         )
         env.PYTHONPATH.append("${ANIMA_DEV_PATH}/maya/scripts")
 
         # MAYA_SCRIPT_PATH
-        env.MAYA_SCRIPT_PATH.append("${ANIMA_PATH}/anima/dcc/mayaEnv/config")
+        env.MAYA_SCRIPT_PATH.append("${ANIMA_PATH}/anima/dcc/mayaDCC/config")
         env.MAYA_SCRIPT_PATH.append(
-            "${ANIMA_PATH}/anima/dcc/mayaEnv/config/${REZ_MAYA_MAJOR_VERSION}"
+            "${ANIMA_PATH}/anima/dcc/mayaDCC/config/${REZ_MAYA_MAJOR_VERSION}"
         )
 
-        env.MAYA_PLUG_IN_PATH.append("${ANIMA_PATH}/anima/dcc/mayaEnv/plugins")
+        env.MAYA_PLUG_IN_PATH.append("${ANIMA_PATH}/anima/dcc/mayaDCC/plugins")
         env.MAYA_PLUG_IN_PATH.append("${ANIMA_DEV_PATH}/maya/plugins")
         env.MAYA_PLUG_IN_PATH.append(
             "${ANIMA_DEV_PATH}/maya/plugins/${REZ_MAYA_MAJOR_VERSION}"
         )
 
         env.MAYA_PLUG_IN_PATH.append(
-            "${ANIMA_PATH}/anima/dcc/mayaEnv/plugins/${REZ_MAYA_MAJOR_VERSION}"
+            "${ANIMA_PATH}/anima/dcc/mayaDCC/plugins/${REZ_MAYA_MAJOR_VERSION}"
         )
 
         # XMBLANGPATH

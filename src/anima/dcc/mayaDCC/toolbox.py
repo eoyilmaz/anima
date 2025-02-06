@@ -6,14 +6,14 @@ import functools
 import pymel.core as pm
 import maya.mel as mel
 
-from anima.dcc.mayaEnv import auxiliary, camera_tools, publish
-from anima.dcc.mayaEnv.animation import Animation
-from anima.dcc.mayaEnv.general import General
-from anima.dcc.mayaEnv.modeling import Modeling
-from anima.dcc.mayaEnv.previs import Previs
-from anima.dcc.mayaEnv.reference import Reference
-from anima.dcc.mayaEnv.render import Render, MayaColorManagementConfigurator
-from anima.dcc.mayaEnv.rigging import Rigging
+from anima.dcc.mayaDCC import auxiliary, camera_tools, publish
+from anima.dcc.mayaDCC.animation import Animation
+from anima.dcc.mayaDCC.general import General
+from anima.dcc.mayaDCC.modeling import Modeling
+from anima.dcc.mayaDCC.previs import Previs
+from anima.dcc.mayaDCC.reference import Reference
+from anima.dcc.mayaDCC.render import Render, MayaColorManagementConfigurator
+from anima.dcc.mayaDCC.rigging import Rigging
 from anima.ui.utils import ColorList
 
 
@@ -42,7 +42,7 @@ def repeat_last(call_data):
     kwargs = call_data[2]
 
     command = (
-        'print \\"\\";python(\\"from anima.dcc.mayaEnv.toolbox import '
+        'print \\"\\";python(\\"from anima.dcc.mayaDCC.toolbox import '
         f'repeater; repeater({index});\\");'
     )
 
@@ -321,7 +321,7 @@ def UI():
             )
 
             color.next()
-            from anima.dcc.mayaEnv.general import unknown_plugin_cleaner_ui
+            from anima.dcc.mayaDCC.general import unknown_plugin_cleaner_ui
 
             pm.button(
                 "cleanup_plugins_button",
@@ -985,7 +985,7 @@ def UI():
 
             def pin_controller_callback(color, *args):
                 """Creates Pin Controller on the selected Vertex"""
-                from anima.dcc.mayaEnv import rigging
+                from anima.dcc.mayaDCC import rigging
 
                 vertex = pm.ls(sl=1)[0]
                 pc = rigging.PinController()
@@ -1065,7 +1065,7 @@ def UI():
             )
 
             def skin_tools_ui_caller(*args):
-                from anima.dcc.mayaEnv.rigging import SkinToolsUI
+                from anima.dcc.mayaDCC.rigging import SkinToolsUI
 
                 st = SkinToolsUI()
                 st.ui()
@@ -1538,9 +1538,9 @@ def UI():
                 default_image_height = 1080
                 # let's update the width and height of the image resolution from the
                 # current project
-                from anima.dcc import mayaEnv
+                from anima.dcc import mayaDCC
 
-                m = mayaEnv.Maya()
+                m = mayaDCC.Maya()
                 v = m.get_current_version()
                 if v:
                     imf = v.task.project.image_format
@@ -1870,7 +1870,7 @@ def UI():
                 )
 
             def lighting_scene_builder_callback(*args):
-                from anima.dcc.mayaEnv import render
+                from anima.dcc.mayaDCC import render
 
                 lsb = render.LightingSceneBuilder()
                 lsb.build()
@@ -1968,7 +1968,7 @@ def UI():
             color.reset()
 
             color.next()
-            from anima.dcc.mayaEnv import picker
+            from anima.dcc.mayaDCC import picker
 
             pm.text(l="===== Object Picker =====")
 
@@ -2009,7 +2009,7 @@ def UI():
             )
 
             color.next()
-            from anima.dcc.mayaEnv import pivot_switcher
+            from anima.dcc.mayaDCC import pivot_switcher
 
             pm.text(l="===== Pivot Switcher =====")
             pm.button(

@@ -20,9 +20,9 @@ class General(object):
         """Opens the Publish Checker window without publishing the current
         scene
         """
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
-        m = mayaEnv.Maya()
+        m = mayaDCC.Maya()
         version = m.get_current_version()
 
         # create the publish window
@@ -32,7 +32,7 @@ class General(object):
             dcc=m,
             publish_callback=None,
             version=version,
-            parent=mayaEnv.get_maya_main_window(),
+            parent=mayaDCC.get_maya_main_window(),
         )
         dialog.auto_delete_new_version_on_exit = False
         dialog.show()
@@ -330,7 +330,7 @@ class General(object):
 
     @classmethod
     def selection_manager(cls):
-        from anima.dcc.mayaEnv import selection_manager
+        from anima.dcc.mayaDCC import selection_manager
 
         selection_manager.UI()
 
@@ -419,7 +419,7 @@ class General(object):
     @classmethod
     def generate_thumbnail(cls):
         """generates thumbnail for current scene"""
-        from anima.dcc.mayaEnv import auxiliary
+        from anima.dcc.mayaDCC import auxiliary
 
         # reload(auxiliary)
         result = auxiliary.generate_thumbnail()
@@ -456,7 +456,7 @@ class General(object):
             rot
             sca
         """
-        from anima.dcc.mayaEnv import redshift
+        from anima.dcc.mayaDCC import redshift
 
         if path == "":
             import os
@@ -546,7 +546,7 @@ class UnknownPluginCleaner(object):
     Usage:
 
     ```python
-    from anima.dcc.mayaEnv import general
+    from anima.dcc.mayaDCC import general
     reload(general)
 
     pc = general.UnknownPluginCleaner()
@@ -692,7 +692,7 @@ def unknown_plugin_cleaner_ui():
     the selected *.ma files
     """
     from anima.ui.lib import QtWidgets
-    from anima.dcc.mayaEnv import get_maya_main_window
+    from anima.dcc.mayaDCC import get_maya_main_window
 
     maya_main_window = get_maya_main_window()
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from anima.dcc.mayaEnv import auxiliary
+from anima.dcc.mayaDCC import auxiliary
 from anima.perf import measure_time
 from pymel import core as pm
 
@@ -143,7 +143,7 @@ class Rigging(object):
 
     @classmethod
     def fix_bound_joint(cls):
-        from anima.dcc.mayaEnv import fix_bound_joint
+        from anima.dcc.mayaDCC import fix_bound_joint
 
         fix_bound_joint.UI()
 
@@ -209,9 +209,9 @@ class Rigging(object):
     @classmethod
     def create_joints_on_curve_ui(cls):
         """Creates joints on selected curve"""
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
-        main_window = mayaEnv.get_maya_main_window()
+        main_window = mayaDCC.get_maya_main_window()
         jocd = JointOnCurveDialog(parent=main_window)
         jocd.show()
 
@@ -740,7 +740,7 @@ class PinController(object):
 
     def setup(self):
         """creates the setup"""
-        from anima.dcc.mayaEnv import auxiliary
+        from anima.dcc.mayaDCC import auxiliary
 
         vtx_coord = pm.xform(self.pin_to_vertex, q=1, ws=1, t=1)
 
@@ -1418,7 +1418,7 @@ class IKLimbJointHierarchy(IKJointHierarchyBase):
             self.ik_end_controller.minScale >> j.sx
 
         pm.parent(self.ik_end_controller, w=1)
-        from anima.dcc.mayaEnv import auxiliary
+        from anima.dcc.mayaDCC import auxiliary
 
         auxiliary.axial_correction_group(self.ik_end_controller)
 
@@ -1848,7 +1848,7 @@ class IKFKLimbRigger(RiggerBase):
 
         Test Code:
 
-    from anima.dcc.mayaEnv import rigging
+    from anima.dcc.mayaDCC import rigging
 
     selection = pm.selected()
 

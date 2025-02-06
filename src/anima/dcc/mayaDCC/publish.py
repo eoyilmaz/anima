@@ -18,7 +18,7 @@ from anima.publish import (
 from anima.exc import PublishError
 from anima.representation import Representation
 from anima.utils import utc_to_local
-from anima.dcc.mayaEnv import auxiliary
+from anima.dcc.mayaDCC import auxiliary
 
 clear_publishers()
 
@@ -240,7 +240,7 @@ def set_all_cameras_cacheable(progress_controller=None):
     for camera in all_cameras:
         camera_transform = camera.getParent()
         if camera_transform.name() not in ["persp", "top", "front", "side"]:
-            from anima.dcc.mayaEnv import rigging
+            from anima.dcc.mayaDCC import rigging
 
             rigging.Rigging.add_cacheable_attribute(camera_transform)
         progress_controller.increment()
@@ -288,9 +288,9 @@ def check_all_geometry_is_referenced(progress_controller=None):
 
     # skip if it is an animation or previs task
     skip_types = ["character"]
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m_env = mayaEnv.Maya()
+    m_env = mayaDCC.Maya()
     v = m_env.get_current_version()
 
     for t in v.naming_parents:
@@ -471,7 +471,7 @@ def convert_old_object_smoothing_to_renderer_time_smoothing(progress_controller=
 
     Currently supports Arnold only.
     """
-    from anima.dcc.mayaEnv import render
+    from anima.dcc.mayaDCC import render
 
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
@@ -515,7 +515,7 @@ def check_if_previous_version_references(progress_controller=None):
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
 
-    from anima.dcc.mayaEnv import Maya
+    from anima.dcc.mayaDCC import Maya
 
     m = Maya()
     ver = m.get_current_version()
@@ -1589,7 +1589,7 @@ def check_multiple_connections_for_textures(progress_controller=None):
                 return
 
     # get all the texture nodes
-    from anima.dcc.mayaEnv import repr_tools
+    from anima.dcc.mayaDCC import repr_tools
 
     # try to find the material it is been used by walking up the connections
     nodes_with_multiple_materials = []
@@ -1801,7 +1801,7 @@ def check_legacy_render_layers___fix():
     """
     tries to fix check_legacy_render_layers
     """
-    from anima.dcc.mayaEnv import render
+    from anima.dcc.mayaDCC import render
 
     render.Render.delete_render_layers()
 
@@ -1855,9 +1855,9 @@ def check_root_node_name(progress_controller=None):
 
     root_nodes = auxiliary.get_root_nodes()
 
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m_env = mayaEnv.Maya()
+    m_env = mayaDCC.Maya()
     v = m_env.get_current_version()
     t = v.task
 
@@ -1906,9 +1906,9 @@ def check_root_node_name___fix():
     tries to fix check_root_node_name
     """
     from stalker import Asset
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m_env = mayaEnv.Maya()
+    m_env = mayaDCC.Maya()
     v = m_env.get_current_version()
     t = v.task
     asset_name = None
@@ -1963,7 +1963,7 @@ def check_cacheable_attr(progress_controller=None):
     Checks if there is only one transform node with a valid cacheable attr.
     """
     from stalker import Asset
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
@@ -1984,7 +1984,7 @@ def check_cacheable_attr(progress_controller=None):
             "More than one cacheable node found in the scene. Only one is allowed!"
         )
 
-    m_env = mayaEnv.Maya()
+    m_env = mayaDCC.Maya()
     v = m_env.get_current_version()
     t = v.task
     asset_code = None
@@ -2014,14 +2014,14 @@ def check_cacheable_attr(progress_controller=None):
 def check_cacheable_attr___fix():
     """Try to fix cacheable attr problems."""
     from stalker import Asset
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
     cacheable_nodes = auxiliary.get_cacheable_nodes()
     cacheable_node = None
 
     if len(cacheable_nodes) == 0:
         # no cacheable node create cacheable attribute on the root node
-        from anima.dcc.mayaEnv import rigging
+        from anima.dcc.mayaDCC import rigging
 
         # assumes there is only one root node
         root_node = auxiliary.get_root_nodes()[0]
@@ -2044,7 +2044,7 @@ def check_cacheable_attr___fix():
                 cacheable_node.deleteAttr("cacheable")
         cacheable_node = lowest_rank_node
 
-    m_env = mayaEnv.Maya()
+    m_env = mayaDCC.Maya()
     v = m_env.get_current_version()
     t = v.task
     asset_code = None
@@ -2319,9 +2319,9 @@ def check_sequence_name___fix():
     sequencer = sequencers[0]
 
     # get current task
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m = mayaEnv.Maya()
+    m = mayaDCC.Maya()
     v = m.get_current_version()
     task = v.task
 
@@ -2356,9 +2356,9 @@ def check_sequence_name_format(progress_controller=None):
     sequencer = shot.outputs(type="sequencer")[0]
 
     # get current task
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m = mayaEnv.Maya()
+    m = mayaDCC.Maya()
     v = m.get_current_version()
     task = v.task
 
@@ -2447,9 +2447,9 @@ def check_shot_name_format___fix():
     # auto fix if there is only 1 shot in the scene
     if len(shot_nodes) == 1:
         from stalker import Shot
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
-        m = mayaEnv.Maya()
+        m = mayaDCC.Maya()
         v = m.get_current_version()
 
         if v:
@@ -2691,7 +2691,7 @@ def bake_mash_nodes_publisher(progress_controller=None):
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
 
-    from anima.dcc.mayaEnv.auxiliary import bake_mash_nodes
+    from anima.dcc.mayaDCC.auxiliary import bake_mash_nodes
 
     bake_mash_nodes()
     progress_controller.complete()
@@ -2731,9 +2731,9 @@ def update_audit_info(progress_controller=None):
 
     if logged_in_user:
         # update the version updated_by
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
-        m_env = mayaEnv.Maya()
+        m_env = mayaDCC.Maya()
         v = m_env.get_current_version()
         if v:
             v.updated_by = logged_in_user
@@ -2761,7 +2761,7 @@ def generate_thumbnail(progress_controller=None):
     if pm.general.about(batch=1):
         return
 
-    from anima.dcc.mayaEnv import auxiliary
+    from anima.dcc.mayaDCC import auxiliary
 
     auxiliary.generate_thumbnail()
 
@@ -2779,9 +2779,9 @@ def create_representations(progress_controller=None):
         progress_controller = ProgressControllerBase()
     progress_controller.maximum = 6
 
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m_env = mayaEnv.Maya()
+    m_env = mayaDCC.Maya()
     v = m_env.get_current_version()
     progress_controller.increment()
 
@@ -2803,14 +2803,14 @@ def create_representations(progress_controller=None):
                 return
     progress_controller.increment()
 
-    from anima.dcc.mayaEnv import repr_tools
+    from anima.dcc.mayaDCC import repr_tools
 
     gen = repr_tools.RepresentationGenerator(version=v)
     gen.generate_all()
     progress_controller.increment()
 
     # re-open the original scene
-    m_env = mayaEnv.Maya()
+    m_env = mayaDCC.Maya()
     current_version = m_env.get_current_version()
     progress_controller.increment()
 
@@ -2832,9 +2832,9 @@ def update_shot_range(progress_controller=None):
 
     from stalker import Shot
     from stalker.db.session import DBSession
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m = mayaEnv.Maya()
+    m = mayaDCC.Maya()
     v = m.get_current_version()
     progress_controller.increment()
 
@@ -2866,7 +2866,7 @@ def usd_export(progress_controller=None):
         if not r.is_base():
             progress_controller.complete()
             return
-        from anima.dcc.mayaEnv import auxiliary
+        from anima.dcc.mayaDCC import auxiliary
 
         auxiliary.export_cache_of_all_cacheable_nodes(handles=1, cache_format=anima.USD)
     progress_controller.increment()
@@ -2881,13 +2881,13 @@ def cache_animations(progress_controller=None):
     progress_controller.maximum = 2
 
     # bake constraints
-    # from anima.dcc.mayaEnv import toolbox
+    # from anima.dcc.mayaDCC import toolbox
     # reload(toolbox)
     # toolbox.Animation.bake_all_constraints()
     # progress_controller.increment()
 
     # export Alembic/USD caches.
-    from anima.dcc.mayaEnv import auxiliary
+    from anima.dcc.mayaDCC import auxiliary
 
     # For now export both cache formats, deprecate Alembics later.
     auxiliary.export_cache_of_all_cacheable_nodes(handles=1, cache_format=anima.ALEMBIC)
@@ -2942,7 +2942,7 @@ def export_edl_and_xml(progress_controller=None):
         progress_controller = ProgressControllerBase()
     progress_controller.maximum = 11
 
-    from anima.dcc.mayaEnv import Maya
+    from anima.dcc.mayaDCC import Maya
 
     m = Maya()
     current_version = m.get_current_version()
@@ -3067,9 +3067,9 @@ def export_camera(progress_controller=None):
     progress_controller.maximum = 7
 
     from stalker import Task, Version
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m = mayaEnv.Maya()
+    m = mayaDCC.Maya()
     v = m.get_current_version()
     progress_controller.increment()
 
@@ -3140,9 +3140,9 @@ def export_fbx(progress_controll=None):
     # pm.select(root_transform_nodes)
 
     # create the output_fbx_path
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m = mayaEnv.Maya()
+    m = mayaDCC.Maya()
     v = m.get_current_version()
 
     # get the asset name

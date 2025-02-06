@@ -128,7 +128,7 @@ TODO :
 __version__ = "1.2.2"
 
 import pymel.core as pm
-from anima.dcc.mayaEnv import auxiliary
+from anima.dcc.mayaDCC import auxiliary
 
 
 class PickedObject(object):

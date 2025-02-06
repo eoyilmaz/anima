@@ -860,10 +860,10 @@ def run_pre_publishers():
     This is written to prevent users to save on top of a Published version and
     create a back door to skip un publishable scene to publish
     """
-    from anima.dcc.mayaEnv.publish import PublishError
-    from anima.dcc import mayaEnv
+    from anima.dcc.mayaDCC.publish import PublishError
+    from anima.dcc import mayaDCC
 
-    m_env = mayaEnv.Maya()
+    m_env = mayaDCC.Maya()
 
     version = m_env.get_current_version()
 
@@ -908,7 +908,7 @@ def run_pre_publishers():
         staging.clear()
     else:
         # run some of the publishers
-        from anima.dcc.mayaEnv import publish as publish_scripts
+        from anima.dcc.mayaDCC import publish as publish_scripts
 
         try:
             publish_scripts.check_node_names_with_bad_characters()
@@ -936,10 +936,10 @@ def run_post_publishers():
     This is written to prevent users to save on top of a Published version and
     create a back door to skip un publishable scene to publish
     """
-    from anima.dcc.mayaEnv.publish import PublishError
-    from anima.dcc import mayaEnv
+    from anima.dcc.mayaDCC.publish import PublishError
+    from anima.dcc import mayaDCC
 
-    m_env = mayaEnv.Maya()
+    m_env = mayaDCC.Maya()
 
     version = m_env.get_current_version()
 
@@ -1025,9 +1025,9 @@ def get_current_render_layer():
 
 def fix_external_paths():
     """fixes external paths in a maya scene"""
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m_env = mayaEnv.Maya()
+    m_env = mayaDCC.Maya()
     if m_env.get_current_version():
         m_env.replace_external_paths()
 
@@ -1053,9 +1053,9 @@ def generate_thumbnail():
     """generates thumbnail for current scene"""
     import tempfile
     import glob
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m_env = mayaEnv.Maya()
+    m_env = mayaDCC.Maya()
     v = m_env.get_current_version()
 
     if not v:
@@ -1132,7 +1132,7 @@ def perform_playblast(
     # check if the current scene is a Stalker related version
     # if not call the default playblast
     # if it is call out ShotPlayblaster
-    from anima.dcc.mayaEnv import Maya
+    from anima.dcc.mayaDCC import Maya
 
     m = Maya()
     v = m.get_current_version()
@@ -1256,11 +1256,11 @@ def ask_playblast_view_options():
     # display the current options and ask the user to change them
     # sadly we need to use Qt to display a proper modal dialog
     from anima.ui.lib import QtCore, QtWidgets
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
     class PlayblastViewOptionsDialog(QtWidgets.QDialog):
         def __init__(self, options=None):
-            parent = mayaEnv.get_maya_main_window()
+            parent = mayaDCC.get_maya_main_window()
             super(PlayblastViewOptionsDialog, self).__init__(parent=parent)
             self.options = options
             self.checkers = []
@@ -1495,7 +1495,7 @@ class Playblaster(object):
                 raise RuntimeError("Please login first!")
 
         self.version = None
-        from anima.dcc.mayaEnv import Maya
+        from anima.dcc.mayaDCC import Maya
 
         self.m_env = Maya()
         self.version = self.m_env.get_current_version()
@@ -1518,7 +1518,7 @@ class Playblaster(object):
         try:
             sequence_name = sequencer.getAttr("sequence_name")
         except pm.MayaAttributeError:
-            from anima.dcc.mayaEnv import previs
+            from anima.dcc.mayaDCC import previs
 
             previs.Previs.add_sequence_name_attribute_to_sequencer(sequencer)
             sequence_name = sequencer.getAttr("sequence_name")
@@ -1578,7 +1578,7 @@ class Playblaster(object):
         if sequencers:
             sequencer = sequencers[0]
             if not sequencer.hasAttr("sequence_name"):
-                from anima.dcc.mayaEnv import previs
+                from anima.dcc.mayaDCC import previs
 
                 previs.Previs.add_sequence_name_attribute_to_sequencer(sequencer)
             if sequencer.getAttr("sequence_name") != "":
@@ -1593,9 +1593,9 @@ class Playblaster(object):
         import timecode
 
         frame_rate = 25
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
-        maya_env = mayaEnv.Maya()
+        maya_env = mayaDCC.Maya()
         v = maya_env.get_current_version()
         if v:
             frame_rate = v.task.project.fps
@@ -2005,9 +2005,9 @@ class Playblaster(object):
                 "\\", "/"
             )
 
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
-        menv = mayaEnv.Maya()
+        menv = mayaDCC.Maya()
         fps = menv.get_fps()
 
         result = []
@@ -2079,9 +2079,9 @@ class Playblaster(object):
         import glob
 
         frame_rate = 25
-        from anima.dcc import mayaEnv
+        from anima.dcc import mayaDCC
 
-        maya_env = mayaEnv.Maya()
+        maya_env = mayaDCC.Maya()
         v = maya_env.get_current_version()
         if v:
             frame_rate = v.task.project.fps
@@ -2922,9 +2922,9 @@ def add_outputs_to_current_version(
     Returns:
         List[File]: List of File instances that are newly created.
     """
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m = mayaEnv.Maya()
+    m = mayaDCC.Maya()
     current_version = m.get_current_version()
 
     if current_version is None:
@@ -3075,9 +3075,9 @@ def auto_reference_caches(cache_type=ALEMBIC):
     # update all references first
     update_cache_references(cache_type=cache_type)
 
-    from anima.dcc import mayaEnv
+    from anima.dcc import mayaDCC
 
-    m = mayaEnv.Maya()
+    m = mayaDCC.Maya()
     v = m.get_current_version()
     if not isinstance(v, Version):
         raise RuntimeError("Active scene is not related to a Version.")
@@ -4011,7 +4011,7 @@ def bake_mash_nodes():
 
     # first convert all MASH_Repro to instancers
     from MASH import switchGeometryType
-    from anima.dcc.mayaEnv import mash_bake_instancer
+    from anima.dcc.mayaDCC import mash_bake_instancer
 
     logger.debug("Converting MASH_Repro to instancers if any!")
     for mash_waiter in pm.ls(type=pm.nt.MASH_Waiter):

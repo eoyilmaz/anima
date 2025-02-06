@@ -472,7 +472,7 @@ def export_camera_curves_to_3de4_ui():
             )
             super(UI, self).accept()
 
-    from anima.dcc.mayaEnv import get_maya_main_window
+    from anima.dcc.mayaDCC import get_maya_main_window
 
     ui = UI(parent=get_maya_main_window())
     ui.show()
@@ -631,7 +631,7 @@ def very_nice_camera_rig(
     camera_shape.verticalFilmAperture.set(vertical_film_aperture / 25.4)
 
     # add cacheable attribute
-    from anima.dcc.mayaEnv import rigging
+    from anima.dcc.mayaDCC import rigging
 
     rigging.Rigging.add_cacheable_attribute(camera_transform, "shot_camera")
 

@@ -34,7 +34,7 @@ TODO List :
 __version__ = "10.5.17"
 
 import pymel.core as pm
-from anima.dcc.mayaEnv import auxiliary
+from anima.dcc.mayaDCC import auxiliary
 
 
 class PivotSwitcher(object):

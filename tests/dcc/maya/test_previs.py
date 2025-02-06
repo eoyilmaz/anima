@@ -22,7 +22,7 @@ from stalker import (
     Version,
 )
 
-from anima.dcc.mayaEnv import previs, Maya
+from anima.dcc.mayaDCC import previs, Maya
 
 
 class ShotSplitterTestCase(unittest.TestCase):

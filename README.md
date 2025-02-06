@@ -82,8 +82,8 @@ rez-env anima redshift aces maya -- maya
 Then inside Maya you can start using the pipeline scripts:
 
 ```python
-from anima.dcc import mayaEnv
-m = mayaEnv.Maya()
+from anima.dcc import mayaDCC
+m = mayaDCC.Maya()
 ```
 
 or better:

@@ -2,7 +2,7 @@
 import shutil
 
 from anima.log import logger
-from anima.dcc import mayaEnv
+from anima.dcc import mayaDCC
 
 from stalker import Asset, Repository, Sequence, Shot, Task, Version
 from stalker.db.session import DBSession
@@ -289,7 +289,7 @@ class AssetMigrationTool(object):
         # We now should have sorted list of source versions
         # and a corresponding version centric migration recipe
         # go over the list and create new versions,
-        dcc_env = mayaEnv.Maya()
+        dcc_env = mayaDCC.Maya()
         publish_errors = []
         for v in ordered_list_of_versions_to_move:
             recipe = version_centric_migration_recipe[v]

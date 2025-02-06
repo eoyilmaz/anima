@@ -847,8 +847,8 @@ global proc string performPlayblast( int $action )
 {
     // The patched version of the original perform playblast
     // directly call our own playblaster
-    print("calling anima.dcc.mayaEnv.auxiliary.perform_playblast(" + $action +  ")");
-    python("from anima.dcc.mayaEnv import auxiliary; auxiliary.perform_playblast(" + $action + ");");
+    print("calling anima.dcc.mayaDCC.auxiliary.perform_playblast(" + $action +  ")");
+    python("from anima.dcc.mayaDCC import auxiliary; auxiliary.perform_playblast(" + $action + ");");
     return "";
 }
 
