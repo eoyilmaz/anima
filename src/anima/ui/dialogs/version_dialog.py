@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import functools
-import sys
-import os
-import logging
 from collections import namedtuple
+import functools
+import logging
+import os
 
 from sqlalchemy import alias
 
@@ -24,9 +23,8 @@ from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.dialogs import publish_checker, version_updater
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.views.task import TaskTreeView
-from anima.ui.widgets.common import RecentFilesComboBox, TakesListWidget
+from anima.ui.widgets.common import RecentFilesComboBox, VariantsListWidget
 from anima.ui.widgets.version import VersionsTableWidget
-
 from anima.utils import (
     MediaManager,
     get_unique_variant_names,
@@ -44,12 +42,11 @@ VersionNT = namedtuple(
     "VersionNT",
     [
         "id",
+        "revision_number",
         "version_number",
         "is_published",
-        "created_with",
         "created_by_id",
         "updated_by_id",
-        "full_path",
         "description",
     ],
 )
@@ -59,6 +56,7 @@ VersionNT = namedtuple(
 # Mode 1: Open
 # Mode 2: Both Save As and Open. This is the default and this is the
 #         legacy mode now, which will be deprecated in later versions.
+# TODO: Convert this to an Enum called UIMode
 SAVE_AS_MODE = 0
 OPEN_MODE = 1
 SAVE_AS_AND_OPEN_MODE = 2
@@ -80,26 +78,28 @@ SAVE_AS_AND_OPEN_MODE = 2
 
 
 def UI(app_in=None, executor=None, **kwargs):
-    """
-    :param environment: The
-      :class:`~anima.dcc.base.DCCBase` can be None to let the UI to
-      work in "environmentless" mode in which it only creates data in database
-      and copies the resultant version file path to clipboard.
+    """Wrap the `ui_caller()` for ease of use.
 
-    :param mode: Runs the UI either in Read-Write (0) mode or in Read-Only (1)
-      mode.
+    Args:
+        dcc: The :class:`~anima.dcc.base.DCCBase` can be None to let the UI to
+            work in "DCC-less" mode in which it only creates data in database
+            and copies the resultant version file path to clipboard.
 
-    :param app_in: A Qt Application instance, which you can pass to let the UI
-      be attached to the given applications event process.
+        mode (int): Runs the UI either in Read-Write (0) mode or in Read-Only
+            (1) mode.
 
-    :param executor: Instead of calling app.exec_ the UI will call this given
-      function. It also passes the created app instance to this executor.
+        app_in (QtCore.Qt.QApplication): A Qt Application instance, which you
+            can pass to let the UI be attached to the given applications event
+            process.
 
+        executor (callable): Instead of calling `app.exec_()` the UI will call
+            this given function. It also passes the created app instance to
+            this executor.
     """
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
+class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     """The main version creation dialog for the pipeline.
 
     This is the main interface that the users of the ``anima`` will use to
@@ -109,54 +109,57 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     is created only for choosing previous versions. There will only be one
     button called "Choose" which returns the chosen Version instance.
 
-    :param environment: It is an object which supplies **methods** like
-      ``open``, ``save``, ``export``,  ``import`` or ``reference``. The most
-      basic way to do this is to pass an instance of a class which is derived
-      from the :class:`~anima.dcc.base.DCCBase` which has all this
-      methods but produces ``NotImplementedError``s if the child class has
-      not implemented these actions.
+    Args:
+        dcc (DCCBase): It is an object which supplies **methods** like
+            ``open``, ``save``, ``export``, ``import`` or ``reference``. The
+            most basic way to do this is to pass an instance of a class which
+            is derived from the :class:`~anima.dcc.base.DCCBase` which has all
+            this methods but produces ``NotImplementedError``s if the child
+            class has not implemented these actions.
 
-      The main duty of the Environment object is to introduce the host
-      application (Maya, Houdini, Nuke, etc.) to the pipeline scripts and let
-      it to open, save, export, import or reference a version file.
+            The main duty of the DCC object is to introduce the host
+            application (Maya, Houdini, Nuke, etc.) to the pipeline scripts and
+            let it to open, save, export, import or reference a version file.
 
-    **No Environment Interaction**
+        **No DCC Interaction**
 
-      The UI is able to handle the situation of not being bounded to an
-      Environment. So if there is no Environment instance is given then the UI
-      generates new Version instance and will allow the user to "copy" the full
-      path of the newly generated Version. So environments which are not able
-      to run Python code (Photoshop, ZBrush etc.) will also be able to
-      contribute to projects.
+            The UI is able to handle the situation of not being bounded to an
+            DCC. So if there is no DCC instance is given then the UI generates
+            new Version instance and will allow the user to "copy" the full
+            path of the newly generated Version. So DCCs which are not able to
+            run Python code (Photoshop, ZBrush etc.) will also be able to
+            contribute to projects.
 
-    :param parent: The parent ``PySide.QtCore.QObject`` of this interface. It
-      is mainly useful if this interface is going to be attached to a parent
-      UI, like the Maya or Nuke.
+        parent (QObject): The parent ``QtCore.QObject`` of this interface. It
+            is mainly useful if this interface is going to be attached to a
+            parent UI, like the Maya or Nuke.
 
-    :param mode: The mode parameter has changed meaning. It is now to define if
-      the UI is in **Save/Create** mode or in **Open/Read** mode. It will
-      discern the Open and Save functionality, which previously both exist
-      at the same time and still can be by setting the mode to 2, which is the
-      default value for now, but it will deprecate in later versions.
+        mode (int): The mode parameter has changed meaning. It is now to define
+            if the UI is in **Save/Create** mode or in **Open/Read** mode. It
+            will discern the Open and Save functionality, which previously both
+            exist at the same time and still can be by setting the mode to 2,
+            which is the default value for now, but it will deprecate in later
+            versions.
 
-      The previous functionality of defining if the UI is in **Read-Write** or
-      **Read-Only** mode has been automized. So the UI can decide to be in
-      **Read-Only** mode if the given Environment doesn't have ``save_as``
-      ability. When the UI is in Read-Write mode there will be all the buttons
-      you would normally have (Export As, Save As, Open, Reference, Import),
-      and in Read-Only mode it will have only one button called "Choose" which
-      lets you choose one Version.
+            The previous functionality of defining if the UI is in
+            **Read-Write** or **Read-Only** mode has been automated. So the UI
+            can decide to be in **Read-Only** mode if the given DCC doesn't
+            have ``save_as`` ability. When the UI is in Read-Write mode there
+            will be all the buttons you would normally have (Export As, Save
+            As, Open, Reference, Import), and in Read-Only mode it will have
+            only one button called "Choose" which lets you choose one
+            Version.
     """
 
-    def __init__(self, environment=None, parent=None, mode=SAVE_AS_AND_OPEN_MODE):
+    def __init__(self, dcc=None, parent=None, mode=SAVE_AS_AND_OPEN_MODE):
         logger.debug("initializing the interface")
-        super(MainDialog, self).__init__(parent)
-        self.dcc = environment
+        QtWidgets.QDialog.__init__(self, parent=parent)
+        self.dcc = dcc
 
         self.mode = None
         self.window_title = ""
         self.chosen_version = None
-        self.environment_name_format = "{name} ({extension})"
+        self.dcc_name_format = "{name} ({extension})"
         # create the project attribute in projects_combo_box
         self.current_dialog = None
 
@@ -178,7 +181,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         logger.debug("finished initializing the interface")
 
     def _setup_ui(self):
-        """sets the UI up"""
+        """Create UI widgets."""
         self.update_window_title()
 
         self.resize(1500, 850)
@@ -481,22 +484,22 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.thumbnail_layout.addLayout(self.horizontal_layout_13)
 
         # ------------------------------------------
-        # Takes Goes its own groupbox
-        self.takes_group_box = QtWidgets.QGroupBox()
-        self.takes_group_box.setTitle("Takes")
+        # Variants Goes its own groupbox
+        # self.variants_group_box = QtWidgets.QGroupBox()
+        # self.variants_group_box.setTitle("Variants")
 
-        self.vertical_layout_8 = QtWidgets.QVBoxLayout(self.takes_group_box)
+        # self.vertical_layout_8 = QtWidgets.QVBoxLayout(self.variants_group_box)
 
-        # ===================
-        # Show Representations
-        self.repr_as_separate_takes_check_box = QtWidgets.QCheckBox()
-        self.repr_as_separate_takes_check_box.setText("Show Repr.")
-        self.repr_as_separate_takes_check_box.setToolTip(
-            "<html><head/><body><p>Check this to show "
-            '<span style=" font-weight:600;">Representations</span> as '
-            "separate takes if available</p></body></html>"
-        )
-        self.vertical_layout_8.addWidget(self.repr_as_separate_takes_check_box)
+        # # ===================
+        # # Show Representations
+        # self.repr_as_separate_variants_check_box = QtWidgets.QCheckBox()
+        # self.repr_as_separate_variants_check_box.setText("Show Repr.")
+        # self.repr_as_separate_variants_check_box.setToolTip(
+        #     "<html><head/><body><p>Check this to show "
+        #     '<span style=" font-weight:600;">Representations</span> as '
+        #     "separate variants if available</p></body></html>"
+        # )
+        # self.vertical_layout_8.addWidget(self.repr_as_separate_variants_check_box)
 
         # # add a spacer
         # spacer_item = QtWidgets.QSpacerItem(
@@ -506,25 +509,25 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # )
         # self.vertical_layout_8.addItem(spacer_item)
 
-        # ===================
-        # Add Take Push Button
-        self.add_take_push_button = QtWidgets.QPushButton(self)
-        self.add_take_push_button.setText("New Take")
-        self.add_take_push_button.setMinimumWidth(120)
-        self.vertical_layout_8.addWidget(self.add_take_push_button)
+        # # ===================
+        # # Add Variant Push Button
+        # self.add_variant_push_button = QtWidgets.QPushButton(self)
+        # self.add_variant_push_button.setText("New Variant")
+        # self.add_variant_push_button.setMinimumWidth(120)
+        # self.vertical_layout_8.addWidget(self.add_variant_push_button)
 
-        # ====================
-        # Takes Label
-        self.takes_label = QtWidgets.QLabel()
-        self.takes_label.setText("Take")
-        self.takes_label.setMinimumSize(QtCore.QSize(35, 0))
-        self.vertical_layout_8.addWidget(self.takes_label)
+        # # ====================
+        # # Variants Label
+        # self.variants_label = QtWidgets.QLabel()
+        # self.variants_label.setText("Variant")
+        # self.variants_label.setMinimumSize(QtCore.QSize(35, 0))
+        # self.vertical_layout_8.addWidget(self.variants_label)
 
-        # ===================
-        # Takes ComboBox
-        # self.takes_combo_box = TakesComboBox(self)
-        self.takes_list_widget = TakesListWidget(self)
-        self.vertical_layout_8.addWidget(self.takes_list_widget)
+        # # ===================
+        # # Variants ComboBox
+        # # self.variants_combo_box = VariantsComboBox(self)
+        # self.variants_list_widget = VariantsListWidget(self)
+        # self.vertical_layout_8.addWidget(self.variants_list_widget)
 
         # ------------------------------------------
         # Previous Versions Group Box
@@ -754,7 +757,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.versions_main_layout.addWidget(self.new_version_controls_widget)
 
         self.vertical_layout_6 = QtWidgets.QVBoxLayout()
-        self.horizontal_layout_12.addWidget(self.takes_group_box)
+        # self.horizontal_layout_12.addWidget(self.variants_group_box)
         self.horizontal_layout_12.addLayout(self.vertical_layout_6)
 
         self.vertical_layout_6.addWidget(self.versions_group_box)
@@ -792,7 +795,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if self.dcc:
             window_title = f"{window_title} | {self.dcc.name}"
         else:
-            window_title = f"{window_title} | No Environment"
+            window_title = f"{window_title} | No DCC"
 
         if self.mode == SAVE_AS_MODE:
             window_title = f"{window_title} | Version: Save-As Mode"
@@ -876,20 +879,20 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         #     self.search_task_comboBox_textChanged
         # )
 
-        # # takes_combo_box
-        # self.takes_combo_box.currentTextChanged.connect(
-        #     self.takes_combo_box_changed
+        # # variants_combo_box
+        # self.variants_combo_box.currentTextChanged.connect(
+        #     self.variants_combo_box_changed
         # )
 
-        # repr_as_separate_takes_checkBox
-        self.repr_as_separate_takes_check_box.stateChanged.connect(
-            self.tasks_tree_view_changed
-        )
+        # # repr_as_separate_variants_checkBox
+        # self.repr_as_separate_variants_check_box.stateChanged.connect(
+        #     self.tasks_tree_view_changed
+        # )
 
-        # takes_list_widget
-        self.takes_list_widget.currentItemChanged.connect(
-            self.takes_list_widget_changed
-        )
+        # # variants_list_widget
+        # self.variants_list_widget.currentItemChanged.connect(
+        #     self.variants_list_widget_changed
+        # )
 
         # recent files comboBox
         self.recent_files_combo_box.currentIndexChanged.connect(
@@ -901,10 +904,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.find_from_path_push_button_clicked
         )
 
-        # add_take_toolButton
-        self.add_take_push_button.clicked.connect(
-            self.takes_list_widget.show_add_take_dialog
-        )
+        # # add_variant_toolButton
+        # self.add_variant_push_button.clicked.connect(
+        #     self.variants_list_widget.show_add_variant_dialog
+        # )
 
         # export_as
         self.export_as_push_button.clicked.connect(self.export_as_push_button_clicked)
@@ -1354,39 +1357,41 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.clear_thumbnail()
         self.update_thumbnail()
 
-        # get the versions of the entity
-        takes = []
+        # # get the versions of the entity
+        # variants = []
 
-        if task_id:
-            # clear the takes_combo_box and fill with new data
-            logger.debug("clear takes widget")
-            self.takes_list_widget.clear()
+        # if task_id:
+        #     # clear the variants_combo_box and fill with new data
+        #     logger.debug("clear variants widget")
+        #     self.variants_list_widget.clear()
 
-            entity_type = (
-                DBSession.query(SimpleEntity.entity_type)
-                .filter(SimpleEntity.id == task_id)
-                .first()
-            )
+        #     entity_type = (
+        #         DBSession.query(SimpleEntity.entity_type)
+        #         .filter(SimpleEntity.id == task_id)
+        #         .first()
+        #     )
 
-            if entity_type == "Project":
-                return
+        #     if entity_type == "Project":
+        #         return
 
-            children_count = (
-                DBSession.query(Task.id).filter(Task.parent_id == task_id).count()
-            )
+        #     children_count = (
+        #         DBSession.query(Task.id).filter(Task.parent_id == task_id).count()
+        #     )
 
-            if children_count == 0:
-                takes = get_unique_variant_names(
-                    task_id,
-                    include_reprs=self.repr_as_separate_takes_check_box.isChecked(),
-                )
-                takes = sorted(takes, key=lambda x: x.lower())
+        #     if children_count == 0:
+        #         variants = get_unique_variant_names(
+        #             task_id,
+        #             include_reprs=self.repr_as_separate_variants_check_box.isChecked(),
+        #         )
+        #         variants = sorted(variants, key=lambda x: x.lower())
 
-            logger.debug(f"len(takes) from db: {len(takes)}")
+        #     logger.debug(f"len(variants) from db: {len(variants)}")
 
-            logger.debug("adding the takes from db")
-            self.takes_list_widget.variant_names = takes
-            self.takes_label.setText(f"Takes ({len(takes)})")
+        #     logger.debug("adding the variants from db")
+        #     self.variants_list_widget.variant_names = variants
+        #     self.variants_label.setText(f"Variants ({len(variants)})")
+
+        self.update_previous_versions_table_widget()
 
     def _set_defaults(self):
         """sets up the defaults for the interface"""
@@ -1408,15 +1413,15 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.fill_tasks_tree_view(self.show_completed_check_box.isChecked())
 
         # reconnect signals
-        # takes_combo_box
-        # self.takes_list_widget.currentTextChanged.connect(
-        #     self.takes_list_widget_changed
+        # variants_combo_box
+        # self.variants_list_widget.currentTextChanged.connect(
+        #     self.variants_list_widget_changed
         # )
 
-        # takes_combo_box
-        self.takes_list_widget.currentItemChanged.connect(
-            self.takes_list_widget_changed
-        )
+        # # variants_combo_box
+        # self.variants_list_widget.currentItemChanged.connect(
+        #     self.variants_list_widget_changed
+        # )
         # *********************************************************************
 
         # custom context menu for the previous_versions_table_widget
@@ -1447,18 +1452,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.search_task_line_edit.setVisible(False)
 
         # fill programs list
-        env_factory = ExternalDCCFactory()
-        env_names = env_factory.get_env_names(name_format=self.environment_name_format)
+        dcc_factory = ExternalDCCFactory()
+        env_names = dcc_factory.get_dcc_names(name_format=self.dcc_name_format)
         self.dcc_combo_box.addItems(env_names)
 
-        is_external_env = False
+        is_external_dcc = False
         dcc = self.dcc
         if not self.dcc:
-            is_external_env = True
-            # just get one random environment
-            dcc = env_factory.get_env(env_names[0])
+            is_external_dcc = True
+            # just get one random DCC
+            dcc = dcc_factory.get_dcc(env_names[0])
 
-        # get all the representations available for this environment
+        # get all the representations available for this DCC
         reprs = dcc.representations
         # add them to the representations comboBox
         for r in reprs:
@@ -1470,13 +1475,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         logger.debug("restoring the ui with the version from DCC")
 
-        # get the last version from the environment
+        # get the last version from the DCC
         version_from_env = dcc.get_last_version()
 
         logger.debug(f"version_from_env: {version_from_env}")
         self.restore_ui(version_from_env)
 
-        if is_external_env:
+        if is_external_dcc:
             # hide some buttons
             self.export_as_push_button.setVisible(False)
             self.reference_push_button.setVisible(False)
@@ -1522,18 +1527,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not version:
             return
 
-        # variant_name
-        variant_name = version.variant_name
-        self.takes_list_widget.current_variant_name = variant_name
+        # # variant_name
+        # variant_name = version.variant_name
+        # self.variants_list_widget.current_variant_name = variant_name
 
         # select the version in the previous version list
         self.previous_versions_table_widget.select_version(version)
 
         if not self.dcc:
-            # set the environment_comboBox
+            # set the dcc_comboBox
             dcc_factory = ExternalDCCFactory()
             try:
-                dcc = dcc_factory.get_env(version.created_with)
+                dcc = dcc_factory.get_dcc(version.created_with)
             except ValueError:
                 pass
             else:
@@ -1542,19 +1547,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 if index:
                     self.dcc_combo_box.setCurrentIndex(index)
 
-    def takes_list_widget_changed(self, index):
-        """runs when the takes_listWidget has changed"""
-        logger.debug("takes_list_widget_changed started")
-        # count = self.takes_list_widget.count()
-        # if index == count - 1:
-        #     # call New Take
-        #     pass
-        # else:
-        #     # update the previous_versions_table_widget
-        #     self.update_previous_versions_table_widget()
-        self.update_previous_versions_table_widget()
+    # def variants_list_widget_changed(self, index):
+    #     """runs when the variants_listWidget has changed"""
+    #     logger.debug("variants_list_widget_changed started")
 
-        logger.debug("takes_combo_box_changed finished")
+    #     self.update_previous_versions_table_widget()
+
+    #     logger.debug("variants_combo_box_changed finished")
 
     def update_previous_versions_table_widget(self):
         """updates the previous_versions_table_widget"""
@@ -1578,29 +1577,27 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.previous_versions_table_widget.clear()
             return
 
-        # take name
-        variant_name = self.takes_list_widget.current_variant_name
+        # # variant name
+        # variant_name = self.variants_list_widget.current_variant_name
 
-        if variant_name != "":
-            logger.debug(f"variant_name: {variant_name}")
-        else:
-            return
+        # if variant_name != "":
+        #     logger.debug(f"variant_name: {variant_name}")
+        # else:
+        #     return
 
-        # query the Versions of this type and take
+        # query the Versions of this type and variant
         query = (
             DBSession.query(
                 # use only the necessary fields
                 Version.id,
                 Version.version_number,
                 Version.is_published,
-                Version.created_with,
                 Version.created_by_id,
                 Version.updated_by_id,
-                Version.full_path,  # convert to absolute full path
                 Version.description,
             )
             .filter(Version.task_id == task_id)
-            .filter(Version.variant_name == variant_name)
+            # .filter(Version.variant_name == variant_name)
         )
 
         # get the published only
@@ -1610,7 +1607,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # show how many
         # count = self.version_count_spin_box.value()
 
-        data_from_db = query.order_by(Version.version_number.desc()).all()
+        data_from_db = query.order_by(Version.revision_number.desc()).order_by(Version.version_number.desc()).all()
         versions = list(map(lambda x: VersionNT(*x), data_from_db))
         versions.reverse()
 
@@ -1642,7 +1639,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             )
             return None
 
-        variant_name = self.takes_list_widget.current_variant_name
+        # variant_name = self.variants_list_widget.current_variant_name
         user = self.get_logged_in_user()
         if not user:
             self.close()
@@ -1653,7 +1650,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             version = Version(
                 task=task,
                 created_by=user,
-                variant_name=variant_name,
+                # variant_name=variant_name,
                 description=description,
             )
             version.is_published = publish
@@ -1683,7 +1680,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not new_version:
             return
 
-        # call the environments export_as method
+        # call the DCC's export_as method
         if self.dcc is not None:
             try:
                 self.dcc.export_as(new_version)
@@ -1738,7 +1735,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 # create the publish window
                 self.close()
                 dialog = publish_checker.UI(
-                    environment=self.dcc,
+                    dcc=self.dcc,
                     publish_callback=callback,
                     version=new_version,
                     parent=self.parent(),
@@ -1773,23 +1770,23 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             logger.debug("no new_version, returning back!")
             return
 
-        # call the environments save_as method
+        # call the DCC's save_as method
         is_external_env = False
         dcc = self.dcc
         if not dcc:
-            # get the environment
+            # get the DCC
             dcc_name = self.dcc_combo_box.currentText()
             dcc_factory = ExternalDCCFactory()
-            dcc = dcc_factory.get_env(dcc_name, self.environment_name_format)
+            dcc = dcc_factory.get_dcc(dcc_name, self.dcc_name_format)
             is_external_env = True
             if not dcc:
                 logger.debug(f"no DCC found with name: {dcc_name}")
                 DBSession.rollback()
                 return
-            logger.debug("dcc: {environment.name}")
+            logger.debug(f"dcc: {dcc.name}")
         else:
             # check if the version the user is trying to create and the version
-            # that is currently open in the current environment belongs to the
+            # that is currently open in the current DCC belongs to the
             # same task
             current_version = dcc.get_current_version()
             if current_version and current_version.task != new_version.task:
@@ -1926,12 +1923,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not is_blender:
             self.close()
 
-        # call the environments open method
+        # call the DCC's open method
         if self.dcc is not None:
             repr_name = self.representations_comboBox.currentText()
             ref_depth = ref_depth_res.index(self.ref_depth_combo_box.currentText())
 
-            # environment can throw RuntimeError for unsaved changes
+            # DCC can throw RuntimeError for unsaved changes
             try:
                 reference_resolution = self.dcc.open(
                     old_version,
@@ -1968,7 +1965,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             if reference_resolution["create"] or reference_resolution["update"]:
                 # invoke the version_updater for this scene
                 version_updater_main_dialog = version_updater.MainDialog(
-                    environment=self.dcc,
+                    dcc=self.dcc,
                     parent=self,
                     reference_resolution=reference_resolution,
                 )
@@ -2028,61 +2025,61 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return
 
         logger.debug(f"referencing version with id: {previous_version.id}")
-        # call the environments reference method
+        # call the DCC's reference method
         if self.dcc is not None:
             # get the use namespace state
             use_namespace = self.use_namespace_check_box.isChecked()
 
             # check if it has any representations
             # .filter(Version.parent == previous_version)\
-            all_repr_count = (
-                Version.query.filter(Version.task == previous_version.task)
-                .filter(
-                    Version.variant_name.ilike(f"{previous_version.variant_name}@%")
-                )
-                .count()
-            )
+            # all_repr_count = (
+            #     Version.query.filter(Version.task == previous_version.task)
+            #     .filter(
+            #         Version.variant_name.ilike(f"{previous_version.variant_name}@%")
+            #     )
+            #     .count()
+            # )
 
-            if all_repr_count > 0:
-                # ask which one to reference
-                repr_message_box = QtWidgets.QMessageBox()
-                repr_message_box.setText("Which Repr.?")
-                base_button = repr_message_box.addButton(
-                    Representation.base_repr_name, QtWidgets.QMessageBox.ActionRole
-                )
-                setattr(base_button, "repr_version", previous_version)
+            # if all_repr_count > 0:
+            #     # ask which one to reference
+            #     repr_message_box = QtWidgets.QMessageBox()
+            #     repr_message_box.setText("Which Repr.?")
+            #     base_button = repr_message_box.addButton(
+            #         Representation.base_repr_name, QtWidgets.QMessageBox.ActionRole
+            #     )
+            #     setattr(base_button, "repr_version", previous_version)
 
-                for repr_name in self.dcc.representations:
-                    repr_str = "%{take}{repr_separator}{repr_name}%".format(
-                        take=previous_version.variant_name,
-                        repr_name=repr_name,
-                        repr_separator=Representation.repr_separator,
-                    )
-                    repr_version = (
-                        Version.query.filter(Version.task == previous_version.task)
-                        .filter(Version.variant_name.ilike(repr_str))
-                        .order_by(Version.version_number.desc())
-                        .first()
-                    )
+            #     for repr_name in self.dcc.representations:
+            #         repr_str = "%{variant}{repr_separator}{repr_name}%".format(
+            #             variant=previous_version.variant_name,
+            #             repr_name=repr_name,
+            #             repr_separator=Representation.repr_separator,
+            #         )
+            #         repr_version = (
+            #             Version.query.filter(Version.task == previous_version.task)
+            #             .filter(Version.variant_name.ilike(repr_str))
+            #             .order_by(Version.version_number.desc())
+            #             .first()
+            #         )
 
-                    if repr_version:
-                        repr_button = repr_message_box.addButton(
-                            repr_name, QtWidgets.QMessageBox.ActionRole
-                        )
-                        setattr(repr_button, "repr_version", repr_version)
+            #         if repr_version:
+            #             repr_button = repr_message_box.addButton(
+            #                 repr_name, QtWidgets.QMessageBox.ActionRole
+            #             )
+            #             setattr(repr_button, "repr_version", repr_version)
 
-                # add a cancel button
-                cancel_button = repr_message_box.addButton(
-                    "Cancel", QtWidgets.QMessageBox.RejectRole
-                )
+            #     # add a cancel button
+            #     cancel_button = repr_message_box.addButton(
+            #         "Cancel", QtWidgets.QMessageBox.RejectRole
+            #     )
 
-                repr_message_box.exec_()
-                clicked_button = repr_message_box.clickedButton()
-                if clicked_button.text() != "Cancel":
-                    if clicked_button.repr_version:
-                        previous_version = clicked_button.repr_version
-                else:
-                    return
+            #     repr_message_box.exec_()
+            #     clicked_button = repr_message_box.clickedButton()
+            #     if clicked_button.text() != "Cancel":
+            #         if clicked_button.repr_version:
+            #             previous_version = clicked_button.repr_version
+            #     else:
+            #         return
 
             try:
                 self.dcc.reference(previous_version, use_namespace)
@@ -2112,7 +2109,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # logger.debug("importing version {}".format(previous_version))
 
-        # call the environments import_ method
+        # call the DCC's import_ method
         if self.dcc is not None:
             # get the use namespace state
             use_namespace = self.use_namespace_check_box.isChecked()

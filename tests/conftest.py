@@ -300,24 +300,44 @@ def create_project():
     DBSession.add_all([char1, model, look_dev_task, rig])
     DBSession.commit()
 
-    model_v1 = Version(task=model, take_name="Main", version_number=1)
-    model_v2 = Version(task=model, take_name="Main", version_number=2)
-    model_v3 = Version(task=model, take_name="Main", version_number=3)
-    look_dev_v1 = Version(task=look_dev_task, take_name="Main", version_number=1)
+    # model Main variant
+    model_main_variant = Variant(task=model, name="Main")
+    DBSession.add(model_main_variant)
+    DBSession.commit()
+
+    # look_dev Main variant
+    look_dev_main_variant = Variant(task=look_dev_task, name="Main")
+    DBSession.add(look_dev_main_variant)
+    DBSession.commit()
+
+    # rig Main variant
+    rig_main_variant = Variant(task=rig, name="Main")
+    DBSession.add(rig_main_variant)
+    DBSession.commit()
+
+    # versions
+    model_v1 = Version(task=model_main_variant, version_number=1)
+    model_v2 = Version(task=model_main_variant, version_number=2)
+    model_v3 = Version(task=model_main_variant, version_number=3)
+    DBSession.add_all([model_v1, model_v2, model_v3])
+    DBSession.commit()
+
+    look_dev_v1 = Version(task=look_dev_main_variant, version_number=1)
     look_dev_v1.inputs.append(model_v1)
-    look_dev_v2 = Version(task=look_dev_task, take_name="Main", version_number=2)
+    look_dev_v2 = Version(task=look_dev_main_variant, version_number=2)
     look_dev_v2.inputs.append(model_v2)
-    look_dev_v3 = Version(task=look_dev_task, take_name="Main", version_number=3)
+    look_dev_v3 = Version(task=look_dev_main_variant, version_number=3)
     look_dev_v3.inputs.append(model_v3)
-    rig_v1 = Version(task=rig, take_name="Main", version_number=1)
+    DBSession.add_all([look_dev_v1, look_dev_v2, look_dev_v3])
+    DBSession.commit()
+
+    rig_v1 = Version(task=rig_main_variant, version_number=1)
     rig_v1.inputs.append(model_v1)
-    rig_v2 = Version(task=rig, take_name="Main", version_number=2)
+    rig_v2 = Version(task=rig_main_variant, version_number=2)
     rig_v2.inputs.append(model_v2)
-    rig_v3 = Version(task=rig, take_name="Main", version_number=3)
+    rig_v3 = Version(task=rig_main_variant, version_number=3)
     rig_v3.inputs.append(model_v3)
-    DBSession.add_all(
-        [model_v1, model_v2, model_v3, look_dev_v1, look_dev_v2, look_dev_v3]
-    )
+    DBSession.add_all([rig_v1, rig_v2, rig_v3])
     DBSession.commit()
 
     # char2
@@ -807,7 +827,7 @@ def repr_test_setup():
         data["main_variant"], ["Bounding Box", "Arnold Scene Source", "GPU"]
     )
 
-    # Non default take name
+    # Non default variant name
     data["version4"] = create_version(
         data["alt1_variant"], ["LOD500", "LOD300", "LOD100"]
     )

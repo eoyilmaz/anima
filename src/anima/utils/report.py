@@ -678,7 +678,7 @@ class NetflixReporter(object):
             lighting_tasks = filter(lambda x: x.name == "Lighting", child_tasks)
             for lighting_task in lighting_tasks:
                 assert isinstance(lighting_task, Task)
-                deps = lighting_task.depends
+                deps = lighting_task.depends_on
                 for dep in deps:
                     assert isinstance(dep, Task)
                     if dep.type:
@@ -696,7 +696,7 @@ class NetflixReporter(object):
                 lambda x: x.type and x.type.name.lower().startswith("anim"), child_tasks
             )
             for animation_task in animation_tasks:
-                for dep in animation_task.depends:
+                for dep in animation_task.depends_on:
                     if dep.type and dep.type.name.lower() == "rig":
                         # check if this is a rig for a character
                         parent_asset = dep.parent

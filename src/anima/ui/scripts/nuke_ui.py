@@ -24,4 +24,4 @@ def version_dialog(mode=2):
     logging.getLogger("anima.dcc.nuke").setLevel(logging.WARNING)
     logging.getLogger("stalker.db").setLevel(logging.WARNING)
 
-    version_dialog.UI(environment=n, mode=mode)
+    version_dialog.UI(dcc=n, mode=mode)

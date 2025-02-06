@@ -20,14 +20,14 @@ def setup_publishers():
 
 
 def test_save_as_calls_publishers_for_published_versions(
-    setup_publishers, create_test_data, create_pymel, create_maya_env
+    setup_publishers, create_test_data, create_pymel, create_maya_dcc
 ):
     """testing if Maya.save_as() runs the registered publishers for
     published versions before really saving the file.
     """
     data = create_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     # register two new publishers
     publishers_called = []
 
@@ -50,19 +50,19 @@ def test_save_as_calls_publishers_for_published_versions(
 
     # check called publishers
     assert publishers_called == []
-    maya_env.save_as(v)
+    maya_dcc.save_as(v)
     assert publishers_called == ["publisher1"]
 
 
 def test_save_as_does_not_call_publishers_for_published_versions(
-    setup_publishers, create_test_data, create_pymel, create_maya_env
+    setup_publishers, create_test_data, create_pymel, create_maya_dcc
 ):
     """testing if Maya.save_as() runs the registered publishers for
     published versions before really saving the file.
     """
     data = create_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     # register two new publishers
     publishers_called = []
 
@@ -82,5 +82,5 @@ def test_save_as_does_not_call_publishers_for_published_versions(
 
     # check called publishers
     assert publishers_called == []
-    maya_env.save_as(v)
+    maya_dcc.save_as(v)
     assert publishers_called == []

@@ -1,20 +1,27 @@
 # -*- coding: utf-8 -*-
 
+from functools import lru_cache
 import os
-from typing import List, Union
+import shutil
+from typing import Dict, List, Optional, Union
 
 from stalker import File, Project, Repository, Shot, Version
 from stalker.db.session import DBSession
 
 
 from anima import defaults
-from anima import representation  # extend Stalker classes
+from anima import representation  # keep this to extend Stalker classes
 from anima.log import logger
 from anima.recent import RecentFileManager
 from anima.utils.progress import ProgressManagerFactory
 
 
-def generate_empty_reference_resolution(root=None, leave=None, update=None, create=None):
+def generate_empty_reference_resolution(
+    root : Optional[List[File]] = None,
+    leave : Optional[List[File]] = None,
+    update : Optional[List[File]] = None,
+    create : Optional[List[File]] = None
+) -> Dict:
     """Generate an empty reference_resolution dictionary.
 
     Generate a ``Reference Resolution`` dictionary, where there are keys like
@@ -27,7 +34,7 @@ def generate_empty_reference_resolution(root=None, leave=None, update=None, crea
             because its references has updated versions.
 
     Returns:
-        dict: The reference resolution dictionary.
+        Dict: The reference resolution dictionary.
     """
     return {
         "root": [] if root is None else root,
@@ -44,7 +51,7 @@ class DCCBase(object):
 
     Generally a GUI for the end user is given a class instance which is derived
     from DCCBase which helps the UI to be able to open, save, import or export
-    a Version without knowing the details of the DCC.
+    a File without knowing the details of the DCC.
 
     The DCC instance supplies **methods** like ``open``, ``save``,
     ``export``,  ``import`` or ``reference``. The main duty of the DCC
@@ -62,17 +69,31 @@ class DCCBase(object):
         class MyProgramEnv(DCCBase):
             '''This is a class which will be used by the UI'''
 
-            def open():
+            def open(file : stalker.File):
                 '''Use the Python API of the DCC to open a version.'''
 
                 # do anything that needs to be done before opening the file
-                my_programs_own_python_api.open(filepath=self.version.full_path)
+                my_programs_own_python_api.open(filepath=self.file.full_path)
 
-            def save_as():
+            def save_as(file : File):
                 '''Use the Python API of the DCC to save the current scene.'''
+                # there should be a Version containing this File
+                version = Version.query.filter(Version.files.contains(file)).first()
+
+                if version is None:
+                    raise RuntimeError(
+                        "The given File instance is not related to a Version, "
+                        "can't save the current scene!"
+                    )
+
+                # set the file path
+                full_path = str(version.generate_path(extension=self.extensions[0]))
+                absolute_full_path = os.path.expandvars(full_path)
+
+                file.full_path = full_path
 
                 # do anything that needs to be done before saving the file
-                my_programs_own_python_api.save(filepath=self.version.full_path)
+                my_programs_own_python_api.save(filepath=absolute_full_path)
 
                 # do anything that needs to be done after saving the file
 
@@ -96,64 +117,89 @@ class DCCBase(object):
         self._version = version
 
     def __str__(self):
-        """the string representation of the DCC"""
+        """Return the string representation."""
         return self._name
 
     @property
     def version(self):
-        """returns the current Version instance which is open in the DCC"""
+        """Return the current Version instance which is open in the DCC."""
         return self.get_current_version()
 
     @property
-    def name(self):
-        """returns the DCC name"""
+    def name(self) -> str:
+        """Return the DCC name.
+
+        Returns:
+            str: The DCC name.
+        """
         return self._name
 
     @name.setter
-    def name(self, name):
-        """sets the DCC name"""
-        self._name = name
-
-    def save_as(self, version, run_pre_publishers=True):
-        """The save as action of this DCC.
-
-        It should save the current scene or file to the given `version.full_path`
+    def name(self, name: str) -> None:
+        """Set the DCC name.
 
         Args:
-            version (Version): The :class:`~stalker.models.version.Version`
-                instance to save.
+            name (str): The DCC name.
+        """
+        self._name = name
+
+    def save_as(self, file: File, run_pre_publishers=True):
+        """Save the current scene in this DCC as the given File.
+
+        It should save the current scene or file to the given `file.full_path`.
+
+        Args:
+            file (File): The :class:`~stalker.models.file.File` instance to
+                save the scene as.
             run_pre_publishers (bool): Run pre publishers of this DCC or not.
                 Default value is True.
         """
-        raise NotImplementedError("save_as is not implemented")
+        raise NotImplementedError("save_as is not implemented in this DCC!")
 
-    def export_as(self, version: Version):
-        """Export the contents of the open document as the given version.
+    def export_as(self, file: File):
+        """Export the contents of the open document as the given file.
 
         Args:
-            version (Version): A :class:`~stalker.models.version.Version` instance
-                holding the desired version.
+            file (File): A :class:`~stalker.models.file.File` instance.
         """
-        raise NotImplementedError("export_as is not implemented")
+        raise NotImplementedError("export_as() is not implemented in this DCC!")
 
     def open(
         self,
-        version: Version,
+        file: File,
         force: bool = False,
-        representation: str = None,
         reference_depth: int = 0,
         skip_update_check: bool = False,
     ):
-        """Open the given Version."""
-        raise NotImplementedError("open is not implemented")
+        """Open the given File instance.
+        
+        Args:
+            file (File): The stalker.File instance to open.
+            force (bool): Skip any errors and force open the given file.
+            reference_depth (int): The reference depth to load. This is kind of
+                specifically created for Maya, but might make sense in other
+                DCCs too.
+            skip_update_check (bool): If True, skip the update check.
+        """
+        raise NotImplementedError("open() is not implemented in this DCC!")
 
-    def import_(self, version: Version):
-        """Import the given Version."""
-        raise NotImplementedError("import_ is not implemented")
+    def import_(self, file: File):
+        """Import the given File.
+        
+        Args:
+            file (File): The file to import to.
+        """
+        raise NotImplementedError("import_() is not implemented in this DCC!")
 
-    def reference(self, version: Version, use_namespace: bool = True):
-        """Reference the given Version."""
-        raise NotImplementedError("reference is not implemented")
+    def reference(self, file: File, use_namespace: bool = True):
+        """Reference the given File.
+        
+        Args:
+            file (File): The stalker.File instance to reference.
+            use_namespace (True): Some DCCs (Maya) support namespaces, if True
+                this should use a namespace for the reference.
+        """
+        raise NotImplementedError("reference is not implemented in this DCC!")
 
     def trim_repo_path(self, path: str) -> str:
         """Trim the repository path value from the given path.
@@ -177,8 +223,8 @@ class DCCBase(object):
             return path[len(repo.windows_path) :]
         elif path.startswith(repo.linux_path):
             return path[len(repo.linux_path) :]
-        elif path.startswith(repo.osx_path):
-            return path[len(repo.osx_path) :]
+        elif path.startswith(repo.macos_path):
+            return path[len(repo.macos_path) :]
         return path
 
     @classmethod
@@ -198,7 +244,8 @@ class DCCBase(object):
         """Find Version instances from the given path value.
 
         Find and return the :class:`~stalker.models.version.Version`
-        instances from the given path value.
+        instances from the given path value which should be the File paths that
+        a Version might contain in their `Version.files` attribute.
 
         Return an empty list if it can't find any matching.
 
@@ -226,12 +273,42 @@ class DCCBase(object):
         logger.debug("os_independent_path: {}".format(os_independent_path))
 
         # try to get all versions with that info
+        versions = []
         with DBSession.no_autoflush:
-            versions = Version.query.filter(
-                Version.full_path.startswith(os_independent_path)
-            ).all()
+            files = File.query.filter(File.full_path.startswith(os_independent_path)).all()
+            for file in files:
+                versions += Version.query.filter(Version.files.contains(file)).all()
 
         return versions
+
+    @classmethod
+    def get_file_from_full_path(cls, full_path: str) -> Union[None, File]:
+        """Find the File instance from the given full_path value.
+
+        Args:
+            full_path (str): The full_path of the desired `File` instance.
+
+        Returns:
+            Union[None, File]: Return the `File` if found, else return None.
+        """
+        if full_path is None or full_path == "":
+            return
+
+        logger.debug("full_path: {}".format(full_path))
+        # convert '\\' to '/'
+        full_path = os.path.normpath(os.path.expandvars(full_path)).replace("\\", "/")
+
+        # trim repo path
+        os_independent_path = Repository.to_os_independent_path(full_path)
+
+        # try to get a file with that info
+        logger.debug(f"getting a file with path: {full_path}")
+
+        with DBSession.no_autoflush:
+            file = File.query.filter(File.full_path == os_independent_path).first()
+        logger.debug(f"file: {file}")
+
+        return file
 
     @classmethod
     def get_version_from_full_path(cls, full_path: str) -> Version:
@@ -248,41 +325,82 @@ class DCCBase(object):
         Returns:
             Union[None, Version]: Return the Version if it is found.
         """
-        if full_path is None or full_path == "":
+        file = cls.get_file_from_full_path(full_path)
+
+        # finding the file
+        if file is None:
             return
 
-        logger.debug("full_path: {}".format(full_path))
-        # convert '\\' to '/'
-        full_path = os.path.normpath(os.path.expandvars(full_path)).replace("\\", "/")
-
-        # trim repo path
-        os_independent_path = Repository.to_os_independent_path(full_path)
-
-        # try to get a version with that info
-        logger.debug(f"getting a version with path: {full_path}")
-
-        repr = File.query.filter(File.full_path == os_independent_path).first()
-        # finding the repr
-        if repr is None:
-            return
-
-        version = Version.query.filter(Version.files.contains(repr)).first()
+        version = Version.query.filter(Version.files.contains(file)).first()
 
         logger.debug(f"version: {version}")
         return version
 
-    def get_current_version(self) -> Union[None, Version]:
-        """Returns the current Version instance from the DCC.
+    def get_current_file(self) -> Union[None, File]:
+        """Return the current File from the DCC.
 
-        :returns: :class:`~stalker.models.version.Version` instance or None
+        Returns:
+            stalker.File: A File instance or None.
         """
-        raise NotImplementedError("get_current_version is not implemented")
+        raise NotImplementedError(
+            "get_current_file() is not implemented for this DCC!"
+        )
 
-    def append_to_recent_files(self, path: str):
-        """appends the given path to the recent files list"""
+    def get_current_version(self) -> Union[None, Version]:
+        """Return the current Version instance from the DCC.
+
+        Returns:
+            Union[None, Version]: A :class:`~stalker.Version` instance or
+                None.
+        """
+        current_file = self.get_current_file()
+        # query the version that contains this file
+        return  Version.query.filter(Version.files.contains(current_file)).first()
+
+    def append_to_recent_files(self, path: str) -> None:
+        """Append the given path to the recent files list.
+
+        Args:
+            path (str): The path to append to the recent files list to.
+        """
         # add the file to the recent file list
         rfm = RecentFileManager()
         rfm.add(self.name, path)
+
+
+    def get_file_from_recent_files(self) -> File:
+        """Try to return a `File` instance from the recent files list.
+
+        It will return None if it can not find one.
+
+        Returns:
+            Union[None, File]: The recent File if possible or None. 
+        """
+        file = None
+
+        logger.debug("trying to get the File from recent file list!")
+        # read the file name from recent files list
+        # try to get the a valid asset file from starting the last recent file
+
+        rfm = RecentFileManager()
+
+        try:
+            recent_files = rfm[self.name]
+        except KeyError:
+            logger.debug("no recent files!")
+            recent_files = None
+
+        if recent_files is None:
+            return
+
+        for recent_file in recent_files:
+            file = self.get_file_from_full_path(recent_file)
+            if file is not None:
+                break
+
+        logger.debug(f"file from recent files is: {file}")
+
+        return file
 
     def get_version_from_recent_files(self) -> Version:
         """Try to return a `Version` instance from the recent files list.
@@ -295,24 +413,14 @@ class DCCBase(object):
         version = None
 
         logger.debug("trying to get the version from recent file list")
-        # read the fileName from recent files list
-        # try to get the a valid asset file from starting the last recent file
 
-        rfm = RecentFileManager()
+        file = self.get_file_from_recent_files()
+        if not file:
+            return
+        
+        version = Version.query.filter(Version.files.contains(file)).first()
 
-        try:
-            recent_files = rfm[self.name]
-        except KeyError:
-            logger.debug("no recent files")
-            recent_files = None
-
-        if recent_files is not None:
-            for recent_file in recent_files:
-                version = self.get_version_from_full_path(recent_file)
-                if version is not None:
-                    break
-
-            logger.debug(f"version from recent files is: {version}")
+        logger.debug(f"version from recent files is: {version}")
 
         return version
 
@@ -345,21 +453,22 @@ class DCCBase(object):
     def set_project(self, version):
         """Sets the project to the given Versions project.
 
-        :param version: A :class:`~stalker.models.version.Version`.
+        Args:
+            version (Version): A :class:`~stalker.Version` instance.
         """
         raise NotImplementedError("set_project is not implemented")
 
     def update_version_inputs(self, parent_ref=None):
-        """Update the references list of the current version.
+        """Update the references list of the current file.
 
         Args:
-            parent_ref: The parent ref, if given will override the given
-                version argument and a Version instance will be get from the
-                given parent_ref.path.
+            parent_ref: The parent ref, if given will override the current
+                file and a File instance will be queried from the given
+                parent_ref.path.
         """
         logger.debug(f"parent_ref: {parent_ref}")
 
-        logger.debug("get a version")
+        logger.debug("get a file")
         if not parent_ref:
             logger.debug("got no parent_ref")
             version = self.get_current_version()
@@ -380,18 +489,18 @@ class DCCBase(object):
             )
 
         # update the reference list
-        referenced_versions = self.get_referenced_versions(parent_ref)
+        referenced_versions = self.get_referenced_files(parent_ref)
         version.inputs = referenced_versions
 
         # commit data to the database
         DBSession.add(version)
         DBSession.commit()
 
-    def deep_version_inputs_update(self):
-        """Updates the inputs of the references of the current scene"""
-        raise NotImplementedError("deep_version_inputs_update is not implemented")
+    def deep_references_update(self):
+        """Update the File.references with the references of the current scene."""
+        raise NotImplementedError("deep_references_update is not implemented")
 
-    def check_referenced_versions(self, pdm=None):
+    def check_references(self, pdm=None):
         """Deeply checks all the references in the scene and returns a
         dictionary which has three keys called 'leave', 'update' and 'create'.
 
@@ -421,16 +530,16 @@ class DCCBase(object):
 
         caller = pdm.register(
             3,
-            f"{self.__class__.__name__}.check_referenced_versions() prepare data",
+            f"{self.__class__.__name__}.check_references() prepare data",
         )
 
         # deeply get which file is referencing which other files
-        self.deep_version_inputs_update()
+        self.deep_references_update()
         if caller:
             caller.step()
 
         reference_resolution = generate_empty_reference_resolution(
-            root=self.get_referenced_versions()
+            root=self.get_referenced_files()
         )
 
         if caller:
@@ -457,7 +566,7 @@ class DCCBase(object):
         # register a new caller
         caller = pdm.register(
             len(dfs_version_references),
-            f"{self.__class__.__name__}.check_referenced_versions()",
+            f"{self.__class__.__name__}.check_references()",
         )
 
         # iterate back in the list
@@ -524,25 +633,32 @@ class DCCBase(object):
 
         return reference_resolution
 
-    def get_referenced_versions(self, parent_ref=None) -> List[File]:
-        """Returns the :class:`~stalker.models.version.Version` instances which
-        are referenced in to the current scene
+    def get_referenced_files(self, parent_ref=None) -> List[File]:
+        """Return :class:`~stalker.File`s that are referenced to the current scene.
 
-        :param parent_ref: The parent reference node.
-        :returns: list of :class:`~stalker.models.version.Version` instances.
+        Args:
+            parent_ref (pymel.nt.Reference): The parent reference node.
+        
+        Returns:
+            List[File]: Referenced Files.
         """
-        raise NotImplementedError("get_referenced_versions is not implemented")
+        raise NotImplementedError(
+            "get_referenced_files() is not implemented in this DCC!"
+        )
 
-    def update_versions(self, reference_resolution):
-        """Updates the versions to the latest ones.
+    def update_reference_versions_to_latest(self, reference_resolution: Dict):
+        """Update the File references to their latest versions.
 
-        :param reference_resolution: A dictionary with keys 'leave', 'update'
-          and 'create' with a list of :class:`~stalker.models.version.Version`
-          instances in each of them. Only 'update' key is used and if the
-          Version instance is in the 'update' list the reference is updated to
-          the latest version.
+        Args:
+            reference_resolution (Dict): A dictionary with keys 'leave',
+                'update' and 'create' with a list of :class:`~stalker.File`
+                instances in each of them. Only 'update' key is used and if the
+                File instance is in the 'update' list the reference is updated
+                to the latest version.
         """
-        raise NotImplementedError("update_versions is not implemented")
+        raise NotImplementedError(
+            "update_reference_versions_to_latest() is not implemented in this DCC!"
+        )
 
     def get_frame_range(self):
         """Returns the frame range from the DCC
@@ -550,7 +666,7 @@ class DCCBase(object):
         :returns: a tuple of integers containing the start and end frame
             numbers
         """
-        raise NotImplementedError("get_frame_range is not implemented")
+        raise NotImplementedError("get_frame_range() is not implemented in this DCC!")
 
     def set_frame_range(self, start_frame=0, end_frame=100, adjust_frame_range=False):
         """Sets the frame range in the DCC to the given start and end
@@ -570,8 +686,8 @@ class DCCBase(object):
         """
         raise NotImplementedError("set_fps is not implemented")
 
-    def has_extension(self, filename):
-        """Returns True if the given file names extension is in the extensions
+    def has_extension(self, filename: str) -> bool:
+        """Return True if the given file names extension is in the extensions
         list false otherwise.
 
         accepts:
@@ -579,63 +695,80 @@ class DCCBase(object):
         * a file name with extension or not
         * an extension with a dot on the start or not
 
-        :param filename: A string containing the filename
+        Args
+            filename (str): A string containing the filename
+
+        Returns:
+            bool: True if the given filename has the correct extension.
         """
         if filename is None:
             return False
         return filename.split(".")[-1].lower() in self.extensions
 
-    def load_referenced_versions(self):
-        """loads all the references"""
-        raise NotImplementedError("load_referenced_versions is not implemented")
+    def load_references(self):
+        """Load all the references."""
+        raise NotImplementedError(
+            "load_references() is not implemented in this DCC!"
+        )
 
-    def replace_version(self, source_version, target_version):
-        """Replaces the source_version with the target_version
+    def replace_reference(self, source_file : File, target_file : File):
+        """Replace the source_file with the target_file.
 
-        :param source_version: A
-          :class:`~stalker.models.version.Version` instance holding the version
-          to be replaced
+        Args:
+            source_file (File): A :class:`~stalker.File` instance holding the
+                reference to be replaced
 
-        :param target_version: A
-          :class:`~stalker.models.version.Version` instance holding the new
-          version replacing the source one.
+            target_version (File): A :class:`~stalker.File` instance holding
+                the new reference replacing the source one.
         """
-        raise NotImplementedError("replace_version is not implemented")
+        raise NotImplementedError(
+            "replace_reference() is not implemented in this DCC!"
+        )
 
     def replace_external_paths(self, mode=0):
-        """Replaces the external paths (which are not starting with the
-        environment variable) with a proper path. The mode controls if the
-        resultant path should be absolute or relative to the project dir.
+        """Replace the external paths with a proper paths;.
 
-        :param mode: Controls the resultant path is absolute or relative.
+        External paths which are not starting with the environment variable are
+        considered. The mode controls if the resultant path should be absolute
+        or relative to the project dir.
 
-          mode 0: absolute (a path which starts with $REPO)
-          mode 1: relative (to project path)
+        Args
+            mode (int): Controls the resultant path is absolute or relative.
 
-        :return:
+                mode 0: absolute (a path which starts with $REPO)
+                mode 1: relative (to project path)
         """
-        raise NotImplementedError("replace_external_paths is not implemented")
+        raise NotImplementedError(
+            "replace_external_paths() is not implemented in this DCC!"
+        )
 
     def reference_filters(self, version, options):
-        """Checks the given version against the given options
+        """Checks the given version against the given options.
 
-        :param options: a dictionary object showing the reference options
-        :return:
+        Args:
+            options (Dict): A dictionary object showing the reference options
         """
         pass
 
     @classmethod
     def get_significant_name(
-        cls, version, include_project_code=True, include_version_number=True
-    ):
-        """returns a significant name starting from the closest parent which is
-        an Asset, Shot or Sequence and includes the ``Project.code``
+        cls,
+        version,
+        include_project_code : bool = True,
+        include_version_number : bool = True,
+    ) -> str:
+        """Return the significant name. 
+        
+        The significant name starts from the closest parent which is an Asset,
+        Shot or Sequence and includes the ``Project.code``.
 
-        :param version: The Stalker Version instance.
-        :param bool include_project_code: Include project code.
-        :param bool include_version_number: Include version number
+        Args:
+            version : The Stalker Version instance.
+            include_project_code (bool): Include project code.
+            include_version_number (bool): Include version number.
 
-        :rtype : str
+        Returns:
+            str: The significant name.
         """
         if include_project_code:
             sig_name = "{}_{}".format(version.task.project.code, version.nice_name)
@@ -643,15 +776,20 @@ class DCCBase(object):
             sig_name = version.nice_name
 
         if include_version_number:
-            sig_name = "{}_v{:03d}".format(sig_name, version.version_number)
+            sig_name = "{}_r{:02d}_v{:03d}".format(
+                sig_name,
+                version.revision_number,
+                version.version_number,
+            )
 
         return sig_name
 
     @classmethod
     def local_backup_path(cls):
-        """returns the local backup path
+        """Return the local backup path.
 
-        :return:
+        Returns:
+            str: The local backup path.
         """
         # use the user home directory .stalker_local_backup
         return os.path.normpath(
@@ -659,8 +797,10 @@ class DCCBase(object):
         ).replace("\\", "/")
 
     def create_project_structure(self, version):
-        """creates the project structure
-        :param version: Stalker version
+        """Create the project structure.
+
+        Args:
+            version (Version): Stalker version.
         """
         project_path = version.absolute_path
         for path in self.project_structure:
@@ -672,26 +812,27 @@ class DCCBase(object):
                 pass
 
     @classmethod
-    def create_local_copy(cls, version):
-        """Creates a local copy of the given version
+    def create_local_copy(cls, file):
+        """Create a local copy of the given file.
 
-        :param version:
-        :return:
+        Args:
+            file (stalker.File): A stalker File instance.
         """
+        absolute_full_path = os.path.expandvars(file.full_path)
         output_path = os.path.join(
-            cls.local_backup_path(), version.absolute_path.replace(":", "")
+            cls.local_backup_path(), absolute_full_path.replace(":", "")
         ).replace("\\", "/")
 
         output_full_path = os.path.join(
-            cls.local_backup_path(), version.absolute_full_path.replace(":", "")
+            cls.local_backup_path(), absolute_full_path.replace(":", "")
         ).replace("\\", "/")
 
         # do nothing if the version and the copy is on the same drive
         # (ex: do not duplicate the file)
-        if len(os.path.commonprefix([output_full_path, version.absolute_full_path])):
+        if len(os.path.commonprefix([output_full_path, absolute_full_path])):
             logger.debug(
                 f"Local copy file: {output_full_path} is on the same drive "
-                f"with the source file: {version.absolute_full_path}"
+                f"with the source file: {absolute_full_path}"
             )
             logger.debug("Not duplicating it!")
             return
@@ -703,37 +844,54 @@ class DCCBase(object):
             # already exists
             pass
 
-        import shutil
-
         try:
-            shutil.copy(version.absolute_full_path, output_full_path)
+            shutil.copy(absolute_full_path, output_full_path)
         except IOError:
             # no space left
             pass
 
         logger.debug(f"created copy to: {output_full_path}")
 
+    @lru_cache
     @classmethod
-    def get_shot(cls, version):
+    def get_shot(cls, version: Version) -> Union[None, Shot]:
+        """Find and return the related Shot.
+
+        Args:
+            version (Version): A stalker Version instance.
+
+        Returns:
+            Union[None, Shot]: The stalker Shot instance or None if this
+                version is not related to a Shot.
+        """
         for task in version.task.parents:
             if isinstance(task, Shot):
                 return task
 
-    def is_shot_related_version(self, version):
-        """Returns true if this is a shot related version
+    @lru_cache
+    def is_shot_related_version(self, version: Version) -> bool:
+        """Return True if this is a shot related version.
 
-        :param version:
-        :return:
+        Args
+            version (Version):
+
+        Returns:
+            bool: True if this is shot related.
         """
         return self.get_shot(version) is not None
 
-    def set_render_resolution(self, width, height, pixel_aspect=1.0):
-        """Sets the render resolution for the current DCC
+    def set_render_resolution(
+        self,
+        width : int,
+        height : int,
+        pixel_aspect : float = 1.0
+    ) -> None:
+        """Set the render resolution for the current DCC.
 
-        :param int width: The width of the resolution
-        :param int height: The height of the resolution
-        :param float pixel_aspect: The pixel aspect ratio, defaults to 1.0.
-        :return:
+        Args:
+            width (int): The width of the resolution.
+            height (int): The height of the resolution.
+            pixel_aspect (float): The pixel aspect ratio, defaults to 1.0.
         """
         raise NotImplementedError("set_render_resolution is not implemented")
 
@@ -742,13 +900,13 @@ class Filter(object):
     """A filter class filters given options against the given versions related
     task type.
 
-    :param version: :class:`~stalker.models.version.Version` instance. The
-      related :class:`~stalker.models.task.Task` instances
-      :attr:`~stalker.models.task.Task.type` attribute is key here. It defines
-      which filter to apply to.
+    Args:
+        version (Version): A :class:`~stalker.Version` instance. The related
+            :class:`~stalker.Task` instances :attr:`~stalker.Task.type`
+            attribute is key here. It defines which filter to apply to.
 
-    :param options: A dictionary with keys are the name of the option and the
-      value is the value of that option.
+        options (Dict): A dictionary with keys are the name of the option and
+            the value is the value of that option.
     """
 
     def __init__(self):

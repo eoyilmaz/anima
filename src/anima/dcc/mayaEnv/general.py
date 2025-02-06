@@ -29,7 +29,7 @@ class General(object):
         from anima.ui.dialogs import publish_checker
 
         dialog = publish_checker.UI(
-            environment=m,
+            dcc=m,
             publish_callback=None,
             version=version,
             parent=mayaEnv.get_maya_main_window(),

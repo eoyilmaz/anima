@@ -472,59 +472,59 @@ class StatusIcon(QtWidgets.QLabel):
         self.setStyleSheet(self.icon_char_lut[self._status]["style"])
 
 
-class TakeWidget(QtWidgets.QWidget):
+class VariantWidget(QtWidgets.QWidget):
     """A QWidget variant to hold stalker.Task related data."""
 
     add_references = QtCore.Signal(object)
     version_updated = QtCore.Signal()
 
-    def __init__(self, parent=None, task=None, take=None):
-        super(TakeWidget, self).__init__(parent=parent)
+    def __init__(self, parent=None, task=None, variant=None):
+        super(VariantWidget, self).__init__(parent=parent)
         self._task = None
-        self._take = None
+        self._variant = None
         self.main_layout = None
-        self.enable_take_check_box = None
-        self.take_new_name_line_edit = None
+        self.enable_variant_check_box = None
+        self.variant_new_name_line_edit = None
         self.versions_combo_box = None
         self.migrate_status_icon = None
         self.no_references_message_label = None
         self.references_are_not_final_label = None
         self.all_references_are_included_label = None
         self.check_references_button = None
-        self.take_new_name_validation_message_field = None
+        self.variant_new_name_validation_message_field = None
         self.setup_ui()
         self.task = task
-        self.take = take
+        self.variant = variant
 
     def setup_ui(self):
         """Create UI widgets."""
         self.main_layout = QtWidgets.QHBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Enable This take Checkbox
-        self.enable_take_check_box = QtWidgets.QCheckBox(self)
-        self.enable_take_check_box.setChecked(True)
-        self.enable_take_check_box.setText("--Take Name--")
-        self.enable_take_check_box.setFixedWidth(150)
-        self.enable_take_check_box.stateChanged.connect(self.enable_take)
-        self.main_layout.addWidget(self.enable_take_check_box)
+        # Enable This variant Checkbox
+        self.enable_variant_check_box = QtWidgets.QCheckBox(self)
+        self.enable_variant_check_box.setChecked(True)
+        self.enable_variant_check_box.setText("--Variant Name--")
+        self.enable_variant_check_box.setFixedWidth(150)
+        self.enable_variant_check_box.stateChanged.connect(self.enable_variant)
+        self.main_layout.addWidget(self.enable_variant_check_box)
 
-        # New Take Name
-        take_new_name_layout = QtWidgets.QVBoxLayout()
-        take_new_name_layout.setContentsMargins(0, 0, 0, 0)
-        self.take_new_name_validation_message_field = QtWidgets.QLabel(self)
-        self.take_new_name_validation_message_field.setStyleSheet("color: red;")
-        self.take_new_name_line_edit = ValidatedLineEdit(
-            parent=self, message_field=self.take_new_name_validation_message_field
+        # New Variant Name
+        variant_new_name_layout = QtWidgets.QVBoxLayout()
+        variant_new_name_layout.setContentsMargins(0, 0, 0, 0)
+        self.variant_new_name_validation_message_field = QtWidgets.QLabel(self)
+        self.variant_new_name_validation_message_field.setStyleSheet("color: red;")
+        self.variant_new_name_line_edit = ValidatedLineEdit(
+            parent=self, message_field=self.variant_new_name_validation_message_field
         )
-        self.take_new_name_line_edit.setToolTip("New Take Name")
-        self.take_new_name_line_edit.setFixedWidth(150)
-        self.take_new_name_line_edit.editingFinished.connect(self.take_new_name_edited)
-        take_new_name_layout.addWidget(self.take_new_name_line_edit)
-        take_new_name_layout.addWidget(self.take_new_name_validation_message_field)
+        self.variant_new_name_line_edit.setToolTip("New Variant Name")
+        self.variant_new_name_line_edit.setFixedWidth(150)
+        self.variant_new_name_line_edit.editingFinished.connect(self.variant_new_name_edited)
+        variant_new_name_layout.addWidget(self.variant_new_name_line_edit)
+        variant_new_name_layout.addWidget(self.variant_new_name_validation_message_field)
 
-        # self.main_layout.addWidget(self.take_new_name_line_edit)
-        self.main_layout.addLayout(take_new_name_layout)
+        # self.main_layout.addWidget(self.variant_new_name_line_edit)
+        self.main_layout.addLayout(variant_new_name_layout)
 
         # Versions
         self.versions_combo_box = QtWidgets.QComboBox()
@@ -590,32 +590,32 @@ class TakeWidget(QtWidgets.QWidget):
         self._task = task
 
     @property
-    def take(self):
-        """Return the take.
+    def variant(self):
+        """Return the variant.
 
         Returns:
-            str: The take name that is stored in this widget.
+            str: The variant name that is stored in this widget.
         """
-        return self._take
+        return self._variant
 
-    @take.setter
-    def take(self, take):
-        """Set the take property.
+    @variant.setter
+    def variant(self, variant):
+        """Set the variant property.
 
         Args:
-            take (str):
+            variant (str):
         """
-        if take is None:
+        if variant is None:
             return
-        self._take = take
-        self.enable_take_check_box.setText(take)
-        self.take_new_name_line_edit.setText(take)
-        self.validate_take_new_name()
+        self._variant = variant
+        self.enable_variant_check_box.setText(variant)
+        self.variant_new_name_line_edit.setText(variant)
+        self.validate_variant_new_name()
 
         # Update Versions list
         versions = (
             Version.query.filter(Version.task == self.task)
-            .filter(Version.variant_name == self.take)
+            .filter(Version.variant_name == self.variant)
             .order_by(Version.version_number.desc())
             .all()
         )
@@ -629,26 +629,26 @@ class TakeWidget(QtWidgets.QWidget):
                 version,
             )
 
-    def take_new_name_edited(self):
+    def variant_new_name_edited(self):
         """Check the text."""
-        self.validate_take_new_name()
+        self.validate_variant_new_name()
 
     def validate(self):
-        """Validate the general status of this take.
+        """Validate the general status of this variant.
 
         Returns:
             bool: True for valid, False otherwise.
         """
-        if not self.enable_take_check_box.isChecked():
+        if not self.enable_variant_check_box.isChecked():
             # doesn't matter return this is valid.
             is_valid = True
         else:
-            is_valid = self.validate_take_new_name() and self.validate_versions()
+            is_valid = self.validate_variant_new_name() and self.validate_versions()
         self.migrate_status_icon.set_status(is_valid)
         return is_valid
 
-    def validate_take_new_name(self):
-        """Validate take new name.
+    def validate_variant_new_name(self):
+        """Validate variant new name.
 
         Returns:
             bool: True for valid, False otherwise.
@@ -656,17 +656,17 @@ class TakeWidget(QtWidgets.QWidget):
         text = self.get_new_variant_name()
         match = variant_name_VALIDATOR_REGEX.match(text)
         if not match or "".join(match.groups()) != text:
-            self.take_new_name_line_edit.set_invalid(
-                "Take name is not in correct format"
+            self.variant_new_name_line_edit.set_invalid(
+                "Variant name is not in correct format"
             )
             return False
         else:
-            self.take_new_name_line_edit.set_valid()
+            self.variant_new_name_line_edit.set_valid()
             return True
 
     def get_new_variant_name(self):
-        """Return the new take name."""
-        return self.take_new_name_line_edit.text()
+        """Return the new variant name."""
+        return self.variant_new_name_line_edit.text()
 
     def versions_combo_box_changed(self, index):
         """Check if newly selected version has inputs.
@@ -674,7 +674,7 @@ class TakeWidget(QtWidgets.QWidget):
         Args:
             index (int): Current index
         """
-        self.enable_take(self.enable_take_check_box.isChecked())
+        self.enable_variant(self.enable_variant_check_box.isChecked())
 
     def get_current_version(self):
         """Return the currently selected version.
@@ -750,7 +750,7 @@ class TakeWidget(QtWidgets.QWidget):
         return validation_status
 
     def pick_references(self):
-        """Pick references of the selected takes.
+        """Pick references of the selected variants.
 
         Add the referenced tasks to the end of the list.
         """
@@ -778,29 +778,29 @@ class TakeWidget(QtWidgets.QWidget):
         if tasks:
             self.add_references.emit(tasks)
 
-    def enable_take(self, state):
-        """Enable or disable take.
+    def enable_variant(self, state):
+        """Enable or disable variant.
 
         Args:
             state (bool): Enable or disable state.
         """
-        self.take_new_name_line_edit.setEnabled(state)
+        self.variant_new_name_line_edit.setEnabled(state)
         self.versions_combo_box.setEnabled(state)
         self.check_references_button.setEnabled(state)
         self.all_references_are_included_label.setEnabled(state)
         self.no_references_message_label.setEnabled(state)
         version = self.get_current_version()
         if not state:
-            # this take has been disabled, we don't care about the validity of
-            # the new take name field
+            # this variant has been disabled, we don't care about the validity of
+            # the new variant name field
             self.migrate_status_icon.setVisible(False)
-            self.take_new_name_line_edit.set_valid()
+            self.variant_new_name_line_edit.set_valid()
             self.validate()
 
             # remove the version from the EntityStorage
             EntityStorage.remove_entity(version)
         else:
-            # this take is re-enabled, re-validate the new take name
+            # this variant is re-enabled, re-validate the new variant name
             self.migrate_status_icon.setVisible(True)
             self.validate()
 
@@ -811,12 +811,12 @@ class TakeWidget(QtWidgets.QWidget):
         self.version_updated.emit()
 
     def is_enabled(self):
-        """Return True if this take is enabled.
+        """Return True if this variant is enabled.
 
         Returns:
-            bool: Return True if this take is enabled.
+            bool: Return True if this variant is enabled.
         """
-        return self.enable_take_check_box.isChecked()
+        return self.enable_variant_check_box.isChecked()
 
     def to_dict(self):
         """Return a dictionary representing the migration data.
@@ -862,7 +862,7 @@ class TaskWidget(QtWidgets.QGroupBox):
         self.asset_new_code_line_edit = None
         self.asset_new_code_validation_message_field = None
         self.child_widgets_layout = None
-        self.take_widgets = []
+        self.variant_widgets = []
         self.task_widgets = []
         self._new_parent = None
         self.new_parent_label = None
@@ -1000,10 +1000,10 @@ class TaskWidget(QtWidgets.QGroupBox):
         for child_task_widget in task_widgets:
             child_task_widget.remove()
 
-        # Remove any take widgets
-        take_widgets = copy.copy(self.take_widgets)
-        for child_take_widget in take_widgets:
-            child_take_widget.remove()
+        # Remove any variant widgets
+        variant_widgets = copy.copy(self.variant_widgets)
+        for child_variant_widget in variant_widgets:
+            child_variant_widget.remove()
 
         # Remove self.task from EntityStorage
         EntityStorage.remove_entity(self.task)
@@ -1187,14 +1187,14 @@ class TaskWidget(QtWidgets.QGroupBox):
                 COLORS[self._task.entity_type.lower()]["fg"],
             )
         )
-        # add all the takes of this task as a TakeWidget
+        # add all the variants of this task as a VariantWidget
         variant_names = get_unique_variant_names(self._task.id)
-        for take in variant_names:
-            take_widget = TakeWidget(parent=self, task=self._task, take=take)
-            self.child_widgets_layout.addWidget(take_widget)
-            take_widget.add_references.connect(self.add_task)
-            take_widget.version_updated.connect(self.version_updated)
-            self.take_widgets.append(take_widget)
+        for variant in variant_names:
+            variant_widget = VariantWidget(parent=self, task=self._task, variant=variant)
+            self.child_widgets_layout.addWidget(variant_widget)
+            variant_widget.add_references.connect(self.add_task)
+            variant_widget.version_updated.connect(self.version_updated)
+            self.variant_widgets.append(variant_widget)
         if variant_names:
             self.no_versions_place_holder.setVisible(False)
 
@@ -1251,20 +1251,20 @@ class TaskWidget(QtWidgets.QGroupBox):
             self.version_updated.emit()
 
     def check_versions(self):
-        """Trigger a version check in all the child takes and task widgets."""
-        for take_widget in self.take_widgets:
-            take_widget.validate()
+        """Trigger a version check in all the child variants and task widgets."""
+        for variant_widget in self.variant_widgets:
+            variant_widget.validate()
 
         for task_widget in self.task_widgets:
             task_widget.check_versions()
 
     def is_enabled(self):
-        """Return True if all takes are enabled.
+        """Return True if all variants are enabled.
 
         Returns:
-            bool: If all take widgets are enabled.
+            bool: If all variant widgets are enabled.
         """
-        return any(take_widget.is_enabled() for take_widget in self.take_widgets)
+        return any(variant_widget.is_enabled() for variant_widget in self.variant_widgets)
 
     def validate(self):
         """Validate the current task widget.
@@ -1274,7 +1274,7 @@ class TaskWidget(QtWidgets.QGroupBox):
         """
         is_valid = (
             self.new_parent
-            and all([take_widget.validate() for take_widget in self.take_widgets])
+            and all([variant_widget.validate() for variant_widget in self.variant_widgets])
             and all([task_widget.validate() for task_widget in self.task_widgets])
             and self.validate_asset_new_name()
             and self.validate_asset_new_code()
@@ -1317,14 +1317,14 @@ class TaskWidget(QtWidgets.QGroupBox):
             if new_code != self.task.code:
                 dict_out[self.task.id]["new_code"] = new_code
 
-        # Takes
-        if self.take_widgets and all(
-            [take_widget.is_enabled for take_widget in self.take_widgets]
+        # Variants
+        if self.variant_widgets and all(
+            [variant_widget.is_enabled for variant_widget in self.variant_widgets]
         ):
-            dict_out[self.task.id]["takes"] = dict(
-                (take_widget.take, take_widget.to_dict())
-                for take_widget in self.take_widgets
-                if take_widget.is_enabled()
+            dict_out[self.task.id]["variants"] = dict(
+                (variant_widget.variant, variant_widget.to_dict())
+                for variant_widget in self.variant_widgets
+                if variant_widget.is_enabled()
             )
 
         # child tasks
@@ -1407,7 +1407,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
         projects_inner_widget.setLayout(self.projects_layout)
 
         # A TaskTreeView can also be used
-        # self.task_tree_view = TaskTreeView(parent=self, show_takes=True)
+        # self.task_tree_view = TaskTreeView(parent=self, show_variants=True)
         # self.main_layout.addWidget(self.task_tree_view)
 
         button_layout = QtWidgets.QHBoxLayout()
@@ -1482,7 +1482,7 @@ class AssetMigrationToolDialog(QtWidgets.QDialog):
                 # connect the signal
                 project_widget.remove_project.connect(self.remove_project)
 
-            # Trigger a Version check on all the take widgets
+            # Trigger a Version check on all the variant widgets
             for project_widget in self.project_widgets:
                 project_widget.check_versions()
 

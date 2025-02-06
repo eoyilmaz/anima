@@ -29,4 +29,4 @@ def version_dialog(lib="PySide"):
     logging.getLogger("anima.dcc.photoshop").setLevel(logging.WARNING)
     logging.getLogger("stalker.db").setLevel(logging.WARNING)
 
-    version_dialog.UI(environment=p)
+    version_dialog.UI(dcc=p)

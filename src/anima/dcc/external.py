@@ -34,11 +34,11 @@ external_dccs = {
 
 
 class ExternalDCC(DCCBase):
-    """An external DCC which doesn't support Python
+    """An external DCC which doesn't support Python.
 
-    A very simple object that handles external environments. For now it just
-    returns the name of the DCC, conforms the given version to the
-    DCC by setting its file extension etc.
+    A very simple object that handles external DCCs. For now it just returns
+    the name of the DCC, conforms the given version to the DCC by setting its
+    file extension etc.
     """
 
     def __init__(self, name, structure=None, extensions=None, **kwargs):
@@ -276,36 +276,37 @@ class ExternalDCCFactory(object):
     """
 
     @classmethod
-    def get_env_names(cls, name_format="{name}"):
+    def get_dcc_names(cls, name_format="{name}"):
         """Return a list of DCC names which it is possible to create one DCC.
 
         Args:
             name_format (str): A string showing the format of the output
                 variables:
-                    {name} : the name of the Environment
-                    {extension} : the extension of the Environment
+                    {name} : the name of the DCC
+                    {extension} : the native extension of the DCCs
+                        scene/project file
 
         Returns:
             List[str]: A list of str showing DCC names.
         """
-        env_names = []
-        for env_name in list(external_dccs.keys()):
-            env_data = external_dccs[env_name]
-            env_names.append(
+        dcc_names = []
+        for dcc_name in list(external_dccs.keys()):
+            dcc_data = external_dccs[dcc_name]
+            dcc_names.append(
                 name_format.format(
-                    name=env_data["name"],
-                    extension=env_data["extensions"][0],
+                    name=dcc_data["name"],
+                    extension=dcc_data["extensions"][0],
                 )
             )
-        return env_names
+        return dcc_names
 
     @classmethod
-    def get_env(cls, name, name_format="{name}"):
+    def get_dcc(cls, name, name_format="{name}"):
         """Create a DCC with the given name.
 
         Args:
             name (str): The name of the DCC, should be a value from
-                anima.dcc.externalEnv.environment_names list.
+                anima.dcc.externalDCC.dcc_names list.
             name_format (str): The name format.
 
         Returns:
@@ -313,7 +314,7 @@ class ExternalDCCFactory(object):
         """
         if not isinstance(name, str):
             raise TypeError(
-                f'"name" argument in {cls.__name__}.get_env() should be an '
+                f'"name" argument in {cls.__name__}.get_dcc() should be an '
                 f"instance of str, not {name.__class__.__name__}: '{name}'"
             )
 
@@ -337,7 +338,7 @@ class ExternalDCCFactory(object):
         if dcc_name not in external_dccs:
             raise ValueError(
                 f"{name} is not in "
-                "anima.dcc.externalEnv.environment_names list, "
+                "anima.dcc.externalDCC.dcc_names list, "
                 f"please supply a value from {list(external_dccs.keys())}"
             )
 

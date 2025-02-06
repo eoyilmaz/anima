@@ -12,17 +12,16 @@ from anima.utils import get_unique_variant_names
 
 
 def UI(app_in=None, executor=None, **kwargs):
-    """
-    :param environment: The
-      :class:`~anima.dcc.base.DCCBase` can be None to let the UI to
-      work in "environmentless" mode in which it only creates data in database
-      and copies the resultant version file path to clipboard.
+    """Wrap the `ui_caller()` for ease of use.
 
-    :param app_in: A Qt Application instance, which you can pass to let the UI
-      be attached to the given applications event process.
+    Args:
+        app_in (QtCore.Qt.QApplication): A Qt Application instance, which you
+            can pass to let the UI be attached to the given applications event
+            process.
 
-    :param executor: Instead of calling app.exec_ the UI will call this given
-      function. It also passes the created app instance to this executor.
+        executor (callable): Instead of calling app.exec_ the UI will call this
+            given function. It also passes the created app instance to this
+            executor.
     """
     return ui_caller(app_in, executor, VersionMover, **kwargs)
 
@@ -205,17 +204,17 @@ class VersionMover(AnimaDialogBase, QtWidgets.QDialog):
             )
             return
 
-        # get take names and related versions
-        # get distinct take names
+        # get variant names and related versions
+        # get distinct variant names
         from stalker.db.session import DBSession
 
         from_variant_names = get_unique_variant_names(from_task.id)
 
-        # create versions for each take
+        # create versions for each variant
         answer = QtWidgets.QMessageBox.question(
             self,
             "Info",
-            "Will copy {} versions from take names:<br><br>"
+            "Will copy {} versions from variant names:<br><br>"
             "{}"
             "<br><br>"
             "Is that Ok?".format(

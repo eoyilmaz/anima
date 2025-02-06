@@ -23,7 +23,7 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
     logger.setLevel(logging_level)
 
     # set the parent object to the maya main window
-    vd.UI(environment=m, parent=mayaEnv.get_maya_main_window(), mode=mode)
+    vd.UI(dcc=m, parent=mayaEnv.get_maya_main_window(), mode=mode)
 
 
 def version_updater(logging_level=logging.WARNING):
@@ -47,12 +47,12 @@ def version_updater(logging_level=logging.WARNING):
     # generate a reference_resolution
     # global version_updater_dialog
     # if version_updater_dialog is None:
-    #     version_updater_dialog = version_updater.UI(environment=m)
+    #     version_updater_dialog = version_updater.UI(dcc=m)
     # else:
     #     version_updater_dialog.show()
 
     # set the parent object to the maya main window
-    vu.UI(environment=m, parent=mayaEnv.get_maya_main_window())
+    vu.UI(dcc=m, parent=mayaEnv.get_maya_main_window())
 
 
 def version_mover():
@@ -103,7 +103,7 @@ def archiver_dialog(logging_level=logging.WARNING, mode=2):
         None,
         None,
         archiver_dialog.MultiVersionSelectDialog,
-        environment=m,
+        dcc=m,
         parent=mayaEnv.get_maya_main_window(),
         archiver=archive.Archiver(),
     )

@@ -10,21 +10,15 @@ from anima.ui.lib import QtWidgets
 
 
 def UI(app_in=None, executor=None, **kwargs):
-    """
-    :param environment: The
-      :class:`~anima.dcc.base.DCCBase` can be None to let the UI to
-      work in "environmentless" mode in which it only creates data in database
-      and copies the resultant version file path to clipboard.
+    """Wrap the `ui_caller` for ease of use.
 
-    :param mode: Runs the UI either in Read-Write (0) mode or in Read-Only (1)
-      mode.
+    Args:
+        app_in: A Qt Application instance, which you can pass to let the UI be
+            attached to the given applications event process.
 
-    :param app_in: A Qt Application instance, which you can pass to let the UI
-      be attached to the given applications event process.
-
-    :param executor: Instead of calling app.exec_ the UI will call this given
-      function. It also passes the created app instance to this executor.
-
+        executor (callable): Instead of calling app.exec_ the UI will call this
+            given function. It also passes the created app instance to this
+            executor.
     """
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 

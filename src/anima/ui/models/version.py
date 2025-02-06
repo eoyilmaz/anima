@@ -101,13 +101,13 @@ class VersionItem(QtGui.QStandardItem):
         nice_name_item.action = action
         set_item_color(nice_name_item, font_color)
 
-        # Take
-        take_item = QtGui.QStandardItem()
-        take_item.setEditable(False)
-        take_item.setText(version.variant_name)
-        take_item.version = version
-        take_item.action = action
-        set_item_color(take_item, font_color)
+        # Variant
+        variant_item = QtGui.QStandardItem()
+        variant_item.setEditable(False)
+        variant_item.setText(version.variant_name)
+        variant_item.version = version
+        variant_item.action = action
+        set_item_color(variant_item, font_color)
 
         # Current
         current_version_item = QtGui.QStandardItem()
@@ -170,7 +170,7 @@ class VersionItem(QtGui.QStandardItem):
             version_item,
             thumbnail_item,
             nice_name_item,
-            take_item,
+            variant_item,
             current_version_item,
             latest_published_version_item,
             action_item,
@@ -228,7 +228,7 @@ class VersionTreeModel(QtGui.QStandardItemModel):
                 "Do Update?",
                 "Thumbnail",
                 "Task",
-                "Take",
+                "Variant",
                 "Current",
                 "Latest",
                 "Action",

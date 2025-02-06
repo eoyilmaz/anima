@@ -25,6 +25,6 @@ def version_dialog(mode=2):
     logger.setLevel(logging.WARNING)
 
     if hou.applicationVersion()[0] <= 13:
-        version_dialog.UI(environment=h, mode=mode)
+        version_dialog.UI(dcc=h, mode=mode)
     else:
-        version_dialog.UI(environment=h, executor=Executor(), mode=mode)
+        version_dialog.UI(dcc=h, executor=Executor(), mode=mode)

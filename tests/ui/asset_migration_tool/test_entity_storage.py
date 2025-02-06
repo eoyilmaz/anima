@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from stalker import Variant
 from anima.ui.dialogs.asset_migration_tool_dialog import EntityStorage
 
 
@@ -66,7 +67,11 @@ def test_entity_storage_add_entity_version(
     )
     model = Task.query.filter(Task.parent == char1).filter(Task.name == "Model").first()
     assert model is not None
-    v1 = model.versions[0]
+
+    model_main_variant = Variant.query.filter(Variant.parent == model).filter(Variant.name == "Main").first()
+    assert model_main_variant is not None
+
+    v1 = model_main_variant.versions[0]
     assert v1 is not None
     assert isinstance(v1, Version)
 
@@ -75,8 +80,8 @@ def test_entity_storage_add_entity_version(
 
     assert char1 in storage.storage
     assert model in storage.storage[char1]
-    assert v1.take_name in storage.storage[char1][model]
-    assert v1 == storage.storage[char1][model][v1.take_name]
+    assert model_main_variant in storage.storage[char1][model]
+    assert v1 == storage.storage[char1][model][model_main_variantå]
 
 
 def test_entity_storage_add_entities_assets(
@@ -176,7 +181,11 @@ def test_entity_storage_remove_entity_version(
     )
     model = Task.query.filter(Task.parent == char1).filter(Task.name == "Model").first()
     assert model is not None
-    v1 = model.versions[0]
+
+    model_main_variant = Variant.query.filter(Variant.parent == model).filter(Variant.name == "Main").first()
+    assert model_main_variant is not None
+
+    v1 = model_main_variant.versions[0]
     assert v1 is not None
     assert isinstance(v1, Version)
 
@@ -189,8 +198,8 @@ def test_entity_storage_remove_entity_version(
     assert char1 in storage.storage
     # The model should be there too
     assert model in storage.storage[char1]
-    # the take should not be there
-    assert v1.take_name not in storage.storage[char1][model]
+    # the model_main_variant should not be there
+    assert model_main_variant.name not in storage.storage[char1][model]
 
 
 def test_entity_storage_is_in_storage_asset(

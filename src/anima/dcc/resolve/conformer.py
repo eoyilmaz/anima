@@ -1395,11 +1395,15 @@ class ConformerUI(object):
 
                     try:
                         has_alpha = False
-                        raw_seconds = os.path.getmtime(last_version.absolute_full_path)
+                        raw_seconds = os.path.getmtime(
+                            last_version.absolute_full_path
+                        )
 
-                        # If we are looking for *Alpha*, comp name will not match with outputs...
-                        # because the output is rendered from Main take with a different saver path
-                        # so we have to look for the first file rendered which had *Alpha* in its name
+                        # If we are looking for *Alpha*, comp name will not
+                        # match with outputs...
+                        # because the output is rendered from Main variant with
+                        # a different saver path so we have to look for the
+                        # first file rendered which had *Alpha* in its name
                         if self.alpha_only_check_box.isChecked():
                             ext = self.ext_name_combo_box.currentText()
                             t_path = task.absolute_path

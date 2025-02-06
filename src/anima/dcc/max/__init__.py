@@ -84,7 +84,7 @@ class Max(DCCBase):
 
         if not skip_update_check:
             # check the referenced versions for any possible updates
-            return self.check_referenced_versions()
+            return self.check_references()
         else:
             return generate_empty_reference_resolution()
 
@@ -277,12 +277,12 @@ class Max(DCCBase):
 
         return xref
 
-    def deep_version_inputs_update(self):
+    def deep_references_update(self):
         """updates the inputs of the references of the current scene"""
         # first update with data from first level references
         self.update_version_inputs()
 
-    def get_referenced_versions(self, parent_ref=None):
+    def get_referenced_files(self, parent_ref=None):
         """Returns a list of Version instances that are referenced to the
         current scene.
 
@@ -314,7 +314,7 @@ class Max(DCCBase):
 
         return versions
 
-    def update_versions(self, reference_resolution):
+    def update_reference_versions_to_latest(self, reference_resolution):
         """Updates XRef versions with the given reference_resolution.
 
         The reference_resolution should be a dictionary in the following

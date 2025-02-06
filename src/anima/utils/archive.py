@@ -135,7 +135,7 @@ class ArchiverBase(object):
         Raises:
             NotImplementedError: This needs to be implemented in the derived class.
         """
-        # This needs to be implemented by the environment
+        # This needs to be implemented by the DCC
         raise NotImplementedError(
             "This method needs to be implemented by the derived class"
         )

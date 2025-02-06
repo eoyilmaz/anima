@@ -5,17 +5,15 @@ from anima.dcc.base import DCCBase
 from anima.testing import count_calls
 
 
-class TestEnvironment(DCCBase):
-    """A test DCC which just raises errors to check if the correct
-    method has been called
-    """
+class TestDCC(DCCBase):
+    """Test DCC which just raises errors to check if the correct method has been called."""
 
-    name = "TestEnv"
+    name = "TestDCC"
     representations = ["Base", "BBox", "GPU", "ASS"]
 
     test_data = {}
 
-    def __init__(self, name="TestEnv"):
+    def __init__(self, name="TestDCC"):
         DCCBase.__init__(self, name=name)
         # initialize test_data counter
         for f in dir(self):
@@ -41,7 +39,7 @@ class TestEnvironment(DCCBase):
         skip_update_check=False,
     ):
         self._version = version
-        return self.check_referenced_versions()
+        return self.check_references()
 
     @count_calls
     def reference(self, version):
@@ -61,11 +59,11 @@ class TestEnvironment(DCCBase):
         return self._version
 
     @count_calls
-    def get_referenced_versions(self):
+    def get_referenced_files(self):
         return self._version.inputs
 
     @count_calls
-    def check_referenced_versions(self):
+    def check_references(self):
         """Deeply checks all the references in the scene and returns a
         dictionary which uses the ids of the Versions as key and the action as
         value.
@@ -79,7 +77,7 @@ class TestEnvironment(DCCBase):
         dfs_version_references = []
         version = self.get_current_version()
         resolution_dictionary = generate_empty_reference_resolution(
-            root=self.get_referenced_versions()
+            root=self.get_referenced_files()
         )
 
         # TODO: with Stalker v0.2.5 replace this with Version.walk_inputs()
@@ -168,12 +166,16 @@ class TestEnvironment(DCCBase):
         self._version.inputs = latest
 
     @count_calls
-    def update_versions(self, reference_resolution):
-        """A mock update_versions implementation, does the update indeed but
-        partially.
+    def update_reference_versions_to_latest(self, reference_resolution):
+        """Mock update_reference_versions implementation.
+        
+        Does the update indeed but partially.
 
-        :param reference_resolution: The reference_resolution dictionary
-        :return: a list of new versions
+        Args
+            reference_resolution (Dict): The reference_resolution dictionary
+        
+        Returns:
+            List[File]: A list of new files.
         """
         # first get the resolution list
         new_versions = []

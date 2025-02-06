@@ -3191,7 +3191,7 @@ def update_cache_references(cache_type=ALEMBIC):
         # The versions will always be sorted properly
         # we don't need to check if the last path in the is the latest one
         all_abc_files = sorted(glob.glob(glob_pattern))
-        # there may be different takes,
+        # there may be different variants,
         # but, we don't need check for that too, because we are globbing for a path
         # that includes the ``variant_name``
 
@@ -3921,7 +3921,7 @@ def orphan_rig_finder(project):
     skipped = []
     checked = []
     cacheable_attrs_that_appear_more_than_once = {}
-    orphan_rigs = {}  # (rig_take_id, rig_version_take)
+    orphan_rigs = {}  # (rig_variant_id, rig_version_variant)
 
     for i, rig_task in enumerate(all_rig_tasks):
         print("{}/{}".format(i + 1, total_rig_task_count))
@@ -3929,9 +3929,9 @@ def orphan_rig_finder(project):
 
         checked.append(rig_task.parent.name)
         # get the latest published rig version
-        # we need to consider all the takes differently
+        # we need to consider all the variants differently
 
-        unique_takes = anima.utils.get_unique_variant_names(rig_task.id)
+        unique_variants = anima.utils.get_unique_variant_names(rig_task.id)
 
         # check LookDev first
         # if no LookDev with the same variant_name
@@ -3943,7 +3943,7 @@ def orphan_rig_finder(project):
         )
 
         rig_task_id_as_str = str(rig_task.id)
-        for variant_name in unique_takes:
+        for variant_name in unique_variants:
             # -----------------------------
             # get the latest published rig version
             latest_published_rig_version = (
@@ -3976,7 +3976,7 @@ def orphan_rig_finder(project):
                 continue
 
             # -----------------------------
-            # get latest published look dev version with the same take name
+            # get latest published look dev version with the same variant name
             latest_published_look_dev_version = (
                 Version.query.filter(Version.task_id == look_dev_task.id)
                 .filter(Version.variant_name == variant_name)
@@ -3990,7 +3990,7 @@ def orphan_rig_finder(project):
                     orphan_rigs[rig_task_id_as_str] = {}
 
                 orphan_rigs[rig_task_id_as_str][variant_name] = {
-                    None: "no look dev published with same take",
+                    None: "no look dev published with same variant name",
                     "look_dev_task_id": None,
                     "look_dev_variant_name": "Main",
                     "no_render": [],

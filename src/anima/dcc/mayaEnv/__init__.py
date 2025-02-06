@@ -1,6 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 
 import os
+from pathlib import Path
 import re
 import shutil
 
@@ -9,7 +10,7 @@ import maya.cmds as mc
 import time
 
 
-from stalker import Repository, Version
+from stalker import File, Repository, Version
 from stalker.db.session import DBSession
 
 
@@ -298,7 +299,7 @@ workspace -fr "translatorData" "Outputs/data";
 
     @classmethod
     def set_arnold_texture_search_path(cls):
-        """Set environment defaults."""
+        """Set DCC defaults."""
         start = time.time()
 
         all_repos = Repository.query.all()
@@ -383,17 +384,19 @@ workspace -fr "translatorData" "Outputs/data";
         if version != current_version:  # prevent CircularDependencyError
             version.parent = current_version
 
-        version.update_paths()
-
-        # set version extension to ma
-        version.extension = self.extensions[0]
+        # create a new File for this Maya scene
+        maya_scene_file = File(name="Maya Scene File")
+        # set full path with extension of ".ma"
+        full_path : Path = version.generate_path(extension=self.extensions[0])
+        maya_scene_file.full_path = str(full_path)
+        # define that this version is created with Maya
+        maya_scene_file.created_with = self.name
+        DBSession.add(maya_scene_file)
+        version.files.append(maya_scene_file)
 
         if not allow_external_references:
             # do not save if there are local files
             self.check_external_files(version)
-
-        # define that this version is created with Maya
-        version.created_with = self.name
 
         project = version.task.project
 
@@ -401,6 +404,8 @@ workspace -fr "translatorData" "Outputs/data";
 
         # create a workspace file inside the same folder of the current version
         workspace_path = version.absolute_path
+        print(f"version.generate_path(): {version.generate_path()}")
+        print(f"workspace_path: {workspace_path}")
 
         # if the new workspace path is not matching the with the previous one
         # update the external paths to absolute version
@@ -505,12 +510,12 @@ workspace -fr "translatorData" "Outputs/data";
         self.update_version_inputs()
 
         # append it to the recent file list
-        self.append_to_recent_files(version.absolute_full_path)
+        self.append_to_recent_files(str(full_path))
 
         DBSession.commit()
 
         # create a local copy
-        self.create_local_copy(version)
+        self.create_local_copy(maya_scene_file)
 
         # run post publishers here
         if version.is_published and not pm.general.about(batch=1):
@@ -619,10 +624,11 @@ workspace -fr "translatorData" "Outputs/data";
         has three keys ['leave', 'update', 'create'] and each of the keys is
         related with a list of Version instances. These Version instances are
         gathered from the first level of references in the opened scene.
-        Passing this dictionary to :meth:`.update_versions` will update or
-        create new versions as necessary. You can also modify this dictionary
-        before passing it to :meth:`.update_versions`, so only desired version
-        instances are updated or a new version is created for them.
+        Passing this dictionary to :meth:`.update_reference_versions` will
+        update or create new versions as necessary. You can also modify this
+        dictionary before passing it to :meth:`.update_reference_versions`, so
+        only desired version instances are updated or a new version is created
+        for them.
 
         Args:
             version (Union[Version, File]): The Stalker `Version` instance to
@@ -742,7 +748,7 @@ workspace -fr "translatorData" "Outputs/data";
 
         if not skip_update_check:
             # check the referenced versions for any possible updates
-            return self.check_referenced_versions()
+            return self.check_references()
         else:
             return generate_empty_reference_resolution()
 
@@ -892,17 +898,18 @@ workspace -fr "translatorData" "Outputs/data";
         return version
 
     def set_sequence_manager_data(self, version):
-        """sets the sequenceManager1 node attributes including the version
-        number.
+        """Set sequenceManager1 node attributes including the version number.
 
-        :param version: :class:`~stalker.models.version.Version`
+        Args:
+            version (stalker.models.version.Version): The stalker Version
+                instance.
         """
         start = time.time()
         sm = pm.ls("sequenceManager1")[0]
         if sm is not None:
             sm.get_shot_name_template()
             sm.set_task_name(version.task.name)
-            sm.set_variant_name(version.variant_name)
+            # sm.set_variant_name(version.variant_name)
             sm.set_version(f"v{version.version_number:03d}")
 
             for seq in sm.sequences.get():
@@ -918,8 +925,7 @@ workspace -fr "translatorData" "Outputs/data";
             version.absolute_path,
             "Outputs",
             "renders",
-            version.variant_name,
-            "v{:03d}".format(version.version_number),
+            "r{:02d}_v{:03d}".format(version.revision_number, version.version_number),
         ).replace("\\", "/")
 
         # image folder from the workspace.mel
@@ -1107,7 +1113,7 @@ workspace -fr "translatorData" "Outputs/data";
         very easily.
         """
         pm.workspace.open(version.absolute_path)
-        # set the current timeUnit to match with the environments
+        # set the current timeUnit to match with the DCCs.
 
         # set scene fps only if this scene is published or it is the first
         # version
@@ -1291,7 +1297,7 @@ workspace -fr "translatorData" "Outputs/data";
         end = time.time()
         logger.debug("check_external_files took {:0.3f} seconds".format(end - start))
 
-    def get_referenced_versions(self, parent_ref=None):
+    def get_referenced_files(self, parent_ref=None):
         """Returns the versions those are referenced to the current scene.
 
         :param parent_ref: The parent ref to start from. So the final list will
@@ -1317,7 +1323,7 @@ workspace -fr "translatorData" "Outputs/data";
             pdm = ProgressManagerFactory.get_progress_manager()
             caller = pdm.register(
                 ref_count,
-                f"Maya.get_referenced_versions({parent_ref}) {ref_count} " "in total",
+                f"Maya.get_referenced_files({parent_ref}) {ref_count} in total",
             )
 
         prev_path = ""
@@ -1459,7 +1465,7 @@ workspace -fr "translatorData" "Outputs/data";
         logger.debug("set_fps() took {:0.3f} seconds".format(end - start))
 
     @classmethod
-    def load_referenced_versions(cls):
+    def load_references(cls):
         """loads all the references"""
         # get all the references
         for reference in pm.listReferences():
@@ -1500,9 +1506,10 @@ workspace -fr "translatorData" "Outputs/data";
 
         .. note::
 
-          The system doesn't care about the mentalrayTexture nodes because the lack of a good environment variable
-          support from that node. Use regular maya file nodes with mib_texture_filter_lookup nodes to have the same
-          sharp results.
+          The system doesn't care about the mentalrayTexture nodes because the
+          lack of a good environment variable support from that node. Use
+          regular maya file nodes with mib_texture_filter_lookup nodes to have
+          the same sharp results.
         """
         start = time.time()
         workspace_path = pm.workspace.path
@@ -1678,7 +1685,7 @@ workspace -fr "translatorData" "Outputs/data";
             "create_workspace_folders() took {:0.3f} seconds".format(end - start)
         )
 
-    def deep_version_inputs_update(self):
+    def deep_references_update(self):
         """updates the inputs of the references of the current scene"""
         # first update with data from first level references
         self.update_version_inputs()
@@ -1706,7 +1713,7 @@ workspace -fr "translatorData" "Outputs/data";
             prev_ref_path = None
             logger.debug("advancing to next ref")
 
-    def check_referenced_versions(self, pdm=None):
+    def check_references(self, pdm=None):
         """Deeply checks all the references in the scene and returns a
         dictionary which has three keys called 'leave', 'update' and 'create'.
 
@@ -1732,9 +1739,9 @@ workspace -fr "translatorData" "Outputs/data";
         :return: dictionary
         """
         pdm = ProgressManagerFactory.get_progress_manager()
-        return super(Maya, self).check_referenced_versions(pdm=pdm)
+        return super(Maya, self).check_references(pdm=pdm)
 
-    def update_versions(self, reference_resolution):
+    def update_reference_versions_to_latest(self, reference_resolution):
         """Updates maya versions with the given reference_resolution.
 
         The reference_resolution should be a dictionary in the following
@@ -1790,7 +1797,10 @@ workspace -fr "translatorData" "Outputs/data";
 
         # use a progress window for that
         pdm = ProgressManagerFactory.get_progress_manager()
-        caller = pdm.register(len(references_list), "Maya.update_versions()")
+        caller = pdm.register(
+            len(references_list),
+            "Maya.update_reference_versions_to_latest()"
+        )
 
         # while len(references_list):
         for ref in references_list:

@@ -125,7 +125,7 @@ class Blender(DCCBase):
         self.set_render_filename(version)
 
         if not skip_update_check:
-            return self.check_referenced_versions()
+            return self.check_references()
         else:
             return generate_empty_reference_resolution
 
@@ -240,7 +240,7 @@ class Blender(DCCBase):
                     files=files[key],
                 )
 
-    def get_referenced_versions(self, parent_ref=None):
+    def get_referenced_files(self, parent_ref=None):
         """Returns the referenced versions
 
         :param parent_ref:
@@ -261,7 +261,7 @@ class Blender(DCCBase):
 
         return versions
 
-    def update_versions(self, reference_resolution):
+    def update_reference_versions_to_latest(self, reference_resolution):
         """Updates the linked libraries according to the given reference_resolution.
 
         :param reference_resolution:
@@ -292,7 +292,7 @@ class Blender(DCCBase):
 
         return []  # need to return an empty list
 
-    def deep_version_inputs_update(self):
+    def deep_references_update(self):
         """updates the inputs of the references of the current scene"""
         # just use the first level references for now
         self.update_version_inputs()

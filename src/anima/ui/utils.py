@@ -53,7 +53,7 @@ def get_cached_icon(icon_name, *args, **kwargs):
                     if qtawesome_version_info[0]
                     else qtawesome.icon("ei.arrow-left")
                 ),
-                "depends_to": (
+                "depends_on": (
                     qtawesome.icon("mdi6.tray-arrow-down", rotated=-90)
                     if qtawesome_version_info[0]
                     else qtawesome.icon("ei.arrow-right")
@@ -84,22 +84,28 @@ def get_cached_icon(icon_name, *args, **kwargs):
                 "task": qtawesome.icon("fa.tasks"),
                 "ticket": qtawesome.icon("fa.ticket"),
                 "timelog": qtawesome.icon("fa.calendar"),
+                "unknown": qtawesome.icon("ei.blind"),
                 "update_project": qtawesome.icon("fa.pencil-square-o"),
                 "user": qtawesome.icon("fa.user"),
                 "users": qtawesome.icon("fa.users"),
                 "vacation": qtawesome.icon("fa.sun-o"),
+                "variant": qtawesome.icon("ph.git-branch-fill"),
                 "version": qtawesome.icon("fa.sitemap"),
                 "version_output": qtawesome.icon("fa.picture-o"),
             }
         )
 
     if icon_name in ICONS_LUT:
-        return ICONS_LUT[icon_name]
+        icon = ICONS_LUT[icon_name]
     else:
-        icon = qtawesome.icon(icon_name, *args, **kwargs)
+        try:
+            icon = qtawesome.icon(icon_name, *args, **kwargs)
+        except Exception:
+            # unknown icon_name use 'unknown' icon
+            icon = ICONS_LUT.get("unknown")
         ICONS_LUT[icon_name] = icon
-        return icon
-    # return ICONS_LUT.get(icon_name.lower(), ICONS_LUT["default"])
+
+    return icon
 
 
 def get_app_icon(icon_name):

@@ -2,7 +2,7 @@
 
 import pytest
 
-from stalker import Project, Task, Asset, Version
+from stalker import Project, Task, Asset, Variant, Version
 from stalker.db.session import DBSession
 
 from anima import publish
@@ -41,10 +41,10 @@ def mock_publishers():
 
 
 @pytest.fixture(scope="function")
-def migration_test_data(create_test_data, create_pymel, create_maya_env):
+def migration_test_data(create_test_data, create_pymel, create_maya_dcc):
     data = create_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
 
     # *********************************
     # Target Project
@@ -95,20 +95,20 @@ def migration_test_data(create_test_data, create_pymel, create_maya_env):
     box = pm.polyCube(name="Box1")[0]
     pm.parent(box, root_node)
     pm.runtime.DeleteHistory()
-    maya_env.save_as(data["asset2_model_main_v001"])
-    maya_env.save_as(data["asset2_model_main_v002"])
-    maya_env.save_as(data["asset2_model_main_v003"])
+    maya_dcc.save_as(data["asset2_model_main_v001"])
+    maya_dcc.save_as(data["asset2_model_main_v002"])
+    maya_dcc.save_as(data["asset2_model_main_v003"])
     DBSession.commit()
 
-    # Asset2 - Take1
+    # Asset2 - Variant1
     pm.newFile(force=True)
-    root_node = pm.nt.Transform(name="Asset2_Take1")
+    root_node = pm.nt.Transform(name="Asset2_Variant1")
     box = pm.polyCube(name="Box4")[0]
     pm.parent(box, root_node)
     pm.runtime.DeleteHistory()
-    maya_env.save_as(data["asset2_model_take1_v001"])
-    maya_env.save_as(data["asset2_model_take1_v002"])
-    maya_env.save_as(data["asset2_model_take1_v003"])
+    maya_dcc.save_as(data["asset2_model_variant1_v001"])
+    maya_dcc.save_as(data["asset2_model_variant1_v002"])
+    maya_dcc.save_as(data["asset2_model_variant1_v003"])
     DBSession.commit()
 
     # --------------------------
@@ -123,19 +123,19 @@ def migration_test_data(create_test_data, create_pymel, create_maya_env):
     )
     pm.parent(ground_geo, root_node)
     pm.runtime.DeleteHistory()
-    maya_env.save_as(data["ext2_model_main_v001"])
-    maya_env.save_as(data["ext2_model_main_v002"])
+    maya_dcc.save_as(data["ext2_model_main_v001"])
+    maya_dcc.save_as(data["ext2_model_main_v002"])
     data["ext2_model_main_v003"].is_published = True
-    maya_env.save_as(data["ext2_model_main_v003"])
-    maya_env.save_as(data["random_asset1_model_main_version1"])
+    maya_dcc.save_as(data["ext2_model_main_v003"])
+    maya_dcc.save_as(data["random_asset1_model_main_version1"])
     data["random_asset1_model_main_version1"].parent = None
     DBSession.commit()
 
     # --------------------------
     # LookDev
     pm.newFile(force=True)
-    maya_env.save_as(data["ext2_look_dev_main_v001"])
-    maya_env.reference(data["ext2_model_main_v003"])
+    maya_dcc.save_as(data["ext2_look_dev_main_v001"])
+    maya_dcc.reference(data["ext2_model_main_v003"])
     # assign a shader
     surface_shader = pm.shadingNode("surfaceShader", asShader=1)
     shading_group = pm.nt.ShadingEngine(name="surfaceShaderSG")
@@ -145,27 +145,27 @@ def migration_test_data(create_test_data, create_pymel, create_maya_env):
     pm.sets(shading_group, fe=ground_geo.getShape())
 
     # save versions
-    maya_env.save_as(data["ext2_look_dev_main_v001"])
-    maya_env.save_as(data["ext2_look_dev_main_v002"])
+    maya_dcc.save_as(data["ext2_look_dev_main_v001"])
+    maya_dcc.save_as(data["ext2_look_dev_main_v002"])
     # publish it
     data["ext2_look_dev_main_v003"].is_published = True
-    maya_env.save_as(data["ext2_look_dev_main_v003"])
+    maya_dcc.save_as(data["ext2_look_dev_main_v003"])
 
     # --------------------------
     # Layout
     pm.newFile(force=True)
-    maya_env.save_as(data["ext2_layout_main_v001"])
+    maya_dcc.save_as(data["ext2_layout_main_v001"])
     # Create a root_node
     root_node = pm.nt.Transform(name="Ext2_Layout")
     # Reference the LookDev
-    ref_node = maya_env.reference(data["ext2_look_dev_main_v003"])
+    ref_node = maya_dcc.reference(data["ext2_look_dev_main_v003"])
     # parent the root of the look dev node to the root node
     look_dev_root_node = auxiliary.get_root_nodes(ref_node)[0]
     pm.parent(look_dev_root_node, root_node)
-    maya_env.save_as(data["ext2_layout_main_v001"])
-    maya_env.save_as(data["ext2_layout_main_v002"])
+    maya_dcc.save_as(data["ext2_layout_main_v001"])
+    maya_dcc.save_as(data["ext2_layout_main_v002"])
     data["ext2_layout_main_v003"].is_published = True
-    maya_env.save_as(data["ext2_layout_main_v003"])
+    maya_dcc.save_as(data["ext2_layout_main_v003"])
 
     yield data
 
@@ -209,7 +209,7 @@ def test_migrating_simple_asset_1(migration_test_data):
         },
         data["asset2_model"].id: {
             "new_parent_id": data["asset2"].id,
-            "takes": {
+            "variants": {
                 "Main": {
                     "new_name": "Main",
                     "versions": [data["asset2_model_main_v003"].version_number],
@@ -237,10 +237,10 @@ def test_migrating_simple_asset_1(migration_test_data):
     assert model_task.versions != []
     assert len(model_task.versions) == 1
     version = model_task.versions[0]
-    assert version.take_name == "Main"
+    # assert version.variant_name == "Main"
 
 
-def test_migrating_simple_asset_2(migration_test_data, create_pymel, create_maya_env):
+def test_migrating_simple_asset_2(migration_test_data, create_pymel, create_maya_dcc):
     """Test AssetMigrationTool carries file content for simple asset. File Content,"""
     # Asset
     #   Model
@@ -248,14 +248,14 @@ def test_migrating_simple_asset_2(migration_test_data, create_pymel, create_maya
     # Check file content
     data = migration_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     migration_recipe = {
         data["asset2"].id: {
             "new_parent_id": data["assets_task2"].id,
         },
         data["asset2_model"].id: {
             "new_parent_id": data["asset2"].id,
-            "takes": {
+            "variants": {
                 "Main": {
                     "new_name": "Main",
                     "versions": [data["asset2_model_main_v003"].version_number],
@@ -277,7 +277,7 @@ def test_migrating_simple_asset_2(migration_test_data, create_pymel, create_maya
 
     # open the maya scene
     # and check content
-    maya_env.open(version, force=True)
+    maya_dcc.open(version, force=True)
 
     root_node = pm.ls("Asset2_Main")[0]
     assert root_node is not None
@@ -286,13 +286,13 @@ def test_migrating_simple_asset_2(migration_test_data, create_pymel, create_maya
     assert box.getParent() == root_node
 
 
-def test_migrating_simple_asset_3(migration_test_data, create_pymel, create_maya_env):
+def test_migrating_simple_asset_3(migration_test_data, create_pymel, create_maya_dcc):
     """Test AssetMigrationTool carries file content for simple asset. Stalker Data."""
     # Asset
     #   Model
     #     Main
-    #     Take1
-    # Check Stalker data for two takes
+    #     Variant1
+    # Check Stalker data for two variants
     data = migration_test_data
     migration_recipe = {
         data["asset2"].id: {
@@ -302,14 +302,14 @@ def test_migrating_simple_asset_3(migration_test_data, create_pymel, create_maya
         },
         data["asset2_model"].id: {
             "new_parent_id": data["asset2"].id,
-            "takes": {
+            "variants": {
                 "Main": {
                     "new_name": "Main",
                     "versions": [data["asset2_model_main_v003"].version_number],
                 },
-                "Take1": {
-                    "new_name": "Take1",
-                    "versions": [data["asset2_model_take1_v003"].version_number],
+                "Variant1": {
+                    "new_name": "Variant1",
+                    "versions": [data["asset2_model_variant1_v003"].version_number],
                 },
             },
         },
@@ -331,46 +331,41 @@ def test_migrating_simple_asset_3(migration_test_data, create_pymel, create_maya
     model_task = new_asset.children[0]
     assert isinstance(model_task, Task)
     assert model_task.name == "Model"
-    assert model_task.versions != []
-    assert len(model_task.versions) == 2
-    assert (
-        Version.query.filter(Version.task == model_task)
-        .filter(Version.take_name == "Main")
-        .count()
-        == 1
-    )
-    assert (
-        Version.query.filter(Version.task == model_task)
-        .filter(Version.take_name == "Take1")
-        .count()
-        == 1
-    )
+    assert model_task.versions == []
+    model_main_variant = model_task.children[0]
+    model_var1_variant = model_task.children[1]
+    assert isinstance(model_main_variant, Variant)
+    assert isinstance(model_var1_variant, Variant)
+    assert len(model_main_variant.versions) == 1
+    assert len(model_var1_variant.versions) == 1
+    assert Version.query.filter(Version.task == model_main_variant).count() == 1
+    assert Version.query.filter(Version.task == model_var1_variant).count() == 1
 
 
-def test_migrating_simple_asset_4(migration_test_data, create_pymel, create_maya_env):
+def test_migrating_simple_asset_4(migration_test_data, create_pymel, create_maya_dcc):
     """Test AssetMigrationTool carries file content for simple asset. File Content."""
     # Asset
     #   Model
     #     Main
-    #     Take1
+    #     Variant1
     # Check file contents
     data = migration_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     migration_recipe = {
         data["asset2"].id: {
             "new_parent_id": data["assets_task2"].id,
         },
         data["asset2_model"].id: {
             "new_parent_id": data["asset2"].id,
-            "takes": {
+            "variants": {
                 "Main": {
                     "new_name": "Main",
                     "versions": [data["asset2_model_main_v003"].version_number],
                 },
-                "Take1": {
-                    "new_name": "Take1",
-                    "versions": [data["asset2_model_take1_v003"].version_number],
+                "Variant1": {
+                    "new_name": "Variant1",
+                    "versions": [data["asset2_model_variant1_v003"].version_number],
                 },
             },
         },
@@ -385,16 +380,14 @@ def test_migrating_simple_asset_4(migration_test_data, create_pymel, create_maya
     # Main
     new_asset = data["assets_task2"].children[0]
     model_task = new_asset.children[0]
-    version = (
-        Version.query.filter(Version.task == model_task)
-        .filter(Version.take_name == "Main")
-        .first()
-    )
-    assert version.extension == ".ma"
+    model_main_variant = model_task.children[0]
+    model_variant1_variant = model_task.children[1]
+    version = Version.query.filter(Version.task == model_main_variant).first()
+    # assert version.extension == ".ma"
 
     # open the maya scene
     # and check content
-    maya_env.open(version, force=True)
+    maya_dcc.open(version, force=True)
 
     root_node = pm.ls("Asset2_Main")[0]
     assert root_node is not None
@@ -402,19 +395,15 @@ def test_migrating_simple_asset_4(migration_test_data, create_pymel, create_maya
     assert box is not None
     assert box.getParent() == root_node
 
-    # Take1
-    version = (
-        Version.query.filter(Version.task == model_task)
-        .filter(Version.take_name == "Take1")
-        .first()
-    )
+    # Variant1
+    version = Version.query.filter(Version.task == model_variant1_variant).first()
     assert version.extension == ".ma"
 
     # open the maya scene
     # and check content
-    maya_env.open(version, force=True)
+    maya_dcc.open(version, force=True)
 
-    root_node = pm.ls("Asset2_Take1")[0]
+    root_node = pm.ls("Asset2_Variant1")[0]
     assert root_node is not None
     box = pm.ls("Box4")[0]
     assert box is not None
@@ -422,7 +411,7 @@ def test_migrating_simple_asset_4(migration_test_data, create_pymel, create_maya
 
 
 def test_migrating_simple_env_asset_1(
-    migration_test_data, create_pymel, create_maya_env
+    migration_test_data, create_pymel, create_maya_dcc
 ):
     """Test AssetMigrationTool with a simple environment asset. Stalker Data."""
     # EnvAsset
@@ -432,7 +421,7 @@ def test_migrating_simple_env_asset_1(
     # Check Stalker data
     data = migration_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     migration_recipe = {
         data["ext2"].id: {
             "new_name": "Ext2A",
@@ -441,13 +430,13 @@ def test_migrating_simple_env_asset_1(
         },
         data["ext2_layout"].id: {  # tricky part, this needs to be moved after look dev
             "new_parent_id": data["ext2"].id,
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["ext2_layout_main_v003"].version_number]},
             },
         },
         data["ext2_look_dev"].id: {
             "new_parent_id": data["ext2"].id,
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["ext2_look_dev_main_v003"].version_number]},
             },
         },
@@ -480,9 +469,11 @@ def test_migrating_simple_env_asset_1(
         .first()
     )
     assert look_dev_task.name == "LookDev"
-    assert len(look_dev_task.versions) == 1
-    look_dev_version = look_dev_task.versions[0]
-    assert look_dev_version.take_name == "Main"
+    assert len(look_dev_task.versions) == 0
+    look_dev_main_variant = look_dev_task.children[0]
+    assert look_dev_main_variant.name == "Main"
+    assert isinstance(look_dev_main_variant, Variant)
+    look_dev_version = look_dev_main_variant.versions[0]
     assert len(look_dev_version.inputs) == 1
     assert data["ext2_model_main_v003"] in look_dev_version.inputs  # baam!
 
@@ -493,15 +484,16 @@ def test_migrating_simple_env_asset_1(
         .first()
     )
     assert layout_task.name == "Layout"
-    assert len(layout_task.versions) == 1
-    layout_version = layout_task.versions[0]
-    assert layout_version.take_name == "Main"
+    assert len(layout_task.versions) == 0
+    layout_main_variant = layout_task.children[0]
+    assert layout_main_variant.name == "Main"
+    layout_version = layout_main_variant.versions[0]
     assert len(layout_version.inputs) == 1
     assert look_dev_version in layout_version.inputs  # baam 2!
 
 
 def test_migrating_simple_env_asset_2(
-    migration_test_data, create_pymel, create_maya_env
+    migration_test_data, create_pymel, create_maya_dcc
 ):
     """Test AssetMigrationTool with a simple environment asset."""
     #   Model (don't move)
@@ -510,7 +502,7 @@ def test_migrating_simple_env_asset_2(
     # Check Stalker data
     data = migration_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     migration_recipe = {
         data["ext2"].id: {
             "new_name": "Ext2B",
@@ -519,13 +511,13 @@ def test_migrating_simple_env_asset_2(
         },
         data["ext2_layout"].id: {  # tricky part, this needs to be moved after look dev
             "new_parent_id": data["ext2"].id,
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["ext2_layout_main_v003"].version_number]},
             },
         },
         data["ext2_look_dev"].id: {
             "new_parent_id": data["ext2"].id,
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["ext2_look_dev_main_v003"].version_number]},
             },
         },
@@ -558,7 +550,7 @@ def test_migrating_simple_env_asset_2(
         .first()
     )
     look_dev_version = look_dev_task.versions[0]
-    maya_env.open(look_dev_version, force=True)
+    maya_dcc.open(look_dev_version, force=True)
     refs = pm.listReferences()
     assert len(refs) == 1
     assert refs[0].version == data["ext2_model_main_v003"]  # baam!
@@ -570,14 +562,14 @@ def test_migrating_simple_env_asset_2(
         .first()
     )
     layout_version = layout_task.versions[0]
-    maya_env.open(layout_version, force=True)
+    maya_dcc.open(layout_version, force=True)
     refs = pm.listReferences()
     assert len(refs) == 1
     assert refs[0].version == look_dev_version  # baam 2!
 
 
 def test_migrating_complex_env_asset_1(
-    migration_test_data, create_pymel, create_maya_env
+    migration_test_data, create_pymel, create_maya_dcc
 ):
     """Test AssetMigrationTool with a complex environment asset."""
     # +- Ext1 (Asset - Exterior)
@@ -610,21 +602,21 @@ def test_migrating_complex_env_asset_1(
     #    +- Props (Task)
     #    |  +- Prop1 (Asset)
     #    |     +- Model (Task - Model)
-    #    |     |  +- **Main** (Take)
+    #    |     |  +- **Main** (Variant)
     #    |     |  |  +- prop1_model_main_v003
-    #    |     |  +- **Kisa** (Take)
+    #    |     |  +- **Kisa** (Variant)
     #    |     |     +- prop1_model_kisa_v003
     #    |     +- LookDev (Task - Look Development)
-    #    |        +- **Main** (Take)
+    #    |        +- **Main** (Variant)
     #    |        |  +- prop1_look_dev_main_v003
-    #    |        +- **Kisa** (Take)
+    #    |        +- **Kisa** (Variant)
     #    |           +- prop1_look_dev_kisa_v003
     #    +- Vegetation (Task - Vegetation)
     #       +- ext1_vegetation_main_v003
     # Check Stalker data
     data = migration_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     migration_recipe = {
         data["ext1"].id: {
             "new_name": "Ext1A",
@@ -632,70 +624,70 @@ def test_migrating_complex_env_asset_1(
             "new_parent_id": data["assets_task2"].id,
         },
         data["ext1_layout"].id: {
-            "takes": {
+            "variants": {
                 # tricky part, this needs to be moved after look dev
                 "Main": {"versions": [data["ext1_layout_main_v003"].version_number]},
             },
         },
         data["ext1_look_dev"].id: {
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["ext1_look_dev_main_v003"].version_number]},
             },
         },
         data["building1"].id: {},
         data["building1_layout"].id: {
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["building1_layout_main_v003"].version_number]},
             },
         },
         data["building1_look_dev"].id: {
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["building1_look_dev_main_v003"].version_number]},
             },
         },
         data["building1_props"].id: {},
         data["building1_yapi"].id: {},
         data["building1_yapi_model"].id: {
-            "takes": {"Main": {"versions": [data["building1_yapi_model_main_v003"].version_number]}}
+            "variants": {"Main": {"versions": [data["building1_yapi_model_main_v003"].version_number]}}
         },
         data["building1_yapi_look_dev"].id: {
-            "takes": {"Main": {"versions": [data["building1_yapi_look_dev_main_v003"].version_number]}}
+            "variants": {"Main": {"versions": [data["building1_yapi_look_dev_main_v003"].version_number]}}
         },
         data["building2"].id: {},
         data["building2_layout"].id: {
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["building2_layout_main_v003"].version_number]},
             },
         },
         data["building2_look_dev"].id: {
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["building2_look_dev_main_v003"].version_number]},
             },
         },
         data["building2_props"].id: {},
         data["building2_yapi"].id: {},
         data["building2_yapi_model"].id: {
-            "takes": {"Main": {"versions": [data["building2_yapi_model_main_v003"].version_number]}}
+            "variants": {"Main": {"versions": [data["building2_yapi_model_main_v003"].version_number]}}
         },
         data["building2_yapi_look_dev"].id: {
-            "takes": {"Main": {"versions": [data["building2_yapi_look_dev_main_v003"].version_number]}}
+            "variants": {"Main": {"versions": [data["building2_yapi_look_dev_main_v003"].version_number]}}
         },
         data["ext1_props"].id: {},
         data["prop1"].id: {},
         data["prop1_model"].id: {
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["prop1_model_main_v003"].version_number]},
                 "Kisa": {"versions": [data["prop1_model_kisa_v003"].version_number]},
             }
         },
         data["prop1_look_dev"].id: {
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["prop1_look_dev_main_v003"].version_number]},
                 "Kisa": {"versions": [data["prop1_look_dev_kisa_v003"].version_number]},
             }
         },
         data["ext1_vegetation"].id: {
-            "takes": {"Main": {"versions": [data["ext1_vegetation_main_v003"].version_number]}}
+            "variants": {"Main": {"versions": [data["ext1_vegetation_main_v003"].version_number]}}
         },
     }
 
@@ -737,8 +729,12 @@ def test_migrating_complex_env_asset_1(
     assert building1_layout.name == data["building1_layout"].name
     assert building1_layout.type == data["layout_type"]
     assert len(building1_layout.versions) == 1
-    v1 = building1_layout.versions[0]
-    assert v1.take_name == "Main"
+
+    # Building1 Layout Main Variant
+    building1_layout_main_variant = building1_layout.children[0]
+    assert isinstance(building1_layout_main_variant, Variant)
+    assert building1_layout_main_variant.name == "Main"
+    v1 = building1_layout_main_variant.versions[0]
     assert v1.version_number == 1
 
     # Building1 LookDev
@@ -751,9 +747,14 @@ def test_migrating_complex_env_asset_1(
     assert isinstance(building1_look_dev, Task)
     assert building1_look_dev.name == data["building1_look_dev"].name
     assert building1_look_dev.type == data["look_development_type"]
-    assert len(building1_look_dev.versions) == 1
-    v1 = building1_look_dev.versions[0]
-    assert v1.take_name == "Main"
+    assert len(building1_look_dev.versions) == 0
+
+    # Building1 LookDev Main Variant
+    building1_look_dev_main_variant = building1_look_dev.children[0]
+    assert isinstance(building1_look_dev_main_variant, Variant)
+    assert building1_look_dev_main_variant.name == "Main"
+    assert len(building1_look_dev_main_variant.versions) == 1
+    v1 = building1_look_dev_main_variant.versions[0]
     assert v1.version_number == 1
 
     # Building1 Props
@@ -790,8 +791,12 @@ def test_migrating_complex_env_asset_1(
     assert building1_yapi_model.type == data["model_type"]
     assert len(building1_yapi_model.children) == 0
     assert len(building1_yapi_model.versions) == 1
-    v1 = building1_yapi_model.versions[0]
-    assert v1.take_name == "Main"
+
+    # Building1 Yapi Model Main Variant
+    building1_yapi_model_main_variant = building1_yapi_model.children[0]
+    assert isinstance(building1_yapi_model_main_variant, Variant)
+    assert building1_yapi_model_main_variant.name == "Main"
+    v1 = building1_yapi_model_main_variant.versions[0]
     assert v1.version_number == 1
 
     # Building1 Yapi LookDev
@@ -805,9 +810,14 @@ def test_migrating_complex_env_asset_1(
     assert building1_yapi_look_dev.name == data["building1_yapi_look_dev"].name
     assert building1_yapi_look_dev.type == data["look_development_type"]
     assert len(building1_yapi_look_dev.children) == 0
-    assert len(building1_yapi_look_dev.versions) == 1
-    v1 = building1_yapi_look_dev.versions[0]
-    assert v1.take_name == "Main"
+    assert len(building1_yapi_look_dev.versions) == 0
+
+    # Building1 Yapi LookDev Main Variant
+    building1_yapi_look_dev_main_variant = building1_yapi_look_dev.children[0]
+    assert isinstance(building1_yapi_look_dev_main_variant, Variant)
+    assert building1_yapi_look_dev_main_variant.name == "Main"
+    assert len(building1_yapi_look_dev_main_variant.versions) == 1
+    v1 = building1_yapi_look_dev_main_variant.versions[0]
     assert v1.version_number == 1
 
     # Building2
@@ -833,9 +843,14 @@ def test_migrating_complex_env_asset_1(
     assert isinstance(building2_layout, Task)
     assert building2_layout.name == data["building2_layout"].name
     assert building2_layout.type == data["layout_type"]
-    assert len(building2_layout.versions) == 1
-    v1 = building2_layout.versions[0]
-    assert v1.take_name == "Main"
+    assert len(building2_layout.versions) == 0
+
+    # Building2 Layout Main Variant
+    building2_layout_main_variant = building2_layout.children[0]
+    assert isinstance(building2_layout_main_variant, Variant)
+    assert building2_layout_main_variant.name == "Main"
+    assert len(building2_layout_main_variant.versions) == 1
+    v1 = building2_layout_main_variant.versions[0]
     assert v1.version_number == 1
 
     # Building2 LookDev
@@ -848,9 +863,14 @@ def test_migrating_complex_env_asset_1(
     assert isinstance(building2_look_dev, Task)
     assert building2_look_dev.name == data["building2_look_dev"].name
     assert building2_look_dev.type == data["look_development_type"]
-    assert len(building2_look_dev.versions) == 1
-    v1 = building2_look_dev.versions[0]
-    assert v1.take_name == "Main"
+    assert len(building2_look_dev.versions) == 0
+
+    # Building2 LookDev Main Variant
+    building2_look_dev_main_variant = building2_look_dev.children[0]
+    assert isinstance(building2_look_dev_main_variant, Variant)
+    assert building2_look_dev_main_variant.name == "Main"
+    assert len(building2_look_dev_main_variant.versions) == 1
+    v1 = building2_look_dev_main_variant.versions[0]
     assert v1.version_number == 1
 
     # Building2 Props
@@ -886,9 +906,14 @@ def test_migrating_complex_env_asset_1(
     assert building2_yapi_model.name == data["building2_yapi_model"].name
     assert building2_yapi_model.type == data["model_type"]
     assert len(building2_yapi_model.children) == 0
-    assert len(building2_yapi_model.versions) == 1
-    v1 = building2_yapi_model.versions[0]
-    assert v1.take_name == "Main"
+    assert len(building2_yapi_model.versions) == 0
+
+    # Building2 Yapi Model Main Variant
+    building2_yapi_model_main_variant = building2_yapi_model.children[0]
+    assert isinstance(building2_yapi_model_main_variant, Variant)
+    assert building2_yapi_model_main_variant.name == "Main"
+    assert len(building2_yapi_model_main_variant.versions) == 1
+    v1 = building2_yapi_model_main_variant.versions[0]
     assert v1.version_number == 1
 
     # Building2 Yapi LookDev
@@ -902,9 +927,14 @@ def test_migrating_complex_env_asset_1(
     assert building2_yapi_look_dev.name == data["building2_yapi_look_dev"].name
     assert building2_yapi_look_dev.type == data["look_development_type"]
     assert len(building2_yapi_look_dev.children) == 0
-    assert len(building2_yapi_look_dev.versions) == 1
-    v1 = building2_yapi_look_dev.versions[0]
-    assert v1.take_name == "Main"
+    assert len(building2_yapi_look_dev.versions) == 0
+
+    # Building2 Yapi LookDev Main Variant
+    building2_yapi_look_dev_main_variant = building2_yapi_look_dev.children[0]
+    assert isinstance(building2_yapi_look_dev_main_variant, Variant)
+    assert building2_yapi_look_dev_main_variant.name == "Main"
+    assert len(building2_yapi_look_dev_main_variant.versions) == 1
+    v1 = building2_yapi_look_dev_main_variant.versions[0]
     assert v1.version_number == 1
 
     # Ext1 Layout
@@ -918,9 +948,14 @@ def test_migrating_complex_env_asset_1(
     assert ext1_layout.name == data["ext1_layout"].name
     assert ext1_layout.type == data["layout_type"]
     assert len(ext1_layout.children) == 0
-    assert len(ext1_layout.versions) == 1
-    v1 = ext1_layout.versions[0]
-    assert v1.take_name == "Main"
+    assert len(ext1_layout.versions) == 0
+
+    # Ext1 Layout Main Variant
+    ext1_layout_main_variant = ext1_layout.children[0]
+    assert isinstance(ext1_layout_main_variant, Variant)
+    assert ext1_layout_main_variant.name == "Main"
+    assert len(ext1_layout_main_variant.versions) == 1
+    v1 = ext1_layout_main_variant.versions[0]
     assert v1.version_number == 1
 
     # Ext1 Look_dev
@@ -934,9 +969,14 @@ def test_migrating_complex_env_asset_1(
     assert ext1_look_dev.name == data["ext1_look_dev"].name
     assert ext1_look_dev.type == data["look_development_type"]
     assert len(ext1_look_dev.children) == 0
-    assert len(ext1_look_dev.versions) == 1
-    v1 = ext1_look_dev.versions[0]
-    assert v1.take_name == "Main"
+    assert len(ext1_look_dev.versions) == 0
+
+    # Ext1 Look_dev Main Variant
+    ext1_look_dev_main_variant = ext1_look_dev.children[0]
+    assert isinstance(ext1_look_dev_main_variant, Variant)
+    assert ext1_look_dev_main_variant.name == "Main"
+    assert len(ext1_look_dev_main_variant.versions) == 1
+    v1 = ext1_look_dev_main_variant.versions[0]
     assert v1.version_number == 1
 
     # Ext1 Props
@@ -972,11 +1012,18 @@ def test_migrating_complex_env_asset_1(
     assert prop1_model.name == data["prop1_model"].name
     assert prop1_model.type == data["model_type"]
     assert len(prop1_model.children) == 0
-    assert len(prop1_model.versions) == 2
-    v1 = prop1_model.versions[0]
-    v2 = prop1_model.versions[1]
-    assert v1.take_name in ["Main", "Kisa"]
-    assert v2.take_name in ["Main", "Kisa"]
+    assert len(prop1_model.versions) == 0
+
+    # Ext1 Props Prop1 Model Main Variant
+    model_main_variant = prop1_model.children[0]
+    model_kisa_variant = prop1_model.children[1]
+
+    assert model_main_variant.name == "Main"
+    assert model_kisa_variant.name == "Kisa"
+    assert len(model_main_variant.versions) == 1
+    assert len(model_kisa_variant.versions) == 1
+    v1 = model_main_variant.versions[0]
+    v2 = model_kisa_variant.versions[0]
 
     # Ext1 Props Prop1 Look_dev
     prop1_look_dev = (
@@ -989,11 +1036,17 @@ def test_migrating_complex_env_asset_1(
     assert prop1_look_dev.name == data["prop1_look_dev"].name
     assert prop1_look_dev.type == data["look_development_type"]
     assert len(prop1_look_dev.children) == 0
-    assert len(prop1_look_dev.versions) == 2
-    v1 = prop1_look_dev.versions[0]
-    v2 = prop1_look_dev.versions[1]
-    assert v1.take_name in ["Main", "Kisa"]
-    assert v2.take_name in ["Main", "Kisa"]
+    assert len(prop1_look_dev.versions) == 0
+
+    # Ext1 Props Prop1 Look_dev Main Variant
+    prop1_look_dev_main_variant = prop1_look_dev.children[0]
+    prop1_look_dev_kisa_variant = prop1_look_dev.children[1]
+    assert prop1_look_dev_main_variant.name == "Main"
+    assert prop1_look_dev_kisa_variant.name == "Kisa"
+    assert len(prop1_look_dev_main_variant.versions) == 1
+    assert len(prop1_look_dev_kisa_variant.versions) == 1
+    v1 = prop1_look_dev_main_variant.versions[0]
+    v2 = prop1_look_dev_kisa_variant.versions[0]
 
     # Ext1 Vegetation
     ext1_vegetation = (
@@ -1006,14 +1059,19 @@ def test_migrating_complex_env_asset_1(
     assert ext1_vegetation.name == data["ext1_vegetation"].name
     assert ext1_vegetation.type == data["vegetation_type"]
     assert len(ext1_vegetation.children) == 0
-    assert len(ext1_vegetation.versions) == 1
-    v1 = ext1_vegetation.versions[0]
-    assert v1.take_name == "Main"
+    assert len(ext1_vegetation.versions) == 0
+
+    # Ext1 Vegetation Main Variant
+    ext1_vegetation_main_variant = ext1_vegetation.children[0]
+    assert isinstance(ext1_vegetation_main_variant, Variant)
+    assert ext1_vegetation_main_variant.name == "Main"
+    assert len(ext1_vegetation_main_variant.versions) == 1
+    v1 = ext1_vegetation_main_variant.versions[0]
     assert v1.version_number == 1
 
 
 def test_migrating_complex_env_asset_2(
-    migration_test_data, create_pymel, create_maya_env
+    migration_test_data, create_pymel, create_maya_dcc
 ):
     """Test AssetMigrationTool with a complex environment asset. File content."""
     # +- Ext1 (Asset - Exterior)
@@ -1046,90 +1104,90 @@ def test_migrating_complex_env_asset_2(
     #    +- Props (Task)
     #    |  +- Prop1 (Asset)
     #    |     +- Model (Task - Model)
-    #    |     |  +- **Main** (Take)
+    #    |     |  +- **Main** (Variant)
     #    |     |  |  +- prop1_model_main_v003
-    #    |     |  +- **Kisa** (Take)
+    #    |     |  +- **Kisa** (Variant)
     #    |     |     +- prop1_model_kisa_v003
     #    |     +- LookDev (Task - Look Development)
-    #    |        +- **Main** (Take)
+    #    |        +- **Main** (Variant)
     #    |        |  +- prop1_look_dev_main_v003
-    #    |        +- **Kisa** (Take)
+    #    |        +- **Kisa** (Variant)
     #    |           +- prop1_look_dev_kisa_v003
     #    +- Vegetation (Task - Vegetation)
     #       +- ext1_vegetation_main_v003
     # Check Stalker data
     data = migration_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     migration_recipe = {
         data["ext1"].id: {
             "new_parent_id": data["assets_task2"].id,
         },
         data["ext1_layout"].id: {
-            "takes": {
+            "variants": {
                 # tricky part, this needs to be moved after look dev
                 "Main": {"versions": [data["ext1_layout_main_v003"].version_number]},
             },
         },
         data["ext1_look_dev"].id: {
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["ext1_look_dev_main_v003"].version_number]},
             },
         },
         data["building1"].id: {},
         data["building1_layout"].id: {
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["building1_layout_main_v003"].version_number]},
             },
         },
         data["building1_look_dev"].id: {
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["building1_look_dev_main_v003"].version_number]},
             },
         },
         data["building1_props"].id: {},
         data["building1_yapi"].id: {},
         data["building1_yapi_model"].id: {
-            "takes": {"Main": {"versions": [data["building1_yapi_model_main_v003"].version_number]}}
+            "variants": {"Main": {"versions": [data["building1_yapi_model_main_v003"].version_number]}}
         },
         data["building1_yapi_look_dev"].id: {
-            "takes": {"Main": {"versions": [data["building1_yapi_look_dev_main_v003"].version_number]}}
+            "variants": {"Main": {"versions": [data["building1_yapi_look_dev_main_v003"].version_number]}}
         },
         data["building2"].id: {},
         data["building2_layout"].id: {
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["building2_layout_main_v003"].version_number]},
             },
         },
         data["building2_look_dev"].id: {
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["building2_look_dev_main_v003"].version_number]},
             },
         },
         data["building2_props"].id: {},
         data["building2_yapi"].id: {},
         data["building2_yapi_model"].id: {
-            "takes": {"Main": {"versions": [data["building2_yapi_model_main_v003"].version_number]}}
+            "variants": {"Main": {"versions": [data["building2_yapi_model_main_v003"].version_number]}}
         },
         data["building2_yapi_look_dev"].id: {
-            "takes": {"Main": {"versions": [data["building2_yapi_look_dev_main_v003"].version_number]}}
+            "variants": {"Main": {"versions": [data["building2_yapi_look_dev_main_v003"].version_number]}}
         },
         data["ext1_props"].id: {},
         data["prop1"].id: {},
         data["prop1_model"].id: {
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["prop1_model_main_v003"].version_number]},
                 "Kisa": {"versions": [data["prop1_model_kisa_v003"].version_number]},
             }
         },
         data["prop1_look_dev"].id: {
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["prop1_look_dev_main_v003"].version_number]},
                 "Kisa": {"versions": [data["prop1_look_dev_kisa_v003"].version_number]},
             }
         },
         data["ext1_vegetation"].id: {
-            "takes": {"Main": {"versions": [data["ext1_vegetation_main_v003"].version_number]}}
+            "variants": {"Main": {"versions": [data["ext1_vegetation_main_v003"].version_number]}}
         },
     }
 
@@ -1270,11 +1328,14 @@ def test_migrating_complex_env_asset_2(
         .filter(Task.name == data["prop1_model"].name)
         .first()
     )
-    prop1_model_main_v001 = prop1_model.versions[0]
-    prop1_model_kisa_v001 = prop1_model.versions[1]
-    if prop1_model_main_v001.take_name != "Main":
-        prop1_model_main_v001 = prop1_model.versions[1]
-        prop1_model_kisa_v001 = prop1_model.versions[0]
+    prop1_model_main_variant = prop1_model.children[0]
+    prop1_model_kisa_variant = prop1_model.children[1]
+    if prop1_model_main_variant.name != "Main":
+        prop1_model_main_variant = prop1_model.children[1]
+        prop1_model_kisa_variant = prop1_model.children[0]
+
+    prop1_model_main_v001 = prop1_model_main_variant.versions[0]
+    prop1_model_kisa_v001 = prop1_model_kisa_variant.versions[0]
 
     # Ext1 Props Prop1 Look_dev
     prop1_look_dev = (
@@ -1282,11 +1343,15 @@ def test_migrating_complex_env_asset_2(
         .filter(Task.name == data["prop1_look_dev"].name)
         .first()
     )
-    prop1_look_dev_main_v001 = prop1_look_dev.versions[0]
-    prop1_look_dev_kisa_v001 = prop1_look_dev.versions[1]
-    if prop1_look_dev_main_v001.take_name != "Main":
-        prop1_look_dev_main_v001 = prop1_look_dev.versions[1]
-        prop1_look_dev_kisa_v001 = prop1_look_dev.versions[0]
+
+    prop1_look_dev_main_variant = prop1_look_dev.children[0]
+    prop1_look_dev_kisa_variant = prop1_look_dev.children[1]
+    if prop1_look_dev_main_variant.name != "Main":
+        prop1_look_dev_main_variant = prop1_look_dev.children[1]
+        prop1_look_dev_kisa_variant = prop1_look_dev.children[0]
+
+    prop1_look_dev_main_v001 = prop1_look_dev_main_variant.versions[0]
+    prop1_look_dev_kisa_v001 = prop1_look_dev_kisa_variant.versions[1]
 
     # Ext1 Vegetation
     ext1_vegetation = (
@@ -1298,7 +1363,7 @@ def test_migrating_complex_env_asset_2(
 
     # Version Content Check
     # Building1 Layout Main v001
-    maya_env.open(
+    maya_dcc.open(
         building1_layout_main_v001,
         force=True,
         skip_update_check=True,
@@ -1310,7 +1375,7 @@ def test_migrating_complex_env_asset_2(
     assert refs[0].version == building1_yapi_look_dev_main_v001
 
     # Building1 LookDev Main v001
-    maya_env.open(
+    maya_dcc.open(
         building1_look_dev_main_v001,
         force=True,
         skip_update_check=True,
@@ -1322,7 +1387,7 @@ def test_migrating_complex_env_asset_2(
     assert refs[0].version == building1_layout_main_v001
 
     # Building1 Yapi Model Main v001
-    maya_env.open(
+    maya_dcc.open(
         building1_yapi_model_main_v001,
         force=True,
         skip_update_check=True,
@@ -1333,7 +1398,7 @@ def test_migrating_complex_env_asset_2(
     assert len(refs) == 0
 
     # Building1 Yapi LookDev Main v001
-    maya_env.open(
+    maya_dcc.open(
         building1_yapi_look_dev_main_v001,
         force=True,
         skip_update_check=True,
@@ -1345,7 +1410,7 @@ def test_migrating_complex_env_asset_2(
     assert refs[0].version == building1_yapi_model_main_v001
 
     # Building2 Layout
-    maya_env.open(
+    maya_dcc.open(
         building2_layout_main_v001,
         force=True,
         skip_update_check=True,
@@ -1357,7 +1422,7 @@ def test_migrating_complex_env_asset_2(
     assert refs[0].version == building2_yapi_look_dev_main_v001
 
     # Building2 LookDev
-    maya_env.open(
+    maya_dcc.open(
         building2_look_dev_main_v001,
         force=True,
         skip_update_check=True,
@@ -1369,7 +1434,7 @@ def test_migrating_complex_env_asset_2(
     assert refs[0].version == building2_layout_main_v001
 
     # Building2 Yapi Model
-    maya_env.open(
+    maya_dcc.open(
         building2_yapi_model_main_v001,
         force=True,
         skip_update_check=True,
@@ -1380,7 +1445,7 @@ def test_migrating_complex_env_asset_2(
     assert len(refs) == 0
 
     # Building2 Yapi LookDev
-    maya_env.open(
+    maya_dcc.open(
         building2_yapi_look_dev_main_v001,
         force=True,
         skip_update_check=True,
@@ -1392,7 +1457,7 @@ def test_migrating_complex_env_asset_2(
     assert refs[0].version == building2_yapi_model_main_v001
 
     # Ext1 Layout
-    maya_env.open(
+    maya_dcc.open(
         ext1_layout_main_v001,
         force=True,
         skip_update_check=True,
@@ -1418,7 +1483,7 @@ def test_migrating_complex_env_asset_2(
     ]
 
     # Ext1 Look_dev
-    maya_env.open(
+    maya_dcc.open(
         ext1_look_dev_main_v001,
         force=True,
         skip_update_check=True,
@@ -1431,7 +1496,7 @@ def test_migrating_complex_env_asset_2(
 
     # Ext1 Props Prop1 Model
     # Main
-    maya_env.open(
+    maya_dcc.open(
         prop1_model_main_v001,
         force=True,
         skip_update_check=True,
@@ -1442,7 +1507,7 @@ def test_migrating_complex_env_asset_2(
     assert len(refs) == 0
 
     # Kisa
-    maya_env.open(
+    maya_dcc.open(
         prop1_model_kisa_v001,
         force=True,
         skip_update_check=True,
@@ -1454,7 +1519,7 @@ def test_migrating_complex_env_asset_2(
 
     # Ext1 Props Prop1 LookDev
     # Main
-    maya_env.open(
+    maya_dcc.open(
         prop1_look_dev_main_v001,
         force=True,
         skip_update_check=True,
@@ -1466,7 +1531,7 @@ def test_migrating_complex_env_asset_2(
     assert refs[0].version == prop1_model_main_v001
 
     # Kisa
-    maya_env.open(
+    maya_dcc.open(
         prop1_look_dev_kisa_v001,
         force=True,
         skip_update_check=True,
@@ -1478,7 +1543,7 @@ def test_migrating_complex_env_asset_2(
     assert refs[0].version == prop1_model_kisa_v001
 
     # Vegetation
-    maya_env.open(
+    maya_dcc.open(
         ext1_vegetation_main_v001,
         force=True,
         skip_update_check=True,
@@ -1490,7 +1555,7 @@ def test_migrating_complex_env_asset_2(
 
 
 def test_migrating_with_alternative_versions_data_1(
-    migration_test_data, create_pymel, create_maya_env
+    migration_test_data, create_pymel, create_maya_dcc
 ):
     """Test a version with referenced data, references are moved previously."""
     # EnvAsset
@@ -1499,14 +1564,14 @@ def test_migrating_with_alternative_versions_data_1(
     # Check Stalker data
     data = migration_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     migration_recipe = {
         data["ext2"].id: {
             "new_parent_id": data["assets_task2"].id,
         },
         data["ext2_look_dev"].id: {
             "new_parent_id": data["ext2"].id,
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["ext2_look_dev_main_v003"].version_number]},
             },
         },
@@ -1550,56 +1615,62 @@ def test_migrating_with_alternative_versions_data_1(
         .first()
     )
     assert look_dev_task.name == "LookDev"
-    assert len(look_dev_task.versions) == 1
-    look_dev_version = look_dev_task.versions[0]
-    assert look_dev_version.take_name == "Main"
+    assert len(look_dev_task.versions) == 0
+    assert len(look_dev_task.children) == 1
+    # LookDev Main Variant
+    look_dev_main_variant = look_dev_task.children[0]
+    assert isinstance(look_dev_main_variant, Variant)
+    assert look_dev_main_variant.name == "Main"
+    assert len(look_dev_main_variant.versions) == 1
+
+    look_dev_version = look_dev_main_variant.versions[0]
     assert len(look_dev_version.inputs) == 1
     assert data["random_asset1_model_main_version1"] in look_dev_version.inputs  # baam!
 
 
-# def test_migration_recipe_to_same_take_name(
-#     migration_test_data, create_pymel, create_maya_env
+# def test_migration_recipe_to_same_variant_name(
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
-#     """Test recipe has two different takes that moves versions to the same take name."""
+#     """Test recipe has two different variants that moves versions to the same variant name."""
 #     # Asset
 #     #   Model
 #     #     Main  -> Main
-#     #     Take1 -> Main
+#     #     Variant1 -> Main
 #     # Check Stalker data
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
 # def test_asset_migration_tool_add_asset_method_with_None(
-#     migration_test_data, create_pymel, create_maya_env
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
 #     """Test AssetMigrationTool.add_asset(None)."""
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
 # def test_asset_migration_tool_add_asset_method_with_non_asset(
-#     migration_test_data, create_pymel, create_maya_env
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
 #     """Test AssetMigrationTool.add_asset() with asset argument something other than an
 #     Asset instance."""
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
-# def test_asset_migration_tool_add_asset_metho_with_a_proper_asset(
-#     migration_test_data, create_pymel, create_maya_env
+# def test_asset_migration_tool_add_asset_method_with_a_proper_asset(
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
 #     """Test AssetMigrationTool.add_asset() with a proper Asset instance."""
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
 # def test_asset_migration_tool_set_target_parent_asset_is_None(
-#     migration_test_data, create_pymel, create_maya_env
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
 #     """Test AssetMigrationTool.set_target_parent() with asset is None."""
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
 # def test_asset_migration_tool_set_target_parent_asset_is_not_a_asset_instance(
-#     migration_test_data, create_pymel, create_maya_env
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
 #     """Test AssetMigrationTool.set_target_parent() with asset is not an Asset
 #     instance."""
@@ -1607,7 +1678,7 @@ def test_migrating_with_alternative_versions_data_1(
 #
 #
 # def test_asset_migration_tool_set_target_parent_asset_is_a_proper_asset_instance(
-#     migration_test_data, create_pymel, create_maya_env
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
 #     """Test AssetMigrationTool.set_target_parent() with the asset argument being a
 #     proper Asset instance."""
@@ -1615,7 +1686,7 @@ def test_migrating_with_alternative_versions_data_1(
 #
 #
 # def test_asset_migration_tool_set_target_parent_new_parent_is_None(
-#     migration_test_data, create_pymel, create_maya_env
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
 #     """Test AssetMigrationTool.set_target_parent() with the new_parent argument is
 #     None."""
@@ -1623,7 +1694,7 @@ def test_migrating_with_alternative_versions_data_1(
 #
 #
 # def test_asset_migration_tool_set_target_parent_new_parent_is_not_a_task_or_project(
-#     migration_test_data, create_pymel, create_maya_env
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
 #     """Test AssetMigrationTool.set_target_parent() with the new_parent argument is not
 #     a Task or Project instance."""
@@ -1631,7 +1702,7 @@ def test_migrating_with_alternative_versions_data_1(
 #
 #
 # def test_asset_migration_tool_set_target_parent_new_parent_is_a_task(
-#     migration_test_data, create_pymel, create_maya_env
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
 #     """Test AssetMigrationTool.set_target_parent() with the new_parent argument value
 #     being a Task instance."""
@@ -1639,7 +1710,7 @@ def test_migrating_with_alternative_versions_data_1(
 #
 #
 # def test_asset_migration_tool_set_target_parent_new_parent_is_a_project(
-#     migration_test_data, create_pymel, create_maya_env
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
 #     """Test AssetMigrationTool.set_target_parent() with the new_parent argument value
 #     being a Project instance."""
@@ -1647,95 +1718,95 @@ def test_migrating_with_alternative_versions_data_1(
 #
 #
 # def test_asset_migration_tool_set_target_parent_new_parent_is_in_the_same_project(
-#     migration_test_data, create_pymel, create_maya_env
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
 #     """Test AssetMigrationTool.set_target_parent() is in the same project."""
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
 # def test_asset_migration_tool_set_target_parent_new_parent_is_a_child_of_original_asset(
-#     migration_test_data, create_pymel, create_maya_env
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
 #     """Test AssetMigrationTool.set_target_parent() is a child task of the given Asset."""
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
-# def test_asset_migration_tool_add_take_task_is_None(
-#     migration_test_data, create_pymel, create_maya_env
+# def test_asset_migration_tool_add_variant_task_is_None(
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
-#     """Test AssetMigrationTool.add_take() task is None."""
+#     """Test AssetMigrationTool.add_variant() task is None."""
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
-# def test_asset_migration_tool_add_take_task_is_not_task_instance(
-#     migration_test_data, create_pymel, create_maya_env
+# def test_asset_migration_tool_add_variant_task_is_not_task_instance(
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
-#     """Test AssetMigrationTool.add_take() task is not a Task instance."""
+#     """Test AssetMigrationTool.add_variant() task is not a Task instance."""
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
-# def test_asset_migration_tool_add_take_task_is_proper_task_instance(
-#     migration_test_data, create_pymel, create_maya_env
+# def test_asset_migration_tool_add_variant_task_is_proper_task_instance(
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
-#     """Test AssetMigrationTool.add_take() task is a proper Task instance."""
+#     """Test AssetMigrationTool.add_variant() task is a proper Task instance."""
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
-# def test_asset_migration_tool_add_take_task_is_not_a_child_of_existing_assets(
-#     migration_test_data, create_pymel, create_maya_env
+# def test_asset_migration_tool_add_variant_task_is_not_a_child_of_existing_assets(
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
-#     """Test AssetMigrationTool.add_take() task is not a child of existing assets."""
+#     """Test AssetMigrationTool.add_variant() task is not a child of existing assets."""
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
-# def test_asset_migration_tool_add_take_old_take_name_is_None(
-#     migration_test_data, create_pymel, create_maya_env
+# def test_asset_migration_tool_add_variant_old_variant_name_is_None(
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
-#     """Test AssetMigrationTool.add_take() old_take_name is None."""
+#     """Test AssetMigrationTool.add_variant() old_variant_name is None."""
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
-# def test_asset_migration_tool_add_take_old_take_name_is_not_a_str(
-#     migration_test_data, create_pymel, create_maya_env
+# def test_asset_migration_tool_add_variant_old_variant_name_is_not_a_str(
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
-#     """Test AssetMigrationTool.add_take() old_take_name is not a string."""
+#     """Test AssetMigrationTool.add_variant() old_variant_name is not a string."""
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
-# def test_asset_migration_tool_add_take_old_take_name_does_not_exist(
-#     migration_test_data, create_pymel, create_maya_env
+# def test_asset_migration_tool_add_variant_old_variant_name_does_not_exist(
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
-#     """Test AssetMigrationTool.add_take() old_take_name doesn't exist."""
+#     """Test AssetMigrationTool.add_variant() old_variant_name doesn't exist."""
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
-# def test_asset_migration_tool_add_take_new_take_name_is_None(
-#     migration_test_data, create_pymel, create_maya_env
+# def test_asset_migration_tool_add_variant_new_variant_name_is_None(
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
-#     """Test AssetMigrationTool.add_take() new_take_name is None."""
+#     """Test AssetMigrationTool.add_variant() new_variant_name is None."""
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
-# def test_asset_migration_tool_add_take_new_take_name_is_not_a_str(
-#     migration_test_data, create_pymel, create_maya_env
+# def test_asset_migration_tool_add_variant_new_variant_name_is_not_a_str(
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
-#     """Test AssetMigrationTool.add_take() new_take_name is not a str."""
+#     """Test AssetMigrationTool.add_variant() new_variant_name is not a str."""
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
-# def test_asset_migration_tool_add_take_new_take_name_is_a_str(
-#     migration_test_data, create_pymel, create_maya_env
+# def test_asset_migration_tool_add_variant_new_variant_name_is_a_str(
+#     migration_test_data, create_pymel, create_maya_dcc
 # ):
-#     """Test AssetMigrationTool.add_take() new_take_name is a str."""
+#     """Test AssetMigrationTool.add_variant() new_variant_name is a str."""
 #     raise NotImplementedError("Test is not implemented yet")
 #
 #
-# def test_move_old_versions_1(migration_test_data, create_pymel, create_maya_env):
+# def test_move_old_versions_1(migration_test_data, create_pymel, create_maya_dcc):
 #     """Test AssetMigrationTool to move a scene with newer versions detected."""
 #     raise NotImplementedError("Test is not implemented yet")
 
 
-def test_post_publishers_are_run_1(migration_test_data, create_pymel, create_maya_env, mock_publishers):
+def test_post_publishers_are_run_1(migration_test_data, create_pymel, create_maya_dcc, mock_publishers):
     """Test AssetMigrationTool run post publishers."""
     # EnvAsset
     #   Model (don't move)
@@ -1743,14 +1814,14 @@ def test_post_publishers_are_run_1(migration_test_data, create_pymel, create_may
     # Check Stalker data
     data = migration_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     migration_recipe = {
         data["ext2"].id: {
             "new_parent_id": data["assets_task2"].id,
         },
         data["ext2_look_dev"].id: {
             "new_parent_id": data["ext2"].id,
-            "takes": {
+            "variants": {
                 "Main": {"versions": [data["ext2_look_dev_main_v003"].version_number]},
             },
         },

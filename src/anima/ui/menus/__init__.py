@@ -304,16 +304,16 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                         get_cached_icon("timelog"), "Create TimeLog..."
                     )
 
-                # Add Depends To menu
+                # Add Depends On menu
                 menu.addSeparator()
-                depends = task.depends
-                if depends:
-                    depends_to_menu = menu.addMenu(
-                        get_cached_icon("depends_to"), "Depends To"
+                depends_on = task.depends_on
+                if depends_on:
+                    depends_on_menu = menu.addMenu(
+                        get_cached_icon("depends_on"), "Depends On"
                     )
 
-                    for dTask in depends:
-                        action = depends_to_menu.addAction(dTask.name)
+                    for dTask in depends_on:
+                        action = depends_on_menu.addAction(dTask.name)
                         action.task = dTask
 
                 # Add Dependent Of Menu
@@ -327,7 +327,7 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                         action = dependent_of_menu.addAction(dTask.name)
                         action.task = dTask
 
-                if not depends and not dependent_of:
+                if not depends_on and not dependent_of:
                     no_deps_action = menu.addAction(
                         get_cached_icon("cross"), "No Dependencies"
                     )
@@ -842,8 +842,8 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                     # assert isinstance(entity, Task)
                     for task in self.parent.get_selected_tasks():
                         if task.is_leaf and (
-                            not task.depends
-                            or all([t.status == status_cmpl for t in task.depends])
+                            not task.depends_on
+                            or all([t.status == status_cmpl for t in task.depends_on])
                         ):
                             # then we can update it
                             task.status = status

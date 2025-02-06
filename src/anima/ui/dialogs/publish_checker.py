@@ -60,18 +60,21 @@ class QProgressBarWrapper(ProgressControllerBase):
 
 def UI(app_in=None, executor=None, **kwargs):
     """
-    :param app_in: A Qt Application instance, which you can pass to let the UI
-      be attached to the given applications event process.
 
-    :param executor: Instead of calling app.exec_ the UI will call this given
-      function. It also passes the created app instance to this executor.
+    Args:
+        app_in (QtCore.Qt.QApplication): A Qt Application instance, which you
+            can pass to let the UI be attached to the given applications event
+            process.
 
+        executor (callable): Instead of calling `app.exec_()` the UI will call
+            this given function. It also passes the created app instance to
+            this executor.
     """
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
 class PublisherElement(object):
-    """A wrapper for publishers and correspongind UI elements"""
+    """A wrapper for publishers and corresponding UI elements."""
 
     passing_text = "Passing"
     not_passing_text = "Not Passing"
@@ -385,10 +388,10 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     """
 
     def __init__(
-        self, parent=None, environment=None, publish_callback=None, version=None
+        self, parent=None, dcc=None, publish_callback=None, version=None
     ):
         QtWidgets.QDialog.__init__(self, parent=parent)
-        self.environment = environment
+        self.dcc = dcc
         self.publishers = []
         self.publish_callback = publish_callback
         self.version = version
@@ -556,7 +559,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     def fill_ui(self):
         """fills the ui with default values"""
         # just import the anima.publish module
-        # if the environment is setup properly
+        # if the DCC is setup properly
         # the publish.publishers should have been filled with publishers
         from anima import publish
 
@@ -565,14 +568,14 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         # generate generics first
         ppt = publish.PRE_PUBLISHER_TYPE
 
-        # check if the environment has at least a couple of publishers
+        # check if the DCC has at least a couple of publishers
         if "" in publish.publishers[ppt]:
             for publisher in publish.publishers[ppt][""]:
                 self.publishers.append(self.create_publisher_field(publisher))
 
         # get the current type
-        if self.environment:
-            # version = self.environment.get_current_version()
+        if self.dcc:
+            # version = self.dcc.get_current_version()
             if self.version and self.version.task.type:
                 type_name = self.version.task.type.name.lower()
 

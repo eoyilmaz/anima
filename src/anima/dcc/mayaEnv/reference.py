@@ -168,7 +168,7 @@ class Reference(object):
             raise RuntimeError("Please Publish this maya scene")
 
         if current_version.variant_name != "Main":
-            raise RuntimeError("This is not the Main take")
+            raise RuntimeError("This is not the Main variant")
 
         # find lookDev
         look_dev = (
@@ -221,7 +221,7 @@ class Reference(object):
             reference_resolution = m.open(
                 latest_look_dev_version, force=True, skip_update_check=True
             )
-            m.update_versions(reference_resolution)
+            m.update_reference_versions_to_latest(reference_resolution)
 
             if reference_resolution["update"] or reference_resolution["create"]:
                 # create a new version
@@ -300,7 +300,7 @@ class Reference(object):
 
     @classmethod
     def fix_reference_paths(cls):
-        """Fixes reference paths that are not using environment vars"""
+        """Fixe reference paths that are not using environment vars."""
         # list current scene references
         from anima.dcc import mayaEnv
 

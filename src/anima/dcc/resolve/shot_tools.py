@@ -343,10 +343,11 @@ class ShotManager(object):
         Args:
             shot_clips (list): Shot clips.
             handle (int): Handle from both ends of the clip.
-            variant_name (str): The desired take name for the Stalker Version.
+            variant_name (str): The desired variant name for the Stalker
+                Version.
             preset_name (str): The preset name to be used for rendering.
-            reuse_latest_version (bool): Create a new version everytime (default) or
-                reuse the latest version.
+            reuse_latest_version (bool): Create a new version every time
+                (default) or reuse the latest version.
         """
         if variant_name is None:
             variant_name = DEFAULT_variant_name
@@ -625,42 +626,42 @@ class ShotClip(object):
 
         with DBSession.no_autoflush:
             try:
-                track_task.depends = [plate_task]
+                track_task.depends_on = [plate_task]
             except StatusError as e:
                 print(e)
                 DBSession.rollback()
                 pass
 
             try:
-                camera_task.depends = [plate_task, track_task]
+                camera_task.depends_on = [plate_task, track_task]
             except StatusError as e:
                 print(e)
                 DBSession.rollback()
                 pass
 
             try:
-                anim_task.depends = [camera_task, sound_task]
+                anim_task.depends_on = [camera_task, sound_task]
             except StatusError as e:
                 print(e)
                 DBSession.rollback()
                 pass
 
             try:
-                lighting_task.depends = [anim_task, camera_task]
+                lighting_task.depends_on = [anim_task, camera_task]
             except StatusError as e:
                 print(e)
                 DBSession.rollback()
                 pass
 
             try:
-                cleanup_task.depends = [plate_task]
+                cleanup_task.depends_on = [plate_task]
             except StatusError as e:
                 print(e)
                 DBSession.rollback()
                 pass
 
             try:
-                comp_task.depends = [lighting_task, plate_task, sound_task]
+                comp_task.depends_on = [lighting_task, plate_task, sound_task]
             except StatusError as e:
                 print(e)
                 DBSession.rollback()
@@ -1372,13 +1373,13 @@ class ShotManagerUI(object):
         )
         handle_horizontal_layout.addWidget(self.handle_spin_box)
 
-        # TakeName horizontal layout
+        # VariantName horizontal layout
         variant_name_horizontal_layout = QtWidgets.QHBoxLayout()
         self.main_layout.addLayout(variant_name_horizontal_layout)
 
-        # The take name to use
+        # The variant name to use
         variant_name_label = QtWidgets.QLabel(self.parent_widget)
-        variant_name_label.setText("Take Name")
+        variant_name_label.setText("Variant Name")
         variant_name_label.setMinimumWidth(140)
         variant_name_label.setMaximumWidth(140)
         variant_name_horizontal_layout.addWidget(variant_name_label)
@@ -1386,7 +1387,7 @@ class ShotManagerUI(object):
         self.variant_name_line_edit = QtWidgets.QLineEdit(self.parent_widget)
         self.variant_name_line_edit.setText(
             DEFAULT_variant_name
-        )  # Uses the default take name
+        )  # Uses the default variant name
         self.variant_name_line_edit.textEdited.connect(
             partial(self.shot_related_data_value_changed)
         )
@@ -1544,7 +1545,7 @@ class ShotManagerUI(object):
         # update handle value
         self.handle_spin_box.setValue(handle)
 
-        # update the take line edit
+        # update the variant name line edit
         self.variant_name_line_edit.setText(variant_name)
 
         # update the combo box

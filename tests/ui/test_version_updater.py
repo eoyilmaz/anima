@@ -10,6 +10,7 @@ from qtpy.QtTest import QTest
 from qtpy.QtCore import Qt
 
 from stalker import (
+    Variant,
     db,
     Asset,
     FilenameTemplate,
@@ -28,7 +29,7 @@ from stalker import (
 )
 from stalker.db.session import DBSession
 
-from anima.dcc.testing import TestEnvironment
+from anima.dcc.testing import TestDCC
 from anima.ui.dialogs import version_updater
 from anima.ui.lib import QtCore, QtGui
 
@@ -272,20 +273,34 @@ class VersionUpdaterTester(unittest.TestCase):
         DBSession.commit()
 
         # now create versions
-        def create_version(task, take_name):
-            """Creates a new version
-            :param task: the task
-            :param take_name: the take_name name
-            :return: the version
+        def create_version(task, variant_name):
+            """Create a new version.
+
+            ARgs:
+                task (stalker.Task): The task.
+                variant_name (str): The variant name.
+
+            Returns: The newly created version.
             """
+            # get the variant
+            variant = (
+                Variant.query.filter(Variant.parent == task)
+                .filter(Variant.name == variant_name)
+                .first()
+            )
+            if not variant:
+                variant = Variant(task=task, name=variant_name)
+                DBSession.add(variant)
+                DBSession.commit()
+
             # just renew the scene
             #pymel.core.newFile(force=True)
 
-            v = Version(task=task, take_name=take_name)
+            v = Version(task=variant)
             v.update_paths()
             DBSession.add(v)
             DBSession.commit()
-            #self.maya_env.save_as(v)
+            #self.maya_dcc.save_as(v)
             return v
 
         # asset2
@@ -294,72 +309,72 @@ class VersionUpdaterTester(unittest.TestCase):
         self.version3 = create_version(self.asset2, 'Main')
         self.version3.description = 'Test Description'
 
-        self.version4 = create_version(self.asset2, 'Take1')
-        self.version5 = create_version(self.asset2, 'Take1')
-        self.version6 = create_version(self.asset2, 'Take1')
+        self.version4 = create_version(self.asset2, 'Variant1')
+        self.version5 = create_version(self.asset2, 'Variant1')
+        self.version6 = create_version(self.asset2, 'Variant1')
 
         # task5
         self.version7 = create_version(self.task5, 'Main')
         self.version8 = create_version(self.task5, 'Main')
         self.version9 = create_version(self.task5, 'Main')
 
-        self.version10 = create_version(self.task5, 'Take1')
-        self.version11 = create_version(self.task5, 'Take1')
-        self.version12 = create_version(self.task5, 'Take1')
+        self.version10 = create_version(self.task5, 'Variant1')
+        self.version11 = create_version(self.task5, 'Variant1')
+        self.version12 = create_version(self.task5, 'Variant1')
 
         # task6
         self.version13 = create_version(self.task6, 'Main')
         self.version14 = create_version(self.task6, 'Main')
         self.version15 = create_version(self.task6, 'Main')
 
-        self.version16 = create_version(self.task6, 'Take1')
-        self.version17 = create_version(self.task6, 'Take1')
-        self.version18 = create_version(self.task6, 'Take1')
+        self.version16 = create_version(self.task6, 'Variant1')
+        self.version17 = create_version(self.task6, 'Variant1')
+        self.version18 = create_version(self.task6, 'Variant1')
 
         # shot3
         self.version19 = create_version(self.shot3, 'Main')
         self.version20 = create_version(self.shot3, 'Main')
         self.version21 = create_version(self.shot3, 'Main')
 
-        self.version22 = create_version(self.shot3, 'Take1')
-        self.version23 = create_version(self.shot3, 'Take1')
-        self.version24 = create_version(self.shot3, 'Take1')
+        self.version22 = create_version(self.shot3, 'Variant1')
+        self.version23 = create_version(self.shot3, 'Variant1')
+        self.version24 = create_version(self.shot3, 'Variant1')
 
         # task3
         self.version25 = create_version(self.task3, 'Main')
         self.version26 = create_version(self.task3, 'Main')
         self.version27 = create_version(self.task3, 'Main')
 
-        self.version28 = create_version(self.task3, 'Take1')
-        self.version29 = create_version(self.task3, 'Take1')
-        self.version30 = create_version(self.task3, 'Take1')
+        self.version28 = create_version(self.task3, 'Variant1')
+        self.version29 = create_version(self.task3, 'Variant1')
+        self.version30 = create_version(self.task3, 'Variant1')
 
         # asset1
         self.version31 = create_version(self.asset1, 'Main')
         self.version32 = create_version(self.asset1, 'Main')
         self.version33 = create_version(self.asset1, 'Main')
 
-        self.version34 = create_version(self.asset1, 'Take1')
-        self.version35 = create_version(self.asset1, 'Take1')
-        self.version36 = create_version(self.asset1, 'Take1')
+        self.version34 = create_version(self.asset1, 'Variant1')
+        self.version35 = create_version(self.asset1, 'Variant1')
+        self.version36 = create_version(self.asset1, 'Variant1')
 
         # shot2
         self.version37 = create_version(self.shot2, 'Main')
         self.version38 = create_version(self.shot2, 'Main')
         self.version39 = create_version(self.shot2, 'Main')
 
-        self.version40 = create_version(self.shot2, 'Take1')
-        self.version41 = create_version(self.shot2, 'Take1')
-        self.version42 = create_version(self.shot2, 'Take1')
+        self.version40 = create_version(self.shot2, 'Variant1')
+        self.version41 = create_version(self.shot2, 'Variant1')
+        self.version42 = create_version(self.shot2, 'Variant1')
 
         # shot1
         self.version43 = create_version(self.shot1, 'Main')
         self.version44 = create_version(self.shot1, 'Main')
         self.version45 = create_version(self.shot1, 'Main')
 
-        self.version46 = create_version(self.shot1, 'Take1')
-        self.version47 = create_version(self.shot1, 'Take1')
-        self.version48 = create_version(self.shot1, 'Take1')
+        self.version46 = create_version(self.shot1, 'Variant1')
+        self.version47 = create_version(self.shot1, 'Variant1')
+        self.version48 = create_version(self.shot1, 'Variant1')
 
         # +- task1
         # |  |
@@ -370,7 +385,7 @@ class VersionUpdaterTester(unittest.TestCase):
         # |  |     |  +- version1
         # |  |     |  +- version2 (P)
         # |  |     |  +- version3 (P)
-        # |  |     +- Take1
+        # |  |     +- Variant1
         # |  |        +- version4 (P)
         # |  |        +- version5
         # |  |        +- version6 (P)
@@ -380,7 +395,7 @@ class VersionUpdaterTester(unittest.TestCase):
         # |  |  |  +- version7
         # |  |  |  +- version8
         # |  |  |  +- version9
-        # |  |  +- Take1
+        # |  |  +- Variant1
         # |  |     +- version10
         # |  |     +- version11
         # |  |     +- version12 (P)
@@ -390,7 +405,7 @@ class VersionUpdaterTester(unittest.TestCase):
         # |     |  +- version13
         # |     |  +- version14
         # |     |  +- version15
-        # |     +- Take1
+        # |     +- Variant1
         # |        +- version16 (P)
         # |        +- version17
         # |        +- version18 (P)
@@ -404,7 +419,7 @@ class VersionUpdaterTester(unittest.TestCase):
         # |        |  +- version19
         # |        |  +- version20
         # |        |  +- version21
-        # |        +- Take1
+        # |        +- Variant1
         # |           +- version22
         # |           +- version23
         # |           +- version24
@@ -414,7 +429,7 @@ class VersionUpdaterTester(unittest.TestCase):
         # |  |  +- version25
         # |  |  +- version26
         # |  |  +- version27
-        # |  +- Take1
+        # |  +- Variant1
         # |     +- version28
         # |     +- version29
         # |     +- version30
@@ -424,7 +439,7 @@ class VersionUpdaterTester(unittest.TestCase):
         # |  |  +- version31
         # |  |  +- version32
         # |  |  +- version33
-        # |  +- Take1
+        # |  +- Variant1
         # |     +- version34
         # |     +- version35
         # |     +- version36
@@ -436,7 +451,7 @@ class VersionUpdaterTester(unittest.TestCase):
         # |     |  +- version37
         # |     |  +- version38
         # |     |  +- version39
-        # |     +- Take1
+        # |     +- Variant1
         # |        +- version40
         # |        +- version41
         # |        +- version42
@@ -446,7 +461,7 @@ class VersionUpdaterTester(unittest.TestCase):
         #    |  +- version43
         #    |  +- version44
         #    |  +- version45
-        #    +- Take1
+        #    +- Variant1
         #       +- version46
         #       +- version47
         #       +- version48
@@ -515,8 +530,8 @@ class VersionUpdaterTester(unittest.TestCase):
         # create a buffer for extra created files, which are to be removed
         self.remove_these_files_buffer = []
 
-        self.test_environment = TestEnvironment(name='Test Environment')
-        self.test_environment._version = self.version15
+        self.test_dcc = TestDCC(name='Test DCC')
+        self.test_dcc._version = self.version15
 
         if not QtGui.QApplication.instance():
             logger.debug('creating a new QApplication')
@@ -527,7 +542,7 @@ class VersionUpdaterTester(unittest.TestCase):
             self.app = QtGui.QApplication.instance()
 
         self.dialog = version_updater.MainDialog(
-            environment=self.test_environment,
+            dcc=self.test_dcc,
             reference_resolution=self.reference_resolution
         )
 
@@ -547,7 +562,7 @@ class VersionUpdaterTester(unittest.TestCase):
                 shutil.rmtree(f, True)
 
     def test_test_setup(self):
-        """testing if the test setup is correct."""
+        """the test setup is correct."""
 
         # check the setup
         visited_versions = []
@@ -566,7 +581,7 @@ class VersionUpdaterTester(unittest.TestCase):
         )
 
     def test_versions_treeView_displays_the_root_versions_correctly(self):
-        """testing if versions_treeView is displaying the root versions
+        """versions_treeView is displaying the root versions
         correctly
         """
         # self.show_dialog(self.dialog)
@@ -586,7 +601,7 @@ class VersionUpdaterTester(unittest.TestCase):
         self.assertEqual(version45_item.version, self.version45)
 
     def test_versions_treeView_displays_the_version_hierarchy_correctly(self):
-        """testing if versions_treeView is displaying the root versions
+        """versions_treeView is displaying the root versions
         correctly
         """
         # check root rows
@@ -613,7 +628,7 @@ class VersionUpdaterTester(unittest.TestCase):
         self.assertEqual(version48_item.version, self.version48)
 
     def test_versions_treeView_displays_the_version_hierarchy_colors_correctly(self):
-        """testing if versions_treeView is displaying the versions in correct
+        """versions_treeView is displaying the versions in correct
         colors
         """
         # check root rows
@@ -662,7 +677,7 @@ class VersionUpdaterTester(unittest.TestCase):
         self.assertEqual(color, QtGui.QColor(0, 192, 0))
 
     def test_versions_treeView_displays_the_version_hierarchy_labels_correctly(self):
-        """testing if versions_treeView is displaying the versions hierarchy
+        """versions_treeView is displaying the versions hierarchy
         with correct labels
         """
         # check root rows
@@ -686,22 +701,17 @@ class VersionUpdaterTester(unittest.TestCase):
         version48_item = version45_item.child(0, 0)
 
         # version12 columns
-        nice_name_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(0, 2))
-        take_column_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(0, 3))
-        current_version_column_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(0, 4))
-        latest_version_column_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(0, 5))
-        action_column_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(0, 6))
-        description_column_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(0, 7))
+        nice_name_item = version_tree_model.itemFromIndex(version_tree_model.index(0, 2))
+        variant_column_item = version_tree_model.itemFromIndex(version_tree_model.index(0, 3))
+        current_version_column_item = version_tree_model.itemFromIndex(version_tree_model.index(0, 4))
+        latest_version_column_item = version_tree_model.itemFromIndex(version_tree_model.index(0, 5))
+        action_column_item = version_tree_model.itemFromIndex(version_tree_model.index(0, 6))
+        description_column_item = version_tree_model.itemFromIndex(version_tree_model.index(0, 7))
 
-        self.assertEqual(nice_name_item.text(),
-                         'Test_Task_1_Test_Task_5_Take1_v003')
-        self.assertEqual(take_column_item.text(), 'Take1')
+        self.assertEqual(
+            nice_name_item.text(),
+            'Test_Task_1_Test_Task_5_Variant1_v003')
+        self.assertEqual(variant_column_item.text(), 'Variant1')
         self.assertEqual(current_version_column_item.text(), '3')
         self.assertEqual(latest_version_column_item.text(), '3')
         self.assertEqual(action_column_item.text(), 'create')
@@ -709,14 +719,14 @@ class VersionUpdaterTester(unittest.TestCase):
 
         # version5 columns
         nice_name_item = version12_item.child(0, 2)
-        take_column_item = version12_item.child(0, 3)
+        variant_column_item = version12_item.child(0, 3)
         current_version_column_item = version12_item.child(0, 4)
         latest_version_column_item = version12_item.child(0, 5)
         action_column_item = version12_item.child(0, 6)
         description_column_item = version12_item.child(0, 7)
 
-        self.assertEqual(nice_name_item.text(), 'Asset_2_Take1_v002')
-        self.assertEqual(take_column_item.text(), 'Take1')
+        self.assertEqual(nice_name_item.text(), 'Asset_2_Variant1_v002')
+        self.assertEqual(variant_column_item.text(), 'Variant1')
         self.assertEqual(current_version_column_item.text(), '2')
         self.assertEqual(latest_version_column_item.text(), '2')
         self.assertEqual(action_column_item.text(), 'create')
@@ -724,14 +734,14 @@ class VersionUpdaterTester(unittest.TestCase):
 
         # version2 columns
         nice_name_item = version5_item.child(0, 2)
-        take_column_item = version5_item.child(0, 3)
+        variant_column_item = version5_item.child(0, 3)
         current_version_column_item = version5_item.child(0, 4)
         latest_version_column_item = version5_item.child(0, 5)
         action_column_item = version5_item.child(0, 6)
         description_column_item = version5_item.child(0, 7)
 
         self.assertEqual(nice_name_item.text(), 'Asset_2_Main_v002')
-        self.assertEqual(take_column_item.text(), 'Main')
+        self.assertEqual(variant_column_item.text(), 'Main')
         self.assertEqual(current_version_column_item.text(), '2')
         self.assertEqual(latest_version_column_item.text(), '3')
         self.assertEqual(action_column_item.text(), 'update')
@@ -740,7 +750,7 @@ class VersionUpdaterTester(unittest.TestCase):
         # version45 columns
         nice_name_item = \
             version_tree_model.itemFromIndex(version_tree_model.index(1, 2))
-        take_column_item = \
+        variant_column_item = \
             version_tree_model.itemFromIndex(version_tree_model.index(1, 3))
         current_version_column_item = \
             version_tree_model.itemFromIndex(version_tree_model.index(1, 4))
@@ -752,7 +762,7 @@ class VersionUpdaterTester(unittest.TestCase):
             version_tree_model.itemFromIndex(version_tree_model.index(1, 7))
 
         self.assertEqual(nice_name_item.text(), 'SH001_Main_v003')
-        self.assertEqual(take_column_item.text(), 'Main')
+        self.assertEqual(variant_column_item.text(), 'Main')
         self.assertEqual(current_version_column_item.text(), '3')
         self.assertEqual(latest_version_column_item.text(), '3')
         self.assertEqual(action_column_item.text(), '')
@@ -760,21 +770,21 @@ class VersionUpdaterTester(unittest.TestCase):
 
         # version48
         nice_name_item = version45_item.child(0, 2)
-        take_column_item = version45_item.child(0, 3)
+        variant_column_item = version45_item.child(0, 3)
         current_version_column_item = version45_item.child(0, 4)
         latest_version_column_item = version45_item.child(0, 5)
         action_column_item = version45_item.child(0, 6)
         description_column_item = version45_item.child(0, 7)
 
-        self.assertEqual(nice_name_item.text(), 'SH001_Take1_v003')
-        self.assertEqual(take_column_item.text(), 'Take1')
+        self.assertEqual(nice_name_item.text(), 'SH001_Variant1_v003')
+        self.assertEqual(variant_column_item.text(), 'Variant1')
         self.assertEqual(current_version_column_item.text(), '3')
         self.assertEqual(latest_version_column_item.text(), '3')
         self.assertEqual(action_column_item.text(), '')
         self.assertEqual(description_column_item.text(), '')
 
     def test_not_all_of_the_root_version_items_check_state_is_True_by_default(self):
-        """testing if not all of the check boxes for all the root items are
+        """not all of the check boxes for all the root items are
         already checked when the UI first appear
         """
         # self.show_dialog(self.dialog)
@@ -798,7 +808,7 @@ class VersionUpdaterTester(unittest.TestCase):
         )
 
     def test_only_update_items_have_check_boxes(self):
-        """testing if there are checkboxes only on the update items
+        """there are checkboxes only on the update items
         """
         # check root rows
         version_tree_model = self.dialog.versions_treeView.model()
@@ -814,7 +824,7 @@ class VersionUpdaterTester(unittest.TestCase):
         self.assertFalse(version45_item.isCheckable())
 
     def test_only_root_items_have_check_boxes(self):
-        """testing if there are checkboxes only on the root items
+        """there are checkboxes only on the root items
         """
         # self.show_dialog(self.dialog)
         # check root rows
@@ -843,7 +853,7 @@ class VersionUpdaterTester(unittest.TestCase):
         self.assertFalse(version48_item.isCheckable())
 
     def test_there_is_an_open_button_on_deeper_update_items(self):
-        """testing if there are Open buttons on deeper update items
+        """there are Open buttons on deeper update items
         """
         # self.show_dialog(self.dialog)
 
@@ -874,7 +884,7 @@ class VersionUpdaterTester(unittest.TestCase):
         self.assertFalse(version48_item.isCheckable())
 
     def test_generate_reference_resolution_generate_a_new_reference_resolution_correctly(self):
-        """testing if version_updater.generate_reference_resolution() method
+        """version_updater.generate_reference_resolution() method
         will return a new reference_resolution according to the checked
         versions
         """
@@ -909,26 +919,25 @@ class VersionUpdaterTester(unittest.TestCase):
             reference_resolution
         )
 
-    def test_update_pushButton_will_call_environment_update_versions_method(self):
-        """testing if update_pushButton will call
-        Test_Environment.update_versions method
+    def test_update_pushButton_will_call_dcc_update_reference_versions_method(self):
+        """update_pushButton calls Test_DCC.update_reference_versions method
         """
         self.assertRaises(
             KeyError,
-            self.test_environment.test_data.__getitem__, 'update_versions'
+            self.test_dcc.test_data.__getitem__, 'update_reference_versions'
         )
         # self.show_dialog(self.dialog)
 
         QTest.mouseClick(self.dialog.update_pushButton, Qt.LeftButton)
-        #print(self.test_environment.test_data)
+        # print(self.test_dcc.test_data)
 
         self.assertEqual(
             1,
-            self.test_environment.test_data['update_versions']['call_count']
+            self.test_dcc.test_data['update_reference_versions']['call_count']
         )
 
     def test_select_none_pushButton_will_deselect_all_check_boxes_when_clicked(self):
-        """testing if select none pushButton will deselect all the check boxes
+        """select none pushButton will deselect all the check boxes
         when clicked
         """
         # check if all are selected
@@ -949,7 +958,7 @@ class VersionUpdaterTester(unittest.TestCase):
         self.assertEqual(version_item2.checkState(), QtCore.Qt.Unchecked)
 
     def test_select_all_pushButton_will_select_all_check_boxes_when_clicked(self):
-        """testing if select all pushButton will select all the check boxes
+        """select all pushButton will select all the check boxes
         when clicked
         """
         # check if all are selected
@@ -969,30 +978,27 @@ class VersionUpdaterTester(unittest.TestCase):
         self.assertEqual(version_item1.checkState(), QtCore.Qt.Checked)
         self.assertEqual(version_item2.checkState(), QtCore.Qt.Checked)
 
-    def test_init_will_fill_reference_resolution_if_it_is_empty_and_there_is_an_environment(self):
-        """testing if the reference_resolution attribute will be filled by the
-        environment if the reference_resolution argument is None or skipped and
-        there is an environment
+    def test_init_fills_reference_resolution_if_it_is_empty_and_there_is_a_dcc(self):
+        """reference_resolution attribute is filled by the DCC if the reference_resolution
+        arg is None or skipped and there is a DCC.
         """
         self.version1.inputs.append(self.version2)
         self.version1.inputs.append(self.version3)
         DBSession.commit()
 
-        self.test_environment._version = self.version1
+        self.test_dcc._version = self.version1
 
         new_dialog = version_updater.MainDialog(
-            environment=self.test_environment
+            dcc=self.test_dcc
         )
         self.assertEqual(
             new_dialog.reference_resolution,
-            self.test_environment.check_referenced_versions()
+            self.test_dcc.check_references()
         )
 
     def test_init_will_raise_a_RuntimeError_if_the_current_version_is_None(self):
-        """testing if a RuntimeError will be raised if the current_version of
-        the environment is None
-        """
-        self.test_environment._version = None
+        """RuntimeError is raised if the current_version in the DCC is None."""
+        self.test_dcc._version = None
 
         def patched(*args, **kwargs):
             pass
@@ -1001,8 +1007,11 @@ class VersionUpdaterTester(unittest.TestCase):
         original = QtGui.QMessageBox.critical
         QtGui.QMessageBox.critical = patched
 
-        self.assertRaises(RuntimeError, version_updater.MainDialog,
-                          environment=self.test_environment)
+        self.assertRaises(
+            RuntimeError,
+            version_updater.MainDialog,
+            dcc=self.test_dcc
+        )
 
         # restore QMessageBox.critical
         QtGui.QMessageBox.critical = original

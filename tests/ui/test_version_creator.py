@@ -6,7 +6,7 @@ import sys
 import tempfile
 import unittest
 
-from anima.dcc.testing import TestEnvironment
+from anima.dcc.testing import TestDCC
 
 from qtpy.QtTest import QTest
 from qtpy.QtCore import Qt
@@ -14,6 +14,7 @@ from qtpy.QtCore import Qt
 
 from stalker import (
     db,
+    File,
     Group,
     Project,
     Repository,
@@ -21,7 +22,9 @@ from stalker import (
     StatusList,
     Structure,
     Task,
+    Type,
     User,
+    Variant,
     Version
 )
 from stalker.db.session import DBSession
@@ -262,9 +265,14 @@ class VersionCreatorTester(unittest.TestCase):
         DBSession.add(cls.test_version3)
         DBSession.commit()
 
+
+        test_task1_main_variant = Variant(
+            parent=cls.test_task1,
+            name='Main',
+        )
+
         cls.test_version4 = Version(
             cls.test_task1,
-            take_name='Main@GPU',
             created_by=cls.admin,
             created_with='Test',
             description='Test Description'
@@ -273,18 +281,31 @@ class VersionCreatorTester(unittest.TestCase):
         DBSession.add(cls.test_version4)
         DBSession.commit()
 
+        repr_file_type = Type(
+            name="Representation",
+            target_entity_type=File
+        )
+        DBSession.add(repr_file_type)
+        DBSession.commit()
+
+        gpu_representation = File(
+            name="GPU",
+            type=repr_file_type
+        )
+        DBSession.add(gpu_representation)
+        DBSession.commit()
+
+        cls.test_version4.files.append(gpu_representation)
+        DBSession.commit()
+
         if not QtGui.QApplication.instance():
             logger.debug('creating a new QApplication')
             cls.app = QtGui.QApplication(sys.argv)
         else:
             logger.debug('using the present QApplication: {}'.format(QtGui.qApp))
-            # self.app = QtGui.qApp
             cls.app = QtGui.QApplication.instance()
 
-        # cls.test_environment = TestEnvironment()
         cls.dialog = version_dialog.MainDialog()
-            # environment=cls.test_environment
-        # )
 
     @classmethod
     def tearDownClass(cls):
@@ -314,7 +335,7 @@ class VersionCreatorTester(unittest.TestCase):
         )
 
     def test_close_button_closes_ui(self):
-        """testing if the close button is closing the ui
+        """close button is closing the ui
         """
         self.dialog.show()
 
@@ -325,12 +346,12 @@ class VersionCreatorTester(unittest.TestCase):
         self.assertEqual(self.dialog.isVisible(), False)
 
     def test_login_dialog_is_shown_if_there_are_no_logged_in_user(self):
-        """testing if the login dialog is shown if there is no logged in user
+        """login dialog is shown if there is no logged in user
         """
         self.fail("Test is not implemented yet")
 
     def test_logged_in_user_field_is_updated_correctly(self):
-        """testing if the logged_in_user field is updated correctly
+        """logged_in_user field is updated correctly
         """
         # now expect to see the admin.name on the dialog.logged_in_user_label
         self.assertEqual(
@@ -344,7 +365,7 @@ class VersionCreatorTester(unittest.TestCase):
         self.fail('test is not implemented yet')
 
     def test_tasks_tree_view_is_filled_with_projects(self):
-        """testing if the tasks_treeView is filled with projects as root
+        """tasks_treeView is filled with projects as root
         level items
         """
         # now call the dialog and expect to see all these projects as root
@@ -374,7 +395,7 @@ class VersionCreatorTester(unittest.TestCase):
         # self.show_dialog(dialog)
 
     def test_tasks_tree_view_lists_all_tasks_properly(self):
-        """testing if the tasks_treeView lists all the tasks properly
+        """tasks_treeView lists all the tasks properly
         """
         task_tree_model = self.dialog.tasks_treeView.model()
         row_count = task_tree_model.rowCount()
@@ -402,7 +423,7 @@ class VersionCreatorTester(unittest.TestCase):
         self.assertEqual(task1_item.task, self.test_task1)
 
     def test_tasks_treeView_lists_only_my_tasks_if_checked(self):
-        """testing if the tasks_treeView lists only my tasks if
+        """tasks_treeView lists only my tasks if
         my_tasks_only_checkBox is checked
         """
         item_model = self.dialog.tasks_treeView.model()
@@ -463,50 +484,8 @@ class VersionCreatorTester(unittest.TestCase):
                 task_id = task_ids[0]
             self.assertEqual(task_id, task)
 
-    def test_takes_listWidget_lists_Main_by_default(self):
-        """testing if the takes_listWidget lists "Main" by default
-        """
-        from anima import defaults
-        dialog = version_dialog.MainDialog()
-        self.assertEqual(
-            defaults.version_take_name,
-            dialog.takes_list_widget.currentItem().text()
-        )
-
-    def test_takes_listWidget_lists_Main_by_default_for_tasks_with_no_versions(self):
-        """testing if the takes_listWidget lists "Main" by default for a task
-        with no version
-        """
-        # now call the dialog and expect to see all these projects as root
-        # level items in tasks_treeView
-
-        dialog = version_dialog.MainDialog()
-        # self.show_dialog(dialog)
-
-        from anima import defaults
-        self.assertEqual(
-            defaults.version_take_name,
-            dialog.takes_list_widget.currentItem().text()
-        )
-
-    def test_takes_listWidget_lists_Main_by_default_for_projects_with_no_tasks(self):
-        """testing if the takes_listWidget lists "Main" by default for a
-        project with no tasks
-        """
-        # now call the dialog and expect to see all these projects as root
-        # level items in tasks_treeView
-
-        dialog = version_dialog.MainDialog()
-        # self.show_dialog(dialog)
-
-        from anima import defaults
-        self.assertEqual(
-            defaults.version_take_name,
-            dialog.takes_list_widget.currentItem().text()
-        )
-
     def test_tasks_treeView_tasks_are_sorted(self):
-        """testing if tasks in tasks_treeView are sorted according to their
+        """tasks in tasks_treeView are sorted according to their
         names
         """
         item_model = self.dialog.tasks_treeView.model()
@@ -530,7 +509,7 @@ class VersionCreatorTester(unittest.TestCase):
         dialog = version_dialog.MainDialog()
 
     def test_previous_versions_tableWidget_is_filled_with_proper_info(self):
-        """testing if the previous_versions_table_widget is filled with proper
+        """previous_versions_table_widget is filled with proper
         information
         """
         # select the t1
@@ -550,9 +529,6 @@ class VersionCreatorTester(unittest.TestCase):
             task1_item.index(),
             QtGui.QItemSelectionModel.Select
         )
-
-        # select the first take
-        self.dialog.takes_list_widget.setCurrentRow(0)
 
         # the row count should be 2
         self.assertEqual(
@@ -579,7 +555,7 @@ class VersionCreatorTester(unittest.TestCase):
             )
 
     def test_get_new_version_with_publish_check_box_is_checked_creates_published_version(self):
-        """testing if checking publish_checkbox will create a published Version
+        """checking publish_checkbox will create a published Version
         instance
         """
         # select the t1
@@ -621,7 +597,7 @@ class VersionCreatorTester(unittest.TestCase):
         self.assertTrue(new_version.is_published)
 
     def test_users_can_change_the_publish_state_if_they_are_the_owner(self):
-        """testing if the users are able to change the publish method if it is
+        """users are able to change the publish method if it is
         their versions
         """
         # select the t1
@@ -646,87 +622,14 @@ class VersionCreatorTester(unittest.TestCase):
         self.fail('test is not completed yet')
 
     def test_thumbnails_are_displayed_correctly(self):
-        """testing if the thumbnails are displayed correctly
-        """
+        """thumbnails are displayed correctly."""
         self.fail('test is not implemented yet')
 
-    def test_representations_combo_box_lists_all_representations_of_current_env(self):
-        """testing if representations_comboBox lists all the possible
-        representations in current environment
-        """
-        test_environment = TestEnvironment()
-        dialog = version_dialog.MainDialog(
-            environment=test_environment
-        )
-        for i in range(len(TestEnvironment.representations)):
-            repr_name = TestEnvironment.representations[i]
+    def test_representations_combo_box_lists_all_representations_of_current_dcc(self):
+        """representations_comboBox lists all the possible representations in current DCC."""
+        test_dcc = TestDCC()
+        dialog = version_dialog.MainDialog(dcc=test_dcc)
+        for i in range(len(TestDCC.representations)):
+            repr_name = TestDCC.representations[i]
             combo_box_text = dialog.representations_comboBox.itemText(i)
             self.assertEqual(repr_name, combo_box_text)
-
-    def test_repr_as_separate_takes_check_box_is_unchecked_by_default(self):
-        """testing if repr_as_separate_takes_checkBox is unchecked by default
-        """
-        self.assertFalse(
-            self.dialog.repr_as_separate_takes_check_box.isChecked()
-        )
-
-    def test_repr_as_separate_takes_check_box_is_working_properly(self):
-        """testing if when the repr_as_separate_takes_checkBox is checked it
-        will update the takes_listWidget to also show representation takes
-        """
-        # select project 1 -> task1
-        item_model = self.dialog.tasks_treeView.model()
-        selection_model = self.dialog.tasks_treeView.selectionModel()
-
-        index = item_model.index(0, 0)
-        project1_item = item_model.itemFromIndex(index)
-        self.dialog.tasks_treeView.expand(index)
-
-        task1_item = project1_item.child(0, 0)
-        selection_model.select(
-            task1_item.index(),
-            QtGui.QItemSelectionModel.Select
-        )
-
-        # expect only one "Main" take listed in take_listWidget
-        self.assertEqual(
-            sorted(self.dialog.takes_list_widget.take_names),
-            ['Main']
-        )
-
-        # check the repr_as_separate_takes_checkBox
-        self.dialog.repr_as_separate_takes_check_box.setChecked(True)
-
-        # expect two takes of "Main" and "Main@GPU"
-        self.assertEqual(
-            sorted(self.dialog.takes_list_widget.take_names),
-            ['Main', 'Main@GPU']
-        )
-
-        # self.show_dialog(self.dialog)
-
-    def test_takes_with_representations_shows_in_blue(self):
-        """testing if takes with representations will be displayed in blue
-        """
-        # select project 1 -> task1
-        item_model = self.dialog.tasks_treeView.model()
-        selection_model = self.dialog.tasks_treeView.selectionModel()
-
-        index = item_model.index(0, 0)
-        project1_item = item_model.itemFromIndex(index)
-        self.dialog.tasks_treeView.expand(index)
-
-        task1_item = project1_item.child(0, 0)
-        selection_model.select(
-            task1_item.index(),
-            QtGui.QItemSelectionModel.Select
-        )
-
-        # expect only one "Main" take listed in take_listWidget
-        main_item = self.dialog.takes_list_widget.item(0)
-        item_foreground = main_item.foreground()
-        color = item_foreground.color()
-        self.assertEqual(
-            color,
-            QtGui.QColor(0, 0, 255)
-        )

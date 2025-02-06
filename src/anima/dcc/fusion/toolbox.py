@@ -23,9 +23,9 @@ def UI(app_in=None, executor=None, **kwargs):
 
 
 class ToolboxDialog(AnimaDialogBase, QtWidgets.QDialog):
-    """The toolbox dialog"""
+    """The toolbox dialog."""
 
-    def __init__(self, environment=None, parent=None):
+    def __init__(self, dcc=None, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
         self._setup_ui()
 
@@ -243,12 +243,12 @@ class GenericTools(object):
         do_db_setup()
         from anima.dcc import fusion
 
-        fusion_env = fusion.Fusion()
-        fusion_env.name = "Fusion"
+        fusion_dcc = fusion.Fusion()
+        fusion_dcc.name = "Fusion"
 
         from anima.ui.dialogs import version_dialog
 
-        ui_instance = version_dialog.MainDialog(environment=fusion_env, **args)
+        ui_instance = version_dialog.MainDialog(dcc=fusion_dcc, **args)
         ui_instance.show()
         ui_instance.center_window()
 

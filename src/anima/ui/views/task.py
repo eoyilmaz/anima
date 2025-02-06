@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """Task related views."""
 
+from stalker import SimpleEntity, Task
+from stalker.db.session import DBSession
+
 from anima.log import logger
+from anima.ui.dialogs import task_dialog
 from anima.ui.lib import QtCore, QtWidgets
 from anima.ui.menus import TaskDataContextMenuHandler
-from anima.ui.models.task import TaskTreeModel
-
-from stalker import SimpleEntity, Task
+from anima.ui.models.task import TaskItem, TaskTreeModel
 
 
 if False:
@@ -28,8 +30,8 @@ class TaskTreeView(QtWidgets.QTreeView):
             the tasks for the dependency information. Default is False.
         show_asset_and_shot_children (bool): If set to True it will show the step tasks
             for each Asset and Shot. The default value is True.
-        show_takes (bool): If set to True, shows another level in the
-            tree of takes information for the child task of an Asset.
+        show_variants (bool): If set to True, shows another level in the
+            tree of variants information for the child task of an Asset.
         context_menu_handler_class (:obj:``ui.menus.BaseContextMenuHandler``):
             A :obj:``ui.menus.BaseContextMenuHandler`` variant to handle the
             context menus. This allows to show different context menus for different
@@ -46,7 +48,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         context_menu_handler_class=None,
         horizontal_labels=None,
         show_asset_and_shot_children=True,
-        show_takes=False,
+        show_variants=False,
         show_dependency_info=False,
     ):
         super(TaskTreeView, self).__init__(parent=parent)
@@ -56,7 +58,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         self.horizontal_labels = horizontal_labels
         self.show_dependency_info = show_dependency_info
         self.show_asset_and_shot_children = show_asset_and_shot_children
-        self.show_takes = show_takes
+        self.show_variants = show_variants
 
         if context_menu_handler_class is None:
             self.context_menu_handler = TaskDataContextMenuHandler(parent=self)
@@ -196,7 +198,7 @@ class TaskTreeView(QtWidgets.QTreeView):
             parent=self,
             show_dependency_info=self.show_dependency_info,
             show_asset_and_shot_children=self.show_asset_and_shot_children,
-            show_takes=self.show_takes,
+            show_variants=self.show_variants,
             horizontal_labels=self.horizontal_labels,
             allow_editing=self.allow_editing,
         )
@@ -241,35 +243,37 @@ class TaskTreeView(QtWidgets.QTreeView):
         except AttributeError:
             return
 
-        if item.task.entity_type == "Task":
+        if item.task.entity_type != "Task":
+            return
 
-            if task_id:
-                entity = SimpleEntity.query.get(task_id)
+        if task_id:
+            with DBSession.no_autoflush:
+                entity = SimpleEntity.query.filter_by(id=task_id).first()
 
-            from anima.ui.dialogs import task_dialog
+        task_main_dialog = task_dialog.MainDialog(parent=self, tasks=[entity])
+        task_main_dialog.exec_()
+        result = task_main_dialog.result()
+        task_main_dialog.deleteLater()
 
-            task_main_dialog = task_dialog.MainDialog(parent=self, tasks=[entity])
-            task_main_dialog.exec_()
-            result = task_main_dialog.result()
-            task_main_dialog.deleteLater()
+        try:
+            # PySide and PySide2
+            accepted = QtWidgets.QDialog.DialogCode.Accepted
+        except AttributeError:
+            # PyQt4
+            accepted = QtWidgets.QDialog.Accepted
 
-            try:
-                # PySide and PySide2
-                accepted = QtWidgets.QDialog.DialogCode.Accepted
-            except AttributeError:
-                # PyQt4
-                accepted = QtWidgets.QDialog.Accepted
+        # refresh the task list
+        if result != accepted:
+            return
 
-            # refresh the task list
-            if result == accepted:
-                # just reload the same item
-                if item.parent:
-                    item.parent.reload()
-                else:
-                    # reload the entire
-                    self.fill_ui()
+        # just reload the same item
+        if item.parent:
+            item.parent.reload()
+        else:
+            # reload the entire
+            self.fill_ui()
 
-                self.find_and_select_entity_item(entity)
+        self.find_and_select_entity_item(entity)
 
     def find_and_select_entity_item(self, tasks, tree_view=None):
         """Find and select the task in the given tree_view item.
@@ -383,8 +387,6 @@ class TaskTreeView(QtWidgets.QTreeView):
         Returns:
             List[TaskItem]: List of selected TaskItem instances.
         """
-        from anima.ui.models.task import TaskItem
-
         selection_model = self.selectionModel()
         logger.debug(f"selection_model: {selection_model}")
         indexes = selection_model.selectedIndexes()
@@ -408,9 +410,11 @@ class TaskTreeView(QtWidgets.QTreeView):
 
     def get_selected_tasks(self):
         """returns the selected tasks"""
-        return Task.query.filter(
-            Task.id.in_([item.task.id for item in self.get_selected_items()])
-        ).all()
+        with DBSession.no_autoflush:
+            tasks = Task.query.filter(
+                Task.id.in_([item.task.id for item in self.get_selected_items()])
+            ).all()
+        return tasks
 
     def expand_all_selected(self, index):
         """Expand all the selected items.

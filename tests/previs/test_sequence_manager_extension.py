@@ -12,20 +12,16 @@ from anima.edit import Sequence, Media, Video, Track, Clip, File
 
 
 class SequenceManagerTestCase(unittest.TestCase):
-    """tests the SequenceManagerExtension class
-    """
+    """tests the SequenceManagerExtension class."""
 
     def setUp(self):
-        """set up the test
-        """
+        """set up the test."""
         # create a new scene and get the sequenceManager in the scene
         pymel.core.newFile(force=True)
         self.sm = pymel.core.PyNode('sequenceManager1')
 
     def test_from_xml_path_argument_skipped(self):
-        """testing if a TypeError will be raised when the path argument is
-        skipped
-        """
+        """a TypeError will be raised when the path argument is skipped."""
         sm = pymel.core.PyNode('sequenceManager1')
         with self.assertRaises(TypeError) as cm:
             sm.from_xml()
@@ -36,9 +32,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         )
 
     def test_from_xml_path_argument_is_not_a_string(self):
-        """testing if a TypeError will be raised when the path argument is not
-        a string
-        """
+        """a TypeError will be raised when the path argument is not a string."""
         sm = pymel.core.PyNode('sequenceManager1')
         with self.assertRaises(TypeError) as cm:
             sm.from_xml(30)
@@ -50,9 +44,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         )
 
     def test_from_xml_path_argument_is_not_a_valid_path(self):
-        """testing if a IOError will be raised when the path argument is not
-        a valid path
-        """
+        """a IOError will be raised when the path argument is not a valid path."""
         sm = pymel.core.PyNode('sequenceManager1')
         with self.assertRaises(IOError) as cm:
             sm.from_xml('not a valid path')
@@ -63,9 +55,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         )
 
     def test_from_xml_generates_correct_sequencer_hierarchy(self):
-        """testing if from_xml method will generate Sequences and shots
-        correctly
-        """
+        """from_xml method will generate Sequences and shots correctly."""
         path = os.path.abspath('./test_data/test_v001.xml')
 
         sm = pymel.core.PyNode('sequenceManager1')
@@ -139,9 +129,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         )
 
     def test_from_xml_updates_sequencer_hierarchy_with_shots_expanded_and_contracted(self):
-        """testing if from_xml method will update Sequences and shots
-        correctly with the xml file
-        """
+        """from_xml method will update Sequences and shots correctly with the xml file."""
         path = os.path.abspath('./test_data/test_v002.xml')
 
         sm = pymel.core.PyNode('sequenceManager1')
@@ -204,9 +192,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(120.0, shot3.endFrame.get())
 
     def test_from_edl_updates_sequencer_hierarchy_with_shots_expanded_and_contracted(self):
-        """testing if from_edl method will update Sequences and shots
-        correctly with the edl file
-        """
+        """from_edl method will update Sequences and shots correctly with the edl file."""
         path = os.path.abspath('./test_data/test_v002.edl')
 
         sm = pymel.core.PyNode('sequenceManager1')
@@ -269,9 +255,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(121.0, shot3.endFrame.get())
 
     def test_from_edl_updates_sequencer_hierarchy_with_shots_used_more_than_one_times(self):
-        """testing if from_edl method will update Sequences and shots correctly
-        with shot are used more than once
-        """
+        """from_edl method will update Sequences and shots correctly with shot are used more than once."""
         path = os.path.abspath('./test_data/test_v004.edl')
 
         sm = pymel.core.PyNode('sequenceManager1')
@@ -356,9 +340,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         )
 
     def test_from_xml_updates_sequencer_hierarchy_with_shots_removed(self):
-        """testing if from_xml method will update Sequences and shots
-        correctly with the xml file
-        """
+        """from_xml method will update Sequences and shots correctly with the xml file."""
         path = os.path.abspath('./test_data/test_v003.xml')
 
         sm = pymel.core.PyNode('sequenceManager1')
@@ -419,9 +401,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(120.0, shot3.endFrame.get())
 
     def test_to_xml_will_generate_proper_xml_string(self):
-        """testing if a proper xml compatible string will be generated with
-        to_xml() method
-        """
+        """a proper xml compatible string will be generated with to_xml() method."""
         path = os.path.abspath('./test_data/test_v001.xml')
 
         sm = pymel.core.PyNode('sequenceManager1')
@@ -466,8 +446,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(expected, result)
 
     def test_create_sequence_is_working_properly(self):
-        """testing if create_sequence is working properly
-        """
+        """create_sequence is working properly."""
         seq = self.sm.create_sequence()
         self.assertEqual(seq.type(), 'sequencer')
 
@@ -475,8 +454,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(self.sm, seq.message.connections()[0])
 
     def test_create_sequence_is_properly_setting_the_sequence_name(self):
-        """testing if create_sequence is working properly
-        """
+        """create_sequence is working properly."""
         seq = self.sm.create_sequence('Test Sequence')
         self.assertEqual(
             'Test Sequence',
@@ -484,8 +462,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         )
 
     def test_to_edl_is_working_properly(self):
-        """testing if to_edl method is working properly
-        """
+        """to_edl method is working properly."""
         import edl
         # create a sequence
         seq1 = self.sm.create_sequence('sequence1')
@@ -499,9 +476,8 @@ class SequenceManagerTestCase(unittest.TestCase):
             edl.List
         )
 
-    def test_to_edl_will_generate_a_proper_edl_content(self):
-        """testing if to_edl will generate a proper edl content
-        """
+    def test_to_edl_generates_a_proper_edl_content(self):
+        """to_edl() generates a proper edl content."""
         edl_path = os.path.abspath('./test_data/test_v001.edl')
 
         sm = pymel.core.PyNode('sequenceManager1')
@@ -553,9 +529,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         )
 
     def test_generate_sequence_structure_returns_a_sequence_instance(self):
-        """testing if generate_sequence_structure() method will return a
-        Sequence instance
-        """
+        """generate_sequence_structure() returns a Sequence instance."""
         sm = pymel.core.PyNode('sequenceManager1')
         seq1 = sm.create_sequence('sequence1')
 
@@ -571,10 +545,8 @@ class SequenceManagerTestCase(unittest.TestCase):
             Sequence
         )
 
-    def test_generate_sequence_structure_will_generate_sequences_and_shots_with_correct_number_of_tracks(self):
-        """testing if a proper sequence structure will be generated by using
-        the generate_sequence_structure() method with correct number of tracks
-        """
+    def test_generate_sequence_structure_generates_sequences_and_shots_with_correct_number_of_tracks(self):
+        """generate_sequence_structure() generates proper sequence structure."""
         path = os.path.abspath('./test_data/test_v001.xml')
 
         sm = pymel.core.PyNode('sequenceManager1')
@@ -600,8 +572,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(len(clips), 3)
 
     def test_set_shot_name_template_is_working_properly(self):
-        """testing if set_shot_name_template() is working properly
-        """
+        """set_shot_name_template() is working properly."""
         sm = pymel.core.PyNode('sequenceManager1')
         self.assertFalse(sm.hasAttr('shot_name_template'))
         test_template = '<Sequence>_<Shot>_<Version>'
@@ -610,8 +581,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(sm.shot_name_template.get(), test_template)
 
     def test_get_shot_name_template_is_working_properly(self):
-        """testing if set_shot_name_template() is working properly
-        """
+        """set_shot_name_template() is working properly."""
         sm = pymel.core.PyNode('sequenceManager1')
         self.assertFalse(sm.hasAttr('shot_name_template'))
         test_template = '<Sequence>_<Shot>_<Version>'
@@ -619,10 +589,8 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertTrue(sm.hasAttr('shot_name_template'))
         self.assertEqual(sm.get_shot_name_template(), test_template)
 
-    def test_get_shot_name_template_will_create_shot_name_template_attribute_if_missing(self):
-        """testing if set_shot_name_template() will create the
-        shot_name_template attribute if missing
-        """
+    def test_get_shot_name_template_creates_shot_name_template_attr_if_missing(self):
+        """set_shot_name_template() creates the shot_name_template attr if missing."""
         sm = pymel.core.PyNode('sequenceManager1')
         self.assertFalse(sm.hasAttr('shot_name_template'))
         result = sm.get_shot_name_template()
@@ -630,8 +598,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(result, '<Sequence>_<Shot>_<Version>')
 
     def test_set_version_is_working_properly(self):
-        """testing if set_version() is working properly
-        """
+        """set_version() is working properly."""
         sm = pymel.core.PyNode('sequenceManager1')
         self.assertFalse(sm.hasAttr('version'))
         test_version = 'v001'
@@ -640,8 +607,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(sm.version.get(), test_version)
 
     def test_get_version_is_working_properly(self):
-        """testing if set_version() is working properly
-        """
+        """set_version() is working properly."""
         sm = pymel.core.PyNode('sequenceManager1')
         self.assertFalse(sm.hasAttr('version'))
         test_version = 'v001'
@@ -650,8 +616,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(sm.get_version(), test_version)
 
     def test_get_version_will_create_attribute_if_missing(self):
-        """testing if get_version() will create the missing version attribute
-        """
+        """get_version() will create the missing version attribute."""
         sm = pymel.core.PyNode('sequenceManager1')
         self.assertFalse(sm.hasAttr('version'))
         result = sm.get_version()
@@ -659,8 +624,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(result, '')
 
     def test_set_task_name_is_working_properly(self):
-        """testing if set_task_name() is working properly
-        """
+        """set_task_name() is working properly."""
         sm = pymel.core.PyNode('sequenceManager1')
         self.assertFalse(sm.hasAttr('task_name'))
         test_task_name = 'Animation'
@@ -669,8 +633,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(sm.task_name.get(), test_task_name)
 
     def test_get_task_name_is_working_properly(self):
-        """testing if set_task_name() is working properly
-        """
+        """set_task_name() is working properly."""
         sm = pymel.core.PyNode('sequenceManager1')
         self.assertFalse(sm.hasAttr('task_name'))
         test_task_name = 'Animation'
@@ -679,46 +642,41 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(sm.get_task_name(), test_task_name)
 
     def test_get_task_name_will_create_attribute_if_missing(self):
-        """testing if get_task_name() will create the missing task_name attribute
-        """
+        """get_task_name() will create the missing task_name attribute."""
         sm = pymel.core.PyNode('sequenceManager1')
         self.assertFalse(sm.hasAttr('task_name'))
         result = sm.get_task_name()
         self.assertTrue(sm.hasAttr('task_name'))
         self.assertEqual(result, '')
 
-    def test_set_take_name_is_working_properly(self):
-        """testing if set_take_name() is working properly
-        """
+    def test_set_variant_name_is_working_properly(self):
+        """set_variant_name() is working properly."""
         sm = pymel.core.PyNode('sequenceManager1')
-        self.assertFalse(sm.hasAttr('take_name'))
-        test_take_name = 'Main'
-        sm.set_take_name(test_take_name)
-        self.assertTrue(sm.hasAttr('take_name'))
-        self.assertEqual(sm.take_name.get(), test_take_name)
+        self.assertFalse(sm.hasAttr('variant_name'))
+        test_variant_name = 'Main'
+        sm.set_variant_name(test_variant_name)
+        self.assertTrue(sm.hasAttr('variant_name'))
+        self.assertEqual(sm.variant_name.get(), test_variant_name)
 
-    def test_get_take_name_is_working_properly(self):
-        """testing if set_take_name() is working properly
-        """
+    def test_get_variant_name_is_working_properly(self):
+        """set_variant_name() is working properly."""
         sm = pymel.core.PyNode('sequenceManager1')
-        self.assertFalse(sm.hasAttr('take_name'))
-        test_take_name = 'Main'
-        sm.set_take_name(test_take_name)
-        self.assertTrue(sm.hasAttr('take_name'))
-        self.assertEqual(sm.get_take_name(), test_take_name)
+        self.assertFalse(sm.hasAttr('variant_name'))
+        test_variant_name = 'Main'
+        sm.set_variant_name(test_variant_name)
+        self.assertTrue(sm.hasAttr('variant_name'))
+        self.assertEqual(sm.get_variant_name(), test_variant_name)
 
-    def test_get_take_name_will_create_attribute_if_missing(self):
-        """testing if get_take_name() will create the missing take_name attribute
-        """
+    def test_get_variant_name_will_create_attribute_if_missing(self):
+        """get_variant_name() will create the missing variant_name attribute."""
         sm = pymel.core.PyNode('sequenceManager1')
-        self.assertFalse(sm.hasAttr('take_name'))
-        result = sm.get_take_name()
-        self.assertTrue(sm.hasAttr('take_name'))
+        self.assertFalse(sm.hasAttr('variant_name'))
+        result = sm.get_variant_name()
+        self.assertTrue(sm.hasAttr('variant_name'))
         self.assertEqual(result, '')
 
     def test_generate_sequence_structure_is_working_properly(self):
-        """testing if generate_sequence_structure() method is working properly
-        """
+        """generate_sequence_structure() method is working properly."""
         sm = pymel.core.PyNode('sequenceManager1')
         from anima.dcc import mayaEnv
         mayaEnv.Maya.set_fps(fps=24)

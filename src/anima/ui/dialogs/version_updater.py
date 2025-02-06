@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+from typing import Union
 
-from anima.dcc.base import generate_empty_reference_resolution
+from anima.dcc.base import generate_empty_reference_resolution, DCCBase
 from anima.log import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.models.version import VersionTreeModel
@@ -9,16 +10,18 @@ from anima.ui.lib import QtCore, QtWidgets
 
 def UI(app_in=None, executor=None, **kwargs):
     """
-    :param environment: The
-      :class:`~anima.dcc.base.DCCBase` can be None to let the UI to
-      work in "environmentless" mode in which it only creates data in database
-      and copies the resultant version file path to clipboard.
+    Args:
+        dcc (DCCBase): The :class:`~anima.dcc.base.DCCBase` can be None to let
+            the UI to work in "DCC-less" mode in which it only creates data in
+            database and copies the resultant version file path to clipboard.
 
-    :param app_in: A Qt Application instance, which you can pass to let the UI
-      be attached to the given applications event process.
+        app_in (QtCore.QApplication): A Qt Application instance, which you can
+            pass to let the UI be attached to the given applications event
+            process.
 
-    :param executor: Instead of calling app.exec_ the UI will call this given
-      function. It also passes the created app instance to this executor.
+        executor (callable): Instead of calling `app.exec_()` the UI will call
+            this given function. It also passes the created app instance to
+            this executor.
     """
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
@@ -29,11 +32,11 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     The version_tuple list consist of a Version instance and a reference
     object.
 
-    For Maya DCC the reference object is the PyMel Reference node,
-    for other environments reference object type will be as native as it can be
+    For Maya DCC the reference object is the PyMel Reference node, for other
+    DCCs reference object type will be as native as it can be.
     """
 
-    def __init__(self, environment=None, parent=None, reference_resolution=None):
+    def __init__(self, dcc=None, parent=None, reference_resolution=None):
         QtWidgets.QDialog.__init__(self, parent)
         self.new_versions = []
         self.versions_tree_view = None
@@ -47,13 +50,13 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         # center to the window
         self.center_window()
 
-        # setup the environment
-        self.environment = self._validate_environment(environment)
+        # setup the DCC
+        self.dcc : DCCBase = self._validate_dcc(dcc)
 
         if reference_resolution is None:
-            # generate from environment
-            if self.environment:
-                reference_resolution = self.environment.check_referenced_versions()
+            # generate from DCC
+            if self.dcc:
+                reference_resolution = self.dcc.check_references()
             else:
                 # create an empty one
                 reference_resolution = generate_empty_reference_resolution()
@@ -135,7 +138,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         # Update
         self.update_push_button = QtWidgets.QPushButton(main_widget)
         self.update_push_button.setText("Update")
-        self.update_push_button.clicked.connect(self.update_versions)
+        self.update_push_button.clicked.connect(self.update_reference_versions_to_latest)
         layout.addWidget(self.update_push_button)
 
         # Cancel
@@ -145,22 +148,39 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         layout.addWidget(self.cancel_push_button)
         main_layout.addWidget(main_widget)
 
-    def _validate_environment(self, environment):
-        """validates the given DCC value"""
-        if environment:
-            current_version = environment.get_current_version()
-            if not current_version:
-                # there is no version so warn the user
-                error_message = (
-                    "Please save the current scene with Version Creator first!!!"
-                )
-                QtWidgets.QMessageBox.critical(
-                    self, "Error", error_message, QtWidgets.QMessageBox.Ok
-                )
-                self.close()
-                raise RuntimeError(error_message)
+    def _validate_dcc(
+        self, dcc: Union[None, DCCBase]
+    ) -> Union[None, DCCBase]:
+        """Validate the given dcc value.
+        
+        Args:
+            dcc (DCCBase): A DCCBase instance.
 
-        return environment
+        Returns:
+            DCCBase: The validated DCCBase instance.
+        """
+        if not dcc:
+            return
+
+        if not isinstance(dcc, DCCBase):
+            raise TypeError(
+                "dcc should be a DCCBase instance, "
+                f"not {dcc.__class__.__name__}: '{dcc}'"
+            )
+
+        current_version = dcc.get_current_version()
+        if not current_version:
+            # there is no version so warn the user
+            error_message = (
+                "Please save the current scene with Version Creator first!!!"
+            )
+            QtWidgets.QMessageBox.critical(
+                self, "Error", error_message, QtWidgets.QMessageBox.Ok
+            )
+            self.close()
+            raise RuntimeError(error_message)
+
+        return dcc
 
     def versions_tree_view_auto_fit_column(self):
         """fits columns to content"""
@@ -282,7 +302,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         prev_lpv = version.latest_published_version
 
         process = subprocess.Popen(
-            [self.environment.executable[platform_name], version.absolute_full_path],
+            [self.dcc.executable[platform_name], version.absolute_full_path],
             stderr=subprocess.PIPE,
         )
 
@@ -293,20 +313,20 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         next_lpv = version.latest_published_version
 
         if prev_lpv != next_lpv:
-            # a new version has been created so tell the environment to update
+            # a new version has been created so tell the DCC to update
             # the references to this version
-            self.reference_resolution = self.environment.check_referenced_versions()
+            self.reference_resolution = self.dcc.check_references()
 
             # and then refresh the UI
             self.fill_ui()
 
-    def update_versions(self):
-        """updates the versions if it is checked in the UI"""
+    def update_reference_versions_to_latest(self):
+        """Update the referenced Files to their latest versions if it is checked in the UI."""
         reference_resolution = self.generate_reference_resolution()
 
-        # send them back to environment
+        # send them back to DCC
         try:
-            self.environment.update_versions(reference_resolution)
+            self.dcc.update_reference_versions_to_latest(reference_resolution)
         except RuntimeError as e:
             # display as a Error message and return without doing anything
             message_box = QtWidgets.QMessageBox(self)

@@ -1,17 +1,39 @@
 # -*- coding: utf-8 -*-
 
+import datetime
 import re
 
+import pytz
+
+from sqlalchemy.orm import aliased
+
+from stalker import (
+    Asset,
+    Entity,
+    Project,
+    ProjectUser,
+    Sequence,
+    Shot,
+    Task,
+    Type,
+    User,
+    Variant,
+)
+from stalker.db.session import DBSession
+from stalker.exceptions import CircularDependencyError, StatusError
+
+from anima import defaults
+from anima import TASK_DERIVATIVES
 from anima.log import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
+from anima.ui.dialogs import task_picker_dialog
 from anima.ui.lib import QtCore, QtWidgets
-from anima.utils import get_task_hierarchy_name
+from anima.ui.widgets.common import ValidatedLineEdit
+from anima.ui.widgets.image_format import ImageFormatWidget
+from anima.utils import get_task_hierarchy_name, local_to_utc
 
-if False:
-    from PySide2 import QtWidgets, QtCore
 
 MULTI_VALUE_ENUM = "---Multiple_Values---"
-
 
 def UI(app_in=None, executor=None, **kwargs):
     """
@@ -122,11 +144,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
         # field
         self.entity_type_combo_box = QtWidgets.QComboBox(self)
-
-        self.entity_type_combo_box.addItem("Task")
-        self.entity_type_combo_box.addItem("Asset")
-        self.entity_type_combo_box.addItem("Shot")
-        self.entity_type_combo_box.addItem("Sequence")
+        self.entity_type_combo_box.addItems(TASK_DERIVATIVES)
 
         self.form_layout.setWidget(
             form_field_index,
@@ -156,8 +174,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         self.parent_task_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
 
         # Line Edit
-        from anima.ui.widgets.common import ValidatedLineEdit
-
         self.parent_task_line_edit = ValidatedLineEdit(
             message_field=self.parent_task_validator_label
         )
@@ -303,8 +319,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
         # ----------------------------------------------
         # Image Format Fields
-        from anima.ui.widgets.image_format import ImageFormatWidget
-
         self.image_format = ImageFormatWidget(
             parent=self,
             parent_form_layout=self.form_layout,
@@ -313,17 +327,17 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         form_field_index += 1
 
         # ----------------------------------------------
-        # DependsTo Fields
-        self.depends_to_label = QtWidgets.QLabel("Depends To", self)
+        # Depends On Fields
+        self.depends_on_label = QtWidgets.QLabel("Depends On", self)
         self.form_layout.setWidget(
-            form_field_index, QtWidgets.QFormLayout.LabelRole, self.depends_to_label
+            form_field_index, QtWidgets.QFormLayout.LabelRole, self.depends_on_label
         )
         self.horizontal_layout_3 = QtWidgets.QHBoxLayout()
-        self.depends_to_list_widget = QtWidgets.QListWidget(self)
-        self.depends_to_list_widget.setSelectionMode(
+        self.depends_on_list_widget = QtWidgets.QListWidget(self)
+        self.depends_on_list_widget.setSelectionMode(
             QtWidgets.QAbstractItemView.MultiSelection
         )
-        self.horizontal_layout_3.addWidget(self.depends_to_list_widget)
+        self.horizontal_layout_3.addWidget(self.depends_on_list_widget)
         self.vertical_layout_3 = QtWidgets.QVBoxLayout()
         self.add_depending_task_push_button = QtWidgets.QPushButton("+", self)
         self.add_depending_task_push_button.setToolTip("Add depending task...")
@@ -455,9 +469,9 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         self.setTabOrder(self.sequence_combo_box, self.fps_spin_box)
         self.setTabOrder(self.fps_spin_box, self.cut_in_spin_box)
         self.setTabOrder(self.cut_in_spin_box, self.cut_out_spin_box)
-        self.setTabOrder(self.cut_out_spin_box, self.depends_to_list_widget)
+        self.setTabOrder(self.cut_out_spin_box, self.depends_on_list_widget)
         self.setTabOrder(
-            self.depends_to_list_widget, self.add_depending_task_push_button
+            self.depends_on_list_widget, self.add_depending_task_push_button
         )
         self.setTabOrder(
             self.add_depending_task_push_button, self.remove_depending_task_push_button
@@ -520,9 +534,9 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             self.remove_depending_task_push_button_clicked
         )
 
-        # depends_to_list_widget doubleClicked
-        self.depends_to_list_widget.itemDoubleClicked.connect(
-            self.depends_to_list_widget_item_double_clicked
+        # depends_on_list_widget doubleClicked
+        self.depends_on_list_widget.itemDoubleClicked.connect(
+            self.depends_on_list_widget_item_double_clicked
         )
 
         # resources_combo_box changed
@@ -584,7 +598,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
         # fill projects list
         self.projects_combo_box.clear()
-        from stalker import Project, Task
 
         self.projects_combo_box.addItems(sorted([p.name for p in Project.query.all()]))
 
@@ -617,9 +630,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         self.set_parent_task(self.parent_task)
 
         # task types
-        from stalker import Type
-        from stalker.db.session import DBSession
-
         all_task_type_names = (
             DBSession.query(Type.name)
             .filter(Type.target_entity_type == "Task")
@@ -632,8 +642,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         )
 
         # asset types
-        from stalker import Type
-
         all_asset_type_names = (
             DBSession.query(Type.name)
             .filter(Type.target_entity_type == "Asset")
@@ -646,8 +654,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         )
 
         # sequences
-        from stalker import Sequence
-
         all_sequence_names = (
             DBSession.query(Sequence.name).filter(Sequence.project == project).all()
         )
@@ -655,8 +661,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         self.sequence_combo_box.addItems(
             [""] + list(map(lambda x: x[0], all_sequence_names))
         )
-
-        from anima import defaults
 
         self.cut_in_spin_box.setValue(defaults.cut_in)
         self.cut_out_spin_box.setValue(defaults.cut_out)
@@ -745,8 +749,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         self.entity_type_combo_box.setEnabled(False)
         self.projects_combo_box.setEnabled(False)
 
-        from stalker import Asset, Shot, Sequence
-
         project = self.get_unique_items(self.tasks, "project")
         if project:
             self.set_project(project)
@@ -756,9 +758,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             self.fps_spin_box.setValue(project.fps)
 
             # sequences
-            from stalker import Sequence
-            from stalker.db.session import DBSession
-
             all_sequence_names = (
                 DBSession.query(Sequence.name)
                 .filter(Sequence.project == project)
@@ -840,8 +839,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         if len(type_obj) == 1:
             # single type selected
             type_obj = type_obj[0]
-            from stalker import Type
-
             if type_obj is not None and isinstance(type_obj, Type):
                 type_name = type_obj.name
         else:
@@ -869,8 +866,8 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
         # add resources
         if not self.multi_selection_mode:
-            depends = self.get_merged_items(self.tasks, "depends")
-            for dep_task in depends:
+            depends_on = self.get_merged_items(self.tasks, "depends_on")
+            for dep_task in depends_on:
                 self.add_dependent_task(dep_task)
         else:
             self.add_dependent_task(MULTI_VALUE_ENUM)
@@ -907,7 +904,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
             if schedule_unit:
                 index = self.schedule_unit_combo_box.findText(
-                    schedule_unit, QtCore.Qt.MatchExactly
+                    str(schedule_unit), QtCore.Qt.MatchExactly
                 )
                 if index:
                     self.schedule_unit_combo_box.setCurrentIndex(index)
@@ -921,7 +918,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
             if schedule_model:
                 index = self.schedule_model_combo_box.findText(
-                    schedule_model, QtCore.Qt.MatchExactly
+                    str(schedule_model), QtCore.Qt.MatchExactly
                 )
                 if index:
                     self.schedule_model_combo_box.setCurrentIndex(index)
@@ -982,9 +979,9 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             self.resources_combo_box.setVisible(True)
             self.resources_list_widget.setVisible(True)
 
-            # depends to fields
-            self.depends_to_label.setVisible(True)
-            self.depends_to_list_widget.setVisible(True)
+            # depends on fields
+            self.depends_on_label.setVisible(True)
+            self.depends_on_list_widget.setVisible(True)
             self.add_depending_task_push_button.setVisible(True)
             self.remove_depending_task_push_button.setVisible(True)
 
@@ -997,8 +994,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             if self.mode == self.UPDATE_MODE:
                 # if this is a parent task
                 # do not show resource and timing related fields
-                from stalker import Task
-
                 assert isinstance(self.tasks[0], Task)
 
                 if self.tasks[0].is_container:
@@ -1048,9 +1043,9 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             self.resources_combo_box.setVisible(False)
             self.resources_list_widget.setVisible(False)
 
-            # depends to fields
-            self.depends_to_label.setVisible(False)
-            self.depends_to_list_widget.setVisible(False)
+            # depends on fields
+            self.depends_on_label.setVisible(False)
+            self.depends_on_list_widget.setVisible(False)
             self.add_depending_task_push_button.setVisible(False)
             self.remove_depending_task_push_button.setVisible(False)
 
@@ -1090,9 +1085,9 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             self.resources_combo_box.setVisible(False)
             self.resources_list_widget.setVisible(False)
 
-            # depends to fields
-            self.depends_to_label.setVisible(False)
-            self.depends_to_list_widget.setVisible(False)
+            # depends on fields
+            self.depends_on_label.setVisible(False)
+            self.depends_on_list_widget.setVisible(False)
             self.add_depending_task_push_button.setVisible(False)
             self.remove_depending_task_push_button.setVisible(False)
 
@@ -1132,9 +1127,9 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             self.resources_combo_box.setVisible(False)
             self.resources_list_widget.setVisible(False)
 
-            # depends to fields
-            self.depends_to_label.setVisible(False)
-            self.depends_to_list_widget.setVisible(False)
+            # depends on fields
+            self.depends_on_label.setVisible(False)
+            self.depends_on_list_widget.setVisible(False)
             self.add_depending_task_push_button.setVisible(False)
             self.remove_depending_task_push_button.setVisible(False)
 
@@ -1152,8 +1147,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         :return:
         """
         project_name = self.projects_combo_box.currentText()
-        from stalker import Project
-
         return Project.query.filter(Project.name == project_name).first()
 
     def set_project(self, project):
@@ -1191,8 +1184,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         :return:
         """
         if task:
-            from stalker import Task, Project
-
             # this is a weird initialization, but the task is may be
             # a project, then init with it
             project = task
@@ -1210,8 +1201,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
     def pick_parent_task_push_button_clicked(self):
         """runs when pick_parent_task_push_button is clicked"""
-        from anima.ui.dialogs import task_picker_dialog
-
         task_picker_main_dialog = task_picker_dialog.MainDialog(
             parent=self, project=self.get_project()
         )
@@ -1235,8 +1224,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
             if parent_task_id is None:
                 return
-
-            from stalker import Entity, Task, Project
 
             parent_task = Entity.query.get(parent_task_id)
             if parent_task is not None:
@@ -1281,15 +1268,12 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
         # reset resources
         # add resources
-        from anima import defaults
-        from stalker import Project, User, ProjectUser
-        from stalker.db.session import DBSession
-
+        project_alias = aliased(Project, flat=True)
         all_project_user_ids = (
             DBSession.query(User.id)
             .join(ProjectUser)
-            .join(Project)
-            .filter(Project.name == project_name)
+            .join(project_alias)
+            .filter(project_alias.name == project_name)
             .all()
         )
 
@@ -1297,8 +1281,8 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             map(lambda x: defaults.user_names_lut[x[0]], all_project_user_ids)
         )
 
-        # clear depends_to_list_widget
-        self.depends_to_list_widget.clear()
+        # clear depends_on_list_widget
+        self.depends_on_list_widget.clear()
 
         # clear resources_list_widget
         self.resources_list_widget.clear()
@@ -1316,12 +1300,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         self.updating_responsible_combo_box = False
 
     def name_line_edit_changed(self, text):
-        """runs when the name_line_edit text has changed"""
-        # if any([True for c in text if ord(c) >= 128]):
-        #     self.name_line_edit.set_invalid('Turkce karakter kullanma!!!!')
-        # else:
-        #     self.name_line_edit.set_valid()
-
+        """Update widgets as name_line_edit text has changed."""
         if re.findall(r"[^a-zA-Z0-9_ ]+", text):
             self.name_line_edit.set_invalid("Invalid character")
         else:
@@ -1374,8 +1353,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             # PyQt4
             accepted = QtWidgets.QDialog.Accepted
 
-        from anima.ui.dialogs import task_picker_dialog
-
         task_picker_main_dialog = task_picker_dialog.MainDialog(
             parent=self, project=self.get_project(), allow_multi_selection=True
         )
@@ -1415,7 +1392,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         # if the only item in the list is MULTI_VALUE_ENUM
         # then remove it, because apparently we are now setting dependencies
         # for all the selected tasks to a single dependency
-        self.remove_multi_value_enum_from_list_widget(self.depends_to_list_widget)
+        self.remove_multi_value_enum_from_list_widget(self.depends_on_list_widget)
 
         task_path = MULTI_VALUE_ENUM
         tasks_exists = False
@@ -1423,15 +1400,15 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             task_path = get_task_hierarchy_name(task)
 
         # don't add if the task already exists
-        tasks_exists = self.depends_to_list_widget.findItems(
+        tasks_exists = self.depends_on_list_widget.findItems(
             task_path, QtCore.Qt.MatchExactly
         )
 
         if not tasks_exists:
-            # add the item to the depends to task list
+            # add the item to the depends on task list
             item = QtWidgets.QListWidgetItem(task_path)
-            self.depends_to_list_widget.insertItem(0, item)
-            self.depends_to_list_widget.sortItems()
+            self.depends_on_list_widget.insertItem(0, item)
+            self.depends_on_list_widget.sortItems()
 
             if task != MULTI_VALUE_ENUM:
                 self.last_selected_dependent_task = task
@@ -1442,10 +1419,10 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     def remove_depending_task_push_button_clicked(self):
         """runs whn remove_depending_task_push_button is clicked"""
         # just remove the current selected item
-        for item in self.depends_to_list_widget.selectedItems():
+        for item in self.depends_on_list_widget.selectedItems():
             if item.text() != MULTI_VALUE_ENUM:
-                self.depends_to_list_widget.takeItem(
-                    self.depends_to_list_widget.row(item)
+                self.depends_on_list_widget.takeItem(
+                    self.depends_on_list_widget.row(item)
                 )
 
     @classmethod
@@ -1563,15 +1540,15 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             self.resources_combo_box.addItem(item_text)
             self.updating_resources_combo_box = False
 
-    def depends_to_list_widget_item_double_clicked(self, item):
-        """runs when an item is double clicked in depends_to_list_widget
+    def depends_on_list_widget_item_double_clicked(self, item):
+        """runs when an item is double clicked in depends_on_list_widget
 
         :param item: A Qt.QListWidgetItem
         :return:
         """
         # remove the item and add it to the resources_combo_box
         if item.text() != MULTI_VALUE_ENUM:
-            self.depends_to_list_widget.takeItem(self.depends_to_list_widget.row(item))
+            self.depends_on_list_widget.takeItem(self.depends_on_list_widget.row(item))
 
     def responsible_list_widget_item_double_clicked(self, item):
         """runs when an item is double clicked in responsible_list_widget
@@ -1612,8 +1589,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         if text == MULTI_VALUE_ENUM:
             return MULTI_VALUE_ENUM
 
-        from stalker import Task
-
         task_id = int(text.split("(")[-1].replace(")", ""))
         return Task.query.get(task_id)
 
@@ -1624,8 +1599,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         :param list_widget:
         :return:
         """
-        from stalker import User
-
         users = []
         for i in range(list_widget.count()):
             user_item = list_widget.item(i)
@@ -1641,9 +1614,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
     def get_task_type(self):
         """returns the task type"""
-        from stalker import Type
-        from stalker.db.session import DBSession
-
         task_type_name = self.task_type_combo_box.currentText()
         task_type = None
         if task_type_name and task_type_name != MULTI_VALUE_ENUM:
@@ -1663,9 +1633,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
     def get_asset_type(self):
         """returns the asset type"""
-        from stalker import Type
-        from stalker.db.session import DBSession
-
         asset_type_name = self.asset_type_combo_box.currentText()
         asset_type = None
         if asset_type_name and asset_type_name != MULTI_VALUE_ENUM:
@@ -1716,8 +1683,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         asset_type = self.get_asset_type()
 
         # Sequence
-        from stalker import Sequence
-
         sequence_name = self.sequence_combo_box.currentText()
         sequence = (
             Sequence.query.filter(Sequence.project == project)
@@ -1730,7 +1695,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         cut_out = self.cut_out_spin_box.value()
         image_format = self.image_format.get_current_image_format()
 
-        depends = self.get_tasks_from_list_widget(self.depends_to_list_widget)
+        depends_on = self.get_tasks_from_list_widget(self.depends_on_list_widget)
         resources = self.get_users_from_list_widget(self.resources_list_widget)
         responsible = self.get_users_from_list_widget(self.responsible_list_widget)
 
@@ -1742,21 +1707,10 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
         created_by = self.get_logged_in_user()
 
-        import datetime
-        from anima.utils import local_to_utc
 
         utc_now = local_to_utc(datetime.datetime.now())
-        import stalker
-        from distutils.version import LooseVersion
-
-        if LooseVersion(stalker.__version__) >= LooseVersion("0.2.18"):
-            # inject timezone info
-            import pytz
-
-            utc_now = utc_now.replace(tzinfo=pytz.utc)
-
-        from stalker import Task, Asset, Shot
-        from stalker.db.session import DBSession
+        # inject timezone info
+        utc_now = utc_now.replace(tzinfo=pytz.utc)
 
         if self.mode == self.CREATE_MODE:
             # Create
@@ -1765,7 +1719,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
                 "code": code,
                 "project": project,
                 "parent": parent_task,
-                "depends": depends,
+                "depends_on": depends_on,
                 "resources": resources,
                 "responsible": responsible,
                 "schedule_timing": schedule_timing,
@@ -1792,6 +1746,8 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
             elif entity_type == "Sequence":
                 entity_class = Sequence
+            elif entity_type == "Variant":
+                entity_class = Variant
             else:
                 entity_class = Task
                 kwargs["type"] = task_type
@@ -1832,8 +1788,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
                         # format so set the shot.image_format to None
                         self.tasks[0].image_format = None
 
-            from stalker.exceptions import CircularDependencyError
-
             try:
                 for task in self.tasks:
                     task.parent = parent_task
@@ -1851,15 +1805,13 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
                 return
 
             try:
-                from stalker.exceptions import StatusError
-
-                if MULTI_VALUE_ENUM not in depends:
+                if MULTI_VALUE_ENUM not in depends_on:
                     for task in self.tasks:
                         try:
-                            if sorted(task.depends, key=lambda x: x.id) != sorted(
-                                depends, key=lambda x: x.id
+                            if sorted(task.depends_on, key=lambda x: x.id) != sorted(
+                                depends_on, key=lambda x: x.id
                             ):
-                                task.depends = depends
+                                task.depends_on = depends_on
                         except StatusError as e:
                             DBSession.rollback()
                             QtWidgets.QMessageBox.critical(self, "Error", str(e))
@@ -1869,18 +1821,9 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
                 QtWidgets.QMessageBox.critical(self, "Error", str(e))
                 return
 
-            import datetime
-            from anima.utils import local_to_utc
-
             utc_now = local_to_utc(datetime.datetime.now())
-            import stalker
-            from distutils.version import LooseVersion
-
-            if LooseVersion(stalker.__version__) >= LooseVersion("0.2.18"):
-                # inject timezone info
-                import pytz
-
-                utc_now = utc_now.replace(tzinfo=pytz.utc)
+            # inject timezone info
+            utc_now = utc_now.replace(tzinfo=pytz.utc)
 
             for task in self.tasks:
                 if MULTI_VALUE_ENUM not in resources:

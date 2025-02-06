@@ -162,20 +162,20 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
         row_number += 1
         # -------------
-        # OSX Path
+        # macOS Path
         # Label
-        self.osx_path_label = QtWidgets.QLabel(self)
-        self.osx_path_label.setObjectName("osx_path_label")
-        self.osx_path_label.setText("OSX Path")
+        self.macos_path_label = QtWidgets.QLabel(self)
+        self.macos_path_label.setObjectName("macos_path_label")
+        self.macos_path_label.setText("macOS Path")
         self.form_layout.setWidget(
-            row_number, QtWidgets.QFormLayout.LabelRole, self.osx_path_label
+            row_number, QtWidgets.QFormLayout.LabelRole, self.macos_path_label
         )
 
         # Field
-        self.osx_path_line_edit = QtWidgets.QLineEdit(self)
-        self.osx_path_line_edit.setObjectName("osx_path_lineEdit")
+        self.macos_path_line_edit = QtWidgets.QLineEdit(self)
+        self.macos_path_line_edit.setObjectName("macos_path_lineEdit")
         self.form_layout.setWidget(
-            row_number, QtWidgets.QFormLayout.FieldRole, self.osx_path_line_edit
+            row_number, QtWidgets.QFormLayout.FieldRole, self.macos_path_line_edit
         )
         self.vertical_layout.addLayout(self.form_layout)
 
@@ -240,7 +240,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
         self.windows_path_line_edit.setText(self.repository.windows_path)
         self.linux_path_line_edit.setText(self.repository.linux_path)
-        self.osx_path_line_edit.setText(self.repository.osx_path)
+        self.macos_path_line_edit.setText(self.repository.macos_path)
 
     def accept(self):
         """overridden accept method"""
@@ -254,7 +254,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
         windows_path = self.windows_path_line_edit.text()
         linux_path = self.linux_path_line_edit.text()
-        osx_path = self.osx_path_line_edit.text()
+        macos_path = self.macos_path_line_edit.text()
 
         from stalker import Repository
         from stalker.db.session import DBSession
@@ -268,7 +268,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
                     code=code,
                     windows_path=windows_path,
                     linux_path=linux_path,
-                    osx_path=osx_path,
+                    macos_path=macos_path,
                 )
                 self.repository = repo
                 DBSession.add(repo)
@@ -285,7 +285,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
                 self.repository.code = code
                 self.repository.windows_path = windows_path
                 self.repository.linux_path = linux_path
-                self.repository.osx_path = osx_path
+                self.repository.macos_path = macos_path
                 self.repository.updated_by = logged_in_user
                 DBSession.add(self.repository)
                 DBSession.commit()

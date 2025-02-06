@@ -233,8 +233,8 @@ class TimeEdit(QtWidgets.QTimeEdit):
                     super(TimeEdit, self).stepBy(step)
 
 
-class TakesListWidget(QtWidgets.QListWidget):
-    """A specialized QListWidget variant used in Take names."""
+class VariantsListWidget(QtWidgets.QListWidget):
+    """A specialized QListWidget variant used in variant names."""
 
     def __init__(self, parent=None, *args, **kwargs):
         QtWidgets.QListWidget.__init__(self, parent, *args, **kwargs)
@@ -244,25 +244,25 @@ class TakesListWidget(QtWidgets.QListWidget):
         self.customContextMenuRequested.connect(self.custom_context_menu_requested)
 
     def custom_context_menu_requested(self, position):
-        """Show custom context menu for the takes list widget."""
+        """Show custom context menu for the variants list widget."""
         global_position = self.mapToGlobal(position)
         item = self.itemAt(position)
         # create the menu
         menu = QtWidgets.QMenu()
-        new_take_action = menu.addAction("Add new Take Name...")
-        copy_take_action = menu.addAction("Copy Take Name")
+        new_variant_action = menu.addAction("Add new Variant Name...")
+        copy_variant_action = menu.addAction("Copy Variant Name")
 
         selected_action = menu.exec_(global_position)
-        if selected_action == new_take_action:
-            self.show_add_take_dialog()
-        elif selected_action == copy_take_action:
+        if selected_action == new_variant_action:
+            self.show_add_variant_dialog()
+        elif selected_action == copy_variant_action:
             if item:
                 clipboard = QtWidgets.QApplication.clipboard()
                 clipboard.setText(os.path.normpath(item.text()))
 
-    def show_add_take_dialog(self):
-        """runs when the add_take_toolButton clicked"""
-        # open up a QInputDialog and ask for a take name
+    def show_add_variant_dialog(self):
+        """runs when the add_variant_toolButton clicked"""
+        # open up a QInputDialog and ask for a variant name
         # anything is acceptable
         # because the validation will occur in the Version instance
 
@@ -271,17 +271,17 @@ class TakesListWidget(QtWidgets.QListWidget):
 
         variant_name, ok = dialog.getText(
             self,
-            "Add Take Name",
-            "New Take Name",
+            "Add Variant Name",
+            "New Variant Name",
             QtWidgets.QLineEdit.Normal,
             current_variant_name,
         )
 
         if ok:
-            # add the given text to the takes_combo_box
+            # add the given text to the variants_combo_box
             # if it is not empty
             if variant_name != "":
-                self.add_take(variant_name)
+                self.add_variant(variant_name)
 
     @property
     def variant_names(self):
@@ -289,52 +289,52 @@ class TakesListWidget(QtWidgets.QListWidget):
 
     @variant_names.setter
     def variant_names(self, variant_names_in):
-        logger.debug("setting take names")
+        logger.debug("setting variant names")
         self.clear()
         self._variant_names = variant_names_in
         from anima import defaults
 
         main = defaults.version_variant_name
         if main in self._variant_names:
-            logger.debug("removing default take name from list")
+            logger.debug("removing default variant name from list")
             index_of_main = self._variant_names.index(main)
             self._variant_names.pop(index_of_main)
 
-        # insert the default take name to the start
+        # insert the default variant name to the start
         self._variant_names.insert(0, main)
 
         # clear the list and new items
-        logger.debug(f"adding supplied take names: {self._variant_names}")
+        logger.debug(f"adding supplied variant names: {self._variant_names}")
         self.addItems(self._variant_names)
 
         # select the first item
         self.setCurrentItem(self.item(0))
 
-    def add_take(self, variant_name):
-        """adds a new take to the takes list"""
+    def add_variant(self, variant_name):
+        """adds a new variant to the variants list"""
         # condition the input
         from stalker import Version
 
         variant_name = Version._format_variant_name(variant_name)
 
-        # if the given take name is in the list don't add it
+        # if the given variant name is in the list don't add it
         if variant_name not in self._variant_names:
             # add the item via property
-            new_take_list = self._variant_names
-            new_take_list.append(variant_name)
-            new_take_list.sort()
-            self.variant_names = new_take_list
+            new_variant_list = self._variant_names
+            new_variant_list.append(variant_name)
+            new_variant_list.sort()
+            self.variant_names = new_variant_list
 
-            # select the newly added take name
+            # select the newly added variant name
             items = self.findItems(variant_name, QtCore.Qt.MatchExactly)
             if items:
                 item = items[0]
-                # set the take to the new one
+                # set the variant to the new one
                 self.setCurrentItem(item)
 
     @property
     def current_variant_name(self):
-        """gets the current take name"""
+        """Return the current variant name."""
         variant_name = ""
         item = self.currentItem()
         if item:
@@ -343,8 +343,8 @@ class TakesListWidget(QtWidgets.QListWidget):
 
     @current_variant_name.setter
     def current_variant_name(self, variant_name):
-        """sets the current take name"""
-        logger.debug(f"finding take with name: {variant_name}")
+        """Set the current variant name"""
+        logger.debug(f"finding variant with name: {variant_name}")
         items = self.findItems(variant_name, QtCore.Qt.MatchExactly)
         if items:
             self.setCurrentItem(items[0])
@@ -356,8 +356,8 @@ class TakesListWidget(QtWidgets.QListWidget):
         QtWidgets.QListWidget.clear(self)
 
 
-class TakesComboBox(QtWidgets.QComboBox):
-    """A specialized QComboBox variant used in Take names."""
+class VariantsComboBox(QtWidgets.QComboBox):
+    """A specialized QComboBox variant used in variant names."""
 
     def __init__(self, parent=None, *args, **kwargs):
         QtWidgets.QComboBox.__init__(self, parent, *args, **kwargs)
@@ -370,56 +370,56 @@ class TakesComboBox(QtWidgets.QComboBox):
 
     @variant_names.setter
     def variant_names(self, variant_names_in):
-        logger.debug("setting take names")
+        logger.debug("setting variant names")
         self.clear()
         self._variant_names = variant_names_in
         from anima import defaults
 
         main = defaults.version_variant_name
         if main in self._variant_names:
-            logger.debug("removing default take name from list")
+            logger.debug("removing default variant name from list")
             index_of_main = self._variant_names.index(main)
             self._variant_names.pop(index_of_main)
 
-        # insert the default take name to the start
+        # insert the default variant name to the start
         self._variant_names.insert(0, main)
 
         # clear the list and new items
-        logger.debug(f"adding supplied take names: {self._variant_names}")
+        logger.debug(f"adding supplied variant names: {self._variant_names}")
         self.addItems(self._variant_names)
 
         # select the first item
         self.setCurrentIndex(0)
 
-    def add_take(self, variant_name):
-        """adds a new take to the takes list"""
+    def add_variant(self, variant_name):
+        """adds a new variant to the variants list"""
         # condition the input
         from stalker import Version
 
         variant_name = Version._format_variant_name(variant_name)
 
-        # if the given take name is in the list don't add it
+        # if the given variant name is in the list don't add it
         if variant_name not in self._variant_names:
             # add the item via property
-            new_take_list = self._variant_names
-            new_take_list.append(variant_name)
-            new_take_list.sort()
-            self.variant_names = new_take_list
+            new_variant_list = self._variant_names
+            new_variant_list.append(variant_name)
+            new_variant_list.sort()
+            self.variant_names = new_variant_list
 
-            # select the newly added take name
+            # select the newly added variant name
             index = self.findText(variant_name, QtCore.Qt.MatchExactly)
             if index:
                 self.setCurrentIndex(index)
 
     @property
     def current_variant_name(self):
-        """gets the current take name"""
+        """Return the current variant name."""
         return self.currentText()
 
     @current_variant_name.setter
     def current_variant_name(self, variant_name):
-        """sets the current take name"""
-        logger.debug(f"finding take with name: {variant_name}")
+        """Set the current variant name"""
+        logger.debug(f"finding variant with name: {variant_name}")
         index = self.findText(variant_name, QtCore.Qt.MatchExactly)
         if index:
             self.setCurrentIndex(index)

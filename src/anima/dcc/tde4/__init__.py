@@ -67,7 +67,7 @@ class TDE4(DCCBase):
         return generate_empty_reference_resolution()
 
     def get_current_version(self):
-        """Return the current version from environment
+        """Return the current version from the DCC.
 
         :return:
         """

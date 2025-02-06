@@ -27,12 +27,12 @@ def toolbox(lib="PySide", logging_level=logging.WARNING, parent=None):
     #
     # from anima.dcc import fusion
     # reload(fusion)
-    # fusion_env = fusion.Fusion()
-    # fusion_env.name = 'Fusion'
+    # fusion_dcc = fusion.Fusion()
+    # fusion_dcc.name = 'Fusion'
     #
     # from anima.ui import version_dialog
     # logger.setLevel(logging_level)
-    # version_dialog.UI(environment=fusion_env, parent=parent)
+    # version_dialog.UI(dcc=fusion_dcc, parent=parent)
 
     from anima.dcc.resolve import toolbox
 

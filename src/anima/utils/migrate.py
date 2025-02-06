@@ -108,7 +108,7 @@ class TaskMigrateData(MigrateDataBase):
 
     def __init__(self, task=None):
         self.task = None
-        self._takes = []
+        self._variants = []
 
     def to_dict(self):
         """Return a dictionary representing the migration data."""
@@ -124,11 +124,11 @@ class TaskMigrateData(MigrateDataBase):
         raise NotImplementedError
 
 
-class TakeMigrateData(MigrateDataBase):
-    """Take related migrate data."""
+class VariantMigrateData(MigrateDataBase):
+    """Variant related migrate data."""
 
-    def __init__(self, take=None):
-        self.take = take
+    def __init__(self, variant=None):
+        self.variant = variant
         self._versions = []
 
     def to_dict(self):

@@ -43,14 +43,14 @@ def create_pymel():
 
 
 @pytest.fixture(scope="function")
-def create_maya_env():
-    """Create a proper maya env."""
-    # create the environment instance
+def create_maya_dcc():
+    """Create a proper Maya DCC."""
+    # create the DCC instance
     from anima.dcc.mayaEnv import Maya
 
-    maya_env = Maya()
-    maya_env.use_progress_window = False
-    yield maya_env
+    maya_dcc = Maya()
+    maya_dcc.use_progress_window = False
+    yield maya_dcc
 
 
 @pytest.fixture(scope="function")
@@ -58,7 +58,7 @@ def create_maya_test_db():
     """create test database for maya"""
     # -----------------------------------------------------------------
     # start of the setUp
-    # create the environment variable and point it to a temp directory
+    # create the DCC variable and point it to a temp directory
     import anima
 
     anima.stalker_server_internal_address = "internal"
@@ -98,13 +98,13 @@ def trash_bin():
 
 
 @pytest.fixture(scope="function")
-def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
+def create_test_data(create_maya_test_db, create_pymel, create_maya_dcc):
     """create test data."""
     logger.debug("creating user1")
     data = dict()
     data["temp_repo_path"] = create_maya_test_db
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     from anima.dcc.mayaEnv import auxiliary
 
     data["user1"] = User(
@@ -340,21 +340,21 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
         name="Model",
         parent=data["char1"],
         type=data["model_type"],
-        depends=[data["char1_char_design"]],
+        depends_on=[data["char1_char_design"]],
     )
 
     data["char1_look_dev"] = Task(
         name="Look Dev",  # this is named Look Dev instead of LookDev on
         parent=data["char1"],  # purpose
         type=data["look_development_type"],
-        depends=[data["char1_model"]],
+        depends_on=[data["char1_model"]],
     )
 
     data["char1_rig"] = Task(
         name="Rig",  # this is named Look Dev instead of LookDev on
         parent=data["char1"],  # purpose
         type=data["rig_type"],
-        depends=[data["char1_model"]],
+        depends_on=[data["char1_model"]],
     )
 
     data["environments"] = Task(name="Environments", parent=data["assets"])
@@ -401,10 +401,10 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
         name="LookDev",
         type=data["look_development_type"],
         parent=data["building1_yapi"],
-        depends=[data["building1_yapi_model"]],
+        depends_on=[data["building1_yapi_model"]],
     )
 
-    data["building1_layout"].depends.append(data["building1_yapi_model"])
+    data["building1_layout"].depends_on.append(data["building1_yapi_model"])
 
     # Building 2
     data["building2"] = Asset(
@@ -439,10 +439,10 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
         name="LookDev",
         type=data["look_development_type"],
         parent=data["building2_yapi"],
-        depends=[data["building2_yapi_model"]],
+        depends_on=[data["building2_yapi_model"]],
     )
 
-    data["building2_layout"].depends.append(data["building2_yapi_model"])
+    data["building2_layout"].depends_on.append(data["building2_yapi_model"])
 
     # continue to ext1 layout
     data["ext1_layout"] = Task(
@@ -452,7 +452,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
         name="LookDev",
         type=data["look_development_type"],
         parent=data["ext1"],
-        depends=[data["ext1_layout"]],
+        depends_on=[data["ext1_layout"]],
     )
     data["ext2_model"] = Task(
         name="Model",
@@ -463,13 +463,13 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
         name="LookDev",
         type=data["look_development_type"],
         parent=data["ext2"],
-        depends=[data["ext2_model"]],
+        depends_on=[data["ext2_model"]],
     )
     data["ext2_layout"] = Task(
         name="Layout",
         type=data["layout_type"],
         parent=data["ext2"],
-        depends=[data["ext2_look_dev"]],
+        depends_on=[data["ext2_look_dev"]],
     )
 
     data["ext1_props"] = Task(name="Props", parent=data["ext1"])
@@ -574,81 +574,81 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     data["asset2_model_main_v002"] = create_version(data["asset2_model"], "Main")
     data["asset2_model_main_v003"] = create_version(data["asset2_model"], "Main")
 
-    data["asset2_model_take1_v001"] = create_version(data["asset2_model"], "Take1")
-    data["asset2_model_take1_v002"] = create_version(data["asset2_model"], "Take1")
-    data["asset2_model_take1_v003"] = create_version(data["asset2_model"], "Take1")
+    data["asset2_model_variant1_v001"] = create_version(data["asset2_model"], "Variant1")
+    data["asset2_model_variant1_v002"] = create_version(data["asset2_model"], "Variant1")
+    data["asset2_model_variant1_v003"] = create_version(data["asset2_model"], "Variant1")
 
     # asset2 lookdev
     data["asset2_lookdev_main_v001"] = create_version(data["asset2_lookdev"], "Main")
     data["asset2_lookdev_main_v002"] = create_version(data["asset2_lookdev"], "Main")
     data["asset2_lookdev_main_v003"] = create_version(data["asset2_lookdev"], "Main")
 
-    data["asset2_lookdev_take1_v001"] = create_version(data["asset2_lookdev"], "Take1")
-    data["asset2_lookdev_take1_v002"] = create_version(data["asset2_lookdev"], "Take1")
-    data["asset2_lookdev_take1_v003"] = create_version(data["asset2_lookdev"], "Take1")
+    data["asset2_lookdev_variant1_v001"] = create_version(data["asset2_lookdev"], "Variant1")
+    data["asset2_lookdev_variant1_v002"] = create_version(data["asset2_lookdev"], "Variant1")
+    data["asset2_lookdev_variant1_v003"] = create_version(data["asset2_lookdev"], "Variant1")
 
     # task5
     data["version7"] = create_version(data["task5"], "Main")
     data["version8"] = create_version(data["task5"], "Main")
     data["version9"] = create_version(data["task5"], "Main")
 
-    data["version10"] = create_version(data["task5"], "Take1")
-    data["version11"] = create_version(data["task5"], "Take1")
-    data["version12"] = create_version(data["task5"], "Take1")
+    data["version10"] = create_version(data["task5"], "Variant1")
+    data["version11"] = create_version(data["task5"], "Variant1")
+    data["version12"] = create_version(data["task5"], "Variant1")
 
     # task6
     data["version13"] = create_version(data["task6"], "Main")
     data["version14"] = create_version(data["task6"], "Main")
     data["version15"] = create_version(data["task6"], "Main")
 
-    data["version16"] = create_version(data["task6"], "Take1")
-    data["version17"] = create_version(data["task6"], "Take1")
-    data["version18"] = create_version(data["task6"], "Take1")
+    data["version16"] = create_version(data["task6"], "Variant1")
+    data["version17"] = create_version(data["task6"], "Variant1")
+    data["version18"] = create_version(data["task6"], "Variant1")
 
     # shot3
     data["shot3_anim_main_v001"] = create_version(data["shot3_anim"], "Main")
     data["shot3_anim_main_v002"] = create_version(data["shot3_anim"], "Main")
     data["shot3_anim_main_v003"] = create_version(data["shot3_anim"], "Main")
 
-    data["shot3_anim_take1_v001"] = create_version(data["shot3_anim"], "Take1")
-    data["shot3_anim_take1_v002"] = create_version(data["shot3_anim"], "Take1")
-    data["shot3_anim_take1_v003"] = create_version(data["shot3_anim"], "Take1")
+    data["shot3_anim_variant1_v001"] = create_version(data["shot3_anim"], "Variant1")
+    data["shot3_anim_variant1_v002"] = create_version(data["shot3_anim"], "Variant1")
+    data["shot3_anim_variant1_v003"] = create_version(data["shot3_anim"], "Variant1")
 
     # task3
     data["version25"] = create_version(data["task3"], "Main")
     data["version26"] = create_version(data["task3"], "Main")
     data["version27"] = create_version(data["task3"], "Main")
 
-    data["version28"] = create_version(data["task3"], "Take1")
-    data["version29"] = create_version(data["task3"], "Take1")
-    data["version30"] = create_version(data["task3"], "Take1")
+    data["version28"] = create_version(data["task3"], "Variant1")
+    data["version29"] = create_version(data["task3"], "Variant1")
+    data["version30"] = create_version(data["task3"], "Variant1")
 
     # asset1
     data["version31"] = create_version(data["asset1"], "Main")
     data["version32"] = create_version(data["asset1"], "Main")
     data["version33"] = create_version(data["asset1"], "Main")
 
-    data["version34"] = create_version(data["asset1"], "Take1")
-    data["version35"] = create_version(data["asset1"], "Take1")
-    data["version36"] = create_version(data["asset1"], "Take1")
+    data["version34"] = create_version(data["asset1"], "Variant1")
+    data["version35"] = create_version(data["asset1"], "Variant1")
+    data["version36"] = create_version(data["asset1"], "Variant1")
 
     # shot2
     data["version37"] = create_version(data["shot2"], "Main")
     data["version38"] = create_version(data["shot2"], "Main")
     data["version39"] = create_version(data["shot2"], "Main")
 
-    data["version40"] = create_version(data["shot2"], "Take1")
-    data["version41"] = create_version(data["shot2"], "Take1")
-    data["version42"] = create_version(data["shot2"], "Take1")
+    data["version40"] = create_version(data["shot2"], "Variant1")
+    data["version41"] = create_version(data["shot2"], "Variant1")
+    data["version42"] = create_version(data["shot2"], "Variant1")
 
     # shot1
     data["version43"] = create_version(data["shot1"], "Main")
     data["version44"] = create_version(data["shot1"], "Main")
     data["version45"] = create_version(data["shot1"], "Main")
 
-    data["version46"] = create_version(data["shot1"], "Take1")
-    data["version47"] = create_version(data["shot1"], "Take1")
-    data["version48"] = create_version(data["shot1"], "Take1")
+    data["version46"] = create_version(data["shot1"], "Variant1")
+    data["version47"] = create_version(data["shot1"], "Variant1")
+    data["version48"] = create_version(data["shot1"], "Variant1")
 
     # Reflected Data
     # Char1 - Character Design
@@ -877,56 +877,56 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     pm.parent(clover_leaf, clover_mesh_group)
 
     # save its
-    maya_env.save_as(version=data["ext1_vegetation_main_v001"])
-    maya_env.save_as(version=data["ext1_vegetation_main_v002"])
-    maya_env.save_as(version=data["ext1_vegetation_main_v003"])
+    maya_dcc.save_as(version=data["ext1_vegetation_main_v001"])
+    maya_dcc.save_as(version=data["ext1_vegetation_main_v002"])
+    maya_dcc.save_as(version=data["ext1_vegetation_main_v003"])
 
     # ***************************************
     # Prop1
     # ***************************************
-    # Prop1 | Model | Main take
+    # Prop1 | Model | Main Variant
     pm.newFile(force=True)
     root_node = pm.nt.Transform(name="prop1")
     kulp = pm.polyCube(name="kulp")
     pm.parent(kulp[0], root_node)
     pm.runtime.DeleteHistory()
-    maya_env.save_as(data["prop1_model_main_v001"])
-    maya_env.save_as(data["prop1_model_main_v002"])
-    maya_env.save_as(data["prop1_model_main_v003"])
+    maya_dcc.save_as(data["prop1_model_main_v001"])
+    maya_dcc.save_as(data["prop1_model_main_v002"])
+    maya_dcc.save_as(data["prop1_model_main_v003"])
     data["prop1_model_main_v003"].is_published = True
 
-    # save it also under "Kisa" take
-    maya_env.save_as(data["prop1_model_kisa_v001"])
-    maya_env.save_as(data["prop1_model_kisa_v002"])
-    maya_env.save_as(data["prop1_model_kisa_v003"])
+    # save it also under "Kisa" Variant
+    maya_dcc.save_as(data["prop1_model_kisa_v001"])
+    maya_dcc.save_as(data["prop1_model_kisa_v002"])
+    maya_dcc.save_as(data["prop1_model_kisa_v003"])
     data["prop1_model_kisa_v003"].is_published = True
 
     # Prop1 | Look Dev | Main
     pm.newFile(force=True)
-    maya_env.save_as(data["prop1_look_dev_main_v001"])
-    maya_env.reference(data["prop1_model_main_v003"])
+    maya_dcc.save_as(data["prop1_look_dev_main_v001"])
+    maya_dcc.reference(data["prop1_model_main_v003"])
     # assign a material to the object
     mat = pm.createSurfaceShader("aiStandard", name="kulp_aiStandard")
     pm.sets(mat[1], fe=pm.ls(type="mesh"))
 
     # save it
-    maya_env.save_as(data["prop1_look_dev_main_v001"])
-    maya_env.save_as(data["prop1_look_dev_main_v002"])
-    maya_env.save_as(data["prop1_look_dev_main_v003"])
+    maya_dcc.save_as(data["prop1_look_dev_main_v001"])
+    maya_dcc.save_as(data["prop1_look_dev_main_v002"])
+    maya_dcc.save_as(data["prop1_look_dev_main_v003"])
     data["prop1_look_dev_main_v003"].is_published = True
 
-    # create "Kisa" take
+    # create "Kisa" variant
     # Prop1 | Look Dev | Kisa
     pm.newFile(force=True)
-    maya_env.save_as(data["prop1_look_dev_kisa_v001"])
-    maya_env.reference(data["prop1_model_kisa_v003"])
+    maya_dcc.save_as(data["prop1_look_dev_kisa_v001"])
+    maya_dcc.reference(data["prop1_model_kisa_v003"])
     # assign a material to the object
     mat = pm.createSurfaceShader("aiStandard", name="kulp_aiStandard")
     pm.sets(mat[1], fe=pm.ls(type="mesh"))
 
-    maya_env.save_as(data["prop1_look_dev_kisa_v001"])
-    maya_env.save_as(data["prop1_look_dev_kisa_v002"])
-    maya_env.save_as(data["prop1_look_dev_kisa_v003"])
+    maya_dcc.save_as(data["prop1_look_dev_kisa_v001"])
+    maya_dcc.save_as(data["prop1_look_dev_kisa_v002"])
+    maya_dcc.save_as(data["prop1_look_dev_kisa_v003"])
     data["prop1_look_dev_kisa_v003"].is_published = True
 
     # ****************************************
@@ -941,54 +941,54 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     pm.parent(some_cube[0], building1_yapi)
 
     # save it
-    maya_env.save_as(data["building1_yapi_model_main_v001"])
-    maya_env.save_as(data["building1_yapi_model_main_v002"])
-    maya_env.save_as(data["building1_yapi_model_main_v003"])
+    maya_dcc.save_as(data["building1_yapi_model_main_v001"])
+    maya_dcc.save_as(data["building1_yapi_model_main_v002"])
+    maya_dcc.save_as(data["building1_yapi_model_main_v003"])
     data["building1_yapi_model_main_v003"].is_published = True
 
     # save it also for Building2 | Props | Yapi | Model
     building1_yapi.rename("building2_yapi")
-    maya_env.save_as(data["building2_yapi_model_main_v001"])
-    maya_env.save_as(data["building2_yapi_model_main_v002"])
-    maya_env.save_as(data["building2_yapi_model_main_v003"])
+    maya_dcc.save_as(data["building2_yapi_model_main_v001"])
+    maya_dcc.save_as(data["building2_yapi_model_main_v002"])
+    maya_dcc.save_as(data["building2_yapi_model_main_v003"])
     data["building2_yapi_model_main_v003"].is_published = True
 
     # Building1 | Props | Yapi | Look Dev
     pm.newFile(force=True)
-    maya_env.save_as(data["building1_yapi_look_dev_main_v001"])
-    maya_env.reference(data["building1_yapi_model_main_v003"])
+    maya_dcc.save_as(data["building1_yapi_look_dev_main_v001"])
+    maya_dcc.reference(data["building1_yapi_model_main_v003"])
 
     # create an arnold material
     mat = pm.createSurfaceShader("aiStandard", name="bina_aiStandard")
     pm.sets(mat[1], fe=pm.ls(type="mesh"))
 
     # save it
-    maya_env.save_as(data["building1_yapi_look_dev_main_v001"])
-    maya_env.save_as(data["building1_yapi_look_dev_main_v002"])
-    maya_env.save_as(data["building1_yapi_look_dev_main_v003"])
+    maya_dcc.save_as(data["building1_yapi_look_dev_main_v001"])
+    maya_dcc.save_as(data["building1_yapi_look_dev_main_v002"])
+    maya_dcc.save_as(data["building1_yapi_look_dev_main_v003"])
     data["building1_yapi_look_dev_main_v003"].is_published = True
 
     # save it for Building2 | Props | Yapi | Look Dev
     pm.listReferences()[0].replaceWith(
         data["building2_yapi_model_main_v003"].absolute_full_path
     )
-    maya_env.save_as(data["building2_yapi_look_dev_main_v001"])
-    maya_env.save_as(data["building2_yapi_look_dev_main_v002"])
-    maya_env.save_as(data["building2_yapi_look_dev_main_v003"])
+    maya_dcc.save_as(data["building2_yapi_look_dev_main_v001"])
+    maya_dcc.save_as(data["building2_yapi_look_dev_main_v002"])
+    maya_dcc.save_as(data["building2_yapi_look_dev_main_v003"])
     data["building2_yapi_look_dev_main_v003"].is_published = True
 
     # building1 layout
     pm.newFile(force=1)
     base_group = pm.nt.Transform(name="building1_layout")
 
-    maya_env.save_as(data["building1_layout_main_v001"])
-    ref_node = maya_env.reference(data["building1_yapi_look_dev_main_v003"])
+    maya_dcc.save_as(data["building1_layout_main_v001"])
+    ref_node = maya_dcc.reference(data["building1_yapi_look_dev_main_v003"])
     ref_root_node = auxiliary.get_root_nodes(ref_node)
     pm.parent(ref_root_node, base_group)
 
-    maya_env.save_as(data["building1_layout_main_v001"])
-    maya_env.save_as(data["building1_layout_main_v002"])
-    maya_env.save_as(data["building1_layout_main_v003"])
+    maya_dcc.save_as(data["building1_layout_main_v001"])
+    maya_dcc.save_as(data["building1_layout_main_v002"])
+    maya_dcc.save_as(data["building1_layout_main_v003"])
     data["building1_layout_main_v003"].is_published = True
 
     # building2 layout
@@ -996,45 +996,45 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     base_group = pm.nt.Transform(name="building2_layout")
 
     # reference building2 | yapi | look dev
-    maya_env.save_as(data["building2_layout_main_v001"])
-    ref_node = maya_env.reference(data["building2_yapi_look_dev_main_v003"])
+    maya_dcc.save_as(data["building2_layout_main_v001"])
+    ref_node = maya_dcc.reference(data["building2_yapi_look_dev_main_v003"])
     ref_root_node = auxiliary.get_root_nodes(ref_node)
     pm.parent(ref_root_node, base_group)
 
-    maya_env.save_as(data["building2_layout_main_v001"])
-    maya_env.save_as(data["building2_layout_main_v002"])
-    maya_env.save_as(data["building2_layout_main_v003"])
+    maya_dcc.save_as(data["building2_layout_main_v001"])
+    maya_dcc.save_as(data["building2_layout_main_v002"])
+    maya_dcc.save_as(data["building2_layout_main_v003"])
     data["building2_layout_main_v003"].is_published = True
 
     # building1 | look dev
     pm.newFile(force=True)
     # reference building1 | Layout
-    maya_env.save_as(data["building1_look_dev_main_v001"])
-    maya_env.reference(data["building1_layout_main_v003"])
+    maya_dcc.save_as(data["building1_look_dev_main_v001"])
+    maya_dcc.reference(data["building1_layout_main_v003"])
     # just save it
-    maya_env.save_as(data["building1_look_dev_main_v001"])
-    maya_env.save_as(data["building1_look_dev_main_v002"])
-    maya_env.save_as(data["building1_look_dev_main_v003"])
+    maya_dcc.save_as(data["building1_look_dev_main_v001"])
+    maya_dcc.save_as(data["building1_look_dev_main_v002"])
+    maya_dcc.save_as(data["building1_look_dev_main_v003"])
     data["building1_look_dev_main_v003"].is_published = True
 
     # building2 | look dev
     pm.newFile(force=True)
     # reference building1 | Layout
-    maya_env.save_as(data["building2_look_dev_main_v001"])
-    maya_env.reference(data["building2_layout_main_v003"])
+    maya_dcc.save_as(data["building2_look_dev_main_v001"])
+    maya_dcc.reference(data["building2_layout_main_v003"])
     # just save it
-    maya_env.save_as(data["building2_look_dev_main_v001"])
-    maya_env.save_as(data["building2_look_dev_main_v002"])
-    maya_env.save_as(data["building2_look_dev_main_v003"])
+    maya_dcc.save_as(data["building2_look_dev_main_v001"])
+    maya_dcc.save_as(data["building2_look_dev_main_v002"])
+    maya_dcc.save_as(data["building2_look_dev_main_v003"])
     data["building2_look_dev_main_v003"].is_published = True
 
     # prepare the main layout of the exterior
     pm.newFile(force=True)
-    maya_env.save_as(data["ext1_layout_main_v001"])
+    maya_dcc.save_as(data["ext1_layout_main_v001"])
     # reference Building1 | Layout
-    maya_env.reference(data["building1_layout_main_v003"])
+    maya_dcc.reference(data["building1_layout_main_v003"])
     # reference Building2 | Layout
-    maya_env.reference(data["building2_layout_main_v003"])
+    maya_dcc.reference(data["building2_layout_main_v003"])
 
     # create the layout root node
     root_node = pm.nt.Transform(name="ext1_layout")
@@ -1050,25 +1050,25 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     building2_layout.setAttr("t", (0, 0, 10))
 
     # reference the vegetation
-    ref_node = maya_env.reference(data["ext1_vegetation_main_v003"])
+    ref_node = maya_dcc.reference(data["ext1_vegetation_main_v003"])
     ref_root_node = auxiliary.get_root_nodes(ref_node)
     pm.parent(ref_root_node, root_node)
 
     # save it
-    maya_env.save_as(data["ext1_layout_main_v001"])
-    maya_env.save_as(data["ext1_layout_main_v002"])
-    maya_env.save_as(data["ext1_layout_main_v003"])
+    maya_dcc.save_as(data["ext1_layout_main_v001"])
+    maya_dcc.save_as(data["ext1_layout_main_v002"])
+    maya_dcc.save_as(data["ext1_layout_main_v003"])
     data["ext1_layout_main_v003"].is_published = True
 
     # *********************************
     # The Look Dev of the environment
     # *********************************
     pm.newFile(force=True)
-    maya_env.save_as(data["ext1_look_dev_main_v001"])
-    maya_env.reference(data["ext1_layout_main_v003"])
-    maya_env.save_as(data["ext1_look_dev_main_v001"])
-    maya_env.save_as(data["ext1_look_dev_main_v002"])
-    maya_env.save_as(data["ext1_look_dev_main_v003"])
+    maya_dcc.save_as(data["ext1_look_dev_main_v001"])
+    maya_dcc.reference(data["ext1_layout_main_v003"])
+    maya_dcc.save_as(data["ext1_look_dev_main_v001"])
+    maya_dcc.save_as(data["ext1_look_dev_main_v002"])
+    maya_dcc.save_as(data["ext1_look_dev_main_v003"])
     data["ext1_look_dev_main_v003"].is_published = True
     pm.newFile(force=True)
 
@@ -1082,26 +1082,26 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     # |  |     |  |  +- asset2_model_main_v001
     # |  |     |  |  +- asset2_model_main_v002 (P)
     # |  |     |  |  +- asset2_model_main_v003 (P)
-    # |  |     |  +- Take1
-    # |  |     |     +- asset2_model_take1_v001 (P)
-    # |  |     |     +- asset2_model_take1_v002
-    # |  |     |     +- asset2_model_take1_v003 (P)
+    # |  |     |  +- Variant1
+    # |  |     |     +- asset2_model_variant1_v001 (P)
+    # |  |     |     +- asset2_model_variant1_v002
+    # |  |     |     +- asset2_model_variant1_v003 (P)
     # |  |     +- LookDev
     # |  |        +- Main
     # |  |        |  +- asset2_lookdev_main_v001
     # |  |        |  +- asset2_lookdev_main_v002 (P)
     # |  |        |  +- asset2_lookdev_main_v003 (P)
-    # |  |        +- Take1
-    # |  |           +- asset2_lookdev_take1_v001 (P)
-    # |  |           +- asset2_lookdev_take1_v002
-    # |  |           +- asset2_lookdev_take1_v003 (P)
+    # |  |        +- Variant1
+    # |  |           +- asset2_lookdev_variant1_v001 (P)
+    # |  |           +- asset2_lookdev_variant1_v002
+    # |  |           +- asset2_lookdev_variant1_v003 (P)
     # |  |
     # |  +- task5
     # |  |  +- Main
     # |  |  |  +- version7
     # |  |  |  +- version8
     # |  |  |  +- version9
-    # |  |  +- Take1
+    # |  |  +- Variant1
     # |  |     +- version10
     # |  |     +- version11
     # |  |     +- version12 (P)
@@ -1111,7 +1111,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     # |     |  +- version13
     # |     |  +- version14
     # |     |  +- version15
-    # |     +- Take1
+    # |     +- Variant1
     # |        +- version16 (P)
     # |        +- version17
     # |        +- version18 (P)
@@ -1126,17 +1126,17 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     # |           |  +- shot3_anim_main_v001
     # |           |  +- shot3_anim_main_v002
     # |           |  +- shot3_anim_main_v003
-    # |           +- Take1
-    # |              +- shot3_anim_take1_v001
-    # |              +- shot3_anim_take1_v001
-    # |              +- shot3_anim_take1_v001
+    # |           +- Variant1
+    # |              +- shot3_anim_variant1_v001
+    # |              +- shot3_anim_variant1_v001
+    # |              +- shot3_anim_variant1_v001
     # |
     # +- task3
     # |  +- Main
     # |  |  +- version25
     # |  |  +- version26
     # |  |  +- version27
-    # |  +- Take1
+    # |  +- Variant1
     # |     +- version28
     # |     +- version29
     # |     +- version30
@@ -1147,7 +1147,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     # |     |  +- version31
     # |     |  +- version32
     # |     |  +- version33
-    # |     +- Take1
+    # |     +- Variant1
     # |        +- version34
     # |        +- version35
     # |        +- version36
@@ -1158,7 +1158,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     # |     |  +- version37
     # |     |  +- version38
     # |     |  +- version39
-    # |     +- Take1
+    # |     +- Variant1
     # |        +- version40
     # |        +- version41
     # |        +- version42
@@ -1168,7 +1168,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     # |  |  +- version43
     # |  |  +- version44
     # |  |  +- version45
-    # |  +- Take1
+    # |  +- Variant1
     # |     +- version46
     # |     +- version47
     # |     +- version48
@@ -1258,21 +1258,21 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_env):
     #          |  +- Props (Task)
     #          |  |  +- Prop1 (Asset)
     #          |  |     +- Model (Task - Model)
-    #          |  |     |  +- **Main** (Take)
+    #          |  |     |  +- **Main** (Variant)
     #          |  |     |  |  +- prop1_model_main_v001
     #          |  |     |  |  +- prop1_model_main_v002
     #          |  |     |  |  +- prop1_model_main_v003
-    #          |  |     |  +- **Kisa** (Take)
+    #          |  |     |  +- **Kisa** (Variant)
     #          |  |     |     +- prop1_model_kisa_v001
     #          |  |     |     +- prop1_model_kisa_v002
     #          |  |     |     +- prop1_model_kisa_v003
     #          |  |     |
     #          |  |     +- LookDev (Task - Look Development)
-    #          |  |        +- **Main** (Take)
+    #          |  |        +- **Main** (Variant)
     #          |  |        |  +- prop1_look_dev_main_v001
     #          |  |        |  +- prop1_look_dev_main_v002
     #          |  |        |  +- prop1_look_dev_main_v003
-    #          |  |        +- **Kisa** (Take)
+    #          |  |        +- **Kisa** (Variant)
     #          |  |           +- prop1_look_dev_kisa_v001
     #          |  |           +- prop1_look_dev_kisa_v002
     #          |  |           +- prop1_look_dev_kisa_v003

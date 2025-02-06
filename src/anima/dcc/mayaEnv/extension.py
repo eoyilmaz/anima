@@ -267,7 +267,7 @@ class SequenceManagerExtension(object):
         attribute if missing
         """
         if not self.hasAttr("shot_name_template"):
-            default_template = "<Sequence>_<Shot>_<Task>_<Take>_<Version>"
+            default_template = "<Sequence>_<Shot>_<Task>_<Variant>_<Version>"
             self.set_shot_name_template(default_template)
 
         return self.shot_name_template.get()
@@ -975,7 +975,7 @@ class ShotExtension(object):
             camera = self.currentCamera.get()
             version = sm.get_version()
             task = sm.get_task_name()
-            take = sm.get_variant_name()
+            variant = sm.get_variant_name()
             template = sm.get_shot_name_template()
 
             # replace template variables
@@ -983,7 +983,7 @@ class ShotExtension(object):
                 template.replace("<Sequence>", "{sequence}")
                 .replace("<Shot>", "{shot}")
                 .replace("<Task>", "{task}")
-                .replace("<Take>", "{take}")
+                .replace("<Variant>", "{variant}")
                 .replace("<Version>", "{version}")
                 .replace("<Camera>", "{camera}")
             )
@@ -992,7 +992,7 @@ class ShotExtension(object):
                 shot=self.shotName.get(),
                 sequence=seq.sequence_name.get(),
                 task=task,
-                take=take,
+                variant=variant,
                 version=version,
                 camera=camera.name() if camera else None,
             )
@@ -1168,7 +1168,7 @@ class ShotExtension(object):
         camera = self.currentCamera.get()
         version = sm.get_version()
         task = sm.get_task_name()
-        take = sm.get_variant_name()
+        variant = sm.get_variant_name()
         template = sm.get_shot_name_template()
 
         # replace template variables
@@ -1176,7 +1176,7 @@ class ShotExtension(object):
             template.replace("<Sequence>", "{sequence}")
             .replace("<Shot>", "{shot}")
             .replace("<Task>", "{task}")
-            .replace("<Take>", "{take}")
+            .replace("<Variant>", "{variant}")
             .replace("<Version>", "{version}")
             .replace("<Camera>", "{camera}")
         )
@@ -1185,7 +1185,7 @@ class ShotExtension(object):
             shot=self.shotName.get(),
             sequence=seq.sequence_name.get(),
             task=task,
-            take=take,
+            variant=variant,
             version=version,
             camera=camera.name() if camera else None,
         )

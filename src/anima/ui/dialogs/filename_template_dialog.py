@@ -2,6 +2,7 @@
 
 import re
 
+from anima import TASK_DERIVATIVES
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtWidgets, QtGui
 
@@ -127,9 +128,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
         # ------------------------------------------------
         # Default values
-        self.target_entity_type_combo_box.addItems(
-            ["Task", "Asset", "Shot", "Sequence"]
-        )
+        self.target_entity_type_combo_box.addItems(TASK_DERIVATIVES)
         self.name_line_edit.set_invalid()  # Empty field is not valid
         self.path_line_edit.setText(
             "$REPO{{project.repository.code}}/{{project.code}}/"
@@ -137,8 +136,11 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             "/{%- endfor -%}"
         )
         self.filename_line_edit.setText(
-            '{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}'
+            '{{version.nice_name}}'
+            '_r{{"%02d"|format(version.revision_number)}}'
+            '_v{{"%03d"|format(version.version_number)}}'
         )
+
 
         # ------------------------------------------------
         # Disable Fields

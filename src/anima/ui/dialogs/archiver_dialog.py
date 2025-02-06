@@ -24,12 +24,12 @@ class MultiVersionSelectDialog(MainDialog):
     This derives from the version dialog.
     """
 
-    def __init__(self, environment=None, parent=None, archiver=None):
+    def __init__(self, dcc=None, parent=None, archiver=None):
         self.add_version_push_button = None
         self.archive_button = None
         self.archiver = archiver
         super(MultiVersionSelectDialog, self).__init__(
-            environment=environment, parent=parent, mode=OPEN_MODE
+            dcc=dcc, parent=parent, mode=OPEN_MODE
         )
 
     def _setup_ui(self):
@@ -37,10 +37,10 @@ class MultiVersionSelectDialog(MainDialog):
         # disable buttons
         self.switch_mode_button.setVisible(False)
         self.switch_mode_button.setEnabled(False)
-        self.repr_as_separate_takes_check_box.setVisible(False)
-        self.repr_as_separate_takes_check_box.setEnabled(False)
-        self.add_take_push_button.setVisible(False)
-        self.add_take_push_button.setEnabled(False)
+        # self.repr_as_separate_variants_check_box.setVisible(False)
+        # self.repr_as_separate_variants_check_box.setEnabled(False)
+        # self.add_variant_push_button.setVisible(False)
+        # self.add_variant_push_button.setEnabled(False)
         self.thumbnail_group_box.setVisible(False)
         self.thumbnail_group_box.setEnabled(False)
 

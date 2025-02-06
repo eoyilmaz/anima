@@ -146,7 +146,7 @@ class TaskItem(QtGui.QStandardItem):
         self.loaded = False
         self.fetched_all = False
         task = kwargs.pop("task", None)
-        self.show_takes = kwargs.pop("show_takes", False)
+        self.show_variants = kwargs.pop("show_variants", False)
         self.display_full_path = kwargs.pop("display_full_path", False)
 
         QtGui.QStandardItem.__init__(self, *args, **kwargs)
@@ -210,7 +210,7 @@ class TaskItem(QtGui.QStandardItem):
             TaskItem: A copy of this item.
         """
         logger.debug("TaskItem.clone() is started for item: {}".format(self.text()))
-        new_item = TaskItem(task=self.task, show_takes=self.show_takes)
+        new_item = TaskItem(task=self.task, show_variants=self.show_variants)
         new_item.parent = self.parent
         new_item.fetched_all = self.fetched_all
         logger.debug("TaskItem.clone() is finished for item: {}".format(self.text()))
@@ -226,7 +226,7 @@ class TaskItem(QtGui.QStandardItem):
             "TaskItem.canFetchMore() is started for item: {}".format(self.text())
         )
         if self.task and self.task.id and not self.fetched_all:
-            return_value = self.task.has_children or self.show_takes
+            return_value = self.task.has_children or self.show_variants
         else:
             return_value = False
         logger.debug(
@@ -248,7 +248,7 @@ class TaskItem(QtGui.QStandardItem):
             tasks = partial_task_query(parent_task=self.task)
             task_items = []
             for task in tasks:
-                task_item = TaskItem(0, 4, task=task, show_takes=self.show_takes)
+                task_item = TaskItem(0, 4, task=task, show_variants=self.show_variants)
                 task_item.parent = self
 
                 # color with task status
@@ -278,14 +278,14 @@ class TaskItem(QtGui.QStandardItem):
                     )
 
                 self.appendRow([task_item, entity_type_item, resources_item])
-        elif self.show_takes:
+        elif self.show_variants:
             # There are no child tasks.
-            # Look for takes
-            for take in get_unique_variant_names(self.task.id):
-                take_item = TakeItem(task=self.task, take=take)
+            # Look for variants
+            for variant in get_unique_variant_names(self.task.id):
+                variant_item = VariantItem(task=self.task, variant=variant)
                 entity_type_item = QtGui.QStandardItem()
-                entity_type_item.setData("Take", QtCore.Qt.DisplayRole)
-                self.appendRow([take_item, entity_type_item])
+                entity_type_item.setData("Variant", QtCore.Qt.DisplayRole)
+                self.appendRow([variant_item, entity_type_item])
 
         self.fetched_all = True
 
@@ -302,7 +302,7 @@ class TaskItem(QtGui.QStandardItem):
         logger.debug(
             "TaskItem.hasChildren() is started for item: {}".format(self.text())
         )
-        return_value = self.task.has_children or self.show_takes
+        return_value = self.task.has_children or self.show_variants
         logger.debug(
             "TaskItem.hasChildren() is finished for item: {}".format(self.text())
         )
@@ -337,11 +337,11 @@ class TaskItem(QtGui.QStandardItem):
         return self.task.id
 
 
-class TakeItem(QtGui.QStandardItem):
+class VariantItem(QtGui.QStandardItem):
     def __init__(self, *args, **kwargs):
         self.loaded = False
         self.fetched_all = False
-        take = kwargs.pop("take", None)
+        variant = kwargs.pop("variant", None)
         task = kwargs.pop("task", None)
         QtGui.QStandardItem.__init__(self, *args, **kwargs)
         # color with task status
@@ -359,8 +359,8 @@ class TakeItem(QtGui.QStandardItem):
         self._task = None
         self.task = task
 
-        self._take = None
-        self.take = take
+        self._variant = None
+        self.variant = variant
 
     @property
     def task(self):
@@ -387,34 +387,34 @@ class TakeItem(QtGui.QStandardItem):
             return
 
     @property
-    def take(self):
-        """Return the take.
+    def variant(self):
+        """Return the variant.
 
         Returns:
-            str: the take name.
+            str: the variant name.
         """
-        return self._take
+        return self._variant
 
-    @take.setter
-    def take(self, take):
-        """Set the take property.
+    @variant.setter
+    def variant(self, variant):
+        """Set the variant property.
 
         Args:
-            take (str): The take name.
+            variant (str): The variant name.
         """
-        self.setData(take, QtCore.Qt.DisplayRole)
+        self.setData(variant, QtCore.Qt.DisplayRole)
 
     def clone(self):
         """Return a copy of this item.
 
         Returns:
-            TakeItem: A copy of this item.
+            VariantItem: A copy of this item.
         """
-        logger.debug("TakeItem.clone() is started for item: {}".format(self.text()))
-        new_item = TakeItem(task=self.task, take=self.take)
+        logger.debug("VariantItem.clone() is started for item: {}".format(self.text()))
+        new_item = VariantItem(task=self.task, variant=self.variant)
         new_item.parent = self.parent
         new_item.fetched_all = self.fetched_all
-        logger.debug("TakeItem.clone() is finished for item: {}".format(self.text()))
+        logger.debug("VariantItem.clone() is finished for item: {}".format(self.text()))
         return new_item
 
     def canFetchMore(self):
@@ -478,7 +478,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         self.show_asset_and_shot_children = kwargs.pop(
             "show_asset_and_shot_children", True
         )
-        self.show_takes = kwargs.pop("show_takes", False)
+        self.show_variants = kwargs.pop("show_variants", False)
         self.allow_editing = kwargs.pop("allow_editing", False)
         parent = kwargs.pop("parent", None)
         super(TaskTreeModel, self).__init__(parent=parent)
@@ -611,7 +611,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         self.setHorizontalHeaderLabels(self.horizontal_labels)
 
         for task in tasks:
-            task_item = TaskItem(0, 4, task=task, show_takes=self.show_takes)
+            task_item = TaskItem(0, 4, task=task, show_variants=self.show_variants)
             task_item.parent = None
             task_item.setColumnCount(4)
 

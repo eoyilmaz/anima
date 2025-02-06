@@ -34,7 +34,7 @@ def version_dialog():
 
     max_window = MaxPlus.GetQMaxWindow()
 
-    version_dialog.UI(environment=m, executor=Executor(), parent=max_window)
+    version_dialog.UI(dcc=m, executor=Executor(), parent=max_window)
 
 
 def version_updater():
@@ -52,4 +52,4 @@ def version_updater():
 
     max_window = MaxPlus.GetQMaxWindow()
 
-    version_updater.UI(environment=m, executor=Executor(), parent=max_window)
+    version_updater.UI(dcc=m, executor=Executor(), parent=max_window)

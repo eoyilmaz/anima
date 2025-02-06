@@ -28,4 +28,4 @@ def version_dialog(lib="PySide", logging_level=logging.WARNING, parent=None):
     from anima.ui.dialogs import version_dialog
 
     logger.setLevel(logging_level)
-    version_dialog.UI(environment=fusion_env, parent=parent)
+    version_dialog.UI(dcc=fusion_env, parent=parent)

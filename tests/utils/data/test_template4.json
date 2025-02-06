@@ -11,31 +11,44 @@
             "schedule_unit": "min",
             "tasks": [
                 {
-                    "tasks": [],
+                    "tasks": [
+                        {
+                            "description": "",
+                            "entity_type": "Variant",
+                            "schedule_constraint": 0,
+                            "schedule_unit": "min",
+                            "name": "Main",
+                            "versions": [
+                                {
+                                    "files": [],
+                                    "version_number": 1,
+                                    "type": null,
+                                    "description": "",
+                                    "extension": ".ma",
+                                    "entity_type": "Version",
+                                    "name": "Version_8beb3cfe-3ded-444d-84e5-d31b3cd5beb8",
+                                    "type_id": null,
+                                    "filename": "Ananas_lookDev_Main_v001.ma",
+                                    "original_filename": "Ananas_lookDev_Main_v001.ma",
+                                    "created_with": "Maya2019",
+                                    "path": "$REPONAS/FuseT_PS/Assets/Ananas/lookDev",
+                                    "full_path": "$REPONAS/FuseT_PS/Assets/Ananas/lookDev/Ananas_lookDev_Main_v001.ma",
+                                    "is_published": true
+                                }
+                            ],
+                            "schedule_timing": 10.0,
+                            "path": "$REPONAS/FuseT_PS/Assets/Ananas/lookDev/Main",
+                            "type": null,
+                            "schedule_model": "effort"
+                        }
+                    ],
                     "description": "",
                     "entity_type": "Task",
                     "type_id": 53,
                     "schedule_constraint": 0,
                     "schedule_unit": "min",
                     "name": "lookDev",
-                    "versions": [
-                        {
-                            "version_number": 1,
-                            "type": null,
-                            "description": "",
-                            "extension": ".ma",
-                            "entity_type": "Version",
-                            "name": "Version_8beb3cfe-3ded-444d-84e5-d31b3cd5beb8",
-                            "type_id": null,
-                            "filename": "Ananas_lookDev_Main_v001.ma",
-                            "original_filename": "Ananas_lookDev_Main_v001.ma",
-                            "created_with": "Maya2019",
-                            "path": "$REPONAS/FuseT_PS/Assets/Ananas/lookDev",
-                            "take_name": "Main",
-                            "full_path": "$REPONAS/FuseT_PS/Assets/Ananas/lookDev/Ananas_lookDev_Main_v001.ma",
-                            "is_published": true
-                        }
-                    ],
+                    "versions": [],
                     "schedule_timing": 10.0,
                     "path": "$REPONAS/FuseT_PS/Assets/Ananas/lookDev",
                     "type": {

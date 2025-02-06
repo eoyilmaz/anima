@@ -166,12 +166,12 @@ class Render(object):
 
     @classmethod
     def delete_unused_shading_nodes(cls):
-        """Deletes unused shading nodes"""
+        """Delete unused shading nodes."""
         pm.mel.eval("MLdeleteUnused")
 
     @classmethod
     def normalize_texture_paths(cls):
-        """Expands the environment variables in texture paths"""
+        """Expand the environment variables in texture paths."""
         import os
 
         for node in pm.ls(type="file"):
@@ -183,8 +183,10 @@ class Render(object):
 
     @classmethod
     def unnormalize_texture_paths(cls):
-        """Contracts the environment variables in texture paths bu adding
-        the repository environment variable to the file paths
+        """Contract the environment variables in texture paths.
+
+        It does that by adding the repository environment variable to the file
+        paths.
         """
         from anima.dcc import mayaEnv
 
@@ -1905,8 +1907,9 @@ class Render(object):
 
     @classmethod
     def setup_window_glass_render_attributes(cls):
-        """sets window glass render attributes for environments, select window
-        glass objects and run this
+        """Set window glass render attributes for environments.
+
+        Select window glass objects and run this.
         """
         shader_name = "toolbox_glass_shader"
         shaders = pm.ls(f"{shader_name}*")
@@ -3430,7 +3433,7 @@ class LightingSceneBuilder(object):
         )
 
         if not animation_version:
-            raise RuntimeError("No Animation Version under Main take is found!")
+            raise RuntimeError("No Animation Version under Main variant is found!")
 
         # get the cacheable_to_look_dev_lut
         cacheable_to_look_dev_version_lut = self.get_cacheable_to_look_dev_version_lut(

@@ -20,4 +20,4 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
     logger.setLevel(logging_level)
 
     # set the parent object to the maya main window
-    version_dialog.UI(environment=tde4_dcc, parent=None, mode=mode)
+    version_dialog.UI(dcc=tde4_dcc, parent=None, mode=mode)

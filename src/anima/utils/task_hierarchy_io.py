@@ -49,7 +49,7 @@ class StalkerEntityEncoder(json.JSONEncoder):
         "date_created",
         "date_updated",
         "dependent_of",
-        "depends",
+        "depends_on",
         "duration",
         "end",
         "entity_groups",
@@ -93,7 +93,7 @@ class StalkerEntityEncoder(json.JSONEncoder):
         "status_list_id",
         "tags",
         "task_dependent_of",
-        "task_depends_to",
+        "task_depends_on",
         "thumbnail",
         "thumbnail_id",
         "tickets",
@@ -266,7 +266,7 @@ class StalkerEntityDecoder(object):
                 if "id" in v_data:
                     v_json_id = v_data.pop("id")
 
-                # check version number and take name
+                # check version number and variant name
                 # if there is a version with the same version_number
                 # don't create it
                 variant_name = v_data["variant_name"]

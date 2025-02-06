@@ -62,7 +62,7 @@ class Avid2Resolve(object):
             .first()
         )
 
-        # this part is not very parametric, and depends highly to out
+        # this part is not very parametric, and depends highly on out
         # project structure
         if task:
             # get the task folder

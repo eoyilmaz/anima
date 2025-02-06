@@ -18,4 +18,4 @@ def version_dialog(logging_level=logging.WARNING):
 
     logger.setLevel(logging_level)
 
-    version_dialog.UI(environment=mb)
+    version_dialog.UI(dcc=mb)

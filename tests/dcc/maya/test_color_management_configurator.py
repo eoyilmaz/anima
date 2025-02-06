@@ -46,7 +46,7 @@ def color_managed_project(temp_project, create_pymel):
 
 
 def test_default_color_management_is_set_to_aces_cg(
-    create_test_db, create_pymel, create_maya_env
+    create_test_db, create_pymel, create_maya_dcc
 ):
     """Test if default color management is set to ACEScg."""
     pm = create_pymel
@@ -66,7 +66,7 @@ def test_default_color_management_is_set_to_aces_cg(
 
 
 def test_color_management_is_set_to_aces_cg(
-    create_test_db, create_pymel, create_maya_env
+    create_test_db, create_pymel, create_maya_dcc
 ):
     """Test if color management can be set to ACEScg."""
     pm = create_pymel
@@ -89,7 +89,7 @@ def test_color_management_is_set_to_aces_cg(
 
 
 def test_color_management_is_set_to_linear_srgb(
-    create_test_db, create_pymel, create_maya_env
+    create_test_db, create_pymel, create_maya_dcc
 ):
     """Test if color management can be set to linear-sRGB."""
     pm = create_pymel
@@ -112,7 +112,7 @@ def test_color_management_is_set_to_linear_srgb(
 
 
 def test_configure_uses_default_config_if_config_name_is_none(
-    create_test_db, create_pymel, create_maya_env
+    create_test_db, create_pymel, create_maya_dcc
 ):
     """Test if default config is going to be used when the config_name is None."""
     pm = create_pymel
@@ -150,7 +150,7 @@ def test_configure_uses_default_config_if_config_name_is_none(
 
 
 def test_configure_raise_value_error_if_config_name_is_not_valid(
-    create_test_db, create_pymel, create_maya_env
+    create_test_db, create_pymel, create_maya_dcc
 ):
     """Test if a ValueError will be raised if config_name is not valid."""
     from anima.dcc.mayaEnv.render import MayaColorManagementConfigurator
@@ -170,14 +170,14 @@ def test_configure_raise_value_error_if_config_name_is_not_valid(
 def test_configure_will_use_the_project_default_config(
     create_test_db,
     create_pymel,
-    create_maya_env,
+    create_maya_dcc,
     create_test_data,
     color_managed_project,
 ):
     """Test if the project default will be used if a project can be found in current
     Maya session."""
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     data = create_test_data
     project = color_managed_project
     pm.newFile(force=True)
@@ -210,8 +210,8 @@ def test_configure_will_use_the_project_default_config(
 
     from anima.dcc.mayaEnv import Maya
 
-    assert isinstance(maya_env, Maya)
-    maya_env.save_as(v)
+    assert isinstance(maya_dcc, Maya)
+    maya_dcc.save_as(v)
 
     # after saving this and calling configure without an argument
     # color management should be set to the project default
@@ -233,7 +233,7 @@ def test_configure_will_use_the_project_default_config(
 
 
 def test_configure_project_should_create_project_config_file(
-    create_test_db, create_pymel, create_maya_env, create_test_data, temp_project
+    create_test_db, create_pymel, create_maya_dcc, create_test_data, temp_project
 ):
     """test calling configure_project with a project and a config_name should create
     config file."""
@@ -255,7 +255,7 @@ def test_configure_project_should_create_project_config_file(
 
 
 def test_configure_project_should_configure_a_project_persistently(
-    create_test_db, create_pymel, create_maya_env, create_test_data, temp_project
+    create_test_db, create_pymel, create_maya_dcc, create_test_data, temp_project
 ):
     """test calling configure_project with a project and a config_name should
     persistently configure the project."""
@@ -282,7 +282,7 @@ def test_configure_project_should_configure_a_project_persistently(
 
 
 def test_configure_project_project_is_none(
-        create_test_db, create_pymel, create_maya_env, create_test_data, temp_project
+        create_test_db, create_pymel, create_maya_dcc, create_test_data, temp_project
 ):
     """test configure project with project argument is None."""
     from anima.dcc.mayaEnv.render import MayaColorManagementConfigurator
@@ -300,7 +300,7 @@ def test_configure_project_project_is_none(
 
 
 def test_configure_project_project_is_not_a_project_instance(
-        create_test_db, create_pymel, create_maya_env, create_test_data, temp_project
+        create_test_db, create_pymel, create_maya_dcc, create_test_data, temp_project
 ):
     """test configure project with project argument is not a project instance."""
     from anima.dcc.mayaEnv.render import MayaColorManagementConfigurator
@@ -318,7 +318,7 @@ def test_configure_project_project_is_not_a_project_instance(
 
 
 def test_configure_project_config_name_is_not_valid(
-    create_test_db, create_pymel, create_maya_env, create_test_data, temp_project
+    create_test_db, create_pymel, create_maya_dcc, create_test_data, temp_project
 ):
     """test configure project with config_name argument is not valid."""
     project = temp_project

@@ -33,5 +33,12 @@ CACHE_FORMAT_DATA = {
     USD: {"output_dir": "usd", "file_extension": ".usd"},
 }
 TIMING_RESOLUTION = 10  # in minutes
+TASK_DERIVATIVES = [
+    "Task",
+    "Variant",
+    "Asset",
+    "Shot",
+    "Sequence",
+]
 
 defaults = Config()

@@ -43,7 +43,7 @@ def test_get_version_from_full_path_with_multiple_repositories(create_test_db):
         path='$REPO{{project.repository.code}}/{{project.code}}/'
              '{%- for parent_task in parent_tasks -%}'
              '{{parent_task.nice_name}}/{%- endfor -%}',
-        filename='{{task.nice_name}}_{{version.take_name}}'
+        filename='{{task.nice_name}}_r{{"%02d"|format(version.revision_number)}}'
                  '_v{{"%03d"|format(version.version_number)}}',
     )
     DBSession.add(task_ft)
@@ -231,7 +231,7 @@ def test_get_versions_from_path_with_multiple_repositories(create_test_db):
         path='$REPO{{project.repository.code}}/'
              '{{project.code}}/{%- for parent_task in parent_tasks -%}'
              '{{parent_task.nice_name}}/{%- endfor -%}',
-        filename='{{task.nice_name}}_{{version.take_name}}'
+        filename='{{task.nice_name}}_r{{"%02d"|format(version.revision_number)}}'
                  '_v{{"%03d"|format(version.version_number)}}',
     )
     DBSession.add(task_ft)
@@ -412,7 +412,7 @@ def test_trim_repo_path_with_multiple_repositories(create_test_db):
         target_entity_type='Task',
         path='{{project.code}}/{%- for parent_task in parent_tasks -%}'
              '{{parent_task.nice_name}}/{%- endfor -%}',
-        filename='{{task.nice_name}}_{{version.take_name}}'
+        filename='{{task.nice_name}}_r{{"%02d"|format(version.revision_number)}}'
                  '_v{{"%03d"|format(version.version_number)}}',
     )
     DBSession.add(task_ft)

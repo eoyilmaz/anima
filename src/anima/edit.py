@@ -747,7 +747,7 @@ class File(EditBase, NameMixin, DurationMixin):
             ).replace("\\", "/")
 
             # remove double slashes after "localhost"
-            # (happens in Linux and OSX only)
+            # (happens in Linux and macOS only)
             pathurl = pathurl.replace("file://localhost//", "file://localhost/")
 
         return pathurl

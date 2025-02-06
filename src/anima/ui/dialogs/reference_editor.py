@@ -3,13 +3,20 @@
 from anima.ui.base import ui_caller, QtCore, QtWidgets
 
 
-def UI(environment=None, app_in=None, executor=None):
-    """ """
-    return ui_caller(app_in, executor, MainDialog, environment=environment)
+def UI(dcc=None, app_in=None, executor=None):
+    """Wrap the `ui_caller` for ease of use.
+
+    Args:
+        dcc (DCCBase): A DCCBase instance.
+        app_in (QtCore.Qt.QApplication): The QApplication instance.
+        executor (callable): A callable to be used instead of calling the
+            `app_in.exec_()`.
+    """
+    return ui_caller(app_in, executor, MainDialog, dcc=dcc)
 
 
 class MainDialog(QtWidgets.QDialog):
-    def __init__(self, environment=None, parent=None):
+    def __init__(self, dcc=None, parent=None):
         super(MainDialog, self).__init__(parent)
         self.use_selection_check_box = None
         self.references_tab = None

@@ -170,7 +170,7 @@ class ShotSplitterTestCase(unittest.TestCase):
         self.comp = Task(name="Comp", parent=self.shot1)
 
         # create maya files
-        self.maya_env = Maya()
+        self.maya_dcc = Maya()
         pm.newFile(force=True)
 
         sm = pm.PyNode("sequenceManager1")
@@ -197,6 +197,6 @@ class ShotSplitterTestCase(unittest.TestCase):
         # save the file under scene previs
         v = Version(task=self.scene_previs)
 
-        self.maya_env.save_as(v)
+        self.maya_dcc.save_as(v)
         pm.newFile(force=1)
         print(v.absolute_full_path)

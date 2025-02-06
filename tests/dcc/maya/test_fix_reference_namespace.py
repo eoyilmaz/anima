@@ -4,37 +4,37 @@ from stalker.db.session import DBSession
 
 
 def test_fix_reference_namespace_is_working_properly(
-    create_test_data, create_pymel, create_maya_env
+    create_test_data, create_pymel, create_maya_dcc
 ):
     """testing if the fix_reference_namespace method is working properly
 
     version15 -> has no new version
       version11 -> has no new version
-        asset2_lookdev_take1_v001 -> has no new version
+        asset2_lookdev_variant1_v001 -> has no new version
           version2 -> has no new version
 
     All uses wrong namespaces
     """
     data = create_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     # create deep reference
     data["asset2_model_main_v002"].is_published = True
-    data["asset2_lookdev_take1_v001"].is_published = True
+    data["asset2_lookdev_variant1_v001"].is_published = True
     data["version11"].is_published = True
     data["version15"].is_published = True
 
     # open version2 and create a locator
-    maya_env.open(data["asset2_model_main_v002"])  # model
+    maya_dcc.open(data["asset2_model_main_v002"])  # model
     loc = pm.spaceLocator(name="locator1")
     loc.t.set(0, 0, 0)
     tra_group = pm.nt.Transform(name="asset1")
     pm.parent(loc, tra_group)
     pm.saveFile()
 
-    # asset2_lookdev_take1_v001 references version2
-    maya_env.open(data["asset2_lookdev_take1_v001"])  # lookdev
-    maya_env.reference(data["asset2_model_main_v002"])
+    # asset2_lookdev_variant1_v001 references version2
+    maya_dcc.open(data["asset2_lookdev_variant1_v001"])  # lookdev
+    maya_dcc.reference(data["asset2_model_main_v002"])
     # change the namespace to old one
     refs = pm.listReferences()
     ref = refs[0]
@@ -43,14 +43,14 @@ def test_fix_reference_namespace_is_working_properly(
     pm.saveFile()
 
     pm.newFile(force=True)
-    # version11 references asset2_lookdev_take1_v001
-    maya_env.open(data["version11"])  # layout
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
+    # version11 references asset2_lookdev_variant1_v001
+    maya_dcc.open(data["version11"])  # layout
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
     # use old namespace style
     refs = pm.listReferences()
-    asset2_lookdev_take1_v001_ref_node = refs[0]
-    asset2_lookdev_take1_v001_ref_node.namespace = data[
-        "asset2_lookdev_take1_v001"
+    asset2_lookdev_variant1_v001_ref_node = refs[0]
+    asset2_lookdev_variant1_v001_ref_node.namespace = data[
+        "asset2_lookdev_variant1_v001"
     ].filename.replace(".", "_")
     # now do the edits here
     # we need to do some edits
@@ -59,7 +59,7 @@ def test_fix_reference_namespace_is_working_properly(
     loc.t.set(1, 0, 0)
 
     # we should have created an edit
-    version2_ref_node = pm.listReferences(asset2_lookdev_take1_v001_ref_node)[0]
+    version2_ref_node = pm.listReferences(asset2_lookdev_variant1_v001_ref_node)[0]
     edits = pm.referenceQuery(version2_ref_node, es=1)
     assert len(edits) > 0
 
@@ -67,8 +67,8 @@ def test_fix_reference_namespace_is_working_properly(
     pm.newFile(force=True)
 
     # version15 references version11 two times
-    maya_env.open(data["version15"])
-    maya_env.reference(data["version11"])
+    maya_dcc.open(data["version15"])
+    maya_dcc.reference(data["version11"])
     # use old namespace style
     refs = pm.listReferences()
     refs[0].namespace = data["version11"].filename.replace(".", "_")
@@ -79,7 +79,7 @@ def test_fix_reference_namespace_is_working_properly(
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
         ".", "_"
     )
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
@@ -87,14 +87,14 @@ def test_fix_reference_namespace_is_working_properly(
     )
 
     # now let it be fixed
-    maya_env.fix_reference_namespaces()
+    maya_dcc.fix_reference_namespaces()
 
     # check if the namespaces are fixed
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].latest_published_version.nice_name
     assert (
         all_refs[1].namespace
-        == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
+        == data["asset2_lookdev_variant1_v001"].latest_published_version.nice_name
     )
     assert (
         all_refs[2].namespace
@@ -120,41 +120,41 @@ def test_fix_reference_namespace_is_working_properly(
 
 
 def test_fix_reference_namespace_is_working_properly_with_duplicate_refs(
-    create_test_data, create_pymel, create_maya_env
+    create_test_data, create_pymel, create_maya_dcc
 ):
     """testing if the fix_reference_namespace method is working properly
     with duplicate references
 
     version15 -> has no new version
       version11 -> has no new version
-        asset2_lookdev_take1_v001 -> has no new version
+        asset2_lookdev_variant1_v001 -> has no new version
           version2 -> has no new version
       version11 -> has no new version
-        asset2_lookdev_take1_v001 -> has no new version
+        asset2_lookdev_variant1_v001 -> has no new version
           version2 -> has no new version
 
     All uses wrong namespaces
     """
     data = create_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     # create deep reference
     data["asset2_model_main_v002"].is_published = True
-    data["asset2_lookdev_take1_v001"].is_published = True
+    data["asset2_lookdev_variant1_v001"].is_published = True
     data["version11"].is_published = True
     data["version15"].is_published = True
 
     # open version2 and create a locator
-    maya_env.open(data["asset2_model_main_v002"])  # model
+    maya_dcc.open(data["asset2_model_main_v002"])  # model
     loc = pm.spaceLocator(name="locator1")
     loc.t.set(0, 0, 0)
     tra_group = pm.nt.Transform(name="asset1")
     pm.parent(loc, tra_group)
     pm.saveFile()
 
-    # asset2_lookdev_take1_v001 references version2
-    maya_env.open(data["asset2_lookdev_take1_v001"])  # lookdev
-    maya_env.reference(data["asset2_model_main_v002"])
+    # asset2_lookdev_variant1_v001 references version2
+    maya_dcc.open(data["asset2_lookdev_variant1_v001"])  # lookdev
+    maya_dcc.reference(data["asset2_model_main_v002"])
     # change the namespace to old one
     refs = pm.listReferences()
     ref = refs[0]
@@ -162,15 +162,15 @@ def test_fix_reference_namespace_is_working_properly_with_duplicate_refs(
     ref.namespace = data["asset2_model_main_v002"].filename.replace(".", "_")
     pm.saveFile()
 
-    # version11 references asset2_lookdev_take1_v001
+    # version11 references asset2_lookdev_variant1_v001
     pm.newFile(force=True)
-    maya_env.open(data["version11"])  # layout
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
+    maya_dcc.open(data["version11"])  # layout
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
     # use old namespace style
     refs = pm.listReferences()
-    asset2_lookdev_take1_v001_ref_node = refs[0]
-    asset2_lookdev_take1_v001_ref_node.namespace = data[
-        "asset2_lookdev_take1_v001"
+    asset2_lookdev_variant1_v001_ref_node = refs[0]
+    asset2_lookdev_variant1_v001_ref_node.namespace = data[
+        "asset2_lookdev_variant1_v001"
     ].filename.replace(".", "_")
     # now do the edits here
     # we need to do some edits
@@ -179,7 +179,7 @@ def test_fix_reference_namespace_is_working_properly_with_duplicate_refs(
     loc[0].t.set(1, 0, 0)
 
     # we should have created an edit
-    version2_ref_node = pm.listReferences(asset2_lookdev_take1_v001_ref_node)[0]
+    version2_ref_node = pm.listReferences(asset2_lookdev_variant1_v001_ref_node)[0]
     edits = pm.referenceQuery(version2_ref_node, es=1)
     assert len(edits) > 0
 
@@ -187,9 +187,9 @@ def test_fix_reference_namespace_is_working_properly_with_duplicate_refs(
     pm.newFile(force=True)
 
     # version15 references version11 two times
-    maya_env.open(data["version15"])
-    maya_env.reference(data["version11"])
-    maya_env.reference(data["version11"])
+    maya_dcc.open(data["version15"])
+    maya_dcc.reference(data["version11"])
+    maya_dcc.reference(data["version11"])
     # use old namespace style
     refs = pm.listReferences()
     refs[0].namespace = data["version11"].filename.replace(".", "_")
@@ -201,7 +201,7 @@ def test_fix_reference_namespace_is_working_properly_with_duplicate_refs(
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
         ".", "_"
     )
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
@@ -210,7 +210,7 @@ def test_fix_reference_namespace_is_working_properly_with_duplicate_refs(
 
     # the second copy
     assert all_refs[3].namespace == "{}1".format(data["version11"].filename.replace(".", "_"))
-    assert all_refs[4].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+    assert all_refs[4].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
         ".", "_"
     )
     assert all_refs[5].namespace == data["asset2_model_main_v002"].filename.replace(
@@ -218,23 +218,23 @@ def test_fix_reference_namespace_is_working_properly_with_duplicate_refs(
     )
 
     # now let it be fixed
-    maya_env.fix_reference_namespaces()
+    maya_dcc.fix_reference_namespaces()
 
     # check if the namespaces are fixed
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].latest_published_version.nice_name
     assert (
         all_refs[1].namespace
-        == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
+        == data["asset2_lookdev_variant1_v001"].latest_published_version.nice_name
     )
     assert (
         all_refs[2].namespace
         == data["asset2_model_main_v002"].latest_published_version.nice_name
     )
-    assert all_refs[3].namespace == "Test_Task_1_Test_Task_5_Take2"
+    assert all_refs[3].namespace == "Test_Task_1_Test_Task_5_Variant2"
     assert (
         all_refs[4].namespace
-        == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
+        == data["asset2_lookdev_variant1_v001"].latest_published_version.nice_name
     )
     assert (
         all_refs[5].namespace
@@ -275,42 +275,42 @@ def test_fix_reference_namespace_is_working_properly_with_duplicate_refs(
 
 
 def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_refs(
-    create_test_data, create_pymel, create_maya_env
+    create_test_data, create_pymel, create_maya_dcc
 ):
     """testing if the fix_reference_namespace method is working properly
     with duplicate references
 
       version11 -> has no new version ->Layout
-        asset2_lookdev_take1_v001 -> has no new version -> LookDev
+        asset2_lookdev_variant1_v001 -> has no new version -> LookDev
           version2 -> has no new version -> Model
-        asset2_lookdev_take1_v001 -> has no new version
+        asset2_lookdev_variant1_v001 -> has no new version
           version2 -> has no new version
-        asset2_lookdev_take1_v001 -> has no new version
+        asset2_lookdev_variant1_v001 -> has no new version
           version2 -> has no new version
-        asset2_lookdev_take1_v001 -> has no new version
+        asset2_lookdev_variant1_v001 -> has no new version
           version2 -> has no new version
 
     All uses wrong namespaces
     """
     data = create_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     # create deep reference
     data["asset2_model_main_v002"].is_published = True
-    data["asset2_lookdev_take1_v001"].is_published = True
+    data["asset2_lookdev_variant1_v001"].is_published = True
     data["version11"].is_published = True
 
     # open version2 and create a locator
-    maya_env.open(data["asset2_model_main_v002"])  # model
+    maya_dcc.open(data["asset2_model_main_v002"])  # model
     loc = pm.spaceLocator(name="locator1")
     loc.t.set(0, 0, 0)
     tra_group = pm.nt.Transform(name="asset1")
     pm.parent(loc, tra_group)
     pm.saveFile()
 
-    # asset2_lookdev_take1_v001 references version2
-    maya_env.open(data["asset2_lookdev_take1_v001"])  # look dev
-    maya_env.reference(data["asset2_model_main_v002"])
+    # asset2_lookdev_variant1_v001 references version2
+    maya_dcc.open(data["asset2_lookdev_variant1_v001"])  # look dev
+    maya_dcc.reference(data["asset2_model_main_v002"])
     # change the namespace to old one
     refs = pm.listReferences()
     ref = refs[0]
@@ -318,19 +318,19 @@ def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_re
     ref.namespace = data["asset2_model_main_v002"].filename.replace(".", "_")
     pm.saveFile()
 
-    # version11 references asset2_lookdev_take1_v001 four times
+    # version11 references asset2_lookdev_variant1_v001 four times
     pm.newFile(force=True)
-    maya_env.open(data["version11"])  # layout
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
+    maya_dcc.open(data["version11"])  # layout
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
     # use old namespace style
     refs = pm.listReferences()
-    refs[0].namespace = data["asset2_lookdev_take1_v001"].filename.replace(".", "_")
-    refs[1].namespace = data["asset2_lookdev_take1_v001"].filename.replace(".", "_")
-    refs[2].namespace = data["asset2_lookdev_take1_v001"].filename.replace(".", "_")
-    refs[3].namespace = data["asset2_lookdev_take1_v001"].filename.replace(".", "_")
+    refs[0].namespace = data["asset2_lookdev_variant1_v001"].filename.replace(".", "_")
+    refs[1].namespace = data["asset2_lookdev_variant1_v001"].filename.replace(".", "_")
+    refs[2].namespace = data["asset2_lookdev_variant1_v001"].filename.replace(".", "_")
+    refs[3].namespace = data["asset2_lookdev_variant1_v001"].filename.replace(".", "_")
     # now do the edits here
     # we need to do some edits
     # there should be four locators in the current scene
@@ -362,7 +362,7 @@ def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_re
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+    assert all_refs[0].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
         ".", "_"
     )
     assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
@@ -371,7 +371,7 @@ def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_re
 
     # the second copy
     assert all_refs[2].namespace == "{}{}".format(
-        data["asset2_lookdev_take1_v001"].filename.replace(".", "_"),
+        data["asset2_lookdev_variant1_v001"].filename.replace(".", "_"),
         all_refs[2].copyNumberList()[1],
     )
     assert all_refs[3].namespace == data["asset2_model_main_v002"].filename.replace(
@@ -380,7 +380,7 @@ def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_re
 
     # the third copy
     assert all_refs[4].namespace == "{}{}".format(
-        data["asset2_lookdev_take1_v001"].filename.replace(".", "_"),
+        data["asset2_lookdev_variant1_v001"].filename.replace(".", "_"),
         all_refs[4].copyNumberList()[2],
     )
     assert all_refs[5].namespace == data["asset2_model_main_v002"].filename.replace(
@@ -389,7 +389,7 @@ def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_re
 
     # the forth copy
     assert all_refs[6].namespace == "{}{}".format(
-        data["asset2_lookdev_take1_v001"].filename.replace(".", "_"),
+        data["asset2_lookdev_variant1_v001"].filename.replace(".", "_"),
         all_refs[6].copyNumberList()[3],
     )
     assert all_refs[7].namespace == data["asset2_model_main_v002"].filename.replace(
@@ -397,7 +397,7 @@ def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_re
     )
 
     # now let it be fixed
-    maya_env.fix_reference_namespaces()
+    maya_dcc.fix_reference_namespaces()
     pm.saveFile()
 
     # check if the namespaces are fixed
@@ -406,7 +406,7 @@ def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_re
     # first copy
     assert (
         all_refs[0].namespace
-        == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
+        == data["asset2_lookdev_variant1_v001"].latest_published_version.nice_name
     )
     assert (
         all_refs[1].namespace
@@ -414,21 +414,21 @@ def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_re
     )
 
     # second copy
-    assert all_refs[2].namespace == "Asset_2_LookDev_Take2"
+    assert all_refs[2].namespace == "Asset_2_LookDev_Variant2"
     assert (
         all_refs[3].namespace
         == data["asset2_model_main_v002"].latest_published_version.nice_name
     )
 
     # third copy
-    assert all_refs[4].namespace == "Asset_2_LookDev_Take3"
+    assert all_refs[4].namespace == "Asset_2_LookDev_Variant3"
     assert (
         all_refs[5].namespace
         == data["asset2_model_main_v002"].latest_published_version.nice_name
     )
 
     # forth copy
-    assert all_refs[6].namespace == "Asset_2_LookDev_Take4"
+    assert all_refs[6].namespace == "Asset_2_LookDev_Variant4"
     assert (
         all_refs[7].namespace
         == data["asset2_model_main_v002"].latest_published_version.nice_name
@@ -478,20 +478,20 @@ def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_re
 
 
 def test_fix_reference_namespace_is_working_properly_with_refs_with_new_versions(
-    create_test_data, create_pymel, create_maya_env
+    create_test_data, create_pymel, create_maya_dcc
 ):
     """testing if the fix_reference_namespace method is working properly
     with references which has new versions
 
       version11 -> has no new version ->Layout
-        asset2_lookdev_take1_v001 -> has no new version -> LookDev
+        asset2_lookdev_variant1_v001 -> has no new version -> LookDev
           version2 -> has no new version -> Model -> has a new version3
 
     All uses wrong namespaces
     """
     data = create_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     # create deep reference
     print("version2: {}".format(data["asset2_model_main_v002"]))
     print("version3: {}".format(data["asset2_model_main_v003"]))
@@ -500,12 +500,12 @@ def test_fix_reference_namespace_is_working_properly_with_refs_with_new_versions
     data["asset2_model_main_v002"].is_published = True
     data["asset2_model_main_v003"].is_published = True
 
-    data["asset2_lookdev_take1_v001"].is_published = True
+    data["asset2_lookdev_variant1_v001"].is_published = True
     data["version11"].is_published = True
     DBSession.commit()
 
     # open version2 and create a locator
-    maya_env.open(data["asset2_model_main_v002"])  # model
+    maya_dcc.open(data["asset2_model_main_v002"])  # model
     loc = pm.spaceLocator(name="locator1")
     loc.t.set(0, 0, 0)
     tra_group = pm.nt.Transform(name="asset1")
@@ -513,12 +513,12 @@ def test_fix_reference_namespace_is_working_properly_with_refs_with_new_versions
     pm.saveFile()
 
     # save as version3
-    maya_env.save_as(data["asset2_model_main_v003"])
+    maya_dcc.save_as(data["asset2_model_main_v003"])
     DBSession.commit()
 
-    # asset2_lookdev_take1_v001 references version2
-    maya_env.open(data["asset2_lookdev_take1_v001"])  # look dev
-    maya_env.reference(data["asset2_model_main_v002"])
+    # asset2_lookdev_variant1_v001 references version2
+    maya_dcc.open(data["asset2_lookdev_variant1_v001"])  # look dev
+    maya_dcc.reference(data["asset2_model_main_v002"])
     # change the namespace to old one
     refs = pm.listReferences()
     ref = refs[0]
@@ -526,13 +526,13 @@ def test_fix_reference_namespace_is_working_properly_with_refs_with_new_versions
     ref.namespace = data["asset2_model_main_v002"].filename.replace(".", "_")
     pm.saveFile()
 
-    # version11 references asset2_lookdev_take1_v001 four times
+    # version11 references asset2_lookdev_variant1_v001 four times
     pm.newFile(force=True)
-    maya_env.open(data["version11"])  # layout
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
+    maya_dcc.open(data["version11"])  # layout
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
     # use old namespace style
     refs = pm.listReferences()
-    refs[0].namespace = data["asset2_lookdev_take1_v001"].filename.replace(".", "_")
+    refs[0].namespace = data["asset2_lookdev_variant1_v001"].filename.replace(".", "_")
     # now do the edits here
     # we need to do some edits
     # there should be four locators in the current scene
@@ -549,7 +549,7 @@ def test_fix_reference_namespace_is_working_properly_with_refs_with_new_versions
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+    assert all_refs[0].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
         ".", "_"
     )
     assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
@@ -557,7 +557,7 @@ def test_fix_reference_namespace_is_working_properly_with_refs_with_new_versions
     )
 
     # now let it be fixed
-    maya_env.fix_reference_namespaces()
+    maya_dcc.fix_reference_namespaces()
     pm.saveFile()
 
     # check if the namespaces are fixed
@@ -566,7 +566,7 @@ def test_fix_reference_namespace_is_working_properly_with_refs_with_new_versions
     # first copy
     assert (
         all_refs[0].namespace
-        == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
+        == data["asset2_lookdev_variant1_v001"].latest_published_version.nice_name
     )
     assert (
         all_refs[1].namespace
@@ -575,12 +575,12 @@ def test_fix_reference_namespace_is_working_properly_with_refs_with_new_versions
 
     # check if the reference is created from version2
     assert (
-        maya_env.get_version_from_full_path(all_refs[1].path).parent
+        maya_dcc.get_version_from_full_path(all_refs[1].path).parent
         == data["asset2_model_main_v002"]
     )
     # and it is version3
     assert (
-        maya_env.get_version_from_full_path(all_refs[1].path)
+        maya_dcc.get_version_from_full_path(all_refs[1].path)
         == data["asset2_model_main_v003"]
     )
 
@@ -601,40 +601,40 @@ def test_fix_reference_namespace_is_working_properly_with_refs_with_new_versions
 
 
 def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_previous_scene(
-    create_test_data, create_pymel, create_maya_env
+    create_test_data, create_pymel, create_maya_dcc
 ):
     """testing if the fix_reference_namespace method is working properly
     with references which are updated in another scene
 
       version11 -> has no new version ->Layout
-        asset2_lookdev_take1_v001 -> has no new version -> LookDev
+        asset2_lookdev_variant1_v001 -> has no new version -> LookDev
           version2 -> has no new version -> Model
 
-      version15 -> another scene which is referencing asset2_lookdev_take1_v001
-        asset2_lookdev_take1_v001
+      version15 -> another scene which is referencing asset2_lookdev_variant1_v001
+        asset2_lookdev_variant1_v001
           version2
 
     All uses wrong namespaces
     """
     data = create_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     # create deep reference
     data["asset2_model_main_v002"].is_published = True
-    data["asset2_lookdev_take1_v001"].is_published = True
+    data["asset2_lookdev_variant1_v001"].is_published = True
     DBSession.commit()
 
     # open version2 and create a locator
-    maya_env.open(data["asset2_model_main_v002"])  # model
+    maya_dcc.open(data["asset2_model_main_v002"])  # model
     loc = pm.spaceLocator(name="locator1")
     loc.t.set(0, 0, 0)
     tra_group = pm.nt.Transform(name="asset1")
     pm.parent(loc, tra_group)
     pm.saveFile()
 
-    # asset2_lookdev_take1_v001 references version2
-    maya_env.open(data["asset2_lookdev_take1_v001"])  # look dev
-    maya_env.reference(data["asset2_model_main_v002"])
+    # asset2_lookdev_variant1_v001 references version2
+    maya_dcc.open(data["asset2_lookdev_variant1_v001"])  # look dev
+    maya_dcc.reference(data["asset2_model_main_v002"])
     # change the namespace to old one
     refs = pm.listReferences()
     ref = refs[0]
@@ -642,13 +642,13 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
     ref.namespace = data["asset2_model_main_v002"].filename.replace(".", "_")
     pm.saveFile()
 
-    # version11 references asset2_lookdev_take1_v001
+    # version11 references asset2_lookdev_variant1_v001
     pm.newFile(force=True)
-    maya_env.open(data["version11"])  # layout
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
+    maya_dcc.open(data["version11"])  # layout
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
     # use old namespace style
     refs = pm.listReferences()
-    refs[0].namespace = data["asset2_lookdev_take1_v001"].filename.replace(".", "_")
+    refs[0].namespace = data["asset2_lookdev_variant1_v001"].filename.replace(".", "_")
     # now do the edits here
     # we need to do some edits
     # there should be only one locator in the current scene
@@ -663,13 +663,13 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
     pm.saveFile()
     DBSession.commit()
 
-    # version15 also references asset2_lookdev_take1_v001
+    # version15 also references asset2_lookdev_variant1_v001
     pm.newFile(force=True)
-    maya_env.open(data["version15"])  # layout
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
+    maya_dcc.open(data["version15"])  # layout
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
     # use old namespace style
     refs = pm.listReferences()
-    refs[0].namespace = data["asset2_lookdev_take1_v001"].filename.replace(".", "_")
+    refs[0].namespace = data["asset2_lookdev_variant1_v001"].filename.replace(".", "_")
     # now do the edits here
     # we need to do some edits
     # there should be only one locator in the current scene
@@ -685,7 +685,7 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+    assert all_refs[0].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
         ".", "_"
     )
     assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
@@ -693,19 +693,19 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
     )
 
     # now fix the namespaces in version15 let it be fixed
-    maya_env.fix_reference_namespaces()
+    maya_dcc.fix_reference_namespaces()
     pm.saveFile()
 
     # check if the namespaces are fixed
     all_refs = pm.listReferences(recursive=1)
 
-    version15_asset2_lookdev_take1_v001_path = all_refs[0].path
+    version15_asset2_lookdev_variant1_v001_path = all_refs[0].path
     version15_version2_path = all_refs[1].path
 
     # first copy
     assert (
         all_refs[0].namespace
-        == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
+        == data["asset2_lookdev_variant1_v001"].latest_published_version.nice_name
     )
     assert (
         all_refs[1].namespace
@@ -728,30 +728,30 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
     pm.saveFile()
 
     # now open version11 and try to fix it also there
-    maya_env.open(data["version11"])
+    maya_dcc.open(data["version11"])
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+    assert all_refs[0].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
         ".", "_"
     )
     assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
 
-    maya_env.fix_reference_namespaces()
+    maya_dcc.fix_reference_namespaces()
     pm.saveFile()
 
     # check if the namespaces are fixed
     all_refs = pm.listReferences(recursive=1)
 
-    version11_asset2_lookdev_take1_v001_path = all_refs[0].path
+    version11_asset2_lookdev_variant1_v001_path = all_refs[0].path
     version11_version2_path = all_refs[1].path
 
     # first copy
     assert (
         all_refs[0].namespace
-        == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
+        == data["asset2_lookdev_variant1_v001"].latest_published_version.nice_name
     )
     assert (
         all_refs[1].namespace
@@ -775,53 +775,53 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
 
     # check if the two scenes are using the same assets
     assert (
-        version15_asset2_lookdev_take1_v001_path
-        == version11_asset2_lookdev_take1_v001_path
+        version15_asset2_lookdev_variant1_v001_path
+        == version11_asset2_lookdev_variant1_v001_path
     )
     assert version15_version2_path == version11_version2_path
 
 
 def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_previous_scene_deeper(
-    create_test_data, create_pymel, create_maya_env
+    create_test_data, create_pymel, create_maya_dcc
 ):
     """testing if the fix_reference_namespace method is working properly
     with references which are updated in another scene
 
     version15 -> Bigger Layout
       version11 -> Layout
-        asset2_lookdev_take1_v001 -> LookDev
+        asset2_lookdev_variant1_v001 -> LookDev
           version2 -> Model
 
       version23 -> Another Bigger Layout
-        version18 -> Another Layout referencing asset2_lookdev_take1_v001
-          asset2_lookdev_take1_v001 -> LookDev
+        version18 -> Another Layout referencing asset2_lookdev_variant1_v001
+          asset2_lookdev_variant1_v001 -> LookDev
             version2 -> Model
 
     All uses wrong namespaces
     """
     data = create_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     # create deep reference
     data["asset2_model_main_v002"].is_published = True
-    data["asset2_lookdev_take1_v001"].is_published = True
+    data["asset2_lookdev_variant1_v001"].is_published = True
     data["version11"].is_published = True
     data["version15"].is_published = True
     data["version18"].is_published = True
-    data["shot3_anim_take1_v002"].is_published = True
+    data["shot3_anim_variant1_v002"].is_published = True
     DBSession.commit()
 
     # open version2 and create a locator
-    maya_env.open(data["asset2_model_main_v002"])  # model
+    maya_dcc.open(data["asset2_model_main_v002"])  # model
     loc = pm.spaceLocator(name="locator1")
     loc.t.set(0, 0, 0)
     tra_group = pm.nt.Transform(name="asset1")
     pm.parent(loc, tra_group)
     pm.saveFile()
 
-    # asset2_lookdev_take1_v001 references version2
-    maya_env.open(data["asset2_lookdev_take1_v001"])  # look dev
-    maya_env.reference(data["asset2_model_main_v002"])
+    # asset2_lookdev_variant1_v001 references version2
+    maya_dcc.open(data["asset2_lookdev_variant1_v001"])  # look dev
+    maya_dcc.reference(data["asset2_model_main_v002"])
     # change the namespace to old one
     refs = pm.listReferences()
     ref = refs[0]
@@ -829,13 +829,13 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
     ref.namespace = data["asset2_model_main_v002"].filename.replace(".", "_")
     pm.saveFile()
 
-    # version11 references asset2_lookdev_take1_v001
+    # version11 references asset2_lookdev_variant1_v001
     pm.newFile(force=True)
-    maya_env.open(data["version11"])  # layout
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
+    maya_dcc.open(data["version11"])  # layout
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
     # use old namespace style
     refs = pm.listReferences()
-    refs[0].namespace = data["asset2_lookdev_take1_v001"].filename.replace(".", "_")
+    refs[0].namespace = data["asset2_lookdev_variant1_v001"].filename.replace(".", "_")
     # now do the edits here
     # we need to do some edits
     # there should be only one locator in the current scene
@@ -850,8 +850,8 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
 
     # version15 references version11
     pm.newFile(force=True)
-    maya_env.open(data["version15"])  # bigger layout
-    maya_env.reference(data["version11"])
+    maya_dcc.open(data["version15"])  # bigger layout
+    maya_dcc.reference(data["version11"])
     # use old namespace style
     refs = pm.listReferences()
     refs[0].namespace = data["version11"].filename.replace(".", "_")
@@ -863,20 +863,20 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
         ".", "_"
     )
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
 
-    # version18 references asset2_lookdev_take1_v001
+    # version18 references asset2_lookdev_variant1_v001
     pm.newFile(force=True)
-    maya_env.open(data["version18"])  # layout
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
+    maya_dcc.open(data["version18"])  # layout
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
     # use old namespace style
     refs = pm.listReferences()
-    refs[0].namespace = data["asset2_lookdev_take1_v001"].filename.replace(".", "_")
+    refs[0].namespace = data["asset2_lookdev_variant1_v001"].filename.replace(".", "_")
     # now do the edits here
     # we need to do some edits
     # there should be only one locator in the current scene
@@ -891,8 +891,8 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
 
     # version23 references version18
     pm.newFile(force=True)
-    maya_env.open(data["shot3_anim_take1_v002"])  # bigger layout
-    maya_env.reference(data["version18"])
+    maya_dcc.open(data["shot3_anim_variant1_v002"])  # bigger layout
+    maya_dcc.reference(data["version18"])
     # use old namespace style
     refs = pm.listReferences()
     refs[0].namespace = data["version18"].filename.replace(".", "_")
@@ -906,7 +906,7 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version18"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
         ".", "_"
     )
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
@@ -922,22 +922,22 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
     assert len(pm.referenceQuery(all_refs[2], es=1, scs=1)) == 2
 
     # now fix the namespaces in version23 let it be fixed
-    assert maya_env.get_current_version() == data["shot3_anim_take1_v002"]
-    assert data["shot3_anim_take1_v002"].is_published is True
-    maya_env.fix_reference_namespaces()
+    assert maya_dcc.get_current_version() == data["shot3_anim_variant1_v002"]
+    assert data["shot3_anim_variant1_v002"].is_published is True
+    maya_dcc.fix_reference_namespaces()
     pm.saveFile()
 
     # check if the namespaces are fixed
     all_refs = pm.listReferences(recursive=1)
 
-    version23_asset2_lookdev_take1_v001_path = all_refs[1].path
+    version23_asset2_lookdev_variant1_v001_path = all_refs[1].path
     version23_version2_path = all_refs[2].path
 
     # first copy
     assert all_refs[0].namespace == data["version18"].latest_published_version.nice_name
     assert (
         all_refs[1].namespace
-        == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
+        == data["asset2_lookdev_variant1_v001"].latest_published_version.nice_name
     )
     assert (
         all_refs[2].namespace
@@ -962,32 +962,32 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
     pm.saveFile()
 
     # now open version11 and try to fix it also there
-    maya_env.open(data["version15"])
+    maya_dcc.open(data["version15"])
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
         ".", "_"
     )
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
 
-    maya_env.fix_reference_namespaces()
+    maya_dcc.fix_reference_namespaces()
     pm.saveFile()
 
     # check if the namespaces are fixed
     all_refs = pm.listReferences(recursive=1)
 
-    version15_asset2_lookdev_take1_v001_path = all_refs[1].path
+    version15_asset2_lookdev_variant1_v001_path = all_refs[1].path
     version15_version2_path = all_refs[2].path
 
     # first copy
     assert all_refs[0].namespace == data["version11"].latest_published_version.nice_name
     assert (
         all_refs[1].namespace
-        == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
+        == data["asset2_lookdev_variant1_v001"].latest_published_version.nice_name
     )
     assert (
         all_refs[2].namespace
@@ -1013,37 +1013,37 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
 
     # check if the two scenes are using the same assets
     assert (
-        version15_asset2_lookdev_take1_v001_path
-        == version23_asset2_lookdev_take1_v001_path
+        version15_asset2_lookdev_variant1_v001_path
+        == version23_asset2_lookdev_variant1_v001_path
     )
     assert version15_version2_path == version23_version2_path
 
 
 def test_fix_reference_namespace_returns_a_list_of_newly_created_versions(
-    create_test_data, create_pymel, create_maya_env
+    create_test_data, create_pymel, create_maya_dcc
 ):
     """testing if the fix_reference_namespace method will return newly
     created version instances in a list.
 
       version11 -> has no new version ->Layout
-        asset2_lookdev_take1_v001 -> has no new version -> LookDev
+        asset2_lookdev_variant1_v001 -> has no new version -> LookDev
           version2 -> has no new version -> Model -> has a new version3
 
     All uses wrong namespaces
     """
     data = create_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     # create deep reference
     data["asset2_model_main_v002"].is_published = True
     data["asset2_model_main_v003"].is_published = True
 
-    data["asset2_lookdev_take1_v001"].is_published = True
+    data["asset2_lookdev_variant1_v001"].is_published = True
     data["version11"].is_published = True
     DBSession.commit()
 
     # open version2 and create a locator
-    maya_env.open(data["asset2_model_main_v002"])  # model
+    maya_dcc.open(data["asset2_model_main_v002"])  # model
     loc = pm.spaceLocator(name="locator1")
     loc.t.set(0, 0, 0)
     tra_group = pm.nt.Transform(name="asset1")
@@ -1051,11 +1051,11 @@ def test_fix_reference_namespace_returns_a_list_of_newly_created_versions(
     pm.saveFile()
 
     # save as version3
-    maya_env.save_as(data["asset2_model_main_v003"])
+    maya_dcc.save_as(data["asset2_model_main_v003"])
 
-    # asset2_lookdev_take1_v001 references version2
-    maya_env.open(data["asset2_lookdev_take1_v001"])  # look dev
-    maya_env.reference(data["asset2_model_main_v002"])
+    # asset2_lookdev_variant1_v001 references version2
+    maya_dcc.open(data["asset2_lookdev_variant1_v001"])  # look dev
+    maya_dcc.reference(data["asset2_model_main_v002"])
     # change the namespace to old one
     refs = pm.listReferences()
     ref = refs[0]
@@ -1063,13 +1063,13 @@ def test_fix_reference_namespace_returns_a_list_of_newly_created_versions(
     ref.namespace = data["asset2_model_main_v002"].filename.replace(".", "_")
     pm.saveFile()
 
-    # version11 references asset2_lookdev_take1_v001 four times
+    # version11 references asset2_lookdev_variant1_v001 four times
     pm.newFile(force=True)
-    maya_env.open(data["version11"])  # layout
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
+    maya_dcc.open(data["version11"])  # layout
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
     # use old namespace style
     refs = pm.listReferences()
-    refs[0].namespace = data["asset2_lookdev_take1_v001"].filename.replace(".", "_")
+    refs[0].namespace = data["asset2_lookdev_variant1_v001"].filename.replace(".", "_")
     # now do the edits here
     # we need to do some edits
     # there should be four locators in the current scene
@@ -1086,7 +1086,7 @@ def test_fix_reference_namespace_returns_a_list_of_newly_created_versions(
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+    assert all_refs[0].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
         ".", "_"
     )
     assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
@@ -1094,38 +1094,38 @@ def test_fix_reference_namespace_returns_a_list_of_newly_created_versions(
     )
 
     # now let it be fixed
-    list_of_versions = maya_env.fix_reference_namespaces()
+    list_of_versions = maya_dcc.fix_reference_namespaces()
 
     assert list_of_versions == [
-        data["asset2_lookdev_take1_v001"].latest_published_version
+        data["asset2_lookdev_variant1_v001"].latest_published_version
     ]
 
 
 def test_fix_reference_namespace_returned_versions_have_correct_description(
-    create_test_data, create_pymel, create_maya_env
+    create_test_data, create_pymel, create_maya_dcc
 ):
     """testing if the fix_reference_namespace method will return newly
     created version instances in a list.
 
       version11 -> has no new version ->Layout
-        asset2_lookdev_take1_v001 -> has no new version -> LookDev
+        asset2_lookdev_variant1_v001 -> has no new version -> LookDev
           version2 -> has no new version -> Model -> has a new version3
 
     All uses wrong namespaces
     """
     data = create_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     # create deep reference
     data["asset2_model_main_v002"].is_published = True
     data["asset2_model_main_v003"].is_published = True
 
-    data["asset2_lookdev_take1_v001"].is_published = True
+    data["asset2_lookdev_variant1_v001"].is_published = True
     data["version11"].is_published = True
     DBSession.commit()
 
     # open version2 and create a locator
-    maya_env.open(data["asset2_model_main_v002"])  # model
+    maya_dcc.open(data["asset2_model_main_v002"])  # model
     loc = pm.spaceLocator(name="locator1")
     loc.t.set(0, 0, 0)
     tra_group = pm.nt.Transform(name="asset1")
@@ -1133,11 +1133,11 @@ def test_fix_reference_namespace_returned_versions_have_correct_description(
     pm.saveFile()
 
     # save as version3
-    maya_env.save_as(data["asset2_model_main_v003"])
+    maya_dcc.save_as(data["asset2_model_main_v003"])
 
-    # asset2_lookdev_take1_v001 references version2
-    maya_env.open(data["asset2_lookdev_take1_v001"])  # look dev
-    maya_env.reference(data["asset2_model_main_v002"])
+    # asset2_lookdev_variant1_v001 references version2
+    maya_dcc.open(data["asset2_lookdev_variant1_v001"])  # look dev
+    maya_dcc.reference(data["asset2_model_main_v002"])
     # change the namespace to old one
     refs = pm.listReferences()
     ref = refs[0]
@@ -1145,13 +1145,13 @@ def test_fix_reference_namespace_returned_versions_have_correct_description(
     ref.namespace = data["asset2_model_main_v002"].filename.replace(".", "_")
     pm.saveFile()
 
-    # version11 references asset2_lookdev_take1_v001 four times
+    # version11 references asset2_lookdev_variant1_v001 four times
     pm.newFile(force=True)
-    maya_env.open(data["version11"])  # layout
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
+    maya_dcc.open(data["version11"])  # layout
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
     # use old namespace style
     refs = pm.listReferences()
-    refs[0].namespace = data["asset2_lookdev_take1_v001"].filename.replace(".", "_")
+    refs[0].namespace = data["asset2_lookdev_variant1_v001"].filename.replace(".", "_")
     # now do the edits here
     # we need to do some edits
     # there should be four locators in the current scene
@@ -1168,7 +1168,7 @@ def test_fix_reference_namespace_returned_versions_have_correct_description(
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+    assert all_refs[0].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
         ".", "_"
     )
     assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
@@ -1176,52 +1176,52 @@ def test_fix_reference_namespace_returned_versions_have_correct_description(
     )
 
     # now let it be fixed
-    maya_env.fix_reference_namespaces()
+    maya_dcc.fix_reference_namespaces()
 
     assert (
-        data["asset2_lookdev_take1_v001"].latest_published_version
-        != data["asset2_lookdev_take1_v001"]
+        data["asset2_lookdev_variant1_v001"].latest_published_version
+        != data["asset2_lookdev_variant1_v001"]
     )
     assert (
         "Automatically created with Fix Reference Namespace"
-        == data["asset2_lookdev_take1_v001"].latest_published_version.description
+        == data["asset2_lookdev_variant1_v001"].latest_published_version.description
     )
 
 
 def test_fix_reference_namespace_is_working_properly_with_complex_edits(
-    create_test_data, create_pymel, create_maya_env
+    create_test_data, create_pymel, create_maya_dcc
 ):
     """testing if the fix_reference_namespace method is working properly
     with references which are updated in another scene
 
     version15 -> Bigger Layout -> Move the parent
       version11 -> Layout -> Parent it under a group
-        asset2_lookdev_take1_v001 -> LookDev -> Assign new Material
+        asset2_lookdev_variant1_v001 -> LookDev -> Assign new Material
           version2 -> Model
 
     All uses wrong namespaces
     """
     data = create_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     # create deep reference
     data["asset2_model_main_v002"].is_published = True
-    data["asset2_lookdev_take1_v001"].is_published = True
+    data["asset2_lookdev_variant1_v001"].is_published = True
     data["version11"].is_published = True
     data["version15"].is_published = True
     DBSession.commit()
 
     # open version2 and create a locator
-    maya_env.open(data["asset2_model_main_v002"])  # model
+    maya_dcc.open(data["asset2_model_main_v002"])  # model
     cube = pm.polyCube(name="test_cube")
     cube[0].t.set(0, 0, 0)
     tra_group = pm.nt.Transform(name="asset1")
     pm.parent(cube[0], tra_group)
     pm.saveFile()
 
-    # asset2_lookdev_take1_v001 references version2
-    maya_env.open(data["asset2_lookdev_take1_v001"])  # look dev
-    maya_env.reference(data["asset2_model_main_v002"])
+    # asset2_lookdev_variant1_v001 references version2
+    maya_dcc.open(data["asset2_lookdev_variant1_v001"])  # look dev
+    maya_dcc.reference(data["asset2_model_main_v002"])
     # change the namespace to old one
     refs = pm.listReferences()
     ref = refs[0]
@@ -1233,13 +1233,13 @@ def test_fix_reference_namespace_is_working_properly_with_complex_edits(
     pm.sets(blinn_sg, e=True, fe=[cube])
     pm.saveFile()
 
-    # version11 references asset2_lookdev_take1_v001
+    # version11 references asset2_lookdev_variant1_v001
     pm.newFile(force=True)
-    maya_env.open(data["version11"])  # layout
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
+    maya_dcc.open(data["version11"])  # layout
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
     # use old namespace style
     refs = pm.listReferences()
-    refs[0].namespace = data["asset2_lookdev_take1_v001"].filename.replace(".", "_")
+    refs[0].namespace = data["asset2_lookdev_variant1_v001"].filename.replace(".", "_")
     # now do the edits here
     # we need to do some edits
     # there should be only one locator in the current scene
@@ -1256,8 +1256,8 @@ def test_fix_reference_namespace_is_working_properly_with_complex_edits(
 
     # version15 references version11
     pm.newFile(force=True)
-    maya_env.open(data["version15"])  # bigger layout
-    maya_env.reference(data["version11"])
+    maya_dcc.open(data["version15"])  # bigger layout
+    maya_dcc.reference(data["version11"])
     # use old namespace style
     refs = pm.listReferences()
     refs[0].namespace = data["version11"].filename.replace(".", "_")
@@ -1270,7 +1270,7 @@ def test_fix_reference_namespace_is_working_properly_with_complex_edits(
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
         ".", "_"
     )
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
@@ -1280,14 +1280,14 @@ def test_fix_reference_namespace_is_working_properly_with_complex_edits(
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
         ".", "_"
     )
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
 
-    maya_env.fix_reference_namespaces()
+    maya_dcc.fix_reference_namespaces()
     pm.saveFile()
 
     # check if the namespaces are fixed
@@ -1297,7 +1297,7 @@ def test_fix_reference_namespace_is_working_properly_with_complex_edits(
     assert all_refs[0].namespace == data["version11"].latest_published_version.nice_name
     assert (
         all_refs[1].namespace
-        == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
+        == data["asset2_lookdev_variant1_v001"].latest_published_version.nice_name
     )
     assert (
         all_refs[2].namespace
@@ -1323,39 +1323,39 @@ def test_fix_reference_namespace_is_working_properly_with_complex_edits(
 
 
 def test_fix_reference_namespace_is_working_properly_with_references_with_no_namespaces(
-    create_test_data, create_pymel, create_maya_env
+    create_test_data, create_pymel, create_maya_dcc
 ):
     """testing if the fix_reference_namespace method is working properly
     with references which are not using namespaces
 
     version15 -> Bigger Layout -> Move the parent / Uses no namespaces
       version11 -> Layout -> Parent it under a group
-        asset2_lookdev_take1_v001 -> LookDev -> Assign new Material
+        asset2_lookdev_variant1_v001 -> LookDev -> Assign new Material
           version2 -> Model
 
     All uses wrong namespaces
     """
     data = create_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     # create deep reference
     data["asset2_model_main_v002"].is_published = True
-    data["asset2_lookdev_take1_v001"].is_published = True
+    data["asset2_lookdev_variant1_v001"].is_published = True
     data["version11"].is_published = True
     data["version15"].is_published = True
     DBSession.commit()
 
     # open version2 and create a locator
-    maya_env.open(data["asset2_model_main_v002"])  # model
+    maya_dcc.open(data["asset2_model_main_v002"])  # model
     cube = pm.polyCube(name="test_cube")
     cube[0].t.set(0, 0, 0)
     tra_group = pm.nt.Transform(name="asset1")
     pm.parent(cube[0], tra_group)
     pm.saveFile()
 
-    # asset2_lookdev_take1_v001 references version2
-    maya_env.open(data["asset2_lookdev_take1_v001"])  # look dev
-    maya_env.reference(data["asset2_model_main_v002"])
+    # asset2_lookdev_variant1_v001 references version2
+    maya_dcc.open(data["asset2_lookdev_variant1_v001"])  # look dev
+    maya_dcc.reference(data["asset2_model_main_v002"])
     # change the namespace to old one
     refs = pm.listReferences()
     ref = refs[0]
@@ -1367,13 +1367,13 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_no_nam
     pm.sets(blinn_sg, e=True, fe=[cube])
     pm.saveFile()
 
-    # version11 references asset2_lookdev_take1_v001
+    # version11 references asset2_lookdev_variant1_v001
     pm.newFile(force=True)
-    maya_env.open(data["version11"])  # layout
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
+    maya_dcc.open(data["version11"])  # layout
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
     # use old namespace style
     refs = pm.listReferences()
-    refs[0].namespace = data["asset2_lookdev_take1_v001"].filename.replace(".", "_")
+    refs[0].namespace = data["asset2_lookdev_variant1_v001"].filename.replace(".", "_")
     # now do the edits here
     # we need to do some edits
     # there should be only one locator in the current scene
@@ -1391,8 +1391,8 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_no_nam
 
     # version15 references version11
     pm.newFile(force=True)
-    maya_env.open(data["version15"])  # bigger layout
-    maya_env.reference(data["version11"], use_namespace=False)
+    maya_dcc.open(data["version15"])  # bigger layout
+    maya_dcc.reference(data["version11"], use_namespace=False)
     # use no namespace for version11 (so do not edit to old version)
     # now do some other edits here
     group = pm.ls("test_group", type=pm.nt.Transform, r=1)[0]
@@ -1406,7 +1406,7 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_no_nam
     #                                                    |
     #                                                    V
     assert all_refs[0].namespace == data["version11"].filename.split(".")[0]
-    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
         ".", "_"
     )
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
@@ -1420,14 +1420,14 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_no_nam
     #                                                     V
     assert all_refs[0].namespace == data["version11"].filename.split(".")[0]
 
-    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].filename.replace(
+    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
         ".", "_"
     )
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
 
-    maya_env.fix_reference_namespaces()
+    maya_dcc.fix_reference_namespaces()
     pm.saveFile()
 
     # check if the namespaces are fixed
@@ -1437,7 +1437,7 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_no_nam
     assert all_refs[0].namespace == data["version11"].filename.split(".")[0]
     assert (
         all_refs[1].namespace
-        == data["asset2_lookdev_take1_v001"].latest_published_version.nice_name
+        == data["asset2_lookdev_variant1_v001"].latest_published_version.nice_name
     )
     assert (
         all_refs[2].namespace
@@ -1462,14 +1462,14 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_no_nam
 
 
 def test_fix_reference_namespace_is_working_properly_with_references_with_same_namespaces_with_its_children_ref(
-    create_test_data, create_pymel, create_maya_env
+    create_test_data, create_pymel, create_maya_dcc
 ):
     """testing if the fix_reference_namespace method is working properly
     with references that has the same namespace with its children
 
     version15 -> Bigger Layout -> Move the parent
       version11 -> Layout -> Parent it under a group
-        asset2_lookdev_take1_v001 -> LookDev -> Assign new Material / using the same
+        asset2_lookdev_variant1_v001 -> LookDev -> Assign new Material / using the same
                     namespace with its child
           version2 -> Model
 
@@ -1477,25 +1477,25 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
     """
     data = create_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     # create deep reference
     data["asset2_model_main_v002"].is_published = True
-    data["asset2_lookdev_take1_v001"].is_published = True
+    data["asset2_lookdev_variant1_v001"].is_published = True
     data["version11"].is_published = True
     data["version15"].is_published = True
     DBSession.commit()
 
     # open version2 and create a locator
-    maya_env.open(data["asset2_model_main_v002"])  # model
+    maya_dcc.open(data["asset2_model_main_v002"])  # model
     cube = pm.polyCube(name="test_cube")
     cube[0].t.set(0, 0, 0)
     tra_group = pm.nt.Transform(name="asset1")
     pm.parent(cube[0], tra_group)
     pm.saveFile()
 
-    # asset2_lookdev_take1_v001 references version2
-    maya_env.open(data["asset2_lookdev_take1_v001"])  # look dev
-    maya_env.reference(data["asset2_model_main_v002"])
+    # asset2_lookdev_variant1_v001 references version2
+    maya_dcc.open(data["asset2_lookdev_variant1_v001"])  # look dev
+    maya_dcc.reference(data["asset2_model_main_v002"])
     # change the namespace to old one
     refs = pm.listReferences()
     ref = refs[0]
@@ -1507,11 +1507,11 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
     pm.sets(blinn_sg, e=True, fe=[cube])
     pm.saveFile()
 
-    # version11 references asset2_lookdev_take1_v001
+    # version11 references asset2_lookdev_variant1_v001
     pm.newFile(force=True)
-    maya_env.open(data["version11"])  # layout
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
-    # use version2 namespace in asset2_lookdev_take1_v001
+    maya_dcc.open(data["version11"])  # layout
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
+    # use version2 namespace in asset2_lookdev_variant1_v001
     refs = pm.listReferences()
     refs[0].namespace = data["asset2_model_main_v002"].filename.replace(".", "_")
     # now do the edits here
@@ -1531,8 +1531,8 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
 
     # version15 references version11
     pm.newFile(force=True)
-    maya_env.open(data["version15"])  # bigger layout
-    maya_env.reference(data["version11"])
+    maya_dcc.open(data["version15"])  # bigger layout
+    maya_dcc.reference(data["version11"])
     # use old style namespace here
     refs = pm.listReferences()
     refs[0].namespace = data["version11"].filename.replace(".", "_")
@@ -1546,7 +1546,7 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
 
-    # asset2_lookdev_take1_v001 is using version2 namespace
+    # asset2_lookdev_variant1_v001 is using version2 namespace
     assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -1558,7 +1558,7 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
 
-    # asset2_lookdev_take1_v001 is using version2 filename
+    # asset2_lookdev_variant1_v001 is using version2 filename
     assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -1566,7 +1566,7 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
         ".", "_"
     )
 
-    maya_env.fix_reference_namespaces()
+    maya_dcc.fix_reference_namespaces()
     pm.saveFile()
 
     # check if the namespaces are fixed
@@ -1574,7 +1574,7 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
 
     # first copy
     assert all_refs[0].namespace == data["version11"].nice_name
-    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].nice_name
+    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].nice_name
     assert all_refs[2].namespace == data["asset2_model_main_v002"].nice_name
 
     # now check we don't have any failed edits
@@ -1595,14 +1595,14 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
 
 
 def test_fix_reference_namespace_is_working_properly_with_references_with_same_namespaces_with_its_children_ref_in_a_shallower_setup(
-    create_test_data, create_pymel, create_maya_env
+    create_test_data, create_pymel, create_maya_dcc
 ):
     """testing if the fix_reference_namespace method is working properly
     with references that has the same namespace with its children in a
     shallower setup
 
     version11 -> Layout -> Parent it under a group
-      asset2_lookdev_take1_v001 -> LookDev -> Assign new Material / using the same
+      asset2_lookdev_variant1_v001 -> LookDev -> Assign new Material / using the same
                   namespace with its child
         version2 -> Model
 
@@ -1610,15 +1610,15 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
     """
     data = create_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     # create deep reference
     data["asset2_model_main_v002"].is_published = True
-    data["asset2_lookdev_take1_v001"].is_published = True
+    data["asset2_lookdev_variant1_v001"].is_published = True
     data["version11"].is_published = True
     DBSession.commit()
 
     # open version2 and create a locator
-    maya_env.open(data["asset2_model_main_v002"])  # model
+    maya_dcc.open(data["asset2_model_main_v002"])  # model
     cube = pm.polyCube(name="test_cube")[0]
     cube.t.set(0, 0, 0)
     tra_group = pm.nt.Transform(name="asset1")
@@ -1626,9 +1626,9 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
     pm.runtime.DeleteHistory()
     pm.saveFile()
 
-    # asset2_lookdev_take1_v001 references version2
-    maya_env.open(data["asset2_lookdev_take1_v001"])  # look dev
-    ref = maya_env.reference(data["asset2_model_main_v002"])
+    # asset2_lookdev_variant1_v001 references version2
+    maya_dcc.open(data["asset2_lookdev_variant1_v001"])  # look dev
+    ref = maya_dcc.reference(data["asset2_model_main_v002"])
     ref.namespace = data["asset2_model_main_v002"].filename.replace(".", "_")
     # assign a new material
     cube = pm.ls("test_cube", type=pm.nt.Transform, r=1)[0]
@@ -1636,11 +1636,11 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
     pm.sets(blinn_sg, e=True, fe=[cube])
     pm.saveFile()
 
-    # version11 references asset2_lookdev_take1_v001
+    # version11 references asset2_lookdev_variant1_v001
     pm.newFile(force=True)
-    maya_env.open(data["version11"])  # layout
-    ref = maya_env.reference(data["asset2_lookdev_take1_v001"])
-    # use version2 namespace in asset2_lookdev_take1_v001
+    maya_dcc.open(data["version11"])  # layout
+    ref = maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
+    # use version2 namespace in asset2_lookdev_variant1_v001
     ref.namespace = data["asset2_model_main_v002"].filename.replace(".", "_")
     # now do the edits here
     # we need to do some edits
@@ -1661,7 +1661,7 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
 
-    # asset2_lookdev_take1_v001 is using version2 namespace
+    # asset2_lookdev_variant1_v001 is using version2 namespace
     assert all_refs[0].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -1670,7 +1670,7 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
     )
 
     # check namespaces
-    # asset2_lookdev_take1_v001 is using version2 filename
+    # asset2_lookdev_variant1_v001 is using version2 filename
     assert all_refs[0].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -1678,14 +1678,14 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
         ".", "_"
     )
 
-    maya_env.fix_reference_namespaces()
+    maya_dcc.fix_reference_namespaces()
     pm.saveFile()
 
     # check if the namespaces are fixed
     all_refs = pm.listReferences(recursive=1)
 
     # first copy
-    assert all_refs[0].namespace == data["asset2_lookdev_take1_v001"].nice_name
+    assert all_refs[0].namespace == data["asset2_lookdev_variant1_v001"].nice_name
     assert all_refs[1].namespace == data["asset2_model_main_v002"].nice_name
 
     # now check we don't have any failed edits
@@ -1702,39 +1702,39 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
 
 
 def test_fix_reference_namespace_is_working_properly_with_references_with_correct_namespaces_but_has_wrong_namespace_children(
-    create_test_data, create_pymel, create_maya_env
+    create_test_data, create_pymel, create_maya_dcc
 ):
     """testing if the fix_reference_namespace method is working properly
     with references that has the same namespace with its children
 
     version15 -> Bigger Layout
       version11 -> Layout -> uses correct namespace
-        asset2_lookdev_take1_v001 -> LookDev -> uses correct namespace
+        asset2_lookdev_variant1_v001 -> LookDev -> uses correct namespace
           version2 -> Model -> uses wrong namespace
 
     All uses wrong namespaces
     """
     data = create_test_data
     pm = create_pymel
-    maya_env = create_maya_env
+    maya_dcc = create_maya_dcc
     # create deep reference
     data["asset2_model_main_v002"].is_published = True
-    data["asset2_lookdev_take1_v001"].is_published = True
+    data["asset2_lookdev_variant1_v001"].is_published = True
     data["version11"].is_published = True
     data["version15"].is_published = True
     DBSession.commit()
 
     # open version2 and create a locator
-    maya_env.open(data["asset2_model_main_v002"])  # model
+    maya_dcc.open(data["asset2_model_main_v002"])  # model
     cube = pm.polyCube(name="test_cube")
     cube[0].t.set(0, 0, 0)
     tra_group = pm.nt.Transform(name="asset1")
     pm.parent(cube[0], tra_group)
     pm.saveFile()
 
-    # asset2_lookdev_take1_v001 references version2
-    maya_env.open(data["asset2_lookdev_take1_v001"])  # look dev
-    ref = maya_env.reference(data["asset2_model_main_v002"])
+    # asset2_lookdev_variant1_v001 references version2
+    maya_dcc.open(data["asset2_lookdev_variant1_v001"])  # look dev
+    ref = maya_dcc.reference(data["asset2_model_main_v002"])
     # change the namespace to old one
     isinstance(ref, pm.system.FileReference)
     ref.namespace = data["asset2_model_main_v002"].filename.replace(".", "_")
@@ -1744,13 +1744,13 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_correc
     pm.sets(blinn_sg, e=True, fe=[cube])
     pm.saveFile()
 
-    # version11 references asset2_lookdev_take1_v001
+    # version11 references asset2_lookdev_variant1_v001
     pm.newFile(force=True)
-    maya_env.open(data["version11"])  # layout
-    maya_env.reference(data["asset2_lookdev_take1_v001"])
-    # use version2 namespace in asset2_lookdev_take1_v001
+    maya_dcc.open(data["version11"])  # layout
+    maya_dcc.reference(data["asset2_lookdev_variant1_v001"])
+    # use version2 namespace in asset2_lookdev_variant1_v001
     refs = pm.listReferences()
-    # refs[0].namespace = data["asset2_lookdev_take1_v001"].nice_name
+    # refs[0].namespace = data["asset2_lookdev_variant1_v001"].nice_name
     # now do the edits here
     # we need to do some edits
     # there should be only one locator in the current scene
@@ -1767,8 +1767,8 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_correc
 
     # version15 references version11
     pm.newFile(force=True)
-    maya_env.open(data["version15"])  # bigger layout
-    maya_env.reference(data["version11"])
+    maya_dcc.open(data["version15"])  # bigger layout
+    maya_dcc.reference(data["version11"])
     # use old style namespace here
     pm.listReferences()
     # refs[0].namespace = data["version11"].nice_name
@@ -1783,13 +1783,13 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_correc
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].nice_name
 
-    # asset2_lookdev_take1_v001 is using correct namespace
-    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].nice_name
+    # asset2_lookdev_variant1_v001 is using correct namespace
+    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].nice_name
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
 
-    maya_env.fix_reference_namespaces()
+    maya_dcc.fix_reference_namespaces()
     pm.saveFile()
 
     # check if the namespaces are fixed
@@ -1797,7 +1797,7 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_correc
 
     # first copy
     assert all_refs[0].namespace == data["version11"].nice_name
-    assert all_refs[1].namespace == data["asset2_lookdev_take1_v001"].nice_name
+    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].nice_name
     assert all_refs[2].namespace == data["asset2_model_main_v002"].nice_name
 
     # now check we don't have any failed edits

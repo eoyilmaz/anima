@@ -279,7 +279,7 @@ class RepresentationGenerator(object):
             variant_name (str): The variant_name.
 
         Returns:
-            Version: The latest repr version of the given take.
+            Version: The latest repr version of the given variant.
         """
         from stalker import Version
 
@@ -594,7 +594,7 @@ class RepresentationGenerator(object):
                     ref.importContents()
                 all_refs = pm.listReferences()
 
-        # save the scene as {{original_take}}@BBOX
+        # save the scene as {{original_variant}}@BBOX
         # use maya
         variant_name = "{}{}{}".format(
             self.base_variant_name,
@@ -1025,7 +1025,7 @@ class RepresentationGenerator(object):
             # clean up
             self.clean_up()
 
-        # 6. save the scene as {{original_take}}@GPU
+        # 6. save the scene as {{original_variant}}@GPU
         # use maya
         variant_name = "{}{}{}".format(
             self.base_variant_name,
@@ -1499,7 +1499,7 @@ class RepresentationGenerator(object):
         pm.select(None)
         pm.sets(arnold_stand_in_default_light_set, fe=pm.ls(type="aiStandIn"))
 
-        # save the scene as {{original_take}}@ASS
+        # save the scene as {{original_variant}}@ASS
         # use maya
         variant_name = "{}{}{}".format(
             self.base_variant_name,
@@ -1888,7 +1888,7 @@ class RepresentationGenerator(object):
             # clean up
             self.clean_up()
 
-        # save the scene as {{original_take}}@ASS
+        # save the scene as {{original_variant}}@ASS
         # use maya
         variant_name = "{}{}{}".format(
             self.base_variant_name,

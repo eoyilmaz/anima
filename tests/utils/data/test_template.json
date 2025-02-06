@@ -61,11 +61,11 @@
                 },
                 "Lighting": {
                     "type": "Lighting",
-                    "depends": ["Animation"]
+                    "depends_on": ["Animation"]
                 },
                 "Comp": {
                     "type": "Comp",
-                    "depends": ["Lighting"]
+                    "depends_on": ["Lighting"]
                 },
                 "Camera": {
                     "type": "Camera",
@@ -80,15 +80,15 @@
                 },
                 "Camera": {
                     "type": "Camera",
-                    "depends": ["Plate"]
+                    "depends_on": ["Plate"]
                 },
                 "Lighting": {
                     "type": "Lighting",
-                    "depends": ["Animation"]
+                    "depends_on": ["Animation"]
                 },
                 "Comp": {
                     "type": "Comp",
-                    "depends": ["Lighting"]
+                    "depends_on": ["Lighting"]
                 },
                 "Plate": {
                     "type": "Plate",

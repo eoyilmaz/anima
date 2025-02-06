@@ -35,7 +35,7 @@ class AssetMigrationTool(object):
                 "new_name": "New Asset Name",  # optional asset new name
                 "new_code": "New Asset Code",  # optional asset new name
                 "new_parent_id": new_parent_task.id,
-                "takes": {  # Take data
+                "variants": {  # Variant data
                     {old_variant_name_1}: {  # Version data
                         "new_name": {new_name},  # Optional
                         "versions": [version1.version_number, version2.version_number]
@@ -51,8 +51,8 @@ class AssetMigrationTool(object):
 
     As seen in the recipe, the keys are Task (or Asset, Shot, Sequence) ids, and the
     value dictionary contains the new parent task id and one another dictionary for the
-    selected takes of the versions. Thus, with this tool, it is possible to carry very
-    complex task hierarchies (i.e. old style environment layouts).
+    selected variants of the versions. Thus, with this tool, it is possible to carry
+    very complex task hierarchies (i.e. old style environment layouts).
 
     It is possible to manually traverse the child Task hierarchy and create a recipe
     that contains all the tasks, assets, shots, sequences in the hierarchy. And because
@@ -60,9 +60,9 @@ class AssetMigrationTool(object):
     another asset that is yet being carried over the other project as their new parent,
     it is possible to fully create complex hierarchies.
 
-    In the migration recipe, versions with two different takes can be moved under the
-    same take. In this case, the versions list will be concatenated, and the versions
-    streams will be merged alphabetically to their take names.
+    In the migration recipe, versions with two different variants can be moved under the
+    same variant. In this case, the versions list will be concatenated, and the versions
+    streams will be merged alphabetically to their variant names.
 
     The AssetMigrationTool is currently written for asset files created with Maya. In
     the future the tool will be generalized to cover all the supported DCC's.
@@ -91,15 +91,16 @@ class AssetMigrationTool(object):
         """
         raise NotImplementedError("Not implemented yet!")
 
-    def add_take(self, task, old_variant_name, new_variant_name=None):
-        """Add a take to the list.
+    def add_variant(self, task, old_variant_name, new_variant_name=None):
+        """Add a variant to the list.
 
         Args:
-            task (stalker.Task): The task to add the take to. The parent Asset needs to
-                be in the list.
-            old_variant_name (str): The take name to add.
-            new_variant_name (str): The new take name, can be skipped in which case the
-                ``old_variant_name`` argument value will be used.
+            task (stalker.Task): The task to add the variant to. The parent
+                Asset needs to be in the list.
+            old_variant_name (str): The variant name to add.
+            new_variant_name (str): The new variant name, can be skipped in
+                which case the ``old_variant_name`` argument value will be
+                used.
         """
         raise NotImplementedError("Not implemented yet!")
 
@@ -125,9 +126,9 @@ class AssetMigrationTool(object):
         progress_count = 0
         for task_id in self.migration_recipe:
             progress_count += 1
-            takes = self.migration_recipe[task_id].get("takes", {})
-            for variant_name in takes:
-                versions = takes[variant_name].get("versions", [])
+            variants = self.migration_recipe[task_id].get("variants", {})
+            for variant_name in variants:
+                versions = variants[variant_name].get("versions", [])
                 for i, version_number in enumerate(versions):
                     progress_count += 1
 
@@ -137,9 +138,9 @@ class AssetMigrationTool(object):
         progress_caller = progress_manager.register(progress_count, "Migrate Versions")
 
         for task_id in self.migration_recipe:
-            takes = self.migration_recipe[task_id].get("takes", {})
-            for variant_name in takes:
-                versions = takes[variant_name].get("versions", [])
+            variants = self.migration_recipe[task_id].get("variants", {})
+            for variant_name in variants:
+                versions = variants[variant_name].get("versions", [])
                 for i, version_number in enumerate(versions):
                     progress_caller.step(
                         message="Sort versions: {task_id}-{variant_name}-"
@@ -158,7 +159,7 @@ class AssetMigrationTool(object):
                     if not v:
                         continue
                     # store the version in the migration_recipe for later use
-                    takes[variant_name]["versions"][i] = v
+                    variants[variant_name]["versions"][i] = v
                     inordered_list_of_versions_to_move.append(v)
 
         # fill new_parent_id, new_name and new_code for all items
@@ -248,9 +249,9 @@ class AssetMigrationTool(object):
 
             # We kind of need a versions list that is in
             # reverse-breadth-first order in their dependencies to each other
-            takes = self.migration_recipe[source_entity_id].get("takes", {})
-            for variant_name in takes:
-                versions = takes[variant_name].get("versions", [])
+            variants = self.migration_recipe[source_entity_id].get("variants", {})
+            for variant_name in variants:
+                versions = variants[variant_name].get("versions", [])
                 for v in versions:  # at this point we should have normal versions
                     # check if something referencing this v has already moved this v
                     # to the ordered list.
@@ -275,7 +276,7 @@ class AssetMigrationTool(object):
                     # add the version to the version centric migration recipe
                     version_centric_migration_recipe[v] = {
                         "new_task": new_task,
-                        "variant_name": takes[variant_name].get(
+                        "variant_name": variants[variant_name].get(
                             "new_name", variant_name
                         ),
                     }
