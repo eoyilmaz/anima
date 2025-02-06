@@ -21,7 +21,7 @@ m.addCommand(
 )
 m.addCommand(
     "Pipeline/Create/Update Output Nodes",
-    "from anima.dcc.nukeEnv import auxiliary; auxiliary.update_outputs()",
+    "from anima.dcc.nukeDCC import auxiliary; auxiliary.update_outputs()",
 )
 
 

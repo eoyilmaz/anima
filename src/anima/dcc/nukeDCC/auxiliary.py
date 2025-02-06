@@ -13,9 +13,9 @@ def update_outputs():
 
     do_db_setup()
 
-    from anima.dcc import nukeEnv
+    from anima.dcc import nukeDCC
 
-    nEnv = nukeEnv.Nuke()
+    nEnv = nukeDCC.Nuke()
     version = nEnv.get_current_version()
     if version:
         nEnv.create_main_write_node(version)

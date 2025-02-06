@@ -9,10 +9,10 @@ def version_dialog(mode=2):
     do_db_setup()
 
     from anima.ui.dialogs import version_dialog
-    from anima.dcc import nukeEnv
+    from anima.dcc import nukeDCC
     import nuke
 
-    n = nukeEnv.Nuke()
+    n = nukeDCC.Nuke()
     n.name = "nuke{}.{}".format(nuke.NUKE_VERSION_MAJOR, nuke.NUKE_VERSION_MINOR)
 
     # display only warning messages
