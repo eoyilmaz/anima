@@ -1,46 +1,40 @@
 # -*- coding: utf-8 -*-
 
 import logging
+
+import pymel
+
+from anima.dcc.mayaDCC.common import get_maya_main_window, Maya
+from anima.dcc.mayaDCC import archive
 from anima.log import logger
+from anima.utils import do_db_setup
 
 
-def version_dialog(logging_level=logging.WARNING, mode=2):
-    """Helper function for version_dialog UI for Maya"""
+def show_version_dialog(logging_level=logging.WARNING, mode=2):
+    """Show version_dialog UI for Maya."""
     # connect to db
-    from anima.utils import do_db_setup
-
     do_db_setup()
 
     from anima.ui.dialogs import version_dialog as vd
-    from anima.dcc import mayaDCC
 
-    m = mayaDCC.Maya()
-
-    import pymel
-
-    m.name = "Maya{}".format(str(pymel.versions.current())[0:4])
+    maya_dcc = Maya()
+    maya_dcc.name = "Maya{}".format(str(pymel.versions.current())[0:4])
 
     logger.setLevel(logging_level)
 
     # set the parent object to the maya main window
-    vd.UI(dcc=m, parent=mayaDCC.get_maya_main_window(), mode=mode)
+    vd.UI(dcc=maya_dcc, parent=get_maya_main_window(), mode=mode)
 
 
-def version_updater(logging_level=logging.WARNING):
-    """helper function for version_updater UI for Maya"""
+def show_version_updater(logging_level=logging.WARNING):
+    """Show version_updater UI for Maya."""
     # connect to db
-    from anima.utils import do_db_setup
-
     do_db_setup()
 
     from anima.ui.dialogs import version_updater as vu
-    from anima.dcc import mayaDCC
 
-    m = mayaDCC.Maya()
-
-    import pymel
-
-    m.name = "Maya{}".format(str(pymel.versions.current())[0:4])
+    maya_dcc = Maya()
+    maya_dcc.name = "Maya{}".format(str(pymel.versions.current())[0:4])
 
     logger.setLevel(logging_level)
 
@@ -52,14 +46,12 @@ def version_updater(logging_level=logging.WARNING):
     #     version_updater_dialog.show()
 
     # set the parent object to the maya main window
-    vu.UI(dcc=m, parent=mayaDCC.get_maya_main_window())
+    vu.UI(dcc=maya_dcc, parent=get_maya_main_window())
 
 
-def version_mover():
-    """ """
+def show_version_mover():
+    """Show version_mover UI for Maya."""
     # connect to db
-    from anima.utils import do_db_setup
-
     do_db_setup()
 
     from anima.ui.dialogs import version_mover as vm
@@ -67,34 +59,28 @@ def version_mover():
     vm.UI()
 
 
-def project_manager(logging_level=logging.WARNING):
-    """Helper function for project_manager UI for Maya"""
+def show_project_manager(logging_level=logging.WARNING):
+    """Show project_manager UI for Maya."""
     # connect to db
-    from anima.utils import do_db_setup
-
     do_db_setup()
 
     from anima.ui.dialogs import project_manager as projman
 
     # set the parent object to the maya main window
-    projman.ui_caller(None, None, project_manager.MainWindow)
+    projman.ui_caller(None, None, show_project_manager.MainWindow)
 
 
-def archiver_dialog(logging_level=logging.WARNING, mode=2):
-    """Archiver dialog UI for Maya."""
+def show_archiver_dialog(logging_level=logging.WARNING, mode=2):
+    """Show archiver dialog UI for Maya."""
     # connect to db
-    from anima.utils import do_db_setup
-
     do_db_setup()
 
-    from anima.dcc import mayaDCC
-    from anima.dcc.mayaDCC import archive
     from anima.ui.base import ui_caller
     from anima.ui.dialogs import archiver_dialog
     import pymel
 
-    m = mayaDCC.Maya()
-    m.name = "Maya{}".format(str(pymel.versions.current())[0:4])
+    maya_dcc = Maya()
+    maya_dcc.name = "Maya{}".format(str(pymel.versions.current())[0:4])
 
     logger.setLevel(logging_level)
 
@@ -103,7 +89,7 @@ def archiver_dialog(logging_level=logging.WARNING, mode=2):
         None,
         None,
         archiver_dialog.MultiVersionSelectDialog,
-        dcc=m,
-        parent=mayaDCC.get_maya_main_window(),
+        dcc=maya_dcc,
+        parent=get_maya_main_window(),
         archiver=archive.Archiver(),
     )

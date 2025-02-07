@@ -3,12 +3,12 @@
 import logging
 
 from anima.log import logger
+from anima.utils import do_db_setup
 
 
-def version_dialog(logging_level=logging.WARNING, mode=2):
-    """Helper function for version_dialog UI for Maya"""
+def show_version_dialog(logging_level=logging.WARNING, mode=2):
+    """Show version_dialog UI for 3DE4."""
     # connect to db
-    from anima.utils import do_db_setup
 
     do_db_setup()
 

@@ -212,7 +212,7 @@ class GeneralTools(object):
         """version dialog"""
         from anima.ui.scripts import houdini
 
-        houdini.version_dialog(mode=mode)
+        houdini.show_version_dialog(mode=mode)
 
     @classmethod
     def browse_hip(cls):

@@ -1,21 +1,19 @@
 # -*- coding: utf-8 -*-
 
 import logging
+
+from anima.dcc import motion_builder as motion_builder_dcc
 from anima.log import logger
+from anima.utils import do_db_setup
 
 
-def version_dialog(logging_level=logging.WARNING):
-    """Helper function for version_dialog UI for MotionBuilder"""
+def show_version_dialog(logging_level : int = logging.WARNING) -> None:
+    """Show version_dialog UI for MotionBuilder."""
     # connect to db
-    from anima.utils import do_db_setup
-
     do_db_setup()
 
     from anima.ui.dialogs import version_dialog
-    from anima.dcc import motion_builder
 
-    mb = motion_builder.MotionBuilder()
-
+    mb_dcc = motion_builder_dcc.MotionBuilder()
     logger.setLevel(logging_level)
-
-    version_dialog.UI(dcc=mb)
+    version_dialog.UI(dcc=mb_dcc)

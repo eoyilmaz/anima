@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import shutil
 
-from anima.log import logger
-from anima.dcc import mayaDCC
+import pymel.core as pm
 
 from stalker import Asset, Repository, Sequence, Shot, Task, Version
 from stalker.db.session import DBSession
 
-import pymel.core as pm
-
+from anima.log import logger
+from anima.dcc.mayaDCC.common import Maya
 from anima.publish import run_publishers, POST_PUBLISHER_TYPE
 from anima.ui.dialogs import progress_dialog
 from anima.utils import get_task_hierarchy_name
@@ -289,7 +288,7 @@ class AssetMigrationTool(object):
         # We now should have sorted list of source versions
         # and a corresponding version centric migration recipe
         # go over the list and create new versions,
-        dcc_env = mayaDCC.Maya()
+        dcc_env = Maya()
         publish_errors = []
         for v in ordered_list_of_versions_to_move:
             recipe = version_centric_migration_recipe[v]

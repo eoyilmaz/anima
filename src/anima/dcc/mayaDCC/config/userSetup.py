@@ -10,7 +10,7 @@ import maya.cmds as cmds
 user_setup_start = time.time()
 
 
-def log_print(log):
+def log_print(log) -> None:
     """Wrap log messages for printing data inside userSetup.py.
 
     Args:
@@ -28,12 +28,15 @@ except NameError as e:
     tb = traceback.extract_tb(sys.exc_info()[2])
     here = tb[0][0]
 
+
+maya_version = cmds.about(v=1)
 env_paths = [
     "../../../",
     "../../../mayaDCC",
     "../../../mayaDCC/config",
-    "../../../mayaDCC/config/{}".format(cmds.about(v=1)),
-    "../../../mayaDCC/plugins" "../../../mayaDCC/plugins/{}".format(cmds.about(v=1)),
+    f"../../../mayaDCC/config/{maya_version}",
+    "../../../mayaDCC/plugins",
+    f"../../../mayaDCC/plugins/{maya_version}",
 ]
 
 for path in env_paths:
@@ -138,15 +141,15 @@ if not pm.general.about(batch=1):
         pm.menu(main_menu_name, label=main_menu_label, tearOff=True, p=maya_main_window)
         pm.menuItem(
             label="Open Version",
-            c="from anima.ui.scripts import maya; maya.version_dialog(mode=1);",
+            c="from anima.ui.scripts import maya; maya.show_version_dialog(mode=1);",
         )
         pm.menuItem(
             label="Save As Version",
-            c="from anima.ui.scripts import maya; maya.version_dialog(mode=0);",
+            c="from anima.ui.scripts import maya; maya.show_version_dialog(mode=0);",
         )
         pm.menuItem(
             label="Publish",
-            c="from anima.ui.scripts import maya; maya.version_dialog(mode=0);",
+            c="from anima.ui.scripts import maya; maya.show_version_dialog(mode=0);",
         )
         pm.menuItem(divider=True)
         pm.menuItem(
@@ -221,11 +224,11 @@ def setup_maya_color_management():
     MayaColorManagementConfigurator.configure()
 
 
-pm.evalDeferred("from anima.dcc import mayaDCC; mayaDCC.Maya.clean_malware();")
+pm.evalDeferred("from anima.dcc.mayaDCC.common import Maya; Maya.clean_malware();")
 
 # create environment variables for each Repository
 pm.evalDeferred(
-    "from anima import utils; " "utils.do_db_setup(); " "setup_maya_color_management();"
+    "from anima import utils; utils.do_db_setup(); setup_maya_color_management();"
 )
 
 user_setup_end = time.time()

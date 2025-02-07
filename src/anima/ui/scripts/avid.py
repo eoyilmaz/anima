@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from anima.ui.dialogs import edl_importer
 
-def edl_importer():
-    """Helper script for AVID edl importer."""
-    from anima.ui.dialogs import edl_importer
 
-    reload(edl_importer)
-
+def show_edl_importer_dialog():
+    """Show AVID edl importer dialog."""
     edl_importer.UI()

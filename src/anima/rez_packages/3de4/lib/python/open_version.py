@@ -10,4 +10,4 @@
 
 import ui_common
 
-ui_common.version_dialog(mode=1)
+ui_common.show_version_dialog(mode=1)

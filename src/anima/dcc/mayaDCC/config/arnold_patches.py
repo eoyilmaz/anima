@@ -2,7 +2,7 @@
 
 
 def createArnoldTextureSettings():
-    """The patched version of the original file"""
+    """The patched version of the original file."""
     import pymel.core as pm
     import maya.cmds as cmds
     import pymel.versions as versions

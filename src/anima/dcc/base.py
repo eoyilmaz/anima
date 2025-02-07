@@ -9,8 +9,10 @@ from stalker import File, Project, Repository, Shot, Version
 from stalker.db.session import DBSession
 
 
-from anima import defaults
-from anima import representation  # keep this to extend Stalker classes
+from anima import (
+    defaults,
+    representation,  # keep this to extend Stalker classes
+)
 from anima.log import logger
 from anima.recent import RecentFileManager
 from anima.utils.progress import ProgressManagerFactory
@@ -852,8 +854,8 @@ class DCCBase(object):
 
         logger.debug(f"created copy to: {output_full_path}")
 
-    @lru_cache
     @classmethod
+    @lru_cache(maxsize=None)
     def get_shot(cls, version: Version) -> Union[None, Shot]:
         """Find and return the related Shot.
 
@@ -868,7 +870,7 @@ class DCCBase(object):
             if isinstance(task, Shot):
                 return task
 
-    @lru_cache
+    @lru_cache(maxsize=None)
     def is_shot_related_version(self, version: Version) -> bool:
         """Return True if this is a shot related version.
 

@@ -472,7 +472,7 @@ def export_camera_curves_to_3de4_ui():
             )
             super(UI, self).accept()
 
-    from anima.dcc.mayaDCC import get_maya_main_window
+    from anima.dcc.mayaDCC.common import get_maya_main_window
 
     ui = UI(parent=get_maya_main_window())
     ui.show()

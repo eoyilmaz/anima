@@ -5,12 +5,14 @@ import os
 import re
 import tempfile
 
+from maya import cmds as cmds, mel as mel
+import pymel.core as pm
+
+from stalker import Type, Task, Version
+
 import anima
 from anima.dcc.mayaDCC import auxiliary
 from anima.utils.progress import ProgressManagerFactory
-
-from maya import cmds as cmds, mel as mel
-from pymel import core as pm
 
 
 class Render(object):
@@ -149,8 +151,6 @@ class Render(object):
         """Deletes the display layers in the current scene"""
         # switch to default render layer before deleting anything
         # this will prevent layers to be non-deletable
-        from anima.dcc.mayaDCC import auxiliary
-
         auxiliary.switch_to_default_render_layer()
         pm.delete(pm.ls(type=["displayLayer"]))
 
@@ -159,8 +159,6 @@ class Render(object):
         """Deletes the render layers in the current scene"""
         # switch to default render layer before deleting anything
         # this will prevent layers to be non-deletable
-        from anima.dcc.mayaDCC import auxiliary
-
         auxiliary.switch_to_default_render_layer()
         pm.delete(pm.ls(type=["renderLayer"]))
 
@@ -188,9 +186,9 @@ class Render(object):
         It does that by adding the repository environment variable to the file
         paths.
         """
-        from anima.dcc import mayaDCC
+        from anima.dcc.mayaDCC.common import Maya
 
-        m = mayaDCC.Maya()
+        m = Maya()
         m.replace_external_paths()
 
     @classmethod
@@ -686,9 +684,9 @@ class Render(object):
     @classmethod
     def update_render_settings(cls):
         """updates render settings for current renderer"""
-        from anima.dcc import mayaDCC
+        from anima.dcc.mayaDCC.common import Maya
 
-        m = mayaDCC.Maya()
+        m = Maya()
         v = m.get_current_version()
         if v:
             m.set_render_filename(version=v)
@@ -1520,24 +1518,24 @@ class Render(object):
 
     @classmethod
     def barndoor_simulator_setup(cls):
-        """creates a barndoor simulator"""
+        """Create a barndoor simulator."""
         bs = auxiliary.BarnDoorSimulator()
         bs.light = pm.ls(sl=1)[0]
         bs.setup()
 
     @classmethod
-    def barndoor_simulator_unsetup(cls):
-        """removes the barndoor simulator"""
+    def barndoor_simulator_delete(cls):
+        """Delete the barndoor simulator."""
         bs = auxiliary.BarnDoorSimulator()
         for light in pm.ls(sl=1):
             light_shape = light.getShape()
             if isinstance(light_shape, pm.nt.Light):
                 bs.light = light
-            bs.unsetup()
+            bs.delete()
 
     @classmethod
     def fix_barndoors(cls):
-        """fixes the barndoors on scene lights created in MtoA 1.0 to match the
+        """Fixe the barndoors on scene lights created in MtoA 1.0 to match the
         new behaviour of barndoors in MtoA 1.1
         """
         for light in pm.ls(type="spotLight"):
@@ -1951,8 +1949,6 @@ class Render(object):
     def dummy_window_light_plane(cls):
         """creates or updates the dummy window plane for the given area light"""
         area_light_list = pm.selected()
-        from anima.dcc.mayaDCC import auxiliary
-
         for light in area_light_list:
             dwl = auxiliary.DummyWindowLight()
             dwl.light = light
@@ -2282,11 +2278,10 @@ class Render(object):
     def generate_reflection_curve(self):
         """Generates a curve which helps creating specular at the desired point"""
         from maya.OpenMaya import MVector
-        from anima.dcc.mayaDCC import auxiliary
 
         vtx = pm.ls(sl=1)[0]
         normal = vtx.getNormal(space="world")
-        panel = auxiliary.Playblaster.get_active_panel()
+        panel = anima.dcc.mayaDCC.playblast.Playblaster.get_active_panel()
         camera = pm.PyNode(pm.modelPanel(panel, q=1, cam=1))
         camera_axis = MVector(0, 0, -1) * camera.worldMatrix.get()
 
@@ -2453,10 +2448,9 @@ class Render(object):
         import os
         import tempfile
         import shutil
-        from anima.dcc.mayaDCC import auxiliary
-        from anima.dcc import mayaDCC
+        from anima.dcc.mayaDCC.common import Maya
 
-        m = mayaDCC.Maya()
+        m = Maya()
         v = m.get_current_version()
 
         nodes = pm.ls(sl=1)
@@ -2763,9 +2757,9 @@ class MayaColorManagementConfigurator(object):
     @classmethod
     def get_project_color_management_pref_name(cls):
         """Return the current project's color management profile name."""
-        from anima.dcc import mayaDCC
+        from anima.dcc.mayaDCC.common import Maya
 
-        m = mayaDCC.Maya()
+        m = Maya()
         v = m.get_current_version()
         maya_specific_config = cls.get_maya_specific_config()
         if not v:
@@ -3186,8 +3180,6 @@ class LightingSceneBuilder(object):
         :param Version animation_version: The animation Version to open.
         :return:
         """
-        from stalker import Type, Task, Version
-
         look_dev_type = Type.query.filter(Type.name == "Look Development").first()
         if not look_dev_type:
             raise RuntimeError(
@@ -3195,10 +3187,10 @@ class LightingSceneBuilder(object):
             )
 
         # open the animation version
-        from anima.dcc import mayaDCC
+        from anima.dcc.mayaDCC.common import Maya
 
         # get the current version
-        m = mayaDCC.Maya()
+        m = Maya()
         # store the current version to open later on
         lighting_version = m.get_current_version()
         m.open(
@@ -3378,7 +3370,7 @@ class LightingSceneBuilder(object):
         from anima.dcc import mayaDCC
 
         # get the current version
-        m = mayaDCC.Maya()
+        m = anima.dcc.mayaDCC.common.Maya()
         v = m.get_current_version()
         if not v:
             raise RuntimeError(

@@ -46,7 +46,7 @@ def create_pymel():
 def create_maya_dcc():
     """Create a proper Maya DCC."""
     # create the DCC instance
-    from anima.dcc.mayaDCC import Maya
+    from anima.dcc.mayaDCC.common import Maya
 
     maya_dcc = Maya()
     maya_dcc.use_progress_window = False

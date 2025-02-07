@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 import uuid
 
+import anima.dcc.mayaDCC.playblast
 from anima.log import logger
 from anima.dcc.mayaDCC import auxiliary
 from anima.representation import Representation
@@ -254,7 +255,7 @@ class RepresentationGenerator(object):
         if not self.logged_in_user:
             raise RuntimeError("Please login first!")
 
-        from anima.dcc.mayaDCC import Maya
+        from anima.dcc.mayaDCC.common import Maya
 
         self.maya_env = Maya()
 
@@ -1120,7 +1121,7 @@ class RepresentationGenerator(object):
         pm.loadPlugin("mtoa")
 
         # disable "show plugin shapes"
-        active_panel = auxiliary.Playblaster.get_active_panel()
+        active_panel = anima.dcc.mayaDCC.playblast.Playblaster.get_active_panel()
         show_plugin_shapes = pm.modelEditor(active_panel, q=1, pluginShapes=1)
         pm.modelEditor(active_panel, e=1, pluginShapes=False)
 
@@ -1518,7 +1519,7 @@ class RepresentationGenerator(object):
         pm.newFile(force=True)
 
         # reset show plugin shapes option
-        active_panel = auxiliary.Playblaster.get_active_panel()
+        active_panel = anima.dcc.mayaDCC.playblast.Playblaster.get_active_panel()
         pm.modelEditor(active_panel, e=1, pluginShapes=show_plugin_shapes)
 
     def generate_rs(self):

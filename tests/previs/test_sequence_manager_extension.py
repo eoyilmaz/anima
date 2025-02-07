@@ -678,8 +678,8 @@ class SequenceManagerTestCase(unittest.TestCase):
     def test_generate_sequence_structure_is_working_properly(self):
         """generate_sequence_structure() method is working properly."""
         sm = pymel.core.PyNode('sequenceManager1')
-        from anima.dcc import mayaDCC
-        mayaDCC.Maya.set_fps(fps=24)
+        from anima.dcc.mayaDCC import common
+        common.Maya.set_fps(fps=24)
 
         sm.set_shot_name_template('<Sequence>_<Shot>_<Version>')
         sm.set_version('v001')

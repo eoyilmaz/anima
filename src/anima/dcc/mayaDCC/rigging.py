@@ -209,9 +209,9 @@ class Rigging(object):
     @classmethod
     def create_joints_on_curve_ui(cls):
         """Creates joints on selected curve"""
-        from anima.dcc import mayaDCC
+        from anima.dcc.mayaDCC import common
 
-        main_window = mayaDCC.get_maya_main_window()
+        main_window = common.get_maya_main_window()
         jocd = JointOnCurveDialog(parent=main_window)
         jocd.show()
 

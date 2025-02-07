@@ -5,6 +5,7 @@ import tempfile
 
 from pymel import core as pm
 
+from anima.dcc.mayaDCC.common import get_maya_main_window, Maya
 from anima.utils.progress import ProgressManagerFactory
 
 
@@ -20,9 +21,7 @@ class General(object):
         """Opens the Publish Checker window without publishing the current
         scene
         """
-        from anima.dcc import mayaDCC
-
-        m = mayaDCC.Maya()
+        m = Maya()
         version = m.get_current_version()
 
         # create the publish window
@@ -32,7 +31,7 @@ class General(object):
             dcc=m,
             publish_callback=None,
             version=version,
-            parent=mayaDCC.get_maya_main_window(),
+            parent=get_maya_main_window(),
         )
         dialog.auto_delete_new_version_on_exit = False
         dialog.show()
@@ -122,11 +121,11 @@ class General(object):
             )
 
     @classmethod
-    def version_dialog(cls, mode=2):
-        """version dialog"""
+    def show_version_dialog(cls, mode=2):
+        """Show version dialog."""
         from anima.ui.scripts import maya
 
-        maya.version_dialog(mode=mode)
+        maya.show_version_dialog(mode=mode)
 
     @classmethod
     def export_transform_info(cls, use_global_pos=False):
@@ -692,7 +691,6 @@ def unknown_plugin_cleaner_ui():
     the selected *.ma files
     """
     from anima.ui.lib import QtWidgets
-    from anima.dcc.mayaDCC import get_maya_main_window
 
     maya_main_window = get_maya_main_window()
 

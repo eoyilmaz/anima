@@ -159,7 +159,7 @@ def UI():
             pm.button(
                 "open_version_button",
                 l="Open Version",
-                c=repeated_callback(General.version_dialog, mode=1),
+                c=repeated_callback(General.show_version_dialog, mode=1),
                 ann="Open Version",
                 bgc=color.color,
             )
@@ -167,7 +167,7 @@ def UI():
             pm.button(
                 "save_as_version_button",
                 l="Save As Version",
-                c=repeated_callback(General.version_dialog, mode=0),
+                c=repeated_callback(General.show_version_dialog, mode=0),
                 ann="Save As Version",
                 bgc=color.color,
             )
@@ -1538,9 +1538,9 @@ def UI():
                 default_image_height = 1080
                 # let's update the width and height of the image resolution from the
                 # current project
-                from anima.dcc import mayaDCC
+                from anima.dcc.mayaDCC import common
 
-                m = mayaDCC.Maya()
+                m = common.Maya()
                 v = m.get_current_version()
                 if v:
                     imf = v.task.project.image_format
@@ -2661,7 +2661,7 @@ def UI():
             pm.button(
                 "barn_door_simulator_unsetup_button",
                 l="Un-Setup",
-                c=repeated_callback(Render.barndoor_simulator_unsetup),
+                c=repeated_callback(Render.barndoor_simulator_delete),
                 ann="Removes the barn door simulator nodes from the selected " "light",
                 bgc=color.color,
             )

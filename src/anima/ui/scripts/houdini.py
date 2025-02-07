@@ -1,27 +1,31 @@
 # -*- coding: utf-8 -*-
 
+import logging
 
 import hou
 
-from anima.log import logger
+from stalker import log
+
+from anima.dcc import houdini as houdini_dcc
 from anima.dcc.houdini.utils import Executor
+from anima.log import logger
 from anima.utils import do_db_setup
 
 
-def version_dialog(mode=2):
-    """Helper function for version_dialog UI for Houdini"""
+def show_version_dialog(mode=2):
+    """Show version_dialog UI for Houdini.
+
+    Args:
+        mode (int): 0: Create, 1: Update, 2: Create or Update.
+    """
     # connect to db
     do_db_setup()
-
-    import logging
-    from stalker import log
 
     log.logging_level = logging.WARNING
 
     from anima.ui.dialogs import version_dialog
-    from anima.dcc import houdini
 
-    h = houdini.Houdini()
+    h = houdini_dcc.Houdini()
     logger.setLevel(logging.WARNING)
 
     if hou.applicationVersion()[0] <= 13:

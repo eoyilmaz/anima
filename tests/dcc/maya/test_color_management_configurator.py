@@ -208,7 +208,7 @@ def test_configure_will_use_the_project_default_config(
     DBSession.add(v)
     DBSession.commit()
 
-    from anima.dcc.mayaDCC import Maya
+    from anima.dcc.mayaDCC.common import Maya
 
     assert isinstance(maya_dcc, Maya)
     maya_dcc.save_as(v)

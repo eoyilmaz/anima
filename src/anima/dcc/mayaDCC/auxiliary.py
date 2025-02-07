@@ -1,30 +1,51 @@
 # -*- coding: utf-8 -*-
-
 import copy
-import json
+from functools import reduce
 import glob
 import os
 import re
+import shutil
 import tempfile
-from typing import List
+import time
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
-from stalker import File, LocalSession, Repository, Shot, Task, Type, Version
-from stalker.db.session import DBSession
-
+import maya.cmds as cmds
+import maya.mel as mel
 import pymel.core as pm
 
+from stalker import File, LocalSession, Project, Repository, Shot, Task, Type, Version
+from stalker.db.session import DBSession
+
+
 from anima import ALEMBIC, USD, CACHE_FORMAT_DATA
+from anima.dcc.mayaDCC import mash_bake_instancer
+from anima.exc import PublishError
 from anima.log import logger
-import anima.utils
+from anima.publish import (
+    run_publishers,
+    staging,
+    POST_PUBLISHER_TYPE,
+)
+from anima.representation import Representation
+from anima.ui.utils import initialize_post_publish_dialog
+from anima.utils import (
+    get_unique_variant_names,
+    upload_thumbnail,
+)
 from anima.utils.progress import ProgressManagerFactory
+
+
+if TYPE_CHECKING:
+    from pymel.core.nodetypes import AiStandIn
+
 
 FIRST_CAP_RE = re.compile("(.)([A-Z][a-z]+)")
 ALL_CAP_RE = re.compile("([a-z0-9])([A-Z])")
 VERSION_NUMBER_RE = r"([\w\d/_\\\:\$]+v)([0-9]+)([\w\d._]+)"
 
 
-def kill_all_torn_off_panels():
-    """deletes all torn off panels"""
+def kill_all_torn_off_panels() -> None:
+    """Delete all torn off panels."""
     panel_list = pm.getPanel(type="modelPanel")
 
     # remove all torn off panels
@@ -33,11 +54,8 @@ def kill_all_torn_off_panels():
             panel.delete(pnl=1)
 
 
-def maximize_first_model_panel():
-    """maximizes the first model panel it can find
-
-    :return:
-    """
+def maximize_first_model_panel() -> None:
+    """Maximize the first model panel it can find."""
     panel_list = pm.getPanel(type="modelPanel")
     if len(panel_list) == 0:
         return
@@ -52,8 +70,13 @@ def maximize_first_model_panel():
         pm.mel.eval("updateToolbox();")
 
 
-def get_valid_dag_node(node):
-    """returns a valid dag node even the input is string"""
+def get_valid_dag_node(node) -> Union[None, pm.nodetypes.DagNode]:
+    """Return a valid DagNode even the input is string.
+    
+    Returns:
+        Union[None, pm.nodetypes.DagNode]: The DagNode if found one, None
+            otherwise.
+    """
     try:
         dag_node = pm.nodetypes.DagNode(node)
     except pm.MayaNodeError:
@@ -63,8 +86,12 @@ def get_valid_dag_node(node):
     return dag_node
 
 
-def get_valid_node(node):
-    """returns a valid PyNode even the input is string"""
+def get_valid_node(node) -> Union[None, pm.PyNode]:
+    """Return a valid PyNode even the input is string.
+    
+    Returns:
+        Union[None, pm.PyNode]: The PyNode instance if found, None otherwise.
+    """
     try:
         PyNode = pm.PyNode(node)
     except pm.MayaNodeError:
@@ -74,9 +101,11 @@ def get_valid_node(node):
     return PyNode
 
 
-def get_anim_curves(node):
-    """returns all the animation curves connected to the
-    given node
+def get_anim_curves(node) -> List[pm.PyNode]:
+    """Return all the animation curves connected to the given node.
+
+    Returns:
+        List[pm.PyNode]: The related anim curves.
     """
     # list all connections to the node
     connected_nodes = pm.listConnections(node)
@@ -91,23 +120,35 @@ def get_anim_curves(node):
     return return_list
 
 
-def set_anim_curve_color(anim_curve, color):
-    """sets animCurve color to color"""
+def set_anim_curve_color(anim_curve, color: List[float]) -> None:
+    """Set animCurve color to the given color.
+    
+    Args:
+        anim_curve (pm.nt.AnimCurve): The AnimCurve instance.
+        color (List[float]): A list of floats representing RGB channels.
+    """
     anim_curve = get_valid_node(anim_curve)
     anim_curve.setAttr("useCurveColor", True)
     anim_curve.setAttr("curveColor", color, type="double3")
 
 
 def axial_correction_group(
-    obj, to_parents_origin=False, name_prefix="", name_postfix="_ACGroup#"
-):
-    """creates a new parent to zero out the transformations
+    obj : Union[str, pm.PyNode],
+    to_parents_origin : bool = False,
+    name_prefix : str = "",
+    name_postfix : str = "_ACGroup#",
+) -> pm.nt.Transform:
+    """Create a new parent to zero out the transformations.
 
-    if to_parents_origin is set to True, it doesn't zero outs the
-    transformations but creates a new parent at the same place of the original
-    parent
+    Args:
+        obj (Union[str, PyNode]): A str as the object name or PyNode
+            representing the object to work on.
+        to_parents_origin (bool): If set to True, it doesn't zero out the
+            transformations but creates a new parent at the same place of the
+            original parent.
 
-    :returns: pymel.core.nodeTypes.Transform
+    Returns:
+        pymel.core.nodeTypes.Transform: The newly created Transform node.
     """
     obj = get_valid_dag_node(obj)
 
@@ -158,8 +199,8 @@ def axial_correction_group(
     return ac_group
 
 
-def go_home(node):
-    """sets all the transformations to zero"""
+def go_home(node) -> None:
+    """Set all the transformations to zero."""
     if node.attr("t").isSettable():
         node.setAttr("t", (0, 0, 0))
     if node.attr("r").isSettable():
@@ -168,8 +209,12 @@ def go_home(node):
         node.setAttr("s", (1, 1, 1))
 
 
-def rivet():
-    """the python version of the famous rivet setup from Bazhutkin"""
+def rivet() -> pm.nt.Transform:
+    """Python version of the famous rivet setup from Michael Bazhutkin.
+
+    Returns:
+        pm.nt.Transform: The locator objects.
+    """
     selection_list = pm.filterExpand(sm=32)
 
     if selection_list is not None and len(selection_list) > 0:
@@ -258,12 +303,16 @@ def rivet():
     return locator
 
 
-def create_follicle(shape, uv):
-    """creates follicle on the given shape at given uv coordinates
+def create_follicle(shape, uv) -> Tuple[pm.nt.Transform, pm.nt.Follicle]:
+    """Create follicle on the given shape at given uv coordinates.
 
-    :param shape:
-    :param uv:
-    :return:
+    Args:
+        shape (pm.nt.Mesh): The shape node.
+        uv (List[float]): The UV coordinates.
+
+    Returns:
+        Tuple[pm.nt.Transform, pm.nt.Follicle]: The follicle transform and
+            follicle node.
     """
     # create a hair follicle
     follicle = pm.nt.Follicle()
@@ -280,11 +329,22 @@ def create_follicle(shape, uv):
     return follicle_transform, follicle
 
 
-def auto_rivet(objects=None, geo=None):
-    """creates hair follicles around selection
+def auto_rivet(
+    objects : Optional[List[pm.nt.Transform]] = None,
+    geo : Optional[Union[pm.nt.Transform, pm.nt.Mesh]] = None
+) -> List[pm.nt.Follicle]:
+    """Create hair follicles around selection.
 
-    :param objects: list of objects to attach to the geometry
-    :param geo: A geometry to attach the objects to.
+    Args:
+        objects (Optional[List[pm.nt.Transform]]): A list of objects to attach
+            to the geometry. If None is given the selected object except the
+            last one will be used.
+        geo (Optional[Union[pm.nt.Transform, pm.nt.Mesh]]): A geometry to
+            attach the objects to. If None is given, the last selected object
+            will be used.
+
+    Returns:
+        List[pm.nt.Follicle]: The follicles.
     """
     if not objects or not geo:
         sel_list = pm.ls(sl=1)
@@ -319,10 +379,13 @@ def auto_rivet(objects=None, geo=None):
     return follicles
 
 
-def rivet_per_face():
-    """creates hair follicles per selected face"""
-    from functools import reduce
+def rivet_per_face() -> Tuple[List[pm.nt.Follicle], List[pm.nt.Transform]]:
+    """Create hair follicles per selected face.
 
+    Returns:
+        Tuple[List[pm.nt.Follicle], List[pm.nt.Transform]]: The follicles and
+            the locators.
+    """
     sel_list = pm.ls(sl=1, fl=1)
 
     follicles = []
@@ -343,8 +406,8 @@ def rivet_per_face():
     return follicles, locators
 
 
-def hair_from_curves():
-    """creates hairs from curves"""
+def hair_from_curves() -> None:
+    """Create hairs from curves."""
     selection_list = pm.ls(sl=1)
 
     curves = []
@@ -462,16 +525,12 @@ def hair_from_curves():
         pm.rename(hair_dag, new_name)
 
     pm.select(hair_system, r=True)
-
-    import maya.mel as mel
-
     mel.eval('displayHairCurves("current", true')
-
     pm.delete(cpom)
 
 
-def align_to_pole_vector():
-    """aligns the object to the pole vector of the selected ikHandle"""
+def align_to_pole_vector() -> None:
+    """Align the object to the pole vector of the selected ikHandle."""
     selection_list = pm.ls(sl=1)
 
     ik_handle = ""
@@ -501,54 +560,57 @@ def align_to_pole_vector():
     pm.parent(control_object, w=True)
 
 
-def export_blend_connections():
-    """Exports the connection commands from selected objects to the blendShape
-    of another object. The resulted text file contains all the MEL scripts to
-    reconnect the objects to the blendShape node. So after exporting the
-    connection commands you can export the blendShape targets as another maya
-    file and delete them from the scene, thus your scene gets lite and loads
-    much more quickly.
+def export_blend_connections() -> None:
+    """Export blendShape connection commands from selected objects.
+
+    The resulting text file contains MEL scripts to reconnect objects to the
+    blendShape node.
+
+    So after exporting the connection commands you can export the blendShape
+    targets as another maya file and delete them from the scene, thus your
+    scene gets lite and loads much more quickly.
     """
     selection_list = pm.ls(tr=1, sl=1, l=1)
-
     dialog_return = pm.fileDialog2(cap="Save As", fm=0, ff="Text Files(*.txt)")
-
     filename = dialog_return[0]
     print(filename)
-
     print("\n\nFiles written:\n--------------------------------------------\n")
+    commands_to_write = []
+    for i in range(0, len(selection_list)):
+        shapes = pm.listRelatives(selection_list[i], s=True, f=True)
+
+        main_shape = ""
+        for j in range(0, len(shapes)):
+            if pm.getAttr(shapes[j] + ".intermediateObject") == 0:
+                main_shape = shapes
+                break
+        if main_shape == "":
+            main_shape = shapes[0]
+
+        con = pm.listConnections(main_shape, t="blendShape", c=1, s=1, p=1)
+
+        cmd = "connectAttr -f {}.worldMesh[0] {};".format(
+            "".join(map(str, main_shape)),
+            "".join(map(str, con[0].name())),
+        )
+        print("{}\n".format(cmd))
+        commands_to_write.append(cmd)
 
     with open(filename, "w") as fileId:
-        for i in range(0, len(selection_list)):
-            shapes = pm.listRelatives(selection_list[i], s=True, f=True)
-
-            main_shape = ""
-            for j in range(0, len(shapes)):
-                if pm.getAttr(shapes[j] + ".intermediateObject") == 0:
-                    main_shape = shapes
-                    break
-            if main_shape == "":
-                main_shape = shapes[0]
-
-            con = pm.listConnections(main_shape, t="blendShape", c=1, s=1, p=1)
-
-            cmd = "connectAttr -f {}.worldMesh[0] {};".format(
-                "".join(map(str, main_shape)),
-                "".join(map(str, con[0].name())),
-            )
-            print("{}\n".format(cmd))
-            fileId.write("{}\n".format(cmd))
+        fileId.write("\n".join(commands_to_write))
 
     print("\n------------------------------------------------------\n")
     print("filename: {}     ...done\n".format(filename))
 
 
-def transfer_shaders(source, target, allow_component_assignments=False):
+def transfer_shaders(source, target, allow_component_assignments=False) -> None:
     """Transfer shader from source to target.
-    :param source: Source geo.
-    :param target: Target geo.
-    :param (bool) allow_component_assignments: If True will transfer component level
-        shader assignments.
+
+    Args:
+        source (Union[pm.nt.Mesh, pm.nt.Transform]): Source geo.
+        target (Union[pm.nt.Mesh, pm.nt.Transform]): Target geo.
+        allow_component_assignments (bool): If True will transfer component
+            level shader assignments.
     """
     if isinstance(source, pm.nt.Transform):
         source_shape = source.getShape()
@@ -557,45 +619,48 @@ def transfer_shaders(source, target, allow_component_assignments=False):
 
     # get the shadingEngines
     shapes_and_engines = source_shape.outputs(type=pm.nt.ShadingEngine, c=1)
-    if len(shapes_and_engines):
-        # possible fix for locked shading engines
-        for source_attribute, shading_engine in shapes_and_engines:
-            pm.lockNode(shading_engine, l=0, lockUnpublished=0)
+    if not len(shapes_and_engines):
+        return
 
-            # check if there is component assignments
-            is_component_assignment = "objectgroups" in source_attribute.lower()
-            if is_component_assignment and allow_component_assignments:
-                # try to get the same components on the target
-                components = []
-                target_shape = target
-                if isinstance(target, pm.nt.Transform):
-                    target_shape = target.getShape()
-                for component in pm.sets(shading_engine, q=1):
-                    if source_shape.name() in str(component):
-                        target_component = component.replace(
-                            source_shape.name(), target_shape.name()
-                        )
-                        components.append(target_component)
-                pm.sets(shading_engine, fe=components)
-            else:
-                pm.sets(shading_engine, fe=target)
-                # also assign instances to the same shader
-                if target.instanceCount() > 1:
-                    for i in range(1, target.instanceCount()):
-                        target.attr("instObjGroups[{}]".format(i)).disconnect()
-                        (
-                            target.attr("instObjGroups[{}]".format(i))
-                            >> shading_engine.attr("dagSetMembers").next_available
-                        )
+    # possible fix for locked shading engines
+    for source_attribute, shading_engine in shapes_and_engines:
+        pm.lockNode(shading_engine, l=0, lockUnpublished=0)
+
+        # check if there is component assignments
+        is_component_assignment = "objectgroups" in source_attribute.lower()
+        if is_component_assignment and allow_component_assignments:
+            # try to get the same components on the target
+            components = []
+            target_shape = target
+            if isinstance(target, pm.nt.Transform):
+                target_shape = target.getShape()
+            for component in pm.sets(shading_engine, q=1):
+                if source_shape.name() in str(component):
+                    target_component = component.replace(
+                        source_shape.name(), target_shape.name()
+                    )
+                    components.append(target_component)
+            pm.sets(shading_engine, fe=components)
+        else:
+            pm.sets(shading_engine, fe=target)
+            # also assign instances to the same shader
+            if target.instanceCount() <= 1:
+                continue
+
+            for i in range(1, target.instanceCount()):
+                target.attr("instObjGroups[{}]".format(i)).disconnect()
+                (
+                    target.attr("instObjGroups[{}]".format(i))
+                    >> shading_engine.attr("dagSetMembers").next_available
+                )
 
 
-def benchmark(iter_cnt):
-    """benchmarks playback rate
+def benchmark(iter_cnt) -> None:
+    """Benchmark playback rate.
 
-    :param iter_cnt: Count of iteration
+    Args:
+        iter_cnt: Count of iteration.
     """
-    import time
-
     start = pm.playbackOptions(q=1, min=1)
     stop = pm.playbackOptions(q=1, max=1)
 
@@ -612,22 +677,28 @@ def benchmark(iter_cnt):
     print("Average FPS   : {:0.3f}".format((stop - start) * iter_cnt / total_time))
 
 
-def load_shelf_tab(shelf_path):
-    """loads the given shelf tab"""
+def load_shelf_tab(shelf_path) -> None:
+    """Load the given shelf tab.
+
+    Args:
+        shelf_path (str): The path to the shelf mel file.
+    """
     # look in to the shelf mel file from user folders
-    import os
+    if not os.path.exists(shelf_path):
+        return
 
-    if os.path.exists(shelf_path):
-        try:
-            pm.mel.eval(f'loadNewShelf "{shelf_path}"')
-        except Exception:
-            # probably not in GUI mode
-            return
+    try:
+        pm.mel.eval(f'loadNewShelf "{shelf_path}"')
+    except Exception:
+        # probably not in GUI mode
+        return
 
 
-def delete_shelf_tab(shelf_name, confirm=True):
-    """The python version of the original mel script of Maya
-    :param shelf_name: The name of the shelf to delete
+def delete_shelf_tab(shelf_name : str, confirm : bool = True) -> None:
+    """The python version of the original mel script of Maya.
+
+    Args:
+        shelf_name (str): The name of the shelf to delete.
     """
     try:
         shelf_top_level_path = pm.melGlobals["gShelfTopLevel"]
@@ -678,8 +749,6 @@ def delete_shelf_tab(shelf_name, confirm=True):
     pm.windows.deleteUI(f"{shelf_top_level_path}|{shelf_name}", layout=1)
 
     # remove the shelf mel file from user folders
-    import os
-
     for path in pm.internalVar(userShelfDir=1).split(os.path.pathsep):
         shelf_file_name = f"shelf_{shelf_name}.mel"
         shelf_file_full_path = os.path.join(path, shelf_file_name)
@@ -702,10 +771,11 @@ def delete_shelf_tab(shelf_name, confirm=True):
     pm.mel.eval("shelfTabChange();")
 
 
-def cube_from_bbox(bbox):
-    """creates a polyCube from the given bbox
+def cube_from_bbox(bbox : pm.dt.BoundingBox) -> None:
+    """Create a polyCube from the given bounding box.
 
-    :param bbox: pymel.core.dt.BoundingBox instance
+    Args:
+        bbox (pm.dt.BoundingBox): pm.dt.BoundingBox instance.
     """
     cube = pm.polyCube(
         width=bbox.width(), height=bbox.height(), depth=bbox.depth(), ch=False
@@ -714,13 +784,19 @@ def cube_from_bbox(bbox):
     return cube[0]
 
 
-def create_bbox(nodes, per_selection=False):
-    """creates bounding boxes for the selected objects
+def create_bbox(
+    nodes : List[pm.nt.Transform],
+    per_selection : bool = False
+) -> Union[pm.dt.BoundingBox, List[pm.dt.BoundingBox]]:
+    """Create bounding boxes for the selected objects.
 
-    :param bool per_selection: If True will create a BBox for each
-      given object
+    Args:
+        per_selection (bool): If True will create a BBox for each given object.
+
+    Returns:
+        Union[pm.dt.BoundingBox, List[pm.dt.BoundingBox]]: The BBox or list of
+            BBoxes.
     """
-
     if per_selection:
         for node in nodes:
             return cube_from_bbox(node.boundingBox())
@@ -732,8 +808,15 @@ def create_bbox(nodes, per_selection=False):
         return cube_from_bbox(bbox)
 
 
-def replace_with_bbox(nodes):
-    """replaces the given nodes with a bbox object"""
+def replace_with_bbox(nodes : List[pm.nt.Transform]) -> List[pm.nt.Transform]:
+    """Replace the given nodes with a bbox object.
+
+    Args:
+        nodes (List[pm.nt.Transform]): A list of nodes to replace with bbox.
+
+    Returns:
+        List[pm.nt.Transform]: The list of bbox objects.
+    """
     node_names = []
     bboxes = []
     processed_nodes = []
@@ -782,13 +865,17 @@ def replace_with_bbox(nodes):
     return bboxes
 
 
-def get_root_nodes(reference_node=None):
-    """returns the root DAG nodes.
+def get_root_nodes(
+    reference_node : Optional[pm.nt.Reference]= None
+) -> List[pm.nt.Transform]:
+    """Return the root DAG nodes.
 
-    :param reference_node: If given, the root node of that reference and all the
-        subReference nodes will be returned.
+    Args:
+        reference_node (Optional[pm.nt.Reference]): If given, the root node of
+            that reference and all the subReference nodes will be returned.
 
-    :return: list
+    Returns:
+        List[pm.nt.Transform]: The root transform nodes.
     """
     root_transform_nodes = []
 
@@ -823,11 +910,29 @@ def get_root_nodes(reference_node=None):
     return root_transform_nodes
 
 
-def create_arnold_stand_in(path=None):
-    """A fixed version of original arnold script of SolidAngle Arnold core API"""
+def create_arnold_stand_in(path : Optional[str] = None) -> "AiStandIn":
+    """Create Arnold Stand-In node.
+
+    This is a fixed version of original arnold script of SolidAngle Arnold core
+    API.
+
+    Args:
+        path (Optional[str]): The path to the stand-in file. If None is given
+            the an empty AiStandIn node will be created.
+
+    Returns:
+        pm.nt.AiStandIn: The created stand-in node.
+    """
     if not pm.objExists("ArnoldStandInDefaultLightSet"):
-        pm.createNode("objectSet", name="ArnoldStandInDefaultLightSet", shared=True)
-        pm.lightlink(object="ArnoldStandInDefaultLightSet", light="defaultLightSet")
+        pm.createNode(
+            "objectSet",
+            name="ArnoldStandInDefaultLightSet",
+            shared=True
+        )
+        pm.lightlink(
+            object="ArnoldStandInDefaultLightSet",
+            light="defaultLightSet"
+        )
 
     stand_in = pm.createNode("aiStandIn", n="ArnoldStandInShape")
     # temp fix until we can correct in c++ plugin
@@ -841,8 +946,18 @@ def create_arnold_stand_in(path=None):
     return stand_in
 
 
-def create_rs_proxy_node(path=None):
-    """Creates Redshift Proxies showing a proxy object"""
+def create_rs_proxy_node(
+    path : Optional[str] = None
+) -> Tuple[pm.nt.RedshiftProxyMesh, pm.nt.Mesh]:
+    """Create Redshift Proxies showing a proxy object.
+
+    Args:
+        path (Optional[str]): The path to the proxy file.
+
+    Returns:
+        Tuple[pm.nt.RedshiftProxyMesh, pm.nt.Mesh]: The created proxy node and
+            the shape node.
+    """
     proxy_mesh_node = pm.createNode("RedshiftProxyMesh")
     proxy_mesh_node.fileName.set(path)
     proxy_mesh_shape = pm.createNode("mesh")
@@ -854,16 +969,15 @@ def create_rs_proxy_node(path=None):
     return proxy_mesh_node, proxy_mesh_shape
 
 
-def run_pre_publishers():
-    """runs pre publishers if the current scene is a published version
+def run_pre_publishers() -> None:
+    """Run pre publishers if the current scene is a published version.
 
     This is written to prevent users to save on top of a Published version and
-    create a back door to skip un publishable scene to publish
+    create a back door to skip un-publishable scene from being published.
     """
-    from anima.dcc.mayaDCC.publish import PublishError
-    from anima.dcc import mayaDCC
+    from anima.dcc.mayaDCC.common import Maya
 
-    m_env = mayaDCC.Maya()
+    m_env = Maya()
 
     version = m_env.get_current_version()
 
@@ -872,18 +986,10 @@ def run_pre_publishers():
         return
 
     # check if it is a Representation
-    from anima.representation import Representation
-
     if Representation.repr_separator in version.variant_name:
         return
 
     if version.is_published:
-        from anima.publish import (
-            run_publishers,
-            staging,
-            POST_PUBLISHER_TYPE,
-        )
-
         # before doing anything run all publishers
         type_name = ""
         if version.task.type:
@@ -908,9 +1014,9 @@ def run_pre_publishers():
         staging.clear()
     else:
         # run some of the publishers
-        from anima.dcc.mayaDCC import publish as publish_scripts
-
         try:
+            from anima.dcc.mayaDCC import publish as publish_scripts
+
             publish_scripts.check_node_names_with_bad_characters()
         except (PublishError, RuntimeError) as e:
             # pop up a message box with the error
@@ -930,16 +1036,15 @@ def run_pre_publishers():
             DBSession.commit()
 
 
-def run_post_publishers():
-    """runs post publishers if the current scene is a published version
+def run_post_publishers() -> None:
+    """Run post publishers if the current scene is a published version.
 
     This is written to prevent users to save on top of a Published version and
-    create a back door to skip un publishable scene to publish
+    create a back door to skip un-publishable scene from being published.
     """
-    from anima.dcc.mayaDCC.publish import PublishError
-    from anima.dcc import mayaDCC
+    from anima.dcc.mayaDCC.common import Maya
 
-    m_env = mayaDCC.Maya()
+    m_env = Maya()
 
     version = m_env.get_current_version()
 
@@ -948,18 +1053,10 @@ def run_post_publishers():
         return
 
     # check if it is a Representation
-    from anima.representation import Representation
-
     if Representation.repr_separator in version.variant_name:
         return
 
     if version.is_published:
-        from anima.publish import (
-            run_publishers,
-            staging,
-            POST_PUBLISHER_TYPE,
-        )
-
         # before doing anything run all publishers
         type_name = ""
         if version.task.type:
@@ -969,8 +1066,6 @@ def run_post_publishers():
         staging["version"] = version
 
         # show dialog during post publish progress and lock maya
-        from anima.ui.utils import initialize_post_publish_dialog
-
         d = initialize_post_publish_dialog()
         d.show()
 
@@ -996,15 +1091,17 @@ def run_post_publishers():
         staging.clear()
 
 
-def get_default_render_layer():
-    """Returns the default render layer
-    :return:
+def get_default_render_layer() -> pm.nt.RenderLayer:
+    """Return the default render layer.
+
+    Returns:
+        pm.nt.RenderLayer: The default render layer.
     """
     return pm.ls(type="renderLayer")[0].defaultRenderLayer()
 
 
-def switch_to_default_render_layer():
-    """sets the current layer to defaultRenderLayer"""
+def switch_to_default_render_layer() -> None:
+    """Set the current layer to defaultRenderLayer."""
     try:
         default_render_layer = get_default_render_layer()
         current_layer = get_current_render_layer()
@@ -1014,30 +1111,36 @@ def switch_to_default_render_layer():
         pass
 
 
-def get_current_render_layer():
-    """Returns the current render layer
+def get_current_render_layer() -> pm.nt.RenderLayer:
+    """Return the current render layer.
 
-    :return:
+    Returns:
+        pm.nt.RenderLayer: The current render layer.
     """
     default_render_layer = get_default_render_layer()
     return default_render_layer.currentLayer()
 
 
-def fix_external_paths():
-    """fixes external paths in a maya scene"""
-    from anima.dcc import mayaDCC
+def fix_external_paths() -> None:
+    """Fixe external paths in a maya scene."""
+    from anima.dcc.mayaDCC.common import Maya
 
-    m_env = mayaDCC.Maya()
+    m_env = Maya()
     if m_env.get_current_version():
         m_env.replace_external_paths()
 
 
-def has_shape(node):
-    """checks if the given node has at least one child that has a shape"""
+def has_shape(node : pm.nt.Transform) -> bool:
+    """Check if the given node has at least one child that has a shape.
+
+    Args:
+        node (pm.nt.Transform): The node to check.
+
+    Returns:
+        bool: True if the node has at least one child with a shape.
+    """
     allowed_shapes = (pm.nt.Mesh, pm.nt.NurbsCurve, pm.nt.NurbsSurface)
-
     has_it = False
-
     children = node.getChildren()
     while len(children) and not has_it:
         child = children.pop(0)
@@ -1049,14 +1152,16 @@ def has_shape(node):
     return has_it
 
 
-def generate_thumbnail():
-    """generates thumbnail for current scene"""
-    import tempfile
-    import glob
-    from anima.dcc import mayaDCC
+def generate_thumbnail() -> Union[None, List[str]]:
+    """Generate thumbnail for current scene.
 
-    m_env = mayaDCC.Maya()
-    v = m_env.get_current_version()
+    Returns:
+        Union[None, List[str]]: The list of generated thumbnails.
+    """
+    from anima.dcc.mayaDCC.common import Maya
+
+    maya_dcc = Maya()
+    v = maya_dcc.get_current_version()
 
     if not v:
         return
@@ -1098,1394 +1203,40 @@ def generate_thumbnail():
     found_output_file = glob.glob(output_file)
     if found_output_file:
         output_file = found_output_file[0]
-
-        from anima.ui import utils
-
-        anima.utils.upload_thumbnail(task, output_file)
+        upload_thumbnail(task, output_file)
 
     return found_output_file
 
 
-def perform_playblast(
-    action=0,
-    resolution=100,
-    playblast_view_options=None,
-    upload_to_server=None,
-    force_batch_mode=False,
-):
-    """The patched version of the original perform playblast.
+def set_range_from_shot(shot : pm.nt.Shot) -> None:
+    """Set the playback range from a shot node in the scene.
 
     Args:
-        action (int): Passed directly to the Maya version of the playblast if the
-            current scene is not related to a Stalker Version.
-        resolution(int): An integer value one of 25, 50, 100 defining the playblast
-            resolution as a percent fraction of the original scene resolution.
-            Default value is 100. If given as None, the value or this argument will be
-            asked to the user.
-        playblast_view_options (dict): A dictionary containing the view options.
-            ``auxiliary.get_default_playblast_view_options`` can be used to get one. If
-            given as None, the value or this argument will be asked to the user.
-        upload_to_server (bool): A bool value to specify if the resultant video should
-            be uploaded to the server or not. If given as None, the value or this
-            argument will be asked to the user.
-    """
-    # check if the current scene is a Stalker related version
-    # if not call the default playblast
-    # if it is call out ShotPlayblaster
-    from anima.dcc.mayaDCC import Maya
-
-    m = Maya()
-    v = m.get_current_version()
-
-    if v:
-        # do use playblaster
-        extra_playblast_options = {"viewer": 0}
-
-        # always use PNG as image format which now properly supports audio files
-        extra_playblast_options["fmt"] = "image"
-        extra_playblast_options["compression"] = "png"
-
-        # ask resolution
-        if resolution is None:
-            resolution = ask_playblast_resolution()
-
-        if resolution is None:
-            return
-
-        extra_playblast_options["percent"] = resolution
-
-        # ask for playblast view options
-        if playblast_view_options is None:
-            playblast_view_options = ask_playblast_view_options()
-
-        pb = Playblaster(
-            playblast_view_options=playblast_view_options,
-            force_batch_mode=force_batch_mode,
-        )
-        outputs = pb.playblast(extra_playblast_options=extra_playblast_options)
-
-        if outputs:
-            if upload_to_server is None:  # so no default options
-                response = pm.confirmDialog(
-                    title="Upload To Server?",
-                    message="Upload To Server?",
-                    button=["Yes", "No"],
-                    defaultButton="No",
-                    cancelButton="No",
-                    dismissString="No",
-                )
-            else:
-                response = "Yes" if upload_to_server else "No"
-
-            if response == "Yes":
-                for output in outputs:
-                    pb.upload_output(pb.version, output)
-
-    else:
-        # call the original playblast
-        return pm.mel.eval(f"performPlayblast_orig({action});")
-
-
-def set_range_from_shot(shot):
-    """sets the playback range from a shot node in the scene
-
-    :param shot: Maya Shot
+        shot (pm.nt.Shot): Maya Shot node.
     """
     min_frame = shot.getAttr("startFrame")
     max_frame = shot.getAttr("endFrame")
 
-    pm.playbackOptions(ast=min_frame, aet=max_frame, min=min_frame, max=max_frame)
-
-
-def ask_playblast_resolution():
-    """Asks the user the playblast resolution"""
-    # ask resolution
-    response = pm.confirmDialog(
-        title="Resolution?",
-        message="Resolution?",
-        button=["Default", "Full", "Half", "Quarter", "Cancel"],
-        defaultButton="Default",
-        cancelButton="Default",
-        dismissString="Default",
-    )
-    if response == "Default":
-        return 50
-    elif response == "Full":
-        return 100
-    elif response == "Half":
-        return 50
-    elif response == "Quarter":
-        return 25
-    elif response == "Cancel":
-        return None
-
-    return 100
-
-
-def get_default_playblast_view_options():
-    """returns a copy of the default_playblast_View_options"""
-    import copy
-
-    return copy.copy(Playblaster.default_view_options)
-
-
-def ask_playblast_view_options():
-    """asks the user the playblast view options
-
-    It will store the last selected view options and if there are no previously
-    selected view options it will use the defaults from the Playblaster
-    """
-    # storage
-    user_playblast_view_options_storage = os.path.join(
-        tempfile.gettempdir(), "playblast_view_options.json"
+    pm.playbackOptions(
+        ast=min_frame,
+        aet=max_frame,
+        min=min_frame,
+        max=max_frame,
     )
 
-    use_defaults = False
-    if os.path.exists(user_playblast_view_options_storage):
-        try:
-            with open(user_playblast_view_options_storage, "r") as f:
-                user_playblast_view_options = json.load(f)
-        except ValueError:
-            use_defaults = True
-    else:
-        use_defaults = True
 
-    if use_defaults:
-        user_playblast_view_options = get_default_playblast_view_options()
-
-    # display the current options and ask the user to change them
-    # sadly we need to use Qt to display a proper modal dialog
-    from anima.ui.lib import QtCore, QtWidgets
-    from anima.dcc import mayaDCC
-
-    class PlayblastViewOptionsDialog(QtWidgets.QDialog):
-        def __init__(self, options=None):
-            parent = mayaDCC.get_maya_main_window()
-            super(PlayblastViewOptionsDialog, self).__init__(parent=parent)
-            self.options = options
-            self.checkers = []
-            self.setup_dialog()
-
-        def setup_dialog(self):
-            self.setWindowTitle("Playblast View Options")
-            # self.resize(517, 545)
-            vertical_layout = QtWidgets.QVBoxLayout(self)
-
-            use_defaults_button = QtWidgets.QPushButton(self)
-            use_defaults_button.setText("Use Defaults")
-            vertical_layout.addWidget(use_defaults_button)
-
-            horizontal_layout = QtWidgets.QHBoxLayout()
-            vertical_layout.addLayout(horizontal_layout)
-
-            current_vertical_layout = QtWidgets.QVBoxLayout()
-            horizontal_layout.addLayout(current_vertical_layout)
-
-            vertical_button_count = 10
-
-            i = 0
-            for k in sorted(self.options.keys()):
-                v = self.options[k]
-                i += 1
-                if isinstance(v, bool):
-                    checker = QtWidgets.QCheckBox(k, parent=self)
-                    checker.setChecked(v)
-                    current_vertical_layout.addWidget(checker)
-                    self.checkers.append(checker)
-
-                if i % vertical_button_count == 0:
-                    # create a new vertical layout
-                    current_vertical_layout = QtWidgets.QVBoxLayout()
-                    horizontal_layout.addLayout(current_vertical_layout)
-
-            # add a spacer to the last column layout
-            spacer_item = QtWidgets.QSpacerItem(
-                20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
-            )
-            current_vertical_layout.addItem(spacer_item)
-
-            button_box = QtWidgets.QDialogButtonBox(self)
-            button_box.setOrientation(QtCore.Qt.Horizontal)
-            button_box.setStandardButtons(
-                QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok
-            )
-            vertical_layout.addWidget(button_box)
-            vertical_layout.setStretch(2, 1)
-
-            # Button box
-            QtCore.QObject.connect(button_box, QtCore.SIGNAL("accepted()"), self.accept)
-            QtCore.QObject.connect(button_box, QtCore.SIGNAL("rejected()"), self.reject)
-            QtCore.QObject.connect(
-                use_defaults_button,
-                QtCore.SIGNAL("clicked()"),
-                self.use_defaults_push_button_clicked,
-            )
-
-        def use_defaults_push_button_clicked(self):
-            """sets the default values"""
-            for checker in self.checkers:
-                checker.setChecked(
-                    Playblaster.default_view_options[str(checker.text())]
-                )
-
-        def get_playblast_options(self):
-            """returns the current selected options"""
-            playblast_options = {}
-            for checker in self.checkers:
-                playblast_options[str(checker.text())] = checker.isChecked()
-            return playblast_options
-
-    pvod = PlayblastViewOptionsDialog(options=user_playblast_view_options)
-    pvod.exec_()
-
-    user_playblast_view_options = pvod.get_playblast_options()
-    # write it down
-    with open(user_playblast_view_options_storage, "w") as f:
-        json.dump(user_playblast_view_options, f)
-
-    return user_playblast_view_options
-
-
-def perform_playblast_shot(shot_name):
-    """Performs shot playblast, this is written to replace the menu action in
-    Camera Sequencer.
-
-    :param shot_name: Shot name
-    :return:
-    """
-    if not shot_name:
-        return
-
-    response = pm.confirmDialog(
-        title="Perform Playblast?",
-        message="Perform Playblast?",
-        button=["Yes", "No"],
-        defaultButton="No",
-        cancelButton="No",
-        dismissString="No",
-    )
-    if response == "No":
-        return
-
-    # ask resolution
-    resolution = 100
-
-    extra_playblast_options = {"viewer": 0, "percent": resolution}
-
-    if " " in shot_name:
-        # there are probabaly more than one shot
-        shots = [pm.PyNode(s_name) for s_name in shot_name.split(" ")]
-    else:
-        shots = [pm.PyNode(shot_name)]
-
-    pb = Playblaster()
-    video_file_outputs = []
-    for shot in shots:
-        video_file_output = pb.playblast_shot(
-            shot, extra_playblast_options=extra_playblast_options
-        )
-        video_file_outputs.append(video_file_output)
-
-    response = pm.confirmDialog(
-        title="Upload To Server?",
-        message="Upload To Server?",
-        button=["Yes", "No"],
-        defaultButton="No",
-        cancelButton="No",
-        dismissString="No",
-    )
-    if response == "Yes":
-        for video_file_output in video_file_outputs:
-            pb.upload_output(pb.version, video_file_output)
-
-
-class Playblaster(object):
-    """Generates playblasts.
-    If there are shots in the current scene then it generates playblasts for
-    each of them and uploads it to the server
-    """
-
-    default_view_options = {
-        "cameras": False,
-        "clipGhosts": False,
-        "cv": False,
-        "deformers": False,
-        "dimensions": False,
-        "displayAppearance": "smoothShaded",  # Smooth shaded
-        "displayLights": "default",  # default lighting
-        "shadows": False,  # No Shadows
-        # "udm": True,  # use default material
-        "dynamics": True,
-        "dynamicConstraints": False,
-        "fluids": True,
-        "follicles": False,
-        "greasePencils": False,
-        "grid": False,
-        "handles": False,
-        "hairSystems": False,
-        "hulls": False,
-        "ikHandles": False,
-        "imagePlane": True,
-        "joints": False,
-        "lights": False,
-        "locators": False,
-        "manipulators": False,
-        "motionTrails": False,
-        "nCloths": True,
-        "nParticles": True,
-        "nRigids": False,
-        "nurbsCurves": False,
-        "nurbsSurfaces": False,
-        "particleInstancers": True,
-        "pivots": False,
-        "planes": True,
-        "pluginShapes": False,
-        "pluginObjects": ("gpuCacheDisplayFilter", True),
-        "polymeshes": True,
-        "strokes": False,
-        "subdivSurfaces": True,
-        "textures": False,
-    }
-
-    cam_attribute_names = [
-        "overscan",
-        "filmFit",
-        "displayFilmGate",
-        "displayResolution",
-        "displayGateMask",
-        "displayFieldChart",
-        "displaySafeAction",
-        "displaySafeTitle",
-        "displayFilmPivot",
-        "displayFilmOrigin",
-    ]
-
-    hardware_rendering_globals_attr_names = [
-        "ssaoEnable",
-        "motionBlurEnable",
-        "multiSampleEnable",
-    ]
-
-    global_playblast_options = {
-        "fmt": "image",
-        "forceOverwrite": 1,
-        "clearCache": 1,
-        "showOrnaments": 1,
-        "percent": 100,
-        "offScreen": 1,
-        "viewer": 0,
-        "compression": "png",
-        "quality": 85,
-        "sequenceTime": 1,
-    }
-
-    hud_name = "PlayblasterHUD"
-
-    def __init__(self, playblast_view_options=None, force_batch_mode=False):
-        self._playblast_view_options = None
-        self.playblast_view_options = playblast_view_options
-        self.batch_mode = force_batch_mode or pm.general.about(batch=1)
-
-        self.logged_in_user = None
-        if not self.batch_mode:
-            local_session = LocalSession()
-            self.logged_in_user = local_session.logged_in_user
-
-            if not self.logged_in_user:
-                raise RuntimeError("Please login first!")
-
-        self.version = None
-        from anima.dcc.mayaDCC import Maya
-
-        self.m_env = Maya()
-        self.version = self.m_env.get_current_version()
-
-        self.user_view_options = {}
-        self.reset_user_view_options_storage()
-
-    def check_sequence_name(self):
-        """checks sequence name and asks the user to set one if maya is in UI
-        mode and there is no sequence name set
-        """
-        local_sequencers = [
-            seq for seq in pm.ls(type="sequencer") if seq.referenceFile() is None
-        ]
-        if not local_sequencers:
-            sequencer = pm.nt.Sequencer()
-        else:
-            sequencer = local_sequencers[0]
-
-        try:
-            sequence_name = sequencer.getAttr("sequence_name")
-        except pm.MayaAttributeError:
-            from anima.dcc.mayaDCC import previs
-
-            previs.Previs.add_sequence_name_attribute_to_sequencer(sequencer)
-            sequence_name = sequencer.getAttr("sequence_name")
-
-        if sequence_name == "" and not self.batch_mode:
-            result = pm.promptDialog(
-                title="Please enter a Sequence Name",
-                message="Sequence Name:",
-                button=["OK", "Cancel"],
-                defaultButton="OK",
-                cancelButton="Cancel",
-                dismissString="Cancel",
-            )
-
-            if result == "OK":
-                sequencer.setAttr(
-                    "sequence_name", pm.promptDialog(query=True, text=True)
-                )
-
-    def get_hud_data(self):
-        """Return HUD data."""
-        # try to get the shot from sequencer
-        current_shot = pm.sequenceManager(q=1, currentShot=1)
-
-        current_cam_name = "NoCameraFound"
-        if current_shot:
-            shot_name = pm.getAttr(f"{current_shot}.shotName")
-            current_cam_name = pm.shot(current_shot, q=1, cc=1)
-            if current_cam_name:
-                current_cam = pm.PyNode(current_cam_name)
-            else:
-                # there is no camera in this shot
-                # use the first camera in the scene
-                # TODO: using the first camera is not a good idea
-                current_cam = pm.ls(type=pm.nt.Camera)[0].getParent()
-                current_cam_name = current_cam.name()
-        else:
-            # then try to get the shot name from the file name
-            import os
-
-            shot_name = os.path.split(pm.sceneName())[1].split("_")[0]
-            # use the active panel camera
-            current_cam = self.get_active_panel_camera()
-
-            if current_cam is not None:
-                current_cam_name = current_cam.name()
-
-        if isinstance(current_cam, pm.nt.Transform):
-            current_cam = current_cam.getShape()
-
-        focal_length = 0
-
-        if current_cam is not None:
-            focal_length = current_cam.getAttr("focalLength")
-
-        sequencers = pm.ls(type="sequencer")
-        if sequencers:
-            sequencer = sequencers[0]
-            if not sequencer.hasAttr("sequence_name"):
-                from anima.dcc.mayaDCC import previs
-
-                previs.Previs.add_sequence_name_attribute_to_sequencer(sequencer)
-            if sequencer.getAttr("sequence_name") != "":
-                shot_info = sequencer.getAttr("sequence_name")
-            else:
-                shot_info = "INVALID"
-        else:
-            shot_info = shot_name
-
-        cf = int(pm.currentTime(q=1)) + 1
-
-        import timecode
-
-        frame_rate = 25
-        from anima.dcc import mayaDCC
-
-        maya_env = mayaDCC.Maya()
-        v = maya_env.get_current_version()
-        if v:
-            frame_rate = v.task.project.fps
-        tc = timecode.Timecode(frame_rate, frames=cf)
-
-        if current_shot:
-            start_time = pm.shot(current_shot, q=1, st=1)
-            end_time = pm.shot(current_shot, q=1, et=1)
-        else:
-            # no shot node use the current playback range
-            start_time = pm.playbackOptions(q=1, min=1)
-            end_time = pm.playbackOptions(q=1, max=1)
-
-        cs_frame = int(cf - start_time)
-
-        length = int(end_time - start_time) + 1
-
-        if self.version:
-            user_name = (
-                self.version.updated_by.name if self.version.updated_by else "None"
-            )
-        else:
-            # get the user name from the login info
-            if self.logged_in_user:
-                user_name = self.logged_in_user.name
-            else:
-                # ok try to use the filename
-                user_name = pm.sceneName().split("_")[-1]
-
-        hud_string = (
-            "{} | {}:{}mm | tc:{} [{}] | Shot: {} | Length: {}/{}fr | [{}]".format(
-                shot_info,
-                current_cam_name.split(":")[-1],
-                int(focal_length),
-                tc,
-                str(int(cf) - 1).zfill(4),
-                shot_name.split(":")[-1],
-                cs_frame,
-                str(length).zfill(3),
-                user_name,
-            )
-        )
-        return hud_string
-
-    def get_active_panel_camera(self):
-        """returns the active view camera"""
-        active_panel = self.get_active_panel()
-        current_cam = None
-        try:
-            current_cam = pm.modelEditor(active_panel, q=1, cam=1)
-        except pm.MayaNodeError as e:
-            pass
-
-        # really return the camera node and not the transform node
-        if isinstance(current_cam, pm.nt.Transform):
-            current_cam = current_cam.getShape()
-
-        return current_cam
-
-    def create_hud(self, hud_name):
-        """creates HUD"""
-        self.remove_hud(hud_name)
-
-        try:
-            # create our HUD
-            pm.headsUpDisplay(
-                hud_name,
-                section=7,
-                block=1,
-                ao=1,
-                blockSize="medium",
-                labelFontSize="large",
-                dfs="large",
-                command=self.get_hud_data,
-                atr=1,
-            )
-        except RuntimeError:
-            # there is another HUD in that position remove it
-            pm.headsUpDisplay(removePosition=(7, 1))
-            self.create_hud(hud_name)
-
-    def remove_hud(self, hud_name=None):
-        """removes the HUD"""
-        if hud_name and pm.headsUpDisplay(hud_name, q=1, ex=1):
-            pm.headsUpDisplay(hud_name, rem=1)
-
-    @classmethod
-    def get_shot_cameras(cls):
-        # store camera display options
-        cameras = []
-        for shot in pm.sequenceManager(listShots=1):
-            camera_name = pm.shot(shot, q=1, cc=1)
-            camera = pm.PyNode(camera_name)
-            if isinstance(camera, pm.nt.Transform):
-                camera = camera.getShape()
-            cameras.append(camera)
-        return cameras
-
-    def get_selected_frame_range(self):
-        """returns the playback range"""
-        start_time = int(pm.playbackOptions(q=1, ast=1))
-        end_time = int(pm.playbackOptions(q=1, aet=1))
-
-        if not self.batch_mode:
-            selected_start_time, selected_end_time = list(
-                map(
-                    int,
-                    pm.timeControl(
-                        pm.melGlobals["$gPlayBackSlider"], q=1, rangeArray=True
-                    ),
-                )
-            )
-
-            if selected_end_time - selected_start_time > 1:
-                # the selection is valid
-                start_time = selected_start_time
-                end_time = selected_end_time
-
-        return [start_time, end_time]
-
-    def is_frame_range_selected(self):
-        """returns true if a range in the time line is selected"""
-        if not self.batch_mode:
-            start, end = list(
-                map(
-                    int,
-                    pm.timeControl(
-                        pm.melGlobals["$gPlayBackSlider"], q=1, rangeArray=True
-                    ),
-                )
-            )
-            return (end - start) > 1
-        else:
-            return False
-
-    @classmethod
-    def get_audio_node(cls):
-        """returns the audio node from the time slider"""
-        audio_node_name = pm.timeControl(
-            pm.melGlobals["$gPlayBackSlider"], q=1, sound=1
-        )
-        try:
-            audio_node = pm.PyNode(audio_node_name)
-        except pm.MayaNodeError:
-            return
-        return audio_node
-
-    def reset_user_view_options_storage(self):
-        """resets the user view options storage"""
-        self.user_view_options = {
-            "view_options": {},
-            "huds": {},
-            "camera_flags": {},
-            "hardware_rendering_globals": {},
-        }
-
-    def store_user_options(self):
-        """stores user options"""
-        # query active model panel
-        active_panel = self.get_active_panel()
-
-        # store show/hide display options for active panel
-        self.reset_user_view_options_storage()
-
-        for flag in self.default_view_options.keys():
-            try:
-                self.user_view_options["view_options"][flag] = pm.modelEditor(
-                    active_panel, **{"q": 1, flag: True}
-                )
-            except TypeError:
-                pass
-
-        # store hud display options
-        hud_names = pm.headsUpDisplay(lh=1)
-        if hud_names:  # in batch mode there is no hud_names
-            for hud_name in hud_names:
-                self.user_view_options["huds"][hud_name] = pm.headsUpDisplay(
-                    hud_name, q=1, vis=1
-                )
-
-        for camera in pm.ls(type="camera"):
-            camera_name = camera.name()
-            per_camera_attr_dict = {}
-            for attr in self.cam_attribute_names:
-                per_camera_attr_dict[attr] = camera.getAttr(attr)
-            self.user_view_options["camera_flags"][camera_name] = per_camera_attr_dict
-
-        hrg = pm.PyNode("hardwareRenderingGlobals")
-        for attr in self.hardware_rendering_globals_attr_names:
-            self.user_view_options["hardware_rendering_globals"][attr] = hrg.getAttr(
-                attr
-            )
-
-    @property
-    def playblast_view_options(self):
-        """the getter for the playblast_view_options"""
-        return self._playblast_view_options
-
-    @playblast_view_options.setter
-    def playblast_view_options(self, playblast_view_options):
-        """setter for the playblast view options
-
-        :param dict playblast_view_options: A dict for the desired options
-        :return:
-        """
-        # use defaults if empty
-        if not playblast_view_options:
-            playblast_view_options = self.default_view_options
-
-        self._playblast_view_options = playblast_view_options
-
-    def set_view_options(self):
-        """set view options for playblast"""
-        active_panel = self.get_active_panel()
-        pm.modelEditor(active_panel, e=1, **self.playblast_view_options)
-
-        # turn all hud displays off
-        hud_flags = pm.headsUpDisplay(lh=1)
-        if hud_flags:  # in batch mode there is node headsUpDisplay
-            for flag in hud_flags:
-                pm.headsUpDisplay(flag, e=1, vis=0)
-
-        # set camera options for playblast
-        for camera in pm.ls(type="camera"):
-            try:
-                camera.setAttr("overscan", 1)
-            except RuntimeError:
-                pass
-
-            try:
-                camera.setAttr("filmFit", 1)
-            except RuntimeError:
-                pass
-
-            try:
-                camera.setAttr("displayFilmGate", 1)
-            except RuntimeError:
-                pass
-
-            try:
-                camera.setAttr("displayResolution", 0)
-            except RuntimeError:
-                pass
-
-        # pm.mel.eval('displayStyle("-ss")')
-
-        # set hardwareRenderingGlobals attributes for playblast
-        hrg = pm.PyNode("hardwareRenderingGlobals")
-        hrg.setAttr("ssaoEnable", False)
-        hrg.setAttr("multiSampleEnable", True)
-
-    def restore_user_options(self):
-        """restores user options"""
-        active_panel = self.get_active_panel()
-        for flag, value in self.user_view_options["view_options"].items():
-            try:
-                pm.modelEditor(active_panel, **{"e": 1, flag: value})
-            except TypeError:
-                pass
-
-        # reassign original hud display options
-        for hud, value in self.user_view_options["huds"].items():
-            if pm.headsUpDisplay(hud, q=1, ex=1):
-                pm.headsUpDisplay(hud, e=1, vis=value)
-
-        # reassign original camera options
-        for camera in pm.ls(type="camera"):
-            camera_name = camera.name()
-
-            try:
-                camera_flags = self.user_view_options["camera_flags"][camera_name]
-            except KeyError:
-                continue
-
-            for attr, value in camera_flags.items():
-                try:
-                    camera.setAttr(attr, value)
-                except RuntimeError:
-                    pass
-
-        # re-set original hardware rendering globals
-        hrg = pm.PyNode("hardwareRenderingGlobals")
-        for attr in self.hardware_rendering_globals_attr_names:
-            value = self.user_view_options["hardware_rendering_globals"][attr]
-            hrg.setAttr(attr, value)
-
-        self.remove_hud(self.hud_name)
-
-    @classmethod
-    def get_active_panel(cls):
-        """returns the active model panel"""
-        active_panel = None
-        panel_list = pm.getPanel(type="modelPanel")
-        for panel in panel_list:
-            if pm.modelEditor(panel, q=1, av=1):
-                active_panel = panel
-                break
-
-        return active_panel
-
-    def playblast(self, extra_playblast_options=None):
-        """Do a scene playblast.
-
-        Decides what kind of playblast it needs to do.
-
-        :param extra_playblast_options: A dictionary for extra playblast
-          options.
-        :return: The resultant movie file or files
-        """
-        # if there is a shot in the scene do a shot playblast
-        shots = pm.ls(type="shot")
-        if not extra_playblast_options:
-            extra_playblast_options = {}
-
-        # if a time range is selected do a simple playblast
-        # the following will return ``False`` in batch mode
-        start, end = self.get_selected_frame_range()
-        if len(shots) and not self.is_frame_range_selected():
-            if not self.batch_mode:
-                response = pm.confirmDialog(
-                    title="Which Camera?",
-                    message="Which Camera?",
-                    button=["Current", "Shot Camera", "Cancel"],
-                    defaultButton="Shot Camera",
-                    cancelButton="Cancel",
-                    dismissString="Cancel",
-                )
-            else:
-                response = "Shot Camera"
-
-            if response == "Current":
-                extra_playblast_options["sequenceTime"] = 0
-            elif response == "Shot Camera":
-                extra_playblast_options["sequenceTime"] = 1
-            else:
-                return []
-            return self.playblast_all_shots(extra_playblast_options)
-        else:
-            extra_playblast_options["startTime"] = start
-            extra_playblast_options["endTime"] = end
-            return self.playblast_simple(extra_playblast_options)
-
-    def playblast_simple(self, extra_playblast_options=None):
-        """Do a simple playblast
-
-        :param extra_playblast_options: A dictionary for extra playblast
-          options.
-        :return: A string showing the path of the resultant movie file
-        """
-        import copy
-
-        playblast_options = copy.copy(self.global_playblast_options)
-        playblast_options["sequenceTime"] = False
-        playblast_options["percent"] = 100
-
-        if extra_playblast_options:
-            playblast_options.update(extra_playblast_options)
-
-        # find some audio
-        audio_node = self.get_audio_node()
-        if audio_node:
-            playblast_options["sound"] = audio_node
-            playblast_options["useTraxSounds"] = False
-        else:
-            playblast_options["useTraxSounds"] = True
-
-        # width height
-        if "wh" not in playblast_options:
-            # get project resolution
-            # use half HD by default
-            width = 1920
-            height = 1080
-            if self.version:
-                project = self.version.task.project
-                # get the resolution
-                imf = project.image_format
-                width = int(imf.width)
-                height = int(imf.height)
-
-            playblast_options["wh"] = (width, height)
-
-        # output path
-        import os
-
-        if "filename" not in playblast_options:
-            if self.version:
-                # use version.base_name plus the camera name
-                current_camera = self.get_active_panel_camera()
-                current_camera_name = "Camera"
-                if current_camera is not None:
-                    # use the transform
-                    current_camera_name = (
-                        current_camera.getParent().name().split(":")[-1]
-                    )
-                filename = "{}_{}".format(
-                    os.path.splitext(self.version.filename)[0],
-                    current_camera_name,
-                )  # node name
-            else:
-                # use the current scene name
-                filename = os.path.splitext(os.path.basename(pm.sceneName()))[0]
-            # also render to the same folder with the file
-            output_dir = os.path.join(os.path.dirname(pm.sceneName()), "temp")
-            import tempfile
-
-            playblast_options["filename"] = os.path.join(output_dir, filename).replace(
-                "\\", "/"
-            )
-
-        from anima.dcc import mayaDCC
-
-        menv = mayaDCC.Maya()
-        fps = menv.get_fps()
-
-        result = []
-        try:
-            self.store_user_options()
-            self.set_view_options()
-            self.create_hud(self.hud_name)
-            import pprint
-
-            pprint.pprint(playblast_options)
-
-            # update all cameras in the scene to have correct film back
-            for cam in pm.ls(type="camera"):
-                try:
-                    cam.verticalFilmAperture.set(
-                        cam.horizontalFilmAperture.get()
-                        * float(playblast_options["wh"][1])
-                        / float(playblast_options["wh"][0])
-                    )
-                except (AttributeError, RuntimeError) as e:
-                    pass
-
-            result = [
-                {
-                    "video": pm.playblast(**playblast_options),
-                    "audio": {
-                        "node": audio_node,
-                        "offset": (
-                            playblast_options.get("startTime", 0)
-                            - audio_node.offset.get()
-                            if audio_node
-                            else 0
-                        ),
-                        "duration": (
-                            playblast_options.get("endTime", 0)
-                            - playblast_options.get("startTime", 0)
-                            + 1
-                        ),
-                    },
-                }
-            ]
-        finally:
-            self.restore_user_options()
-
-        video = self.convert_image_sequence_to_video(
-            result, delete_source_sequence=True
-        )
-        return video
-
-    @classmethod
-    def convert_image_sequence_to_video(cls, data, delete_source_sequence=False):
-        """converts image sequence to video
-
-        :param data: A dictionary containing audio and video information in the following format:
-
-          {
-              'video': 'video_path',
-              'audio': {
-                  'node': audio_node_path,
-                  'offset': in frames,
-                  'duration': in frames
-              }
-          }
-
-        :param bool delete_source_sequence: If True, this option will let the function to delete the source image
-          sequence.
-        """
-        import os
-        import glob
-
-        frame_rate = 25
-        from anima.dcc import mayaDCC
-
-        maya_env = mayaDCC.Maya()
-        v = maya_env.get_current_version()
-        if v:
-            frame_rate = v.task.project.fps
-
-        # convert image sequences to h264
-        new_result = []
-        original_image_sequence_path = ""
-        for output in data:
-            # convert each output to a mp4 if the output is a frame
-            # sequence
-            video_file_path = output
-            audio_data = None
-            if isinstance(output, dict):
-                # this is possibly a more complex output that includes audio
-                video_file_path = output.get("video")
-                audio_data = output.get("audio")
-
-            original_image_sequence_path = video_file_path
-            if video_file_path and "#" in video_file_path:
-                # convert to mp4
-
-                # add start_number option
-                temp_str = video_file_path.replace("#", "*")
-                sequence = sorted(glob.glob(temp_str))
-                options = dict()
-                if sequence:
-                    # Ep002_004_0210_v007.mov.####.png
-                    # fix start number for {:04d} to {:05d} passage (eg. 9900 to 10010)
-                    smallest_start_number = 1e10
-                    for file_in_seq in sequence:
-                        filename = os.path.basename(file_in_seq)
-                        filename = filename.replace(".mov", "")
-                        start_number = int(filename.split(".")[1])
-                        if start_number < smallest_start_number:
-                            smallest_start_number = start_number
-
-                    options["start_number"] = smallest_start_number
-
-                # use the correct frame rate
-                options["framerate"] = frame_rate
-                options["r"] = frame_rate
-
-                # first convert the #'s to {:03d} format
-                temp_str = video_file_path.replace("#", "")
-                hash_count = len(video_file_path) - len(temp_str)
-                splits = video_file_path.split("#")
-                video_file_path = "{}{}{}".format(
-                    splits[0],
-                    "{{:0{hash_count}d}}".format(hash_count=hash_count),
-                    splits[-1],
-                )
-                video_file_path_h264 = splits[0].replace(".mov.", ".")
-
-                # check audio output
-                if audio_data:
-                    audio_node = audio_data.get("node")
-                    if audio_node:
-                        audio_file_path = os.path.expandvars(audio_node.filename.get())
-                        # audio offset should be subtracted from the current playblast range
-                        # and should be converted to a TimeCode
-                        audio_offset = audio_data.get("offset", 0)
-                        audio_duration = audio_data.get("duration", 0)
-
-                        options["i"] = [
-                            os.path.normpath(video_file_path),
-                            os.path.normpath(audio_file_path),
-                        ]
-                        options["map"] = ["0:0", "1:0"]
-
-                        audio_offset_in_milli_seconds = int(
-                            audio_offset * 1000 / frame_rate
-                        )
-                        duration_in_milli_seconds = int(
-                            audio_duration * 1000 / frame_rate
-                        )
-
-                        from anima import utils
-
-                        options["ss"] = [
-                            None,
-                            utils.milliseconds_to_tc(
-                                abs(audio_offset_in_milli_seconds)
-                            ),
-                        ]
-                        options["to"] = [
-                            None,
-                            utils.milliseconds_to_tc(
-                                abs(audio_offset_in_milli_seconds)
-                                + duration_in_milli_seconds
-                            ),
-                        ]
-
-                from anima.utils import MediaManager
-
-                mm = MediaManager()
-                video_file_path = mm.convert_to_h264(
-                    video_file_path, video_file_path_h264, options=options
-                )
-
-            new_result.append(video_file_path)
-
-        # delete all the temp files
-        if delete_source_sequence and "#" in original_image_sequence_path:
-            try:
-                video_file_pattern = original_image_sequence_path.replace("#", "*")
-                import glob
-
-                for filename in glob.glob(video_file_pattern):
-                    os.remove(filename)
-            except (OSError, AttributeError):
-                pass
-
-        return new_result
-
-    def playblast_shot(self, shot, extra_playblast_options=None):
-        """does the real thing"""
-        import copy
-
-        shot_playblast_options = copy.copy(self.global_playblast_options)
-
-        shot_playblast_options.update(
-            {
-                "sequenceTime": 1,
-            }
-        )
-        if extra_playblast_options:
-            shot_playblast_options.update(extra_playblast_options)
-
-        # deselect all
-        pm.select(cl=1)
-
-        self.check_sequence_name()
-
-        if "wh" not in shot_playblast_options:
-            # get project resolution
-            # use half HD by default
-            width = 1920
-            height = 1080
-            if self.version:
-                project = self.version.task.project
-                # get the resolution
-                imf = project.image_format
-                width = int(imf.width)
-                height = int(imf.height)
-
-            shot_playblast_options["wh"] = (width, height)
-
-        try:
-            self.store_user_options()
-            self.set_view_options()
-            self.create_hud(self.hud_name)
-
-            # create video playblast
-            temp_video_file_full_path = shot.playblast(options=shot_playblast_options)
-        finally:
-            self.restore_user_options()
-
-        return temp_video_file_full_path
-
-    def playblast_all_shots(self, extra_playblast_options=None):
-        """Playblast all shots.
-
-        :return:
-        """
-        shots = pm.ls(type="shot")
-        if len(shots) <= 0:
-            raise RuntimeError("There are no Shots in your Camera Sequencer.")
-
-        pdm = ProgressManagerFactory.get_progress_manager()
-        pdm.end_progress()
-
-        caller = pdm.register(len(shots), "Generating Playblasts...")
-
-        generic_playblast_options = {}
-        if extra_playblast_options:
-            generic_playblast_options.update(extra_playblast_options)
-
-        # if the time range is selected from the time line
-        # just use this range
-        range_start, range_end = self.get_selected_frame_range()
-        generic_playblast_options["startTime"] = range_start
-        generic_playblast_options["endTime"] = range_end
-
-        # check audio
-        audio_node = self.get_audio_node()
-        if audio_node:
-            generic_playblast_options.update(
-                {"useTraxSounds": False, "sound": audio_node}
-            )
-        else:
-            generic_playblast_options["useTraxSounds"] = True
-
-        temp_video_file_full_paths = []
-        import copy
-
-        for shot in shots:
-            per_shot_playblast_options = copy.copy(generic_playblast_options)
-
-            shot_start_frame = shot.startFrame.get()
-            shot_end_frame = shot.endFrame.get()
-            per_shot_playblast_options["startTime"] = shot_start_frame
-            per_shot_playblast_options["endTime"] = shot_end_frame
-
-            if self.is_frame_range_selected():
-                # skip this shot if the selected playback range do not
-                # coincide with this shot range
-                if (
-                    range_start > shot_start_frame and range_start > shot_end_frame
-                ) or (range_end < shot_start_frame and range_end < shot_end_frame):
-                    caller.step()
-                    continue
-
-            temp_video_file_full_path = self.playblast_shot(
-                shot, per_shot_playblast_options
-            )
-            temp_video_file_full_paths.append(
-                {
-                    "video": temp_video_file_full_path[0],
-                    "audio": {
-                        "node": audio_node,
-                        "offset": (
-                            audio_node.offset.get() - shot_start_frame
-                            if audio_node
-                            else 0
-                        ),
-                        "duration": shot_end_frame - shot_start_frame + 1,
-                    },
-                }
-            )
-
-            caller.step()
-
-        return self.convert_image_sequence_to_video(
-            temp_video_file_full_paths, delete_source_sequence=True
-        )
-
-    @classmethod
-    def upload_outputs(cls, version, video_file_full_paths):
-        """Bulk upload outputs to given version
-
-        :param version: Stalker Version instance
-        :param list video_file_full_paths: List of file paths
-        :return:
-        """
-        pdm = ProgressManagerFactory.get_progress_manager()
-        pdm.end_progress()
-
-        outputs = []
-        # register a new caller
-        caller = pdm.register(len(video_file_full_paths), "Uploading Playblasts...")
-        for output_file_full_path in video_file_full_paths:
-            # upload output to server
-            output_path = cls.upload_output(
-                version=version,
-                output_file_full_path=output_file_full_path,
-            )
-
-            outputs.append(output_path)
-            caller.step()
-
-        return outputs
-
-    @classmethod
-    def upload_output(cls, version, output_file_full_path):
-        """Set the given file as the output of the given version.
-
-        Also generate a thumbnail and a web version if it is a movie file.
-
-        Args:
-            version (Version): The stalker version instance.
-            output_file_full_path (str): The path of the media file.
-        """
-        if not isinstance(version, Version):
-            raise RuntimeError("version should be a stalker version instance!")
-
-        hires_extension = ".mp4"
-        webres_extension = ".webm"
-        thumbnail_extension = ".png"
-
-        if not os.path.exists(output_file_full_path):
-            raise RuntimeError(f"Output file does not exits: {output_file_full_path}")
-
-        output_file_name = os.path.basename(output_file_full_path)
-
-        hires_output_file_name = "{}{}".format(
-            os.path.splitext(output_file_name)[0],
-            hires_extension,
-        )
-
-        webres_output_file_name = "{}{}".format(
-            os.path.splitext(output_file_name)[0],
-            webres_extension,
-        )
-
-        thumbnail_output_file_name = "{}{}".format(
-            os.path.splitext(output_file_name)[0],
-            thumbnail_extension,
-        )
-
-        task = version.task
-
-        hires_path = os.path.join(
-            task.absolute_path, "Outputs", "Stalker_Pyramid", hires_output_file_name
-        )
-        webres_path = os.path.join(
-            task.absolute_path,
-            "Outputs",
-            "Stalker_Pyramid",
-            "ForWeb",
-            webres_output_file_name,
-        )
-        thumbnail_path = os.path.join(
-            task.absolute_path,
-            "Outputs",
-            "Stalker_Pyramid",
-            "Thumbnail",
-            thumbnail_output_file_name,
-        )
-
-        # create folders
-        try:
-            os.makedirs(os.path.dirname(hires_path))
-        except OSError:
-            pass
-
-        try:
-            os.makedirs(os.path.dirname(webres_path))
-        except OSError:
-            pass
-
-        try:
-            os.makedirs(os.path.dirname(thumbnail_path))
-        except OSError:
-            pass
-
-        import shutil
-
-        shutil.copy(output_file_full_path, hires_path)
-
-        # generate the web version
-        from anima.utils import MediaManager
-
-        m = MediaManager()
-        temp_web_version_full_path = m.generate_media_for_web(output_file_full_path)
-
-        try:
-            shutil.copy(temp_web_version_full_path, webres_path)
-        except IOError:
-            pass
-
-        temp_thumbnail_full_path = m.generate_thumbnail(output_file_full_path)
-        try:
-            # also upload thumbnail
-            shutil.copy(temp_thumbnail_full_path, thumbnail_path)
-        except IOError:
-            pass
-
-        project = task.project
-        repo = project.repository
-
-        # try to find a file with the same name assigned to the version as
-        # output
-        found = None
-        hires_os_independent_path = repo.to_os_independent_path(hires_path)
-        for file in version.files:
-            if file.full_path == hires_os_independent_path:
-                found = True
-                break
-
-        # if we found a file with the same name as the output, just overwrite
-        # it
-        if not found:
-            l_hires = File(
-                full_path=repo.to_os_independent_path(hires_path),
-                original_filename=hires_output_file_name,
-            )
-
-            l_for_web = File(
-                full_path=repo.to_os_independent_path(webres_path),
-                original_filename=hires_output_file_name,
-            )
-
-            l_hires.thumbnail = l_for_web
-            version.files.append(l_hires)
-
-            l_thumb = File(
-                full_path=repo.to_os_independent_path(thumbnail_path),
-                original_filename=hires_output_file_name,
-            )
-            l_for_web.thumbnail = l_thumb
-
-            DBSession.add_all([l_hires, l_for_web, l_thumb])
-            DBSession.commit()
-
-        return hires_path
-
-
-def get_cacheable_nodes(reference_node=None):
+def get_cacheable_nodes(
+    reference_node : Optional[pm.system.FileReference] = None
+) -> List[pm.nt.Transform]:
     """Return the cacheable nodes from the current scene or in the given reference node.
 
-    :param reference_node: A Maya FileReference node. When supplied only the recursive
-        content of this reference will be searched for a cacheable node.
+    Args:
+        reference_node (Optional[pm.system.FileReference]): An optional Maya
+            FIleReference node. When supplied only the recursive content of
+            this reference will be searched for a cacheable node.
 
-    :return:
+    Returns:
+        List[pm.nt.Transform]: A list of cacheable nodes.
     """
     pdm = ProgressManagerFactory.get_progress_manager()
     pdm.end_progress()
@@ -2529,10 +1280,17 @@ def get_cacheable_nodes(reference_node=None):
     return cacheable_nodes
 
 
-def get_reference_copy_number(node):
+def get_reference_copy_number(
+    node: Union[pm.PyNode, pm.system.FileReference]
+) -> int:
     """Return the reference number of the given reference file.
 
-    :param node: This can be a regular Maya node or a ReferenceFile.
+    Args:
+        node (Union[pm.PyNode, pm.system.FileReference]): This can
+            be a regular Maya node or a ReferenceFile.
+
+    Returns:
+        int: The reference number.
     """
     if not isinstance(node, pm.system.FileReference):
         ref_node = node.referenceFile()
@@ -2558,36 +1316,36 @@ def get_reference_copy_number(node):
 
 
 def export_cache_of_nodes(
-    cacheable_nodes,
-    start_frame=None,
-    end_frame=None,
-    handles=0,
-    step=1,
-    isolate=True,
-    unload_refs=True,
-    cache_format=ALEMBIC,
-):
+    cacheable_nodes: List[pm.nt.Transform],
+    start_frame : Optional[int] = None,
+    end_frame : Optional[int] = None,
+    handles : int = 0,
+    step : int = 1,
+    isolate : bool = True,
+    unload_refs : bool = True,
+    cache_format : str = ALEMBIC,
+) -> List[str]:
     """Export Alembic/USD caches of the given nodes.
 
     Args:
-        cacheable_nodes (list): The top transform nodes
-        start_frame (int): The start frame. If both start and end frame are the same and
-            the handle is 0 then a static file will be exported.
-        end_frame (int): The end frame. If both start and end frame are the same and
-            the handle is 0 then a static file will be exported.
-        handles (int): An integer that shows the desired handles from start and end. If
-            both start and end frame are the same and the handle is 0 then a static file
-            will be exported.
+        cacheable_nodes (List[pm.nt.Transform]): The top transform nodes to
+            export the caches from.
+        start_frame (Optional[int]): Start frame. If same as end frame and
+            handle is 0, exports static file.
+        end_frame (Optional[int]): End frame. If same as start frame and
+            handle is 0, exports static file.
+        handles (int): Handles from start and end. If same as start and end
+            frame and handle is 0, exports static file.
         step (int): Frame step.
-        isolate (bool): Isolate the exported object, so it is faster to playback. This
-            can sometimes create a problem of constraints not to work on some scenes.
-            Default value is True.
-        unload_refs (bool): Unloads the references in the scene to speed playback
-            performance.
-        cache_format (str): Cache format, "alembic" or "usd". The default is "alembic".
+        isolate (bool): Isolate exported object for faster playback. Default is
+            True.
+        unload_refs (bool): Unload references to speed playback. Default is
+            True.
+        cache_format (str): Cache format, "alembic" or "usd". Default is
+            "alembic".
 
     Returns:
-        list: List of exported file paths.
+        List[str]: List of exported file paths.
     """
     logger.info("INFO: Start export_cache_of_nodes!")
     # stop if there are no cacheable nodes given
@@ -2607,32 +1365,32 @@ def export_cache_of_nodes(
                 return
 
     pdm = ProgressManagerFactory.get_progress_manager()
-
     cacheable_nodes.sort(key=lambda x: x.getAttr("cacheable"))
-
     caller = pdm.register(len(cacheable_nodes), "Exporting Alembic Caches")
 
+    # set default start_frame and end_frame values
     if start_frame is None:
         start_frame = int(pm.playbackOptions(q=1, ast=1))
     if end_frame is None:
         end_frame = int(pm.playbackOptions(q=1, aet=1))
 
-    export_animation = bool((end_frame - start_frame + 2 * handles) > 0)
+    export_animation : bool = (end_frame - start_frame + 2 * handles) > 0
 
-    current_file_full_path = pm.sceneName()
+    current_file_full_path = str(pm.sceneName())
     current_file_path = os.path.dirname(current_file_full_path)
     current_file_name = os.path.basename(current_file_full_path)
 
     # export caches
+    # deselect everything first
     pm.select(None)
 
-    wrong_node_names = ["_rig_", "_proxy_"]
-    wrong_node_names_starts_with = ["rig_"]
-    wrong_node_names_ends_with = ["_rig"]
+    exclude_node_names = ["_rig_", "_proxy_"]
+    exclude_node_names_starts_with = ["rig_"]
+    exclude_node_names_ends_with = ["_rig"]
 
     default_playback_option = pm.playbackOptions(q=1, v=True)
 
-    # leave off only one panel in the viewport
+    # leave off only one panel in the viewport and maximize it
     kill_all_torn_off_panels()
     maximize_first_model_panel()
 
@@ -2661,8 +1419,7 @@ def export_cache_of_nodes(
                 if current_ref in references_already_visited:
                     # already scanned this reference
                     continue
-                else:
-                    references_already_visited.add(current_ref)
+                references_already_visited.add(current_ref)
                 roots_of_ref_node = get_root_nodes(current_ref)
                 nodes_to_evaluate = copy.copy(roots_of_ref_node)
                 for root_node in roots_of_ref_node:
@@ -2675,12 +1432,13 @@ def export_cache_of_nodes(
                     ):
                         for input_node in constraint_node.inputs():
                             related_ref = input_node.referenceFile()
-                            if related_ref is not None:
-                                # go to the top most reference
-                                related_ref = related_ref.topmost_parent
-                                if related_ref != ref:
-                                    related_references.add(related_ref)
-                                    references_to_traverse.add(related_ref)
+                            if related_ref is None:
+                                continue
+                            # go to the top most reference
+                            related_ref = related_ref.topmost_parent
+                            if related_ref != ref:
+                                related_references.add(related_ref)
+                                references_to_traverse.add(related_ref)
 
             # make it a list of unique values
             related_references = list(set(related_references))
@@ -2705,17 +1463,13 @@ def export_cache_of_nodes(
             if is_loaded:
                 ref.unload()
 
-    import tempfile
-    import shutil
-
-    output_full_paths = []
+    cache_file_full_paths = []
     for cacheable_node_name in sorted(cacheable_node_references):
         logger.info("INFO: exporting: {}".format(cacheable_node_name))
 
         if unload_refs:
             # load the reference first
-            ref = cacheable_node_references[cacheable_node_name]["ref"]
-            if ref:
+            if ref := cacheable_node_references[cacheable_node_name]["ref"]:
                 ref.load()
 
             # load related_references
@@ -2751,15 +1505,15 @@ def export_cache_of_nodes(
             )
 
             if (
-                any([n in underscored_name for n in wrong_node_names])
+                any([n in underscored_name for n in exclude_node_names])
                 or any(
                     [
                         underscored_name.startswith(n)
-                        for n in wrong_node_names_starts_with
+                        for n in exclude_node_names_starts_with
                     ]
                 )
                 or any(
-                    [underscored_name.endswith(n) for n in wrong_node_names_ends_with]
+                    [underscored_name.endswith(n) for n in exclude_node_names_ends_with]
                 )
             ):
                 if current_node.v.get() is True and not current_node.v.isLocked():
@@ -2794,11 +1548,8 @@ def export_cache_of_nodes(
             ext=CACHE_FORMAT_DATA[cache_format]["file_extension"],
         )
 
-        output_full_path = os.path.join(output_path, output_filename).replace("\\", "/")
-        try:
-            os.makedirs(os.path.dirname(output_full_path))
-        except OSError:
-            pass
+        cache_file_full_path = os.path.join(output_path, output_filename).replace("\\", "/")
+        os.makedirs(os.path.dirname(cache_file_full_path), exist_ok=True)
 
         if cache_format == ALEMBIC:
             if int(pm.about(v=1)) >= 2017:
@@ -2823,7 +1574,7 @@ def export_cache_of_nodes(
                 )
 
             command += ' -root {node} -file {file_path}";'
-        else:
+        elif cache_format == USD:
             command = (
                 'file -force -options ";exportUVs=1;exportSkels=none;exportSkin=none;'
                 "exportBlendShapes=0;exportColorSets=1;defaultMeshScheme=catmullClark;"
@@ -2868,8 +1619,8 @@ def export_cache_of_nodes(
         logger.info("INFO: Executing command: {}".format(command_to_exec))
         pm.mel.eval(command_to_exec)
         # move in to place
-        shutil.move(temp_cache_file_path, output_full_path)
-        output_full_paths.append(output_full_path)
+        shutil.move(temp_cache_file_path, cache_file_full_path)
+        cache_file_full_paths.append(cache_file_full_path)
 
         # reveal any previously hidden nodes
         for node in hidden_nodes:
@@ -2903,41 +1654,41 @@ def export_cache_of_nodes(
     print("INFO: End export_cache_of_nodes!")
 
     # add the outputs as an output for the current version
-    add_outputs_to_current_version(output_full_paths, cache_format)
+    add_files_to_current_version(cache_file_full_paths, cache_format)
 
-    return output_full_paths
+    return cache_file_full_paths
 
 
-def add_outputs_to_current_version(
-    output_full_paths: List[str],
-    output_type_name: str
+def add_files_to_current_version(
+    file_full_paths: List[str],
+    file_type_name: str
 ) -> List[File]:
-    """Add the given file as a File to the current version.
+    """Add the given file as a `File` to the current `Version.files`.
 
     Args:
-        output_full_paths (List[str]): A list of file paths.
-        output_type_name (str): The output type, e.g Alembic, USD, Image,
+        file_full_paths (List[str]): A list of file paths.
+        file_type_name (str): The file type, e.g Alembic, USD, Image,
             Video, Audio etc.
 
     Returns:
         List[File]: List of File instances that are newly created.
     """
-    from anima.dcc import mayaDCC
+    from anima.dcc.mayaDCC.common import Maya
 
-    m = mayaDCC.Maya()
-    current_version = m.get_current_version()
+    maya_dcc = Maya()
+    current_version : Version = maya_dcc.get_current_version()
 
     if current_version is None:
         return
 
-    # get Alembic type
+    # get related Type instance
     with DBSession.no_autoflush:
-        output_type = Type.query.filter(Type.name == output_type_name).first()
+        file_type = Type.query.filter(Type.name == file_type_name).first()
 
-    if not output_type:
-        output_type = Type(
-            name=output_type_name,
-            code=output_type_name,
+    if not file_type:
+        file_type = Type(
+            name=file_type_name,
+            code=file_type_name,
             target_entity_type="File",
         )
 
@@ -2945,12 +1696,12 @@ def add_outputs_to_current_version(
     with DBSession.no_autoflush:
         logged_in_user = local_session.logged_in_user
 
-    # Create a File with the output file and add it to the current version files
-    for output_file_path in output_full_paths:
+    # Create a File with the file path and add it to the current Version.files
+    for output_file_path in file_full_paths:
         new_file = File(
             full_path=Repository.to_os_independent_path(output_file_path),
             original_filename=os.path.basename(output_file_path),
-            type=output_type,
+            type=file_type,
             created_by=logged_in_user,
         )
         DBSession.add(new_file)
@@ -2959,34 +1710,33 @@ def add_outputs_to_current_version(
 
 
 def export_cache_of_selected_cacheable_nodes(
-    start_frame=None,
-    end_frame=None,
-    handles=0,
-    step=1,
-    isolate=True,
-    unload_refs=True,
-    cache_format=ALEMBIC,
-):
+    start_frame : Optional[int] = None,
+    end_frame : Optional[int] = None,
+    handles : int = 0,
+    step : int = 1,
+    isolate : bool = True,
+    unload_refs : bool = True,
+    cache_format : str = ALEMBIC,
+) -> List[str]:
     """Export Alembic/USD caches of the selected cacheable nodes.
 
     Args:
-        start_frame (int): The start frame. If both start and end frame are the same and
-            the handle is 0 then a static file will be exported.
-        end_frame (int): The end frame. If both start and end frame are the same and
-            the handle is 0 then a static file will be exported.
-        handles (int): An integer that shows the desired handles from start and end. If
-            both start and end frame are the same and the handle is 0 then a static file
-            will be exported.
+        start_frame (Optional[int]): Start frame. If same as end frame and
+            handle is 0, exports static file.
+        end_frame (Optional[int]): End frame. If same as start frame and
+            handle is 0, exports static file.
+        handles (int): Handles from start and end. If same as start and end
+            frame and handle is 0, exports static file.
         step (int): Frame step.
-        isolate (bool): Isolate the exported object, so it is faster to playback. This
-            can sometimes create a problem of constraints not to work on some scenes.
-            Default value is True.
-        unload_refs (bool): Unloads the references in the scene to speed playback
-            performance.
-        cache_format (str): Cache format, "alembic" or "usd". The default is "alembic".
+        isolate (bool): Isolate exported object for faster playback. Default is
+            True.
+        unload_refs (bool): Unload references to speed playback. Default is
+            True.
+        cache_format (str): Cache format, "alembic" or "usd". Default is
+            "alembic".
 
     Returns:
-        list: List of exported file paths.
+        List[str]: List of exported file paths.
     """
     # get selected cacheable nodes in the current scene
     cacheable_nodes = [
@@ -3005,35 +1755,33 @@ def export_cache_of_selected_cacheable_nodes(
 
 
 def export_cache_of_all_cacheable_nodes(
-    start_frame=None,
-    end_frame=None,
-    handles=0,
-    step=1,
-    isolate=True,
-    unload_refs=True,
-    cache_format=ALEMBIC,
-):
-    """Export Alembic/USD caches by looking at the current scene and try to find
-    transform nodes which has an attribute called "cacheable".
+    start_frame : Optional[int] = None,
+    end_frame : Optional[int] = None,
+    handles : int = 0,
+    step : int = 1,
+    isolate : bool = True,
+    unload_refs : bool = True,
+    cache_format : str = ALEMBIC,
+) -> List[str]:
+    """Export Alembic/USD caches for transform nodes with "cacheable" attribute.
 
     Args:
-        start_frame (int): The start frame. If both start and end frame are the same and
-            the handle is 0 then a static file will be exported.
-        end_frame (int): The end frame. If both start and end frame are the same and
-            the handle is 0 then a static file will be exported.
-        handles (int): An integer that shows the desired handles from start and end. If
-            both start and end frame are the same and the handle is 0 then a static file
-            will be exported.
+        start_frame (Optional[int]): Start frame. If same as end frame and
+            handle is 0, exports static file.
+        end_frame (Optional[int]): End frame. If same as start frame and
+            handle is 0, exports static file.
+        handles (int): Handles from start and end. If same as start and end
+            frame and handle is 0, exports static file.
         step (int): Frame step.
-        isolate (bool): Isolate the exported object, so it is faster to playback. This
-            can sometimes create a problem of constraints not to work on some scenes.
-            Default value is True.
-        unload_refs (bool): Unloads the references in the scene to speed playback
-            performance.
-        cache_format (str): Cache format, "alembic" or "usd". The default is "alembic".
+        isolate (bool): Isolate exported object for faster playback. Default is
+            True.
+        unload_refs (bool): Unload references to speed playback. Default is
+            True.
+        cache_format (str): Cache format, "alembic" or "usd". Default is
+            "alembic".
 
     Returns:
-        list: List of exported file paths.
+        List[str]: List of exported file paths.
     """
     # get cacheable nodes in the current scene
     cacheable_nodes = get_cacheable_nodes()
@@ -3049,8 +1797,8 @@ def export_cache_of_all_cacheable_nodes(
     )
 
 
-def extract_version_from_path(path: str) -> int:
-    """Extract version number ("_v{:03d}") as an integer from the given path
+def extract_version_number_from_path(path : str) -> int:
+    """Extract version number ("_v{:03d}") as an integer from the given path.
 
     Args:
         path (str): The path to extract the version number from.
@@ -3058,32 +1806,30 @@ def extract_version_from_path(path: str) -> int:
     Returns:
         int: The extracted version number.
     """
-    import re
-
     version_matcher = re.compile(VERSION_NUMBER_RE)
     m = re.match(version_matcher, path)
     if m:
         return int(m.group(2))
 
 
-def auto_reference_caches(cache_type=ALEMBIC):
+def auto_reference_caches(cache_type : str = ALEMBIC) -> None:
     """Reference caches from Animation scene of the same shot.
 
-    :param str cache_type: Desired cache type, one of ``auxiliary.ALEMBIC`` or
-        ``auxiliary.USD``, default value is ALEMBIC and USD is meaningless for now.
+    cache_type (str): Desired cache type, one of `ALEMBIC` or `USD`, default
+        value is ALEMBIC and USD is meaningless for now.
     """
     # update all references first
+    from anima.dcc.mayaDCC.common import Maya
+
     update_cache_references(cache_type=cache_type)
 
-    from anima.dcc import mayaDCC
-
-    m = mayaDCC.Maya()
-    v = m.get_current_version()
-    if not isinstance(v, Version):
+    maya_dcc = Maya()
+    version = maya_dcc.get_current_version()
+    if not isinstance(version, Version):
         raise RuntimeError("Active scene is not related to a Version.")
 
     # get the task
-    task = v.task
+    task = version.task
     if not task.parent:
         raise RuntimeError("This is a root task, please open a Shot based version!")
 
@@ -3120,7 +1866,10 @@ def auto_reference_caches(cache_type=ALEMBIC):
             "\\", "/"
         )
 
-        all_cache_files = sorted(glob.glob(glob_pattern), key=extract_version_from_path)
+        all_cache_files = sorted(
+            glob.glob(glob_pattern),
+            key=extract_version_number_from_path
+        )
         if not all_cache_files:
             continue
         latest_cache_file_name = all_cache_files[-1]
@@ -3153,11 +1902,12 @@ def auto_reference_caches(cache_type=ALEMBIC):
         )
 
 
-def update_cache_references(cache_type=ALEMBIC):
-    """Update referenced alembic files in the current scene.
+def update_cache_references(cache_type : str = ALEMBIC) -> None:
+    """Update referenced cache files in the current scene.
 
-    :param str cache_type: Desired cache type, one of ``auxiliary.ALEMBIC`` or
-        ``auxiliary.USD``, default value is ALEMBIC and USD is meaningless for now.
+    Args:
+        cache_type (str): Desired cache type, one of `ALEMBIC` or `USD`,
+            default value is ALEMBIC and USD is meaningless for now.
     """
     # TODO: This tool needs improvement
     # There is a need for a UI similar to the ``VersionUpdater``
@@ -3168,20 +1918,15 @@ def update_cache_references(cache_type=ALEMBIC):
     # and then another tool should update it
     #
     # But, this is exactly what VersionUpdater does.
-
-    import glob
-
     version_matcher = re.compile(VERSION_NUMBER_RE)
 
     updated_path_info = []
     for ref in pm.listReferences():
         is_loaded = ref.isLoaded()
-        path = ref.path
-        if not path.endswith(CACHE_FORMAT_DATA[cache_type]["file_extension"]):
+        if not (path := str(ref.path)).endswith(CACHE_FORMAT_DATA[cache_type]["file_extension"]):
             continue
 
-        m = re.match(version_matcher, path)
-        if not m:
+        if not (m := re.match(version_matcher, path)):
             continue
 
         prefix = m.group(1)
@@ -3195,8 +1940,7 @@ def update_cache_references(cache_type=ALEMBIC):
         # but, we don't need check for that too, because we are globbing for a path
         # that includes the ``variant_name``
 
-        last_abc_file = all_abc_files[-1]
-        if last_abc_file != os.path.expandvars(path):
+        if (last_abc_file := all_abc_files[-1]) != os.path.expandvars(path):
             # replace it
             updated_path_info.append((path, last_abc_file))
             ref.replaceWith(last_abc_file)
@@ -3214,7 +1958,7 @@ def update_cache_references(cache_type=ALEMBIC):
 
 # noinspection PyStatementEffect
 class BarnDoorSimulator(object):
-    """A aiBarnDoor simulator"""
+    """A aiBarnDoor simulator."""
 
     sides = ["top", "bottom", "left", "right"]
     message_storage_attr_name = "barnDoorSimulatorData"
@@ -3224,11 +1968,8 @@ class BarnDoorSimulator(object):
         self.frame_curve = None
         self.light = None
         self.barn_door = None
-
         self.script_job_no = -1
-
         self.preview_curves = {"top": [], "bottom": [], "left": [], "right": []}
-
         self.joints = {
             "top": [],
             "bottom": [],
@@ -3236,8 +1977,8 @@ class BarnDoorSimulator(object):
             "right": [],
         }
 
-    def create_barn_door(self):
-        """creates the barn door node"""
+    def create_barn_door(self) -> None:
+        """Create the barn door node."""
         light_shape = self.light.getShape()
         inputs = light_shape.inputs(type="aiBarndoor")
         if inputs:
@@ -3249,27 +1990,39 @@ class BarnDoorSimulator(object):
                 >> light_shape.attr("aiFilters").next_available
             )
 
-    def store_data(self, data):
-        """stores the given data"""
+    def store_data(self, data : str) -> None:
+        """Store the given data.
+
+        Args:
+            data (str): The data to store.
+        """
         if not self.light.hasAttr(self.custom_data_storage_attr_name):
             pm.addAttr(self.light, ln=self.custom_data_storage_attr_name, dt="string")
 
         self.light.setAttr(self.custom_data_storage_attr_name, data)
 
-    def store_nodes(self, nodes):
-        """stores the nodes"""
+    def store_nodes(self, nodes: List[pm.nt.Transform]) -> None:
+        """Store the given nodes.
+
+        Args:
+            nodes (List[pm.nt.Transform])
+        """
         for node in nodes:
             self.store_node(node)
 
-    def store_node(self, node):
-        """stores the node in the storage attribute"""
+    def store_node(self, node : pm.nt.Transform) -> None:
+        """Store the node in the storage attribute.
+        
+        Args:
+            node (pm.nt.Transform): The node to store.
+        """
         if not self.light.hasAttr(self.message_storage_attr_name):
             pm.addAttr(self.light, ln=self.message_storage_attr_name, m=1)
 
         node.message >> self.light.attr(self.message_storage_attr_name).next_available
 
-    def create_frame_curve(self):
-        """creates the frame curve"""
+    def create_frame_curve(self) -> None:
+        """Create the frame curve."""
         self.frame_curve = pm.curve(
             d=1,
             p=[
@@ -3283,8 +2036,12 @@ class BarnDoorSimulator(object):
         )
         self.store_node(self.frame_curve)
 
-    def create_preview_curve(self, side):
-        """creates preview curves"""
+    def create_preview_curve(self, side: str) -> None:
+        """Create preview curves.
+
+        Args:
+            side (str): The side name.
+        """
         # create two joints
         j1 = pm.createNode("joint")
         j2 = pm.createNode("joint")
@@ -3305,7 +2062,7 @@ class BarnDoorSimulator(object):
         self.store_nodes([j1, j2, preview_curve, skin_cluster])
 
     def create_expression(self):
-        """creates the expression"""
+        """Create the expression."""
         expr = """float $frame_scale, $cone_angle;
 
 if({light}.penumbraAngle < 0){{
@@ -3390,8 +2147,8 @@ $frame_scale = tan(deg_to_rad($cone_angle * 0.5));
         expr_node = pm.expression(s=expr)
         self.store_node(expr_node)
 
-    def create_script_job(self):
-        """creates the script job that disables the affected highlight"""
+    def create_script_job(self) -> None:
+        """Create the script job that disables the affected highlight."""
         script_job_no = pm.scriptJob(
             e=[
                 "SelectionChanged",
@@ -3403,8 +2160,8 @@ $frame_scale = tan(deg_to_rad($cone_angle * 0.5));
         )
         self.store_data(f"{script_job_no}")
 
-    def setup(self):
-        """setup the magic"""
+    def setup(self) -> None:
+        """Setup the magic."""
         # create 4 preview curves
         self.create_frame_curve()
 
@@ -3463,8 +2220,8 @@ $frame_scale = tan(deg_to_rad($cone_angle * 0.5));
         # select the light again
         pm.select(self.light)
 
-    def unsetup(self):
-        """deletes the barn door setup"""
+    def delete(self) -> None:
+        """Delete the barn door setup."""
         if self.light:
             try:
                 pm.delete(self.light.attr(self.message_storage_attr_name).inputs())
@@ -3478,16 +2235,15 @@ $frame_scale = tan(deg_to_rad($cone_angle * 0.5));
                 # list all lights and try to find the light that has this group
                 for light in pm.ls(type=pm.nt.Light):
                     light_parent = light.getParent()
-                    if light_parent.hasAttr(self.message_storage_attr_name):
-                        if (
-                            node
-                            in light_parent.attr(
-                                self.message_storage_attr_name
-                            ).inputs()
-                        ):
-                            self.light = light_parent
-                            found_light = True
-                            self.unsetup()
+                    if light_parent.hasAttr(self.message_storage_attr_name) and (
+                        node
+                        in light_parent.attr(
+                            self.message_storage_attr_name
+                        ).inputs()
+                    ):
+                        self.light = light_parent
+                        found_light = True
+                        self.delete()
 
                 # if the code comes here than this node is not listed in any
                 # lights, so delete it if it contains the string
@@ -3496,33 +2252,36 @@ $frame_scale = tan(deg_to_rad($cone_angle * 0.5));
                     pm.delete(node)
 
 
-def create_shader(shader_tree, name=None):
-    """Creates a shader tree from the given shader tree.
+def create_shader(shader_tree : Dict, name : Optional[str] = None) -> pm.PyNode:
+    """Create a shader tree from the given shader tree definition.
 
-    The shader_tree is a Python dictionary showing node types and attribute
-    values.
+    Args:
+        shader_tree (Dict): The shader tree definition. The shader_tree is a
+            Python dictionary showing node types and attribute values.
 
-    Each shader_tree can create only one shading network. The format of the
-    dictionary should be as follows.
+            Each shader_tree can create only one shading network. The format of
+            the dictionary should be as follows::
 
-    shader_tree: {
-        'type': <- The maya node type of the toppest shader
-        'class': <- The type of the shading node, one of
-            "asLight", "asPostProcess", "asRendering", "asShader", "asTexture"
-             "asUtility"
-        'attr': {
-            <- A dictionary that contains attribute names and values.
-            'attr1': {
-                'type': --- type name of the connected node
+            shader_tree: {
+                'type': <- The maya node type of the highest shader node
+                'class': <- The type of the shading node, one of
+                    "asLight", "asPostProcess", "asRendering", "asShader", "asTexture"
+                    "asUtility"
                 'attr': {
-                    <- attribute values ->
+                    <- A dictionary that contains attribute names and values.
+                    'attr1': {
+                        'type': --- type name of the connected node
+                        'attr': {
+                            <- attribute values ->
+                        }
+                    }
                 }
             }
-        }
-    }
 
-    :param dict shader_tree: A dictionary showing the shader tree attributes.
-    :return:
+        name (Optional[str]): The name of the shader to create.
+
+    Returns:
+        pm.PyNode: The created shader node.
     """
     shader_type = shader_tree["type"]
 
@@ -3550,19 +2309,25 @@ def create_shader(shader_tree, name=None):
     return shader
 
 
-def match_hierarchy(source, target, node_types=None, use_long_names=False):
-    """Matches the objects in two different hierarchy by looking at their
-    names.
+def match_hierarchy(
+    source: pm.PyNode,
+    target: pm.PyNode,
+    node_types : Optional[Tuple] = None,
+    use_long_names : bool = False
+) -> Dict:
+    """Match the objects in two different hierarchy by looking at their names.
 
-    Returns a dictionary where you can look up for matches by using the object
-    name.
+    Args:
+        source (pm.PyNode): The source node. It can be a parent node. So the match
+            includes the descendants.
+        target (pm.PyNode): The target node.
+        node_types (Optional[Tuple]): A tuple showing the node types to match.
+            The default value is (pm.nt.Mesh, pm.nt.NurbsSurface).
+        use_long_names (bool): Precisely match the placement in the hierarchy.
 
-    :param source: The source node. It can be a parent node. So the match
-      includes the descendants.
-    :param target: The target node.
-    :param node_types: A tuple showing the node types to match. The default
-      value is (pm.nt.Mesh, pm.nt.NurbsSurface).
-    :param use_long_names: Precisely match the placement in the hierarchy.
+    Returns:
+        Dict: A dictionary where you can look up for matches by using the
+            object name.
     """
     if node_types is None:
         node_types = (pm.nt.Mesh, pm.nt.NurbsSurface)
@@ -3616,19 +2381,21 @@ def match_hierarchy(source, target, node_types=None, use_long_names=False):
     return lut
 
 
-def camel_case_to_underscore(name):
-    """Converts the given CamelCase formatted string to underscore formatted
-    one
+def camel_case_to_underscore(name : str) -> str:
+    """Convert the given CamelCase formatted string to underscore formatted one.
 
-    :param name:
-    :return:
+    Args:
+        name (str): The CamelCase formatted string.
+
+    Returns:
+        str: The underscore formatted string.
     """
     name = FIRST_CAP_RE.sub(r"\1_\2", name)
     return ALL_CAP_RE.sub(r"\1_\2", name).lower()
 
 
 class Cell(object):
-    """An implementation for a grid cell
+    """An implementation for a grid cell.
 
     Holds points in space. It is easy to find a corresponding point with using
     a cell.
@@ -3642,43 +2409,49 @@ class Cell(object):
 
 
 class Grid(object):
-    """A simple grid implementation for component search"""
+    """A simple grid implementation for component search."""
 
     def __init__(self):
         self.divisions = [1, 1, 1]
         self.bbox = None
         self.tree = []
 
-    def add_point(self, point):
-        """Adds the given point to a cell.
+    def add_point(self, point: List[float]) -> None:
+        """Add the given point to a cell.
 
-        :param point:
-        :return:
+        Args:
+            point (List[float]): The point to add.
         """
         raise NotImplementedError()
 
-    def to_index(self, pos):
-        """converts the given position in space to a cell index
+    def to_index(self, pos: List[float]) -> List[int]:
+        """Convert the given position in space to a cell index.
 
-        :param pos: A point position in space
+        Args:
+            pos (List[float]): A point position in space.
+
+        Returns:
+            List[int]: The cell index.
         """
         raise NotImplementedError()
 
-    def to_cell(self, pos):
-        """returns a cell in the given position in space or none if no cell
-        contains that point.
+    def to_cell(self, pos: List[float]) -> Cell:
+        """Return a cell in the given position in space or none if no cell contains that point.
 
-        :param pos: A point position in space
-        :return:
+        Args:
+            pos (List[float]): A point position in space.
+
+        Return:
+            Cell: The cell that contains the given point.
         """
         raise NotImplementedError()
 
 
 class DummyWindowLight(object):
-    """generates dummy plane for given lights"""
+    """Generate dummy plane for given lights."""
 
-    shader_name = "oyToolbox_dummy_window_light_shader"
-    shading_engine_name = "oyToolbox_dummy_window_light_shaderSG"
+    shader_name = "dummy_window_light_shader"
+    shading_engine_name = "dummy_window_light_shaderSG"
 
     kelvin_min = 1000
     kelvin_max = 30000
@@ -3689,40 +2462,45 @@ class DummyWindowLight(object):
         self._shading_engine = None
         self._plane = None
 
-    def update(self):
-        """updates the node"""
+    def update(self) -> None:
+        """Update the node."""
         plane = self.plane
         self._update_plane_color()
         self._set_light_attributes()
 
-    def _set_light_attributes(self):
-        """sets the default light attributes"""
+    def _set_light_attributes(self) -> None:
+        """Set the default light attributes."""
         light_shape = self.light.getShape()
         light_shape.aiIndirect.set(0)
         light_shape.aiSamples.set(1)
 
     @property
-    def shader(self):
-        """returns the shader"""
+    def shader(self) -> pm.PyNode:
+        """Return the shader.
+
+        Returns:
+            pm.PyNode: The shader node.
+        """
         if self._shader:
             return self._shader
+
+        shader = pm.ls(self.shader_name)
+        if not shader:
+            self._create_shader()
+            return self._shader
+
+        self._shader = shader[0]
+        shading_engine = self._shader.outColor.outputs(type=pm.nt.ShadingEngine)
+        if shading_engine:
+            self._shading_engine = shading_engine[0]
         else:
-            shader = pm.ls(self.shader_name)
-            if not shader:
-                self._create_shader()
-                return self._shader
-            else:
-                self._shader = shader[0]
-                shading_engine = self._shader.outColor.outputs(type=pm.nt.ShadingEngine)
-                if shading_engine:
-                    self._shading_engine = shading_engine[0]
-                else:
-                    self._create_shading_engine()
-                return shader[0]
+            self._create_shading_engine()
+
+        return shader[0]
 
     @property
-    def shading_engine(self):
-        """returns the shading engine"""
+    def shading_engine(self) -> pm.nt.ShadingEngine:
+        """Return the shading engine."""
         if self._shading_engine:
             return self._shading_engine
         else:
@@ -3730,8 +2508,12 @@ class DummyWindowLight(object):
             return self._shading_engine
 
     @property
-    def plane(self):
-        """returns the plane"""
+    def plane(self) -> pm.nt.Transform:
+        """Return the plane.
+
+        Returns:
+            pm.nt.Transform: The transform node of the plane.
+        """
         self._validate_light(self.light)
 
         # get the first polygon object under the light
@@ -3751,18 +2533,17 @@ class DummyWindowLight(object):
             if plane_shape:
                 self._plane = plane_shape.getParent()
                 return self._plane
-            else:
-                return self._create_plane()
-        else:
-            # create the plane
+
             return self._create_plane()
 
-    def _create_shading_engine(self):
-        """creates the shading engine"""
+        # create the plane
+        return self._create_plane()
+
+    def _create_shading_engine(self) -> pm.nt.ShadingEngine:
+        """Create the shading engine."""
         if self.shader:
             # get the shading engine from shader
-            shading_engines = self.shader.outputs(type=pm.nt.ShadingEngine)
-            if shading_engines:
+            if shading_engines := self.shader.outputs(type=pm.nt.ShadingEngine):
                 self._shading_engine = shading_engines[0]
 
         if not self._shading_engine:
@@ -3775,15 +2556,14 @@ class DummyWindowLight(object):
 
         return self._shading_engine
 
-    def _create_shader(self):
+    def _create_shader(self) -> None:
+        """Create the shader."""
         self._shader = pm.shadingNode("surfaceShader", asShader=1)
         self._shader.rename(self.shader_name)
 
         self._shader.outColor >> self.shading_engine.surfaceShader
 
         # create the ramp
-        import maya.cmds as cmds
-
         kelvin_ramp = pm.shadingNode("ramp", asTexture=1)
         intensity_ramp = pm.shadingNode("ramp", asTexture=1)
         intensity_ramp.attr("type").set(1)
@@ -3809,14 +2589,22 @@ class DummyWindowLight(object):
         # connect ramp to the surfaceShaders.outColor
         intensity_ramp.outColor >> self.shader.outColor
 
-    def _validate_light(self, light):
+    def _validate_light(self, light: pm.nt.Light) -> pm.nt.Light:
+        """Validate the light.
+
+        Args:
+            light (pm.nt.Light): The light to validate.
+
+        Returns:
+            pm.nt.Light: The validated light node.
+        """
         if light is None:
             raise RuntimeError("No Light specified")
 
         return light
 
-    def _create_plane(self):
-        """there should be a light"""
+    def _create_plane(self) -> None:
+        """Create the plane for the light."""
         self._validate_light(self.light)
 
         trans, pplane = pm.polyPlane()
@@ -3840,8 +2628,8 @@ class DummyWindowLight(object):
         pm.sets(self.shading_engine, fe=[self._plane])
         self._update_plane_color()
 
-    def _update_plane_color(self):
-        """updates the plane uv according to the light color"""
+    def _update_plane_color(self) -> None:
+        """Update the plane uv according to the light color."""
         self._validate_light(self.light)
 
         # assign the shader
@@ -3872,10 +2660,11 @@ class DummyWindowLight(object):
             pass
 
 
-def fix_joint_hierarchy_scale(source_joint):
-    """Duplicates the given joint hierarchy
+def fix_joint_hierarchy_scale(source_joint: pm.nt.Joint) -> None:
+    """Duplicate the given joint hierarchy and fix the scale of the duplicated one.
 
-    :param source_joint: A maya joint
+    Args:
+        source_joint (pm.nt.Joint): A maya joint.
     """
     data = {}
     joints = [source_joint]
@@ -3904,10 +2693,11 @@ def fix_joint_hierarchy_scale(source_joint):
         # pm.xform(joint, ws=1, t=j_data['r'])
 
 
-def orphan_rig_finder(project):
+def orphan_rig_finder(project: Project) -> Dict:
     """Find rig tasks that doesn't have a corresponding LookDev tasks.
 
-    :param project: A Stalker Project instance to look in to.
+    Args:
+        project (stalker.Project): A Stalker Project instance to look in to.
     """
     # get all the rig tasks
     rig_type = Type.query.filter(Type.name == "Rig").first()
@@ -3931,7 +2721,7 @@ def orphan_rig_finder(project):
         # get the latest published rig version
         # we need to consider all the variants differently
 
-        unique_variants = anima.utils.get_unique_variant_names(rig_task.id)
+        unique_variants = get_unique_variant_names(rig_task.id)
 
         # check LookDev first
         # if no LookDev with the same variant_name
@@ -4001,7 +2791,7 @@ def orphan_rig_finder(project):
     return orphan_rigs
 
 
-def bake_mash_nodes():
+def bake_mash_nodes() -> None:
     """Convert MASH instances to normal nodes in the current scene."""
     logger.debug("bake_mash_nodes start!")
     if not pm.pluginInfo("MASH", q=1, loaded=1):
@@ -4011,7 +2801,6 @@ def bake_mash_nodes():
 
     # first convert all MASH_Repro to instancers
     from MASH import switchGeometryType
-    from anima.dcc.mayaDCC import mash_bake_instancer
 
     logger.debug("Converting MASH_Repro to instancers if any!")
     for mash_waiter in pm.ls(type=pm.nt.MASH_Waiter):

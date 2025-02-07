@@ -44,9 +44,9 @@ class OpenVersion(Operator):
     # bl_icon = "FILE"
 
     def execute(self, context):
-        from anima.ui.scripts.blender import version_dialog
+        from anima.ui.scripts.blender import show_version_dialog
 
-        version_dialog(mode=1)
+        show_version_dialog(mode=1)
         # redraw
         # context.area.tag_redraw()
         return {"FINISHED"}
@@ -59,9 +59,9 @@ class SaveAsVersion(Operator):
     # bl_icon = "FILE_NEW"
 
     def execute(self, context):
-        from anima.ui.scripts.blender import version_dialog
+        from anima.ui.scripts.blender import show_version_dialog
 
-        version_dialog(mode=0)
+        show_version_dialog(mode=0)
         # redraw
         # context.area.tag_redraw()
         return {"FINISHED"}
@@ -73,9 +73,9 @@ class VersionUpdater(Operator):
     bl_description = "Updates versions"
 
     def execute(self, context):
-        from anima.ui.scripts.blender import version_updater
+        from anima.ui.scripts.blender import show_version_updater
 
-        version_updater()
+        show_version_updater()
         # redraw
         # context.area.tag_redraw()
         return {"FINISHED"}

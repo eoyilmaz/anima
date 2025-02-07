@@ -115,7 +115,7 @@ class FileReferenceExtension(object):
         :param str repr_name: The desired repr name
         :return: :class:`.Version`
         """
-        from anima.dcc.mayaDCC import Maya
+        from anima.dcc.mayaDCC.common import Maya
 
         m = Maya()
         v = m.get_version_from_full_path(self.path)
@@ -135,7 +135,7 @@ class FileReferenceExtension(object):
 
         :return: list of str
         """
-        from anima.dcc.mayaDCC import Maya
+        from anima.dcc.mayaDCC.common import Maya
 
         m = Maya()
         v = m.get_version_from_full_path(self.path)
@@ -156,7 +156,7 @@ class FileReferenceExtension(object):
         """returns True or False depending to if this is the base
         representation for this reference
         """
-        from anima.dcc.mayaDCC import Maya
+        from anima.dcc.mayaDCC.common import Maya
 
         m = Maya()
         v = m.get_version_from_full_path(self.path)
@@ -174,7 +174,7 @@ class FileReferenceExtension(object):
         :param str repr_name: The name of the desired representation
         :return:
         """
-        from anima.dcc.mayaDCC import Maya
+        from anima.dcc.mayaDCC.common import Maya
 
         m = Maya()
         v = m.get_version_from_full_path(self.path)
@@ -192,7 +192,7 @@ class FileReferenceExtension(object):
         :param str repr_name: The representation name
         :return:
         """
-        from anima.dcc.mayaDCC import Maya
+        from anima.dcc.mayaDCC.common import Maya
 
         m = Maya()
         v = m.get_version_from_full_path(self.path)
@@ -207,7 +207,7 @@ class FileReferenceExtension(object):
     @property
     def repr(self):
         """the representation name of the related version"""
-        from anima.dcc.mayaDCC import Maya
+        from anima.dcc.mayaDCC.common import Maya
 
         m = Maya()
         v = m.get_version_from_full_path(self.path)
@@ -221,7 +221,7 @@ class FileReferenceExtension(object):
     @extends(FileReference)
     def get_base(self):
         """returns the base version instance"""
-        from anima.dcc.mayaDCC import Maya
+        from anima.dcc.mayaDCC.common import Maya
 
         m = Maya()
         v = m.get_version_from_full_path(self.path)
@@ -236,7 +236,7 @@ class FileReferenceExtension(object):
     @property
     def version(self):
         """returns the Stalker Version instance related to this reference"""
-        from anima.dcc.mayaDCC import Maya
+        from anima.dcc.mayaDCC.common import Maya
 
         m = Maya()
         return m.get_version_from_full_path(self.path)
@@ -510,7 +510,7 @@ class SequenceManagerExtension(object):
                 f"be a string, not {path.__class__.__name__}: '{path}'"
             )
 
-        from anima.dcc.mayaDCC import Maya
+        from anima.dcc.mayaDCC.common import Maya
 
         m = Maya()
         fps = m.get_fps()
@@ -548,7 +548,7 @@ class SequenceManagerExtension(object):
         :return: Sequence
         """
         import timecode
-        from anima.dcc.mayaDCC import Maya
+        from anima.dcc.mayaDCC.common import Maya
 
         m = Maya()
         fps = m.get_fps()
@@ -1070,7 +1070,7 @@ class ShotExtension(object):
         # restore track
         self.track.set(track)
 
-        from anima.dcc.mayaDCC.auxiliary import Playblaster
+        from anima.dcc.mayaDCC.playblast import Playblaster
 
         return Playblaster.convert_image_sequence_to_video(
             result, delete_source_sequence=True

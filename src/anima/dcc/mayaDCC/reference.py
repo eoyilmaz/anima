@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from anima.dcc.mayaDCC.common import Maya
+import anima.dcc.mayaDCC.common
 from anima.utils import do_db_setup
 from pymel import core as pm
 from anima.utils.progress import ProgressManagerFactory
@@ -148,7 +150,7 @@ class Reference(object):
         from anima.dcc import mayaDCC
 
         do_db_setup()
-        m = mayaDCC.Maya()
+        m = anima.dcc.mayaDCC.common.Maya()
 
         local_session = LocalSession()
         logged_in_user = local_session.logged_in_user
@@ -282,7 +284,7 @@ class Reference(object):
         from stalker import LocalSession
         from anima.dcc import mayaDCC
 
-        m = mayaDCC.Maya()
+        m = anima.dcc.mayaDCC.common.Maya()
 
         local_session = LocalSession()
         logged_in_user = local_session.logged_in_user
@@ -304,7 +306,7 @@ class Reference(object):
         # list current scene references
         from anima.dcc import mayaDCC
 
-        m_env = mayaDCC.Maya()
+        m_env = anima.dcc.mayaDCC.common.Maya()
         current_version = m_env.get_current_version()
 
         all_refs = pm.listReferences(recursive=True)
@@ -372,7 +374,7 @@ class Reference(object):
         """Create a ZIP file containing the current scene and its references in a flat
         Maya default project folder structure.
         """
-        from anima.dcc.mayaDCC import Maya
+        from anima.dcc.mayaDCC.common import Maya
         from anima.dcc.mayaDCC.archive import Archiver
         from anima.utils.archive import archive_versions
 
@@ -386,7 +388,7 @@ class Reference(object):
         """Archive multiple scenes."""
         from anima.ui.scripts import maya as maya_ui_scripts
 
-        maya_ui_scripts.archiver_dialog()
+        maya_ui_scripts.show_archiver_dialog()
 
     @classmethod
     def bind_to_original(cls):
@@ -398,7 +400,7 @@ class Reference(object):
         from anima.dcc import mayaDCC
         from stalker import Repository, Task, Project, Version
 
-        m = mayaDCC.Maya()
+        m = anima.dcc.mayaDCC.common.Maya()
         current_version = m.get_current_version()
 
         # get the current project
@@ -643,7 +645,7 @@ class Reference(object):
         cls, generate_gpu=True, generate_ass=True, generate_rs=True, skip_existing=False
     ):
         """generates desired representations of this scene"""
-        from anima.dcc.mayaDCC import Maya, repr_tools
+        from anima.dcc.mayaDCC import repr_tools
 
         response = pm.confirmDialog(
             title="Do Create Representations?",
@@ -723,7 +725,7 @@ class Reference(object):
         cls, generate_gpu=True, generate_ass=True, generate_rs=True, skip_existing=False
     ):
         """generates all representations of all references of this scene"""
-        from anima.dcc.mayaDCC import Maya, repr_tools
+        from anima.dcc.mayaDCC import repr_tools
 
         paths_visited = []
         versions_to_visit = []

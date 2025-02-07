@@ -18,7 +18,7 @@ SET_PYSIDE2()
 
 from anima.ui.scripts import houdini
 
-func = functools.partial(houdini.version_dialog, mode=1)
+func = functools.partial(houdini.show_version_dialog, mode=1)
 hdefereval.executeDeferred(func)
 ]]>
         </scriptCode>
@@ -37,7 +37,7 @@ SET_PYSIDE2()
 
 from anima.ui.scripts import houdini
 
-func = functools.partial(houdini.version_dialog, mode=0)
+func = functools.partial(houdini.show_version_dialog, mode=0)
 hdefereval.executeDeferred(func)
 ]]>
         </scriptCode>
@@ -46,4 +46,3 @@ hdefereval.executeDeferred(func)
     </subMenu>
   </menuBar>
 </mainMenu>
-

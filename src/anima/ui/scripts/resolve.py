@@ -1,40 +1,31 @@
 # -*- coding: utf-8 -*-
 
 import logging
+from typing import TYPE_CHECKING, Optional
 
+from anima.dcc.resolve import toolbox
 from anima.log import logger
+from anima.utils import do_db_setup
 
 
-def toolbox(lib="PySide", logging_level=logging.WARNING, parent=None):
-    """Helper function for version_dialog UI for Resolve
+if TYPE_CHECKING:
+    from anima.ui.lib.QtWidgets import QWidget
+
+
+def show_toolbox(
+    logging_level : int = logging.WARNING,
+    parent : Optional["QWidget"] = None
+) -> None:
+    """Show toolbox for Resolve.
 
     It uses with PySide by default you can opt to use PyQt4 instead by setting
     the ``lib`` argument to "PyQt4".
 
-    :param str lib: choose a lib, one of ["PySide", "PyQt4"]
-    :param logging_level:
-    :return: None
+    Args:
+        logging_level (int): Set the logging level. Default is logging.WARNING.
+        parent (QWidget): The parent widget. Default is None.
     """
-    # # connect to db
-    # from anima.utils import do_db_setup
-    # do_db_setup()
-    #
-    # from anima.ui import SET_PYSIDE, SET_PYQT4
-    # if lib == 'PySide':
-    #     SET_PYSIDE()
-    # elif lib == 'PyQt4':
-    #     SET_PYQT4()
-    #
-    # from anima.dcc import fusion
-    # reload(fusion)
-    # fusion_dcc = fusion.Fusion()
-    # fusion_dcc.name = 'Fusion'
-    #
-    # from anima.ui import version_dialog
-    # logger.setLevel(logging_level)
-    # version_dialog.UI(dcc=fusion_dcc, parent=parent)
-
-    from anima.dcc.resolve import toolbox
+    do_db_setup()
 
     dialog = toolbox.UI()
     return dialog

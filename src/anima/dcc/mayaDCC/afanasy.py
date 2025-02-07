@@ -2,13 +2,14 @@
 
 
 import copy
+import functools
+import logging
 import os
 import time
-import logging
-import functools
 
 import af
 import afcommon
+
 import pymel.core as pm
 
 
@@ -337,14 +338,11 @@ This system will be updated in Afanasy."""
     def generate_job_name(cls):
         """generates a job name according to the current scene"""
         # first check if it is a Stalker Project
-        from anima.dcc import mayaDCC
+        from anima.dcc.mayaDCC.common import Maya
 
-        m = mayaDCC.Maya()
+        m = Maya()
         v = m.get_current_version()
         if v is not None:
-            from stalker import Version
-
-            assert isinstance(v, Version)
             return "{}:{}_v{:03d}{}".format(
                 v.task.project.code,
                 v.nice_name,

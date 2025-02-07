@@ -3,19 +3,19 @@
 import logging
 
 
-from anima.utils import do_db_setup
 from anima.dcc import photoshop
 from anima.ui.dialogs import version_dialog
+from anima.utils import do_db_setup
 
 
-def version_dialog(lib="PySide"):
-    """Helper function for version_dialog UI for Photoshop
+def show_version_dialog(lib="PySide") -> None:
+    """Show version_dialog UI for Photoshop.
 
     It uses with PySide by default you can opt to use PyQt4 instead by setting
     the ``lib`` argument to "PyQt4".
 
-    :param str lib: choose a lib, one of ["PySide", "PyQt4"]
-    :return: None
+    Args:
+        lib (str): choose a lib, one of ["PySide", "PyQt4"].
     """
     # connect to db
     do_db_setup()

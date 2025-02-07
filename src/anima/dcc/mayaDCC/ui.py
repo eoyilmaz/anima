@@ -7,7 +7,7 @@ import pymel
 
 import anima
 
-from anima.dcc.mayaDCC import Maya
+from anima.dcc.mayaDCC.common import Maya
 
 from pymel import core
 

@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import MaxPlus
+
+
+from anima.dcc import max as max_dcc
+from anima.utils import do_db_setup
+
+
 
 class Executor(object):
     """ """
@@ -19,37 +26,25 @@ class Executor(object):
     #     self.application.sendPostedEvents(None, 0)
 
 
-def version_dialog():
-    """Helper function for version_dialog UI for Max"""
-    from anima.utils import do_db_setup
-
+def show_version_dialog():
+    """Show version_dialog UI for Max."""
     do_db_setup()
 
     from anima.ui.dialogs import version_dialog
-    from anima.dcc import max as max_env
 
-    m = max_env.Max()
-
-    import MaxPlus
-
+    m = max_dcc.Max()
     max_window = MaxPlus.GetQMaxWindow()
 
     version_dialog.UI(dcc=m, executor=Executor(), parent=max_window)
 
 
-def version_updater():
-    """Helper function for version_updater UI for Max"""
-    from anima.utils import do_db_setup
-
+def show_version_updater():
+    """Show version_updater UI for Max."""
     do_db_setup()
 
     from anima.ui.dialogs import version_updater
-    from anima.dcc import max as max_env
 
-    m = max_env.Max()
-
-    import MaxPlus
-
+    m = max_dcc.Max()
     max_window = MaxPlus.GetQMaxWindow()
 
     version_updater.UI(dcc=m, executor=Executor(), parent=max_window)

@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import functools
+import os
+
+from pymel import core as pm
+
+from stalker import Shot
 
 from anima.dcc.mayaDCC.camera_tools import cam_to_chan
-from pymel import core as pm
+from anima.dcc.mayaDCC.common import Maya
+from anima.utils import smooth_array
 
 
 class Animation(object):
@@ -165,8 +171,6 @@ class Animation(object):
         :param iteration:
         :return:
         """
-        from anima.utils import smooth_array
-
         node = pm.keyframe(q=1, sl=1, n=1)[0]
         keyframe_indices = pm.keyframe(q=1, sl=1, iv=1)
         keyframe_values = pm.keyframe(q=1, sl=1, vc=1)
@@ -193,8 +197,6 @@ class Animation(object):
     @classmethod
     def create_alembic(cls, from_top_node=1):
         """creates alembic cache from selected nodes"""
-        import os
-
         root_flag = "-root {node}"
         mel_command = (
             'AbcExport -j "-frameRange {start} {end} -ro '
@@ -399,14 +401,10 @@ class Animation(object):
             max_frame = shot.getAttr("endFrame")
         else:
             # check if this is a shot related scene
-            from anima.dcc import mayaDCC
-
-            m = mayaDCC.Maya()
+            m = Maya()
             v = m.get_current_version()
             if v:
                 t = v.task
-                from stalker import Shot
-
                 parents = t.parents
                 parents.reverse()
                 for p in parents:
@@ -428,7 +426,7 @@ class Animation(object):
     @classmethod
     def export_alembics_on_farm(cls):
         """Submits alembic export jobs to Afanasy"""
-        from anima.dcc.mayaDCC import Maya, afanasy_publisher
+        from anima.dcc.mayaDCC import afanasy_publisher
 
         m = Maya()
         v = m.get_current_version()
@@ -442,7 +440,7 @@ class Animation(object):
     @classmethod
     def playblast_on_farm(cls):
         """Submits playblast creation jobs to Afanasy"""
-        from anima.dcc.mayaDCC import Maya, afanasy_publisher
+        from anima.dcc.mayaDCC import afanasy_publisher
 
         m = Maya()
         v = m.get_current_version()
