@@ -31,8 +31,8 @@ except NameError as e:
 
 maya_version = cmds.about(v=1)
 env_paths = [
-    "../../../",
-    "../../../mayaDCC",
+    # "../../../",
+    # "../../../mayaDCC",
     "../../../mayaDCC/config",
     f"../../../mayaDCC/config/{maya_version}",
     "../../../mayaDCC/plugins",
@@ -42,7 +42,7 @@ env_paths = [
 for path in env_paths:
     resolved_path = os.path.normpath(os.path.join(here, path))
 
-    log_print(f"appending : {resolved_path}")
+    log_print(f"appending to sys.path: {resolved_path}")
     sys.path.append(resolved_path)
 
 # add path from os.environ['PYTHONPATH']
