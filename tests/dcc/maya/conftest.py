@@ -27,7 +27,7 @@ import logging
 
 from tests.dcc.maya.utils import create_version
 
-logger = logging.getLogger("anima.dcc.mayaDCC")
+logger = logging.getLogger("anima.dcc.maya")
 logger.setLevel(logging.DEBUG)
 
 
@@ -46,7 +46,7 @@ def create_pymel():
 def create_maya_dcc():
     """Create a proper Maya DCC."""
     # create the DCC instance
-    from anima.dcc.mayaDCC.common import Maya
+    from anima.dcc.maya.common import Maya
 
     maya_dcc = Maya()
     maya_dcc.use_progress_window = False
@@ -105,7 +105,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_dcc):
     data["temp_repo_path"] = create_maya_test_db
     pm = create_pymel
     maya_dcc = create_maya_dcc
-    from anima.dcc.mayaDCC import auxiliary
+    from anima.dcc.maya import auxiliary
 
     data["user1"] = User(
         name="User 1", login="user1", email="user1@users.com", password="12345"

@@ -3,7 +3,7 @@
 import tempfile
 import unittest
 
-from anima.dcc.mayaDCC.common import Maya
+from anima.dcc.maya.common import Maya
 import pymel.core as pm
 
 from stalker import (
@@ -23,7 +23,7 @@ from stalker import (
     Version,
 )
 
-from anima.dcc.mayaDCC import previs
+from anima.dcc.maya import previs
 
 
 class ShotSplitterTestCase(unittest.TestCase):

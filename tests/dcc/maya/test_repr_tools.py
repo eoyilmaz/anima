@@ -1,11 +1,11 @@
-"""Tests for anima.dcc.mayaDCC.toolbox representation tools
+"""Tests for anima.dcc.maya.toolbox representation tools
 """
 import os
 
 import pytest
 
-from anima.dcc.mayaDCC.reference import Reference
-from anima.dcc.mayaDCC.repr_tools import RepresentationGenerator, Representation
+from anima.dcc.maya.reference import Reference
+from anima.dcc.maya.repr_tools import RepresentationGenerator, Representation
 
 from stalker import User, LocalSession
 

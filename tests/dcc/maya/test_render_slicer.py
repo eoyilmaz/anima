@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Tests for the ``anima.dcc.mayaDCC.render_slicer.RenderSlicer`` class."""
+"""Tests for the ``anima.dcc.maya.render_slicer.RenderSlicer`` class."""
 
 import pytest
 
-from anima.dcc.mayaDCC.render import RenderSlicer
+from anima.dcc.maya.render import RenderSlicer
 
 
 @pytest.fixture(scope="function")

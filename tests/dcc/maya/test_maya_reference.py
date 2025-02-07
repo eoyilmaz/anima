@@ -743,7 +743,7 @@ def test_get_referenced_files_returns_a_list_of_file_instances_even_with_represe
     maya_dcc.save_as(data["asset2_model_variant1_v001"])
     maya_dcc.save_as(data["asset2_model_variant1_v002"])
 
-    from anima.dcc.mayaDCC.repr_tools import RepresentationGenerator
+    from anima.dcc.maya.repr_tools import RepresentationGenerator
 
     gen = RepresentationGenerator()
 

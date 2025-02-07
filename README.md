@@ -82,15 +82,15 @@ rez-env anima redshift aces maya -- maya
 Then inside Maya you can start using the pipeline scripts:
 
 ```python
-from anima.dcc import mayaDCC
-m = mayaDCC.Maya()
+from anima.dcc.maya.common import Maya
+m = Maya()
 ```
 
 or better:
 
 ```python
-from anima.ui.scripts import maya
-maya.version_dialog()
+from anima.ui.scripts.maya import show_version_dialog
+show_version_dialog()
 ```
 
 It is a good idea to create a `Studio` instance in your database, with all the

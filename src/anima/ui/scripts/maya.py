@@ -4,8 +4,8 @@ import logging
 
 import pymel
 
-from anima.dcc.mayaDCC.common import get_maya_main_window, Maya
-from anima.dcc.mayaDCC import archive
+from anima.dcc.maya.common import get_maya_main_window, Maya
+from anima.dcc.maya import archive
 from anima.log import logger
 from anima.utils import do_db_setup
 

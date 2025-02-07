@@ -6,8 +6,8 @@ from stalker import Project, Task, Asset, Variant, Version
 from stalker.db.session import DBSession
 
 from anima import publish
-from anima.dcc.mayaDCC import auxiliary
-from anima.dcc.mayaDCC.asset_migration_tool import AssetMigrationTool
+from anima.dcc.maya import auxiliary
+from anima.dcc.maya.asset_migration_tool import AssetMigrationTool
 from anima.publish import PRE_PUBLISHER_TYPE, POST_PUBLISHER_TYPE
 
 
