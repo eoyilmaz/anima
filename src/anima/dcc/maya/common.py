@@ -273,9 +273,13 @@ class Maya(DCCBase):
         )
 
     def save_as(
-        self, version, run_pre_publishers=True, allow_external_references=False
+        self,
+        file,
+        run_pre_publishers=True,
+        allow_external_references=False
     ) -> bool:
-        """Save the current scene as the "Base" representation for the given Version.
+        """Save the current scene as the "Base" representation for the given
+        Version.
 
         Save the given ``Version`` instance to the Version.absolute_full_path.
 
@@ -287,13 +291,26 @@ class Maya(DCCBase):
             allow_external_references (bool): Allow external references which
                 are unknown to Stalker. `False` by default.
 
+        Raises:
+            RuntimeError: If the given file is not related to a Version.
+
         Returns:
             bool: True if success, False otherwise.
         """
+
         # clean malware
         self.clean_malware()
 
         start = time.time()
+
+        # get the related Version
+        version = Version.query.filter(Version.file.contains(file)).first()
+        if not version:
+            RuntimeError(
+                "The given file is not related to a Version instance, "
+                "please related it to a Version and then call save_as()."
+            )
+
         if version.is_published:
             if run_pre_publishers:
                 # before doing anything run all publishers
@@ -334,8 +351,9 @@ class Maya(DCCBase):
         if version != current_version:  # prevent CircularDependencyError
             version.parent = current_version
 
-        # create a new File for this Maya scene
-        maya_scene_file = File(name="Maya Scene File")
+        # update the File for this Maya scene
+        maya_scene_file = file
+        maya_scene_file.name = "Maya Scene File"
         # set full path with extension of ".ma"
         full_path : Path = version.generate_path(extension=self.extensions[0])
         maya_scene_file.full_path = str(full_path)
@@ -365,7 +383,7 @@ class Maya(DCCBase):
         if current_workspace_path != workspace_path:
             logger.debug("changing workspace detected!")
             logger.debug(
-                "converting paths to absolute, to be able to " "preserve external paths"
+                "converting paths to absolute, to be able to preserve external paths"
             )
 
             # replace external paths with absolute ones
@@ -393,12 +411,10 @@ class Maya(DCCBase):
         if shot and version.version_number == 1:
             self.set_frame_range(shot.cut_in, shot.cut_out)
 
+        # set the fps and render resolution
         fps = shot.fps if shot else project.fps
         imf = shot.image_format if shot else project.image_format
-
         self.set_render_resolution(imf.width, imf.height, imf.pixel_aspect)
-
-        # now always setting the scene fps
         self.set_fps(fps)
 
         # set arnold texture search paths
@@ -414,11 +430,7 @@ class Maya(DCCBase):
         self.set_playblast_file_name(version)
 
         # create the folder if it doesn't exist
-        try:
-            os.makedirs(version.absolute_path)
-        except OSError:
-            # already exists
-            pass
+        os.makedirs(version.absolute_path, exist_ok=True)
 
         # delete the unknown nodes
         unknown_nodes = mc.ls(type="unknown")
@@ -430,6 +442,8 @@ class Maya(DCCBase):
                 pass
 
         if unknown_nodes:
+            logger.debug("Deleting unknown nodes:")
+            logger.debug(unknown_nodes)
             mc.delete(unknown_nodes)
 
         # set the file paths for external resources
@@ -448,7 +462,7 @@ class Maya(DCCBase):
         self.remove_rogue_model_panel_change_events()
 
         # save the file
-        pm.saveAs(version.absolute_full_path, type="mayaAscii")
+        pm.saveAs(maya_scene_file.absolute_full_path, type="mayaAscii")
 
         # switch back to the last layer
         if int(pm.about(v=1)) >= 2017:
@@ -471,8 +485,6 @@ class Maya(DCCBase):
 
         # run post publishers here
         if version.is_published and not pm.general.about(batch=1):
-            from anima.ui.lib import QtCore, QtWidgets, QtGui
-
             # before doing anything run all publishers
             type_name = ""
             if version.task.type:
@@ -486,6 +498,7 @@ class Maya(DCCBase):
 
             # before running use the staging area to store the current version
             staging["version"] = version
+            staging["file"] = maya_scene_file
             try:
                 run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
                 publish_dialog.close()
