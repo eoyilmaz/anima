@@ -130,9 +130,10 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
 
         for i, version in enumerate(versions):
             is_published = version.is_published
-            absolute_full_path = os.path.normpath(
-                os.path.expandvars(version.full_path)
-            ).replace("\\", "/")
+            absolute_full_path = ""
+            # os.path.normpath(
+            #     os.path.expandvars(version.absolute_full_path)
+            # ).replace("\\", "/")
             version_file_exists = os.path.exists(absolute_full_path)
 
             c = 0
@@ -156,13 +157,13 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             # ------------------------------------
             # created_with
             item = QtWidgets.QTableWidgetItem()
-            if version.created_with:
-                item.setToolTip(version.created_with)
-                from anima.ui import utils as ui_utils
+            # if version.created_with:
+            #     item.setToolTip(version.created_with)
+            #     from anima.ui import utils as ui_utils
 
-                app_icon = ui_utils.get_app_icon(version.created_with.lower())
-                if app_icon:
-                    item.setIcon(app_icon)
+            #     app_icon = ui_utils.get_app_icon(version.created_with.lower())
+            #     if app_icon:
+            #         item.setIcon(app_icon)
 
             if is_published:
                 set_published_font(item)
