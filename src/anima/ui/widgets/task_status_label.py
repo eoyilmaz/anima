@@ -59,9 +59,7 @@ class TaskStatusLabel(QtWidgets.QLabel):
                     text-align: center;
                     padding-left: 0.5em;
                     padding-right: 0.5em;
-                """.format(
-                    status_color
-                )
+                """.format(status_color)
             )
             self.setText(self.task.status.name)
         else:

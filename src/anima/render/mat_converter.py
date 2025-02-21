@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Contains the base classes for material conversion for different renderers.
-"""
+"""Contains the base classes for material conversion for different renderers."""
 
 
 class NodeCreatorBase(object):
@@ -15,8 +14,7 @@ class NodeCreatorBase(object):
 
 
 class ConversionManagerBase(object):
-    """The base class for material conversion managers for different renderers.
-    """
+    """The base class for material conversion managers for different renderers."""
 
     def __init__(self):
         self.conversion_spec_sheet = None

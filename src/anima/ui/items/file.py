@@ -1,22 +1,19 @@
 # -*- coding: utf-8 -*-
 """File related items are situated here."""
 
-
 from anima.ui.lib import QtCore, QtGui, QtWidgets
-
 
 
 #
 # File.thumbnail
 # File.name
-# File.type
+# File.type
 # File.full_path
 # File.created_with
 # File.created_by
 # File.date_created
 # File.date_updated
 #
-
 
 
 class FileThumbnailItem(QtGui.QStandardItem):
@@ -90,4 +87,3 @@ class FileItem(QtGui.QStandardItem):
         self.updated_by_item = None
         self.date_created_item = None
         self.date_updated_item = None
-

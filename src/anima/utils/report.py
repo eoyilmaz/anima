@@ -767,7 +767,6 @@ class NetflixReporter(object):
             for shot in (
                 Shot.query.filter(Shot.parent == shots_task).order_by(Shot.code).all()
             ):
-
                 comp_or_cleanup_task = (
                     Task.query.filter(Task.parent == shot)
                     .filter(Task.name == "Comp")

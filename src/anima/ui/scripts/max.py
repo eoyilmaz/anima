@@ -7,7 +7,6 @@ from anima.dcc import max as max_dcc
 from anima.utils import do_db_setup
 
 
-
 class Executor(object):
     """ """
 

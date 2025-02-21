@@ -389,8 +389,12 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         self.fill_repository_combo_box()
         self.fill_structure_combo_box()
 
-        project_status_list = StatusList.query.filter(StatusList.target_entity_type == 'Project').first()
-        all_project_statuses = [(status.id, status.name) for status in project_status_list.statuses]
+        project_status_list = StatusList.query.filter(
+            StatusList.target_entity_type == "Project"
+        ).first()
+        all_project_statuses = [
+            (status.id, status.name) for status in project_status_list.statuses
+        ]
 
         for st_id, st_name in all_project_statuses:
             self.status_combo_box.addItem(st_name, st_id)

@@ -106,7 +106,7 @@ class VersionMover(AnimaDialogBase, QtWidgets.QDialog):
         QtCore.QObject.connect(
             self.from_task_tree_view.selectionModel(),
             QtCore.SIGNAL(
-                "selectionChanged(const QItemSelection &, " "const QItemSelection &)"
+                "selectionChanged(const QItemSelection &, const QItemSelection &)"
             ),
             self.from_task_tree_view_changed,
         )
@@ -114,7 +114,7 @@ class VersionMover(AnimaDialogBase, QtWidgets.QDialog):
         QtCore.QObject.connect(
             self.to_task_tree_view.selectionModel(),
             QtCore.SIGNAL(
-                "selectionChanged(const QItemSelection &, " "const QItemSelection &)"
+                "selectionChanged(const QItemSelection &, const QItemSelection &)"
             ),
             self.to_task_tree_view_changed,
         )

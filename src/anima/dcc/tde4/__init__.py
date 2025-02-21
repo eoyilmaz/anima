@@ -5,7 +5,6 @@ from anima.dcc.base import DCCBase
 
 
 class TDE4(DCCBase):
-
     name = "3DE4"
     extensions = [".3de"]
 

@@ -60,9 +60,7 @@ class oyCenterOfMass(OpenMayaMPx.MPxNode):
         OpenMayaMPx.MPxNode.__init__(self)
 
     def compute(self, plug, dataBlock):
-
         if plug == oyCenterOfMass.aCOMPos:
-
             # get the mesh vertices for time from start to end
 
             # get the meshes

@@ -387,9 +387,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     QTableWidget.
     """
 
-    def __init__(
-        self, parent=None, dcc=None, publish_callback=None, version=None
-    ):
+    def __init__(self, parent=None, dcc=None, publish_callback=None, version=None):
         QtWidgets.QDialog.__init__(self, parent=parent)
         self.dcc = dcc
         self.publishers = []

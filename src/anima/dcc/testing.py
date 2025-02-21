@@ -168,12 +168,12 @@ class TestDCC(DCCBase):
     @count_calls
     def update_reference_versions_to_latest(self, reference_resolution):
         """Mock update_reference_versions implementation.
-        
+
         Does the update indeed but partially.
 
         Args
             reference_resolution (Dict): The reference_resolution dictionary
-        
+
         Returns:
             List[File]: A list of new files.
         """
@@ -194,7 +194,7 @@ class TestDCC(DCCBase):
                 task=version.task,
                 variant_name=version.variant_name,
                 parent=version,
-                description="Automatically created with " "Deep Reference Update",
+                description="Automatically created with Deep Reference Update",
             )
             new_version.is_published = True
 

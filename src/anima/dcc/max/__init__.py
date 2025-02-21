@@ -251,7 +251,7 @@ class Max(DCCBase):
             use_namespace (bool): Use a namespace or not.
 
         Returns:
-            xref: 
+            xref:
         """
         rt = pymxs.runtime
 

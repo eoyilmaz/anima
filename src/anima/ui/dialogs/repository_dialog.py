@@ -47,7 +47,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
         self.vertical_layout.setObjectName("verticalLayout")
         self.dialog_label = QtWidgets.QLabel(self)
-        self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);\n" "font: 18pt;")
+        self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);\nfont: 18pt;")
         self.dialog_label.setObjectName("dialog_label")
         self.dialog_label.setText("Create Repository")
 

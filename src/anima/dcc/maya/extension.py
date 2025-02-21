@@ -388,7 +388,6 @@ class SequenceManagerExtension(object):
                 # is_deleted = True
                 for shot in shots:
                     if clip.id.lower() == shot.full_shot_name.lower():
-
                         # update with the given clip info
                         # anchor = shot.startFrame.get()
                         handle = shot.handle.get()

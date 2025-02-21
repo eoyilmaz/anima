@@ -363,8 +363,7 @@ sourceimages/3dPaintTextures"""
 
             if not versions:
                 print(
-                    "no version found in the same project, "
-                    "looking in to other projects"
+                    "no version found in the same project, looking in to other projects"
                 )
                 # try to look in to all projects, order by Project.date_created
                 versions = (

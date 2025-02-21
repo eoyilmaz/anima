@@ -148,7 +148,7 @@ class UIFile(object):
     def _validate_full_path(self, full_path):
         """validates the given full_path"""
         if full_path == "" or full_path is None:
-            raise TypeError("UIFile.full_path can not be None or empty " "string")
+            raise TypeError("UIFile.full_path can not be None or empty string")
 
         # update filename
         self.filename = os.path.basename(full_path)

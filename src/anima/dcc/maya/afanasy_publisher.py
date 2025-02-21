@@ -10,10 +10,7 @@ from anima.dcc.maya.common import Maya
 
 
 def submit_job(
-    job_name : str,
-    block_name : str,
-    command : str,
-    host_mask : str = ""
+    job_name: str, block_name: str, command: str, host_mask: str = ""
 ) -> None:
     """Submit an Afanasy job.
 
@@ -41,11 +38,7 @@ def submit_job(
         RuntimeError("Something went wrong!")
 
 
-def submit_alembic_job(
-    path : str,
-    project_code : str = "",
-    host_mask : str = ""
-) -> None:
+def submit_alembic_job(path: str, project_code: str = "", host_mask: str = "") -> None:
     """Create an Afanasy job that exports the alembics on a given scene
 
     Args:
@@ -74,9 +67,7 @@ def submit_alembic_job(
 
 
 def submit_playblast_job(
-    path : str,
-    project_code : str = "",
-    host_mask : str = ""
+    path: str, project_code: str = "", host_mask: str = ""
 ) -> None:
     """Create an Afanasy job that exports the alembics on a given scene.
 
@@ -97,7 +88,7 @@ def submit_playblast_job(
     submit_job(job_name, block_name, command, host_mask=host_mask)
 
 
-def export_alembics(path : str) -> None:
+def export_alembics(path: str) -> None:
     """Create alembic files.
 
     Args:
@@ -118,9 +109,7 @@ def export_alembics(path : str) -> None:
 
 
 def export_playblast(
-    path: str,
-    force_batch_mode : str = False,
-    reference_depth : str = 0
+    path: str, force_batch_mode: str = False, reference_depth: str = 0
 ):
     """Playblast the current scene.
 

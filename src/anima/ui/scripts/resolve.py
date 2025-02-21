@@ -13,8 +13,7 @@ if TYPE_CHECKING:
 
 
 def show_toolbox(
-    logging_level : int = logging.WARNING,
-    parent : Optional["QWidget"] = None
+    logging_level: int = logging.WARNING, parent: Optional["QWidget"] = None
 ) -> None:
     """Show toolbox for Resolve.
 

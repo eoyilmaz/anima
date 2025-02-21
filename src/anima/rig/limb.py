@@ -12,7 +12,6 @@ from anima.rig.drawNode import DrawNode
 
 class Limb(object):
     def __init__(self, limbName_in):
-
         # Name of the Limb
         self._limbName = limbName_in
 
@@ -68,7 +67,6 @@ class FkLimb(object):
         self.fkLimbNodes = None
 
     def create_fk_limb(self, name_in, positions, frontAxis=None):
-
         self._fkLimbName = name_in
         self._fkJoints = JointChain(name_in, positions)
         self._fkJoints.orient_joint_chain(frontAxis=frontAxis)
@@ -226,7 +224,6 @@ class IkSpineLimb(object):
         for i in xrange(
             numOfFkCtrl, self.joints._numOfJoints - numOfFkCtrl, numOfFkCtrl
         ):
-
             fkJointsPos.append(self.joints.jointPos[i])
         fkJointsPos.append(self.joints.endPos)
         print(fkJointsPos)

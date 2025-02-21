@@ -20,10 +20,10 @@ from anima.utils.progress import ProgressManagerFactory
 
 
 def generate_empty_reference_resolution(
-    root : Optional[List[File]] = None,
-    leave : Optional[List[File]] = None,
-    update : Optional[List[File]] = None,
-    create : Optional[List[File]] = None
+    root: Optional[List[File]] = None,
+    leave: Optional[List[File]] = None,
+    update: Optional[List[File]] = None,
+    create: Optional[List[File]] = None,
 ) -> Dict:
     """Generate an empty reference_resolution dictionary.
 
@@ -122,7 +122,7 @@ class DCCBase(object):
     def __str__(self):
         """Return the string representation."""
         return self._name
-    
+
     def generate_file_for_version(self, version: Version) -> File:
         """Generate a File instance for the given Version instance.
 
@@ -139,7 +139,9 @@ class DCCBase(object):
             )
 
         file = File()
-        full_path : Path = version.generate_path(extension=self.extensions[0] if self.extensions else "")
+        full_path: Path = version.generate_path(
+            extension=self.extensions[0] if self.extensions else ""
+        )
         file.full_path = str(full_path)
         version.files.append(file)
         return file
@@ -196,7 +198,7 @@ class DCCBase(object):
         skip_update_check: bool = False,
     ):
         """Open the given File instance.
-        
+
         Args:
             file (File): The stalker.File instance to open.
             force (bool): Skip any errors and force open the given file.
@@ -209,7 +211,7 @@ class DCCBase(object):
 
     def import_(self, file: File):
         """Import the given File.
-        
+
         Args:
             file (File): The file to import to.
         """
@@ -217,7 +219,7 @@ class DCCBase(object):
 
     def reference(self, file: File, use_namespace: bool = True):
         """Reference the given File.
-        
+
         Args:
             file (File): The stalker.File instance to reference.
             use_namespace (True): Some DCCs (Maya) support namespaces, if True
@@ -259,7 +261,7 @@ class DCCBase(object):
             path (str): Path in a repository.
 
         Returns:
-            stalker.models.repository.Repository: The 
+            stalker.models.repository.Repository: The
         """
         # first find the repository
         return Repository.find_repo(path)
@@ -299,7 +301,9 @@ class DCCBase(object):
         # try to get all versions with that info
         versions = []
         with DBSession.no_autoflush:
-            files = File.query.filter(File.full_path.startswith(os_independent_path)).all()
+            files = File.query.filter(
+                File.full_path.startswith(os_independent_path)
+            ).all()
             for file in files:
                 versions += Version.query.filter(Version.files.contains(file)).all()
 
@@ -366,9 +370,7 @@ class DCCBase(object):
         Returns:
             stalker.File: A File instance or None.
         """
-        raise NotImplementedError(
-            "get_current_file() is not implemented for this DCC!"
-        )
+        raise NotImplementedError("get_current_file() is not implemented for this DCC!")
 
     def get_current_version(self) -> Union[None, Version]:
         """Return the current Version instance from the DCC.
@@ -379,7 +381,7 @@ class DCCBase(object):
         """
         current_file = self.get_current_file()
         # query the version that contains this file
-        return  Version.query.filter(Version.files.contains(current_file)).first()
+        return Version.query.filter(Version.files.contains(current_file)).first()
 
     def append_to_recent_files(self, path: str) -> None:
         """Append the given path to the recent files list.
@@ -391,14 +393,13 @@ class DCCBase(object):
         rfm = RecentFileManager()
         rfm.add(self.name, path)
 
-
     def get_file_from_recent_files(self) -> File:
         """Try to return a `File` instance from the recent files list.
 
         It will return None if it can not find one.
 
         Returns:
-            Union[None, File]: The recent File if possible or None. 
+            Union[None, File]: The recent File if possible or None.
         """
         file = None
 
@@ -432,7 +433,7 @@ class DCCBase(object):
         It will return None if it can not find one.
 
         Returns:
-            Union[None, Version]: The recent Version if possible or None. 
+            Union[None, Version]: The recent Version if possible or None.
         """
         version = None
 
@@ -441,7 +442,7 @@ class DCCBase(object):
         file = self.get_file_from_recent_files()
         if not file:
             return
-        
+
         version = Version.query.filter(Version.files.contains(file)).first()
 
         logger.debug(f"version from recent files is: {version}")
@@ -508,9 +509,7 @@ class DCCBase(object):
 
         if version.variant_name and version.parent:
             version = version.parent
-            logger.debug(
-                f"this is a representation switching to its parent: {version}"
-            )
+            logger.debug(f"this is a representation switching to its parent: {version}")
 
         # update the reference list
         referenced_versions = self.get_referenced_files(parent_ref)
@@ -662,7 +661,7 @@ class DCCBase(object):
 
         Args:
             parent_ref (pymel.nt.Reference): The parent reference node.
-        
+
         Returns:
             List[File]: Referenced Files.
         """
@@ -731,11 +730,9 @@ class DCCBase(object):
 
     def load_references(self):
         """Load all the references."""
-        raise NotImplementedError(
-            "load_references() is not implemented in this DCC!"
-        )
+        raise NotImplementedError("load_references() is not implemented in this DCC!")
 
-    def replace_reference(self, source_file : File, target_file : File):
+    def replace_reference(self, source_file: File, target_file: File):
         """Replace the source_file with the target_file.
 
         Args:
@@ -745,9 +742,7 @@ class DCCBase(object):
             target_version (File): A :class:`~stalker.File` instance holding
                 the new reference replacing the source one.
         """
-        raise NotImplementedError(
-            "replace_reference() is not implemented in this DCC!"
-        )
+        raise NotImplementedError("replace_reference() is not implemented in this DCC!")
 
     def replace_external_paths(self, mode=0):
         """Replace the external paths with a proper paths;.
@@ -778,11 +773,11 @@ class DCCBase(object):
     def get_significant_name(
         cls,
         version,
-        include_project_code : bool = True,
-        include_version_number : bool = True,
+        include_project_code: bool = True,
+        include_version_number: bool = True,
     ) -> str:
-        """Return the significant name. 
-        
+        """Return the significant name.
+
         The significant name starts from the closest parent which is an Asset,
         Shot or Sequence and includes the ``Project.code``.
 
@@ -905,10 +900,7 @@ class DCCBase(object):
         return self.get_shot(version) is not None
 
     def set_render_resolution(
-        self,
-        width : int,
-        height : int,
-        pixel_aspect : float = 1.0
+        self, width: int, height: int, pixel_aspect: float = 1.0
     ) -> None:
         """Set the render resolution for the current DCC.
 

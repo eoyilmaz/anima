@@ -875,7 +875,6 @@ class Render(object):
         objects = pm.ls(sl=1)
 
         for obj in objects:
-
             shape = obj
 
             if isinstance(obj, pm.nt.Transform):
@@ -2650,8 +2649,6 @@ class MayaColorManagementConfigurator(object):
                 },
             },
         },
-
-
     }
 
     @classmethod
@@ -3256,9 +3253,9 @@ class LightingSceneBuilder(object):
                 if rig_task_id_as_str not in self.rig_to_cacheable_lut:
                     self.rig_to_cacheable_lut[rig_task_id_as_str] = {}
 
-                self.rig_to_cacheable_lut[rig_task_id_as_str][
-                    rig_variant_name
-                ] = cacheable_attr_value
+                self.rig_to_cacheable_lut[rig_task_id_as_str][rig_variant_name] = (
+                    cacheable_attr_value
+                )
 
             cacheable_attr_value_with_copy_number = "{}{}".format(
                 cacheable_attr_value, copy_number

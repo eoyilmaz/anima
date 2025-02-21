@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Anima Previs Editor
-"""
+"""Anima Previs Editor"""
 
 import os
 import pymel

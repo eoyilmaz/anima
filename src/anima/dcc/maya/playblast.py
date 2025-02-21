@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Contains playblast related functions for Maya."""
+
 import copy
 import glob
 import json
@@ -21,13 +22,12 @@ from anima.utils import MediaManager, milliseconds_to_tc
 from anima.utils.progress import ProgressManagerFactory
 
 
-
 def perform_playblast(
-    action : int = 0,
-    resolution : int = 100,
-    playblast_view_options : Optional[Dict] = None,
-    upload_to_server : Optional[bool] = None,
-    force_batch_mode : bool = False,
+    action: int = 0,
+    resolution: int = 100,
+    playblast_view_options: Optional[Dict] = None,
+    upload_to_server: Optional[bool] = None,
+    force_batch_mode: bool = False,
 ) -> Union[None, str]:
     """The patched version of the original perform playblast.
 
@@ -272,7 +272,7 @@ def ask_playblast_view_options() -> Dict:
     return user_playblast_view_options
 
 
-def perform_playblast_shot(shot_name : str) -> None:
+def perform_playblast_shot(shot_name: str) -> None:
     """Perform shot playblast
 
     This is written to replace the menu action in Camera Sequencer.
@@ -430,8 +430,7 @@ class Playblaster(object):
         self.reset_user_view_options_storage()
 
     def check_sequence_name(self) -> None:
-        """Check sequence name and prompt user if not set (in UI mode).
-        """
+        """Check sequence name and prompt user if not set (in UI mode)."""
         local_sequencers = [
             seq for seq in pm.ls(type="sequencer") if seq.referenceFile() is None
         ]
@@ -459,9 +458,7 @@ class Playblaster(object):
         )
 
         if result == "OK":
-            sequencer.setAttr(
-                "sequence_name", pm.promptDialog(query=True, text=True)
-            )
+            sequencer.setAttr("sequence_name", pm.promptDialog(query=True, text=True))
 
     def get_hud_data(self) -> str:
         """Return HUD data.
@@ -602,7 +599,7 @@ class Playblaster(object):
             pm.headsUpDisplay(removePosition=(7, 1))
             self.create_hud(hud_name)
 
-    def remove_hud(self, hud_name : Optional[str] = None) -> None:
+    def remove_hud(self, hud_name: Optional[str] = None) -> None:
         """Remove the HUD."""
         if hud_name and pm.headsUpDisplay(hud_name, q=1, ex=1):
             pm.headsUpDisplay(hud_name, rem=1)
@@ -639,9 +636,7 @@ class Playblaster(object):
         selected_start_time, selected_end_time = list(
             map(
                 int,
-                pm.timeControl(
-                    pm.melGlobals["$gPlayBackSlider"], q=1, rangeArray=True
-                ),
+                pm.timeControl(pm.melGlobals["$gPlayBackSlider"], q=1, rangeArray=True),
             )
         )
 
@@ -664,9 +659,7 @@ class Playblaster(object):
         start, end = list(
             map(
                 int,
-                pm.timeControl(
-                    pm.melGlobals["$gPlayBackSlider"], q=1, rangeArray=True
-                ),
+                pm.timeControl(pm.melGlobals["$gPlayBackSlider"], q=1, rangeArray=True),
             )
         )
         return (end - start) > 1
@@ -848,10 +841,7 @@ class Playblaster(object):
 
         return active_panel
 
-    def playblast(
-        self,
-        extra_playblast_options : Optional[Dict] = None
-    ) -> List[str]:
+    def playblast(self, extra_playblast_options: Optional[Dict] = None) -> List[str]:
         """Do a scene playblast.
 
         Decide what kind of playblast it needs to do.
@@ -896,8 +886,7 @@ class Playblaster(object):
             return self.playblast_simple(extra_playblast_options)
 
     def playblast_simple(
-        self,
-        extra_playblast_options : Optional[Dict] = None
+        self, extra_playblast_options: Optional[Dict] = None
     ) -> List[str]:
         """Do a simple playblast.
 
@@ -1015,8 +1004,8 @@ class Playblaster(object):
     @classmethod
     def convert_image_sequence_to_video(
         cls,
-        data : Dict,
-        delete_source_sequence : bool = False,
+        data: Dict,
+        delete_source_sequence: bool = False,
     ) -> List[str]:
         """Convert image sequence to video.
 
@@ -1120,9 +1109,7 @@ class Playblaster(object):
 
                         options["ss"] = [
                             None,
-                            milliseconds_to_tc(
-                                abs(audio_offset_in_millie_seconds)
-                            ),
+                            milliseconds_to_tc(abs(audio_offset_in_millie_seconds)),
                         ]
                         options["to"] = [
                             None,
@@ -1151,9 +1138,7 @@ class Playblaster(object):
         return new_result
 
     def playblast_shot(
-        self,
-        shot : pm.nt.Shot,
-        extra_playblast_options : Optional[Dict] = None
+        self, shot: pm.nt.Shot, extra_playblast_options: Optional[Dict] = None
     ) -> List[str]:
         """Do the real playblast.
 
@@ -1204,8 +1189,7 @@ class Playblaster(object):
         return temp_video_file_full_path
 
     def playblast_all_shots(
-        self,
-        extra_playblast_options : Optional[Dict] = None
+        self, extra_playblast_options: Optional[Dict] = None
     ) -> List[str]:
         """Playblast all shots.
 
@@ -1289,9 +1273,7 @@ class Playblaster(object):
 
     @classmethod
     def upload_files(
-        cls,
-        version: Version,
-        video_file_full_paths: List[str]
+        cls, version: Version, video_file_full_paths: List[str]
     ) -> List[str]:
         """Bulk upload files to the given Version instance.
 
@@ -1321,11 +1303,7 @@ class Playblaster(object):
         return files
 
     @classmethod
-    def upload_file(
-        cls,
-        version : Version,
-        file_full_path: str
-    ) -> str:
+    def upload_file(cls, version: Version, file_full_path: str) -> str:
         """Upload the given file as a file for the given Version.
 
         Also generate a thumbnail and a web version if it is a movie file.
@@ -1349,9 +1327,7 @@ class Playblaster(object):
         thumbnail_extension = ".png"
 
         if not os.path.exists(file_full_path):
-            raise RuntimeError(
-                f"File does not exits: {file_full_path}"
-            )
+            raise RuntimeError(f"File does not exits: {file_full_path}")
 
         file_name = os.path.basename(file_full_path)
 

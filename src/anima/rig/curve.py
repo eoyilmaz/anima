@@ -5,7 +5,6 @@ import pymel.core as pm
 
 class Curve(object):
     def __init__(self, name_in, curve):
-
         self._curveNode = pm.nt.Transform(pm.rename(curve, name_in))
 
         self._curveInfo = self._create_curveInfo()
@@ -53,7 +52,6 @@ class Curve(object):
     @property
     # CV Positions : Gets the positions of cvs
     def cvPositions(self):
-
         return self._cvPositions
 
     @property

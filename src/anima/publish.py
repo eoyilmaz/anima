@@ -2,6 +2,7 @@
 """This module contains scripts those run when a new Version is published. It
 is a way of checking the quality of the published versions.
 """
+
 PRE_PUBLISHER_TYPE = 0
 POST_PUBLISHER_TYPE = 1
 

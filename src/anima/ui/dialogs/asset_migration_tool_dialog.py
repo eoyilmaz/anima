@@ -354,7 +354,7 @@ class ProjectWidget(QtWidgets.QGroupBox):
                         # okay, we found a child widget that has one of the parents
                         # give the rest of the tasks to that widget,
                         # so that it can add them as child widgets.
-                        rest_of_the_tasks = all_parents[i + 1:]
+                        rest_of_the_tasks = all_parents[i + 1 :]
                         found_task_widget = task_widget
                         break
                 if found_task_widget and rest_of_the_tasks:
@@ -519,9 +519,13 @@ class VariantWidget(QtWidgets.QWidget):
         )
         self.variant_new_name_line_edit.setToolTip("New Variant Name")
         self.variant_new_name_line_edit.setFixedWidth(150)
-        self.variant_new_name_line_edit.editingFinished.connect(self.variant_new_name_edited)
+        self.variant_new_name_line_edit.editingFinished.connect(
+            self.variant_new_name_edited
+        )
         variant_new_name_layout.addWidget(self.variant_new_name_line_edit)
-        variant_new_name_layout.addWidget(self.variant_new_name_validation_message_field)
+        variant_new_name_layout.addWidget(
+            self.variant_new_name_validation_message_field
+        )
 
         # self.main_layout.addWidget(self.variant_new_name_line_edit)
         self.main_layout.addLayout(variant_new_name_layout)
@@ -1190,7 +1194,9 @@ class TaskWidget(QtWidgets.QGroupBox):
         # add all the variants of this task as a VariantWidget
         variant_names = get_unique_variant_names(self._task.id)
         for variant in variant_names:
-            variant_widget = VariantWidget(parent=self, task=self._task, variant=variant)
+            variant_widget = VariantWidget(
+                parent=self, task=self._task, variant=variant
+            )
             self.child_widgets_layout.addWidget(variant_widget)
             variant_widget.add_references.connect(self.add_task)
             variant_widget.version_updated.connect(self.version_updated)
@@ -1235,14 +1241,14 @@ class TaskWidget(QtWidgets.QGroupBox):
                         task_added = task
 
                         # give the rest of the tasks to this widget
-                        task_widget.add_child_tasks(intermediate_tasks[i + 1:])
+                        task_widget.add_child_tasks(intermediate_tasks[i + 1 :])
                         break
                     else:
                         # oh okay so this task is already in a task_widget
                         for task_widget in self.task_widgets:
                             if task_widget.task == task:
                                 # give the rest of the tasks to that task widget
-                                task_widget.add_child_tasks(intermediate_tasks[i + 1:])
+                                task_widget.add_child_tasks(intermediate_tasks[i + 1 :])
                                 break
 
         if tasks_added:
@@ -1264,7 +1270,9 @@ class TaskWidget(QtWidgets.QGroupBox):
         Returns:
             bool: If all variant widgets are enabled.
         """
-        return any(variant_widget.is_enabled() for variant_widget in self.variant_widgets)
+        return any(
+            variant_widget.is_enabled() for variant_widget in self.variant_widgets
+        )
 
     def validate(self):
         """Validate the current task widget.
@@ -1274,7 +1282,9 @@ class TaskWidget(QtWidgets.QGroupBox):
         """
         is_valid = (
             self.new_parent
-            and all([variant_widget.validate() for variant_widget in self.variant_widgets])
+            and all(
+                [variant_widget.validate() for variant_widget in self.variant_widgets]
+            )
             and all([task_widget.validate() for task_widget in self.task_widgets])
             and self.validate_asset_new_name()
             and self.validate_asset_new_code()

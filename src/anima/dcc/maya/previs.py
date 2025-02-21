@@ -23,7 +23,6 @@ class ShotExporter2(object):
     """exports shots from a Previs scene"""
 
     def __init__(self):
-
         self.working_file_name = pm.env.sceneName()
         self.working_scene_name = os.path.basename(pm.env.sceneName())
         self.working_folder = pm.workspace(fn=True)
@@ -193,7 +192,6 @@ def move_all_anim_curves():
 
                 key_cnt = anim_curve.numKeys()
                 for i in range(1, key_cnt + 1):
-
                     if choice == "forward":
                         ind = key_cnt - i
                     if choice == "back":
@@ -328,7 +326,7 @@ def create_shots_from_scratch():
                 start_length = pm.intField(f"{shot_length_name}{i}", q=1, v=1)
                 pm.intField(f"{end_frame_name}{i}", e=1, v=s_frame + start_length)
             else:
-                prev_end_frame = pm.intField(f"{end_frame_name}{i-1}", q=1, v=1)
+                prev_end_frame = pm.intField(f"{end_frame_name}{i - 1}", q=1, v=1)
                 pm.intField(f"{start_frame_name}{i}", e=1, v=prev_end_frame + 1)
                 start_length = pm.intField(f"{shot_length_name}{i}", q=1, v=1)
                 pm.intField(

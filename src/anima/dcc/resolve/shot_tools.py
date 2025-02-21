@@ -11,6 +11,7 @@ timeline = resolve_project.GetCurrentTimeline()
 clip = timeline.GetCurrentVideoItem()
 
 """
+
 import os
 
 from anima.dcc import blackmagic

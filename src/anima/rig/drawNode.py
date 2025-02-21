@@ -13,7 +13,6 @@ class DrawNode(object):
     """
 
     def __init__(self, drawer, name):
-
         self._drawnNode = None
 
         self._set_drawnNode(drawer, name)

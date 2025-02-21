@@ -6,6 +6,7 @@ from anima.dcc.resolve import toolbox
 dialog = toolbox.UI()
 
 """
+
 import os
 
 from anima.ui.base import ui_caller

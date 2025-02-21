@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Utilities for UI stuff
-"""
+"""Utilities for UI stuff"""
+
 import os
 
 from anima.log import logger
@@ -309,7 +309,7 @@ def initialize_post_publish_dialog():
     dialog.vertical_layout = QtWidgets.QVBoxLayout(dialog)
     dialog.label = QtWidgets.QLabel(dialog.vertical_layout.widget())
     dialog.label.setText("POST PUBLISH IN PROGRESS")
-    dialog.label.setStyleSheet(_fromUtf8("color: rgb(20, 255, 20);\n" "font: 16pt;"))
+    dialog.label.setStyleSheet(_fromUtf8("color: rgb(20, 255, 20);\nfont: 16pt;"))
     dialog.vertical_layout.addWidget(dialog.label)
     dialog.label1 = QtWidgets.QLabel(dialog.vertical_layout.widget())
     dialog.label1.setText("PLEASE WAIT...")

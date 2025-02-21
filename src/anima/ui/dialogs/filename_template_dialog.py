@@ -136,11 +136,10 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             "/{%- endfor -%}"
         )
         self.filename_line_edit.setText(
-            '{{version.nice_name}}'
+            "{{version.nice_name}}"
             '_r{{"%02d"|format(version.revision_number)}}'
             '_v{{"%03d"|format(version.version_number)}}'
         )
-
 
         # ------------------------------------------------
         # Disable Fields

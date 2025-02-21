@@ -155,9 +155,7 @@ if ({camera}.filmFit == 1){{
     $fa = $vfa;
 }}
 {frustum_geo}.sx = {frustum_geo}.sy = {frustum_geo}.sz = -{frustum_geo}.translateZ * $hfa/ $flen;
-""".format(
-        camera=camera.name(), frustum_geo=frustum_geo.name()
-    )
+""".format(camera=camera.name(), frustum_geo=frustum_geo.name())
     pm.expression(s=exp, o="", ae=1, uc="all")
 
     # hide unnecessary attributes
@@ -245,7 +243,7 @@ def cam_to_chan(start_frame, end_frame):
 
     camera = selection[0]
 
-    template = "{frame}\t{posx}\t{posy}\t{posz}\t" "{rotx}\t{roty}\t{rotz}\t{vfv}"
+    template = "{frame}\t{posx}\t{posy}\t{posz}\t{rotx}\t{roty}\t{rotz}\t{vfv}"
 
     lines = []
 

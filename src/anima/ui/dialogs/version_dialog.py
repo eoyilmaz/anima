@@ -31,7 +31,7 @@ from anima.utils import (
     MediaManager,
     get_unique_variant_names,
     open_browser_in_location,
-    upload_thumbnail
+    upload_thumbnail,
 )
 
 
@@ -62,6 +62,7 @@ class UIMode(IntEnum):
     Mode 2: Both Save As and Open. This is the default and this is the
             legacy mode now, which will be deprecated in later versions.
     """
+
     SAVE_AS_MODE = 0
     OPEN_MODE = 1
     SAVE_AS_AND_OPEN_MODE = 2
@@ -653,9 +654,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
         representations_label = QtWidgets.QLabel(self)
         representations_label.setText("Repr.")
-        previous_version_secondary_controls_layout.addWidget(
-            representations_label
-        )
+        previous_version_secondary_controls_layout.addWidget(representations_label)
 
         self.representations_comboBox = QtWidgets.QComboBox(self)
         self.representations_comboBox.setToolTip(
@@ -667,16 +666,12 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         )
         reference_depth_label = QtWidgets.QLabel(self)
         reference_depth_label.setText("Refs")
-        previous_version_secondary_controls_layout.addWidget(
-            reference_depth_label
-        )
+        previous_version_secondary_controls_layout.addWidget(reference_depth_label)
         self.ref_depth_combo_box = QtWidgets.QComboBox(self)
         self.ref_depth_combo_box.setToolTip(
             "Choose reference depth (if supported by DCC)"
         )
-        previous_version_secondary_controls_layout.addWidget(
-            self.ref_depth_combo_box
-        )
+        previous_version_secondary_controls_layout.addWidget(self.ref_depth_combo_box)
         spacer_item3 = QtWidgets.QSpacerItem(
             40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
         )
@@ -749,9 +744,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         self.close1_push_button.setText("Close")
         open_buttons_layout.addWidget(self.close1_push_button)
 
-        versions_main_layout.addWidget(
-            self.previous_version_secondary_controls_widget
-        )
+        versions_main_layout.addWidget(self.previous_version_secondary_controls_widget)
         versions_main_layout.addWidget(self.previous_version_controls_widget)
         versions_main_layout.addWidget(self.new_version_controls_widget)
 
@@ -796,7 +789,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
         Args:
             mode (int): The mode to set. It can be one of the following:
-            
+
                 - ``UIMode.SAVE_AS_MODE``: Save As Mode
                 - ``UIMode.OPEN_MODE``: Open Mode
                 - ``UIMode.SAVE_AS_AND_OPEN_MODE``: Save As and Open Mode
@@ -1100,9 +1093,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
                         answer = QtWidgets.QMessageBox.question(
                             self,
                             "Delete?",
-                            "Delete the version?"
-                            "<br>"
-                            "<br>Files will not be deleted!",
+                            "Delete the version?<br><br>Files will not be deleted!",
                             QtWidgets.QMessageBox.Yes,
                             QtWidgets.QMessageBox.No,
                         )
@@ -1300,7 +1291,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     #     # self.tasks_tree_view.user_tasks_only = bool(state)
     #     # self.fill_tasks_tree_view()
 
-    def fill_tasks_tree_view(self, show_completed_projects : bool=False) -> None:
+    def fill_tasks_tree_view(self, show_completed_projects: bool = False) -> None:
         """Wrap the tasks_tree_view.fill_ui() method."""
         self.tasks_tree_view.show_completed_projects = show_completed_projects
 
@@ -1328,7 +1319,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         QtCore.QObject.connect(
             self.tasks_tree_view.selectionModel(),
             QtCore.SIGNAL(
-                "selectionChanged(const QItemSelection &, " "const QItemSelection &)"
+                "selectionChanged(const QItemSelection &, const QItemSelection &)"
             ),
             self.tasks_tree_view_changed,
         )
@@ -1490,7 +1481,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
         logger.debug("finished setting up interface defaults")
 
-    def restore_ui(self, entity : Union[File, Task, Version]) -> None:
+    def restore_ui(self, entity: Union[File, Task, Version]) -> None:
         """Restore the UI with the given Version instance.
 
         Args:
@@ -1599,8 +1590,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
                 Version.created_by_id,
                 Version.updated_by_id,
                 Version.description,
-            )
-            .filter(Version.task_id == task_id)
+            ).filter(Version.task_id == task_id)
             # .filter(Version.variant_name == variant_name)
         )
 
@@ -1611,14 +1601,18 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         # show how many
         # count = self.version_count_spin_box.value()
 
-        data_from_db = query.order_by(Version.revision_number.desc()).order_by(Version.version_number.desc()).all()
+        data_from_db = (
+            query.order_by(Version.revision_number.desc())
+            .order_by(Version.version_number.desc())
+            .all()
+        )
         versions = list(map(lambda x: VersionNT(*x), data_from_db))
         versions.reverse()
 
         self.previous_versions_table_widget.update_content(versions)
         logger.debug("update_previous_versions_table_widget is finished")
 
-    def get_new_version(self, publish : bool = False) -> Version:
+    def get_new_version(self, publish: bool = False) -> Version:
         """Return a Version instance from the UI by looking at the input fields.
 
         Returns:
@@ -1705,7 +1699,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
                 QtWidgets.QMessageBox.information(
                     self,
                     "Export",
-                    f"{new_version.filename}\n\n" "has been exported correctly!",
+                    f"{new_version.filename}\n\nhas been exported correctly!",
                 )
 
     def save_as_push_button_clicked(self) -> None:
@@ -1714,7 +1708,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         new_version = self.get_new_version()
         self.save_as_wrapper(new_version)
 
-    def publisher_rejected(self, version : Optional[Version] = None) -> None:
+    def publisher_rejected(self, version: Optional[Version] = None) -> None:
         """Publisher is rejected delete the temp version."""
         if version and isinstance(version, Version):
             if version:
@@ -1902,9 +1896,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         if not version_id:
             return
 
-        self.chosen_version = (
-            Version.query.filter(Version.id == version_id).first()
-        )
+        self.chosen_version = Version.query.filter(Version.id == version_id).first()
 
         if self.chosen_version:
             logger.debug(self.chosen_version.id)
@@ -1919,9 +1911,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         old_version = self.previous_versions_table_widget.current_version
         skip_update_check = not self.check_updates_check_box.isChecked()
 
-        old_version = (
-            Version.query.filter(Version.id == old_version.id).first()
-        )
+        old_version = Version.query.filter(Version.id == old_version.id).first()
 
         if not self.check_version_file_exists(old_version):
             return
@@ -2036,9 +2026,9 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             )
             return
 
-        previous_version = (
-            Version.query.filter(Version.id == previous_version.id).first()
-        )
+        previous_version = Version.query.filter(
+            Version.id == previous_version.id
+        ).first()
 
         if not self.check_version_file_exists(previous_version):
             return
@@ -2110,22 +2100,19 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
                 QtWidgets.QMessageBox.information(
                     self,
                     "Reference",
-                    f"{previous_version.filename}"
-                    "\n\n has been referenced correctly!",
+                    f"{previous_version.filename}\n\n has been referenced correctly!",
                     QtWidgets.QMessageBox.Ok,
                 )
         except RuntimeError as e:
-            QtWidgets.QMessageBox.critical(
-                self, "Error", exceptionMessageGenerator(e)
-            )
+            QtWidgets.QMessageBox.critical(self, "Error", exceptionMessageGenerator(e))
 
     def import_push_button_clicked(self) -> None:
         """Import the selected Version in the current DCC."""
         # get the previous version
         previous_version_id = self.previous_versions_table_widget.current_version.id
-        previous_version = (
-            Version.query.filter(Version.id == previous_version_id).first()
-        )
+        previous_version = Version.query.filter(
+            Version.id == previous_version_id
+        ).first()
 
         if not self.check_version_file_exists(previous_version):
             return
@@ -2146,9 +2133,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             QtWidgets.QMessageBox.information(
                 self,
                 "Import",
-                "{}\n\n has been imported correctly!".format(
-                    previous_version.filename
-                ),
+                "{}\n\n has been imported correctly!".format(previous_version.filename),
                 QtWidgets.QMessageBox.Ok,
             )
 
@@ -2314,7 +2299,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     #     self.search_task_comboBox.addItems(items)
     #
 
-    def recent_files_combo_box_index_changed(self, path : str) -> None:
+    def recent_files_combo_box_index_changed(self, path: str) -> None:
         """Set the version from the recent files combo box.
 
         Args:

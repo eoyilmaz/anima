@@ -261,7 +261,6 @@ class StalkerEntityDecoder(object):
         # create Versions
         if version_data:
             for v_data in version_data:
-
                 v_json_id = None
                 if "id" in v_data:
                     v_json_id = v_data.pop("id")

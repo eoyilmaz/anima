@@ -104,7 +104,7 @@ class ConformerUI(object):
             )
         )
         resolve_project_label.setStyleSheet(
-            _fromUtf8("color: rgb(71, 143, 202);\n" "font: 12pt;")
+            _fromUtf8("color: rgb(71, 143, 202);\nfont: 12pt;")
         )
         self.main_layout.addWidget(resolve_project_label)
 
@@ -1395,9 +1395,7 @@ class ConformerUI(object):
 
                     try:
                         has_alpha = False
-                        raw_seconds = os.path.getmtime(
-                            last_version.absolute_full_path
-                        )
+                        raw_seconds = os.path.getmtime(last_version.absolute_full_path)
 
                         # If we are looking for *Alpha*, comp name will not
                         # match with outputs...

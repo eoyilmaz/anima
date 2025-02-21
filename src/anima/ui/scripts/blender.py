@@ -11,6 +11,7 @@ from anima.ui.scripts import blender
 blender.show_version_dialog()
 
 """
+
 import logging
 
 from anima.log import logger

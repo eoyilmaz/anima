@@ -1143,10 +1143,4 @@ class Fusion(DCCBase):
         print(f"setting project directory to: {project_directory_in}")
 
         # set a path map
-        self.comp.SetPrefs(
-            {
-                "Comp.Paths.Map": {
-                    "Project:": project_directory_in
-                }
-            }
-        )
+        self.comp.SetPrefs({"Comp.Paths.Map": {"Project:": project_directory_in}})

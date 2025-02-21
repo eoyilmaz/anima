@@ -76,7 +76,6 @@ SimpleEntity.get_generic_text_attr = get_generic_text_attr
 SimpleEntity.set_generic_text_attr = set_generic_text_attr
 
 
-
 # Patch Stalker.Project
 @property
 @cache

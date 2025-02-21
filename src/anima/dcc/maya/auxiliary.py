@@ -72,7 +72,7 @@ def maximize_first_model_panel() -> None:
 
 def get_valid_dag_node(node) -> Union[None, pm.nodetypes.DagNode]:
     """Return a valid DagNode even the input is string.
-    
+
     Returns:
         Union[None, pm.nodetypes.DagNode]: The DagNode if found one, None
             otherwise.
@@ -88,7 +88,7 @@ def get_valid_dag_node(node) -> Union[None, pm.nodetypes.DagNode]:
 
 def get_valid_node(node) -> Union[None, pm.PyNode]:
     """Return a valid PyNode even the input is string.
-    
+
     Returns:
         Union[None, pm.PyNode]: The PyNode instance if found, None otherwise.
     """
@@ -122,7 +122,7 @@ def get_anim_curves(node) -> List[pm.PyNode]:
 
 def set_anim_curve_color(anim_curve, color: List[float]) -> None:
     """Set animCurve color to the given color.
-    
+
     Args:
         anim_curve (pm.nt.AnimCurve): The AnimCurve instance.
         color (List[float]): A list of floats representing RGB channels.
@@ -133,10 +133,10 @@ def set_anim_curve_color(anim_curve, color: List[float]) -> None:
 
 
 def axial_correction_group(
-    obj : Union[str, pm.PyNode],
-    to_parents_origin : bool = False,
-    name_prefix : str = "",
-    name_postfix : str = "_ACGroup#",
+    obj: Union[str, pm.PyNode],
+    to_parents_origin: bool = False,
+    name_prefix: str = "",
+    name_postfix: str = "_ACGroup#",
 ) -> pm.nt.Transform:
     """Create a new parent to zero out the transformations.
 
@@ -330,8 +330,8 @@ def create_follicle(shape, uv) -> Tuple[pm.nt.Transform, pm.nt.Follicle]:
 
 
 def auto_rivet(
-    objects : Optional[List[pm.nt.Transform]] = None,
-    geo : Optional[Union[pm.nt.Transform, pm.nt.Mesh]] = None
+    objects: Optional[List[pm.nt.Transform]] = None,
+    geo: Optional[Union[pm.nt.Transform, pm.nt.Mesh]] = None,
 ) -> List[pm.nt.Follicle]:
     """Create hair follicles around selection.
 
@@ -694,7 +694,7 @@ def load_shelf_tab(shelf_path) -> None:
         return
 
 
-def delete_shelf_tab(shelf_name : str, confirm : bool = True) -> None:
+def delete_shelf_tab(shelf_name: str, confirm: bool = True) -> None:
     """The python version of the original mel script of Maya.
 
     Args:
@@ -771,7 +771,7 @@ def delete_shelf_tab(shelf_name : str, confirm : bool = True) -> None:
     pm.mel.eval("shelfTabChange();")
 
 
-def cube_from_bbox(bbox : pm.dt.BoundingBox) -> None:
+def cube_from_bbox(bbox: pm.dt.BoundingBox) -> None:
     """Create a polyCube from the given bounding box.
 
     Args:
@@ -785,8 +785,7 @@ def cube_from_bbox(bbox : pm.dt.BoundingBox) -> None:
 
 
 def create_bbox(
-    nodes : List[pm.nt.Transform],
-    per_selection : bool = False
+    nodes: List[pm.nt.Transform], per_selection: bool = False
 ) -> Union[pm.dt.BoundingBox, List[pm.dt.BoundingBox]]:
     """Create bounding boxes for the selected objects.
 
@@ -808,7 +807,7 @@ def create_bbox(
         return cube_from_bbox(bbox)
 
 
-def replace_with_bbox(nodes : List[pm.nt.Transform]) -> List[pm.nt.Transform]:
+def replace_with_bbox(nodes: List[pm.nt.Transform]) -> List[pm.nt.Transform]:
     """Replace the given nodes with a bbox object.
 
     Args:
@@ -866,7 +865,7 @@ def replace_with_bbox(nodes : List[pm.nt.Transform]) -> List[pm.nt.Transform]:
 
 
 def get_root_nodes(
-    reference_node : Optional[pm.nt.Reference]= None
+    reference_node: Optional[pm.nt.Reference] = None,
 ) -> List[pm.nt.Transform]:
     """Return the root DAG nodes.
 
@@ -910,7 +909,7 @@ def get_root_nodes(
     return root_transform_nodes
 
 
-def create_arnold_stand_in(path : Optional[str] = None) -> "AiStandIn":
+def create_arnold_stand_in(path: Optional[str] = None) -> "AiStandIn":
     """Create Arnold Stand-In node.
 
     This is a fixed version of original arnold script of SolidAngle Arnold core
@@ -924,15 +923,8 @@ def create_arnold_stand_in(path : Optional[str] = None) -> "AiStandIn":
         pm.nt.AiStandIn: The created stand-in node.
     """
     if not pm.objExists("ArnoldStandInDefaultLightSet"):
-        pm.createNode(
-            "objectSet",
-            name="ArnoldStandInDefaultLightSet",
-            shared=True
-        )
-        pm.lightlink(
-            object="ArnoldStandInDefaultLightSet",
-            light="defaultLightSet"
-        )
+        pm.createNode("objectSet", name="ArnoldStandInDefaultLightSet", shared=True)
+        pm.lightlink(object="ArnoldStandInDefaultLightSet", light="defaultLightSet")
 
     stand_in = pm.createNode("aiStandIn", n="ArnoldStandInShape")
     # temp fix until we can correct in c++ plugin
@@ -947,7 +939,7 @@ def create_arnold_stand_in(path : Optional[str] = None) -> "AiStandIn":
 
 
 def create_rs_proxy_node(
-    path : Optional[str] = None
+    path: Optional[str] = None,
 ) -> Tuple[pm.nt.RedshiftProxyMesh, pm.nt.Mesh]:
     """Create Redshift Proxies showing a proxy object.
 
@@ -1130,7 +1122,7 @@ def fix_external_paths() -> None:
         m_env.replace_external_paths()
 
 
-def has_shape(node : pm.nt.Transform) -> bool:
+def has_shape(node: pm.nt.Transform) -> bool:
     """Check if the given node has at least one child that has a shape.
 
     Args:
@@ -1208,7 +1200,7 @@ def generate_thumbnail() -> Union[None, List[str]]:
     return found_output_file
 
 
-def set_range_from_shot(shot : pm.nt.Shot) -> None:
+def set_range_from_shot(shot: pm.nt.Shot) -> None:
     """Set the playback range from a shot node in the scene.
 
     Args:
@@ -1226,7 +1218,7 @@ def set_range_from_shot(shot : pm.nt.Shot) -> None:
 
 
 def get_cacheable_nodes(
-    reference_node : Optional[pm.system.FileReference] = None
+    reference_node: Optional[pm.system.FileReference] = None,
 ) -> List[pm.nt.Transform]:
     """Return the cacheable nodes from the current scene or in the given reference node.
 
@@ -1280,9 +1272,7 @@ def get_cacheable_nodes(
     return cacheable_nodes
 
 
-def get_reference_copy_number(
-    node: Union[pm.PyNode, pm.system.FileReference]
-) -> int:
+def get_reference_copy_number(node: Union[pm.PyNode, pm.system.FileReference]) -> int:
     """Return the reference number of the given reference file.
 
     Args:
@@ -1317,13 +1307,13 @@ def get_reference_copy_number(
 
 def export_cache_of_nodes(
     cacheable_nodes: List[pm.nt.Transform],
-    start_frame : Optional[int] = None,
-    end_frame : Optional[int] = None,
-    handles : int = 0,
-    step : int = 1,
-    isolate : bool = True,
-    unload_refs : bool = True,
-    cache_format : str = ALEMBIC,
+    start_frame: Optional[int] = None,
+    end_frame: Optional[int] = None,
+    handles: int = 0,
+    step: int = 1,
+    isolate: bool = True,
+    unload_refs: bool = True,
+    cache_format: str = ALEMBIC,
 ) -> List[str]:
     """Export Alembic/USD caches of the given nodes.
 
@@ -1374,7 +1364,7 @@ def export_cache_of_nodes(
     if end_frame is None:
         end_frame = int(pm.playbackOptions(q=1, aet=1))
 
-    export_animation : bool = (end_frame - start_frame + 2 * handles) > 0
+    export_animation: bool = (end_frame - start_frame + 2 * handles) > 0
 
     current_file_full_path = str(pm.sceneName())
     current_file_path = os.path.dirname(current_file_full_path)
@@ -1548,7 +1538,9 @@ def export_cache_of_nodes(
             ext=CACHE_FORMAT_DATA[cache_format]["file_extension"],
         )
 
-        cache_file_full_path = os.path.join(output_path, output_filename).replace("\\", "/")
+        cache_file_full_path = os.path.join(output_path, output_filename).replace(
+            "\\", "/"
+        )
         os.makedirs(os.path.dirname(cache_file_full_path), exist_ok=True)
 
         if cache_format == ALEMBIC:
@@ -1660,8 +1652,7 @@ def export_cache_of_nodes(
 
 
 def add_files_to_current_version(
-    file_full_paths: List[str],
-    file_type_name: str
+    file_full_paths: List[str], file_type_name: str
 ) -> List[File]:
     """Add the given file as a `File` to the current `Version.files`.
 
@@ -1676,7 +1667,7 @@ def add_files_to_current_version(
     from anima.dcc.maya.common import Maya
 
     maya_dcc = Maya()
-    current_version : Version = maya_dcc.get_current_version()
+    current_version: Version = maya_dcc.get_current_version()
 
     if current_version is None:
         return
@@ -1710,13 +1701,13 @@ def add_files_to_current_version(
 
 
 def export_cache_of_selected_cacheable_nodes(
-    start_frame : Optional[int] = None,
-    end_frame : Optional[int] = None,
-    handles : int = 0,
-    step : int = 1,
-    isolate : bool = True,
-    unload_refs : bool = True,
-    cache_format : str = ALEMBIC,
+    start_frame: Optional[int] = None,
+    end_frame: Optional[int] = None,
+    handles: int = 0,
+    step: int = 1,
+    isolate: bool = True,
+    unload_refs: bool = True,
+    cache_format: str = ALEMBIC,
 ) -> List[str]:
     """Export Alembic/USD caches of the selected cacheable nodes.
 
@@ -1755,13 +1746,13 @@ def export_cache_of_selected_cacheable_nodes(
 
 
 def export_cache_of_all_cacheable_nodes(
-    start_frame : Optional[int] = None,
-    end_frame : Optional[int] = None,
-    handles : int = 0,
-    step : int = 1,
-    isolate : bool = True,
-    unload_refs : bool = True,
-    cache_format : str = ALEMBIC,
+    start_frame: Optional[int] = None,
+    end_frame: Optional[int] = None,
+    handles: int = 0,
+    step: int = 1,
+    isolate: bool = True,
+    unload_refs: bool = True,
+    cache_format: str = ALEMBIC,
 ) -> List[str]:
     """Export Alembic/USD caches for transform nodes with "cacheable" attribute.
 
@@ -1797,7 +1788,7 @@ def export_cache_of_all_cacheable_nodes(
     )
 
 
-def extract_version_number_from_path(path : str) -> int:
+def extract_version_number_from_path(path: str) -> int:
     """Extract version number ("_v{:03d}") as an integer from the given path.
 
     Args:
@@ -1812,7 +1803,7 @@ def extract_version_number_from_path(path : str) -> int:
         return int(m.group(2))
 
 
-def auto_reference_caches(cache_type : str = ALEMBIC) -> None:
+def auto_reference_caches(cache_type: str = ALEMBIC) -> None:
     """Reference caches from Animation scene of the same shot.
 
     cache_type (str): Desired cache type, one of `ALEMBIC` or `USD`, default
@@ -1867,8 +1858,7 @@ def auto_reference_caches(cache_type : str = ALEMBIC) -> None:
         )
 
         all_cache_files = sorted(
-            glob.glob(glob_pattern),
-            key=extract_version_number_from_path
+            glob.glob(glob_pattern), key=extract_version_number_from_path
         )
         if not all_cache_files:
             continue
@@ -1902,7 +1892,7 @@ def auto_reference_caches(cache_type : str = ALEMBIC) -> None:
         )
 
 
-def update_cache_references(cache_type : str = ALEMBIC) -> None:
+def update_cache_references(cache_type: str = ALEMBIC) -> None:
     """Update referenced cache files in the current scene.
 
     Args:
@@ -1923,7 +1913,9 @@ def update_cache_references(cache_type : str = ALEMBIC) -> None:
     updated_path_info = []
     for ref in pm.listReferences():
         is_loaded = ref.isLoaded()
-        if not (path := str(ref.path)).endswith(CACHE_FORMAT_DATA[cache_type]["file_extension"]):
+        if not (path := str(ref.path)).endswith(
+            CACHE_FORMAT_DATA[cache_type]["file_extension"]
+        ):
             continue
 
         if not (m := re.match(version_matcher, path)):
@@ -1990,7 +1982,7 @@ class BarnDoorSimulator(object):
                 >> light_shape.attr("aiFilters").next_available
             )
 
-    def store_data(self, data : str) -> None:
+    def store_data(self, data: str) -> None:
         """Store the given data.
 
         Args:
@@ -2010,9 +2002,9 @@ class BarnDoorSimulator(object):
         for node in nodes:
             self.store_node(node)
 
-    def store_node(self, node : pm.nt.Transform) -> None:
+    def store_node(self, node: pm.nt.Transform) -> None:
         """Store the node in the storage attribute.
-        
+
         Args:
             node (pm.nt.Transform): The node to store.
         """
@@ -2237,9 +2229,7 @@ $frame_scale = tan(deg_to_rad($cone_angle * 0.5));
                     light_parent = light.getParent()
                     if light_parent.hasAttr(self.message_storage_attr_name) and (
                         node
-                        in light_parent.attr(
-                            self.message_storage_attr_name
-                        ).inputs()
+                        in light_parent.attr(self.message_storage_attr_name).inputs()
                     ):
                         self.light = light_parent
                         found_light = True
@@ -2252,7 +2242,7 @@ $frame_scale = tan(deg_to_rad($cone_angle * 0.5));
                     pm.delete(node)
 
 
-def create_shader(shader_tree : Dict, name : Optional[str] = None) -> pm.PyNode:
+def create_shader(shader_tree: Dict, name: Optional[str] = None) -> pm.PyNode:
     """Create a shader tree from the given shader tree definition.
 
     Args:
@@ -2312,8 +2302,8 @@ def create_shader(shader_tree : Dict, name : Optional[str] = None) -> pm.PyNode:
 def match_hierarchy(
     source: pm.PyNode,
     target: pm.PyNode,
-    node_types : Optional[Tuple] = None,
-    use_long_names : bool = False
+    node_types: Optional[Tuple] = None,
+    use_long_names: bool = False,
 ) -> Dict:
     """Match the objects in two different hierarchy by looking at their names.
 
@@ -2381,7 +2371,7 @@ def match_hierarchy(
     return lut
 
 
-def camel_case_to_underscore(name : str) -> str:
+def camel_case_to_underscore(name: str) -> str:
     """Convert the given CamelCase formatted string to underscore formatted one.
 
     Args:

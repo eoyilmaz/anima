@@ -2720,7 +2720,9 @@ def partial_task_query(parent_task=None):
             array_agg(users_as_resource.name).label("resources"),
         )
         .outerjoin(Task_Resources, Task.__table__.c.id == Task_Resources.c.task_id)
-        .outerjoin(users_as_resource, Task_Resources.c.resource_id == users_as_resource.id)
+        .outerjoin(
+            users_as_resource, Task_Resources.c.resource_id == users_as_resource.id
+        )
         .group_by(
             Task.id,
             Task.name,

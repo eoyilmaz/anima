@@ -92,11 +92,15 @@ def commands():
         # Locate Maya:
         env.MAYA_VERSION = env.REZ_MAYA_MAJOR_VERSION
         if system.platform == "linux":
-            env.MAYA_LOCATION = "/usr/autodesk/maya{}".format(env.REZ_MAYA_MAJOR_VERSION)
+            env.MAYA_LOCATION = "/usr/autodesk/maya{}".format(
+                env.REZ_MAYA_MAJOR_VERSION
+            )
             env.MAYA_EXEC = "${MAYA_LOCATION}/bin/maya${MAYA_VERSION}"
         elif system.platform == "osx":
-            env.MAYA_LOCATION = "/Applications/Autodesk/maya{}/Maya.app/Contents".format(
-                env.REZ_MAYA_MAJOR_VERSION
+            env.MAYA_LOCATION = (
+                "/Applications/Autodesk/maya{}/Maya.app/Contents".format(
+                    env.REZ_MAYA_MAJOR_VERSION
+                )
             )
             env.MAYA_EXEC = "${MAYA_LOCATION}/bin/maya"
 

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This module contains exceptions
-"""
+"""This module contains exceptions."""
 
 
 class PublishError(RuntimeError):

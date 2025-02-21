@@ -430,8 +430,9 @@ def check_representations(progress_controller=None):
             color = "red" if current_repr != repr_name else "green"
 
             ref_repr_labels.append(
-                '<span style="color: {color}">{repr_name}</span> -> '
-                "{ref}".format(color=color, repr_name=repr_name, ref=ref.refNode.name())
+                '<span style="color: {color}">{repr_name}</span> -> {ref}'.format(
+                    color=color, repr_name=repr_name, ref=ref.refNode.name()
+                )
             )
 
         raise PublishError(
@@ -545,7 +546,7 @@ def check_if_previous_version_references(progress_controller=None):
 
     progress_controller.complete()
     if len(same_version_references):
-        print("The following nodes are references to an older version of this " "scene")
+        print("The following nodes are references to an older version of this scene")
         print("\n".join(map(lambda x: x.refNode.name(), same_version_references)))
         raise PublishError(
             "The current scene contains a <b>reference</b> to a<br>"
@@ -1009,7 +1010,7 @@ def check_empty_groups(progress_controller=None):
     if len(empty_groups):
         pm.select(empty_groups)
         raise PublishError(
-            "There are <b>empty groups</b> in your scene, " "please remove them!!!"
+            "There are <b>empty groups</b> in your scene, please remove them!!!"
         )
 
 
@@ -1999,8 +2000,7 @@ def check_cacheable_attr(progress_controller=None):
     progress_controller.complete()
     if has_valid_cacheable is False:
         raise PublishError(
-            "Please add <b>cacheable</b> attribute and set it to a "
-            "<b>proper name</b>!"
+            "Please add <b>cacheable</b> attribute and set it to a <b>proper name</b>!"
         )
 
 
@@ -2524,9 +2524,7 @@ def check_unique_shot_names(progress_controller=None):
     progress_controller.complete()
     if len(shots_with_non_unique_shot_names) > 0:
         raise PublishError(
-            "The following shots have non-unique shot names:<br>"
-            "<br>"
-            "{}".format(
+            "The following shots have non-unique shot names:<br><br>{}".format(
                 ", ".join(
                     map(lambda x: x.shotName.get(), shots_with_non_unique_shot_names)
                 )

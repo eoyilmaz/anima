@@ -72,7 +72,6 @@ class HierarchyInstancer(object):
         dup_hierarchy = self.walk_hierarchy(dup_node)
 
         for i, node in enumerate(dup_hierarchy):
-
             shape = node.getShape()
             if shape is not None and isinstance(shape, tuple(self._instantiable_types)):
                 # instance the corresponding sourceNode

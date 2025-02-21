@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """create deformer with::
 
-  deformer -type "randomizeUVDeformer"
+deformer -type "randomizeUVDeformer"
 
 """
+
 import sys
 
 

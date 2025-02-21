@@ -288,7 +288,6 @@ class SelectionRowFactory(object):
         # create a SelectionRow instance
         rows = []
         for node in pm.ls(type=pm.nt.ObjectSet):
-
             # do something with node
             if node.hasAttr("selectionManagerData"):
                 # this is a SelectionSet

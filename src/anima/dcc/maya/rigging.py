@@ -191,7 +191,6 @@ class Rigging(object):
         """Resets the tweaks on the selected deformed objects"""
         for obj in pm.ls(sl=1):
             for tweak_node in pm.ls(obj.listHistory(), type=pm.nt.Tweak):
-
                 try:
                     for i in tweak_node.pl[0].cp.get(mi=1):
                         tweak_node.pl[0].cv[i].vx.set(0)
@@ -1017,7 +1016,6 @@ class SkinToolsUI(object):
 
         self.form_layout1 = pm.formLayout("skinTools_formLayout1", nd=100)
         with self.form_layout1:
-
             self.column_layout1 = pm.columnLayout(
                 "skinTools_columnLayout1", adj=1, cal="center"
             )
@@ -1532,7 +1530,6 @@ class BendyLimbJointHierarchy(JointHierarchy):
 
         # cluster curve CV points
         for i, curve in enumerate(self.bendy_curves):
-
             # create a cluster for first two and last two cvs of the curve
             for j in range(2):
                 cluster, cluster_handle = pm.cluster(

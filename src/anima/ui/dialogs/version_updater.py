@@ -56,7 +56,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         self.center_window()
 
         # setup the DCC
-        self.dcc : DCCBase = self._validate_dcc(dcc)
+        self.dcc: DCCBase = self._validate_dcc(dcc)
 
         if reference_resolution is None:
             # generate from DCC
@@ -143,7 +143,9 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         # Update
         self.update_push_button = QtWidgets.QPushButton(main_widget)
         self.update_push_button.setText("Update")
-        self.update_push_button.clicked.connect(self.update_reference_versions_to_latest)
+        self.update_push_button.clicked.connect(
+            self.update_reference_versions_to_latest
+        )
         layout.addWidget(self.update_push_button)
 
         # Cancel
@@ -153,11 +155,9 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         layout.addWidget(self.cancel_push_button)
         main_layout.addWidget(main_widget)
 
-    def _validate_dcc(
-        self, dcc: Union[None, DCCBase]
-    ) -> Union[None, DCCBase]:
+    def _validate_dcc(self, dcc: Union[None, DCCBase]) -> Union[None, DCCBase]:
         """Validate the given dcc value.
-        
+
         Args:
             dcc (DCCBase): A DCCBase instance.
 
@@ -290,7 +290,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             if choice == "Open...":
                 self.open_version(selected_action.version)
 
-    def open_version(self, version : Version):
+    def open_version(self, version: Version):
         """Open the given version in a new DCC.
 
         Args:

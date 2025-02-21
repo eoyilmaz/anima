@@ -16,6 +16,7 @@ Usage is as follows:
     project_manager.ui_caller(None, None, project_manager.MainWindow)
 ```
 """
+
 import os
 
 from anima import ui

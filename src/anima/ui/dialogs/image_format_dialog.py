@@ -68,7 +68,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         self.resize(328, 184)
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
         self.dialog_label = QtWidgets.QLabel(self)
-        self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);\n" "font: 18pt;")
+        self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);\nfont: 18pt;")
         self.vertical_layout.addWidget(self.dialog_label)
         self.line = QtWidgets.QFrame(self)
         self.line.setFrameShape(QtWidgets.QFrame.HLine)

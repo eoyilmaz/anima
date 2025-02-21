@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Maya related common functionality is situated here."""
+
 from functools import lru_cache
 import os
 from pathlib import Path
@@ -17,11 +18,16 @@ from anima import utils
 from anima.dcc.base import DCCBase, generate_empty_reference_resolution
 from anima.dcc.maya import (
     extension,  # keep this to register extensions
-    render
+    render,
 )
 from anima.exc import PublishError
 from anima.log import logger
-from anima.publish import POST_PUBLISHER_TYPE, PRE_PUBLISHER_TYPE, run_publishers, staging
+from anima.publish import (
+    POST_PUBLISHER_TYPE,
+    PRE_PUBLISHER_TYPE,
+    run_publishers,
+    staging,
+)
 from anima.representation import Representation
 from anima.utils.progress import ProgressDialogBase, ProgressManagerFactory
 
@@ -268,15 +274,11 @@ class Maya(DCCBase):
 
         end = time.time()
         logger.debug(
-            "set_arnold_texture_search_path() took "
-            "{:0.3f} seconds".format(end - start)
+            "set_arnold_texture_search_path() took {:0.3f} seconds".format(end - start)
         )
 
     def save_as(
-        self,
-        file,
-        run_pre_publishers=True,
-        allow_external_references=False
+        self, file, run_pre_publishers=True, allow_external_references=False
     ) -> bool:
         """Save the current scene as the "Base" representation for the given
         Version.
@@ -355,7 +357,7 @@ class Maya(DCCBase):
         maya_scene_file = file
         maya_scene_file.name = "Maya Scene File"
         # set full path with extension of ".ma"
-        full_path : Path = version.generate_path(extension=self.extensions[0])
+        full_path: Path = version.generate_path(extension=self.extensions[0])
         maya_scene_file.full_path = str(full_path)
         # define that this version is created with Maya
         maya_scene_file.created_with = self.name
@@ -881,7 +883,7 @@ class Maya(DCCBase):
                 seq.get_sequence_name()
         end = time.time()
         logger.debug(
-            "set_sequence_manager_data() took " "{:0.3f} seconds".format(end - start)
+            "set_sequence_manager_data() took {:0.3f} seconds".format(end - start)
         )
 
     def set_render_filename(self, version):
@@ -915,8 +917,7 @@ class Maya(DCCBase):
         if current_renderer == "redshift":
             # do not use <RenderPass> in Redshift
             output_filename_template = (
-                "{render_output_folder}/<RenderLayer>/"
-                "{version_sig_name}_<RenderLayer>"
+                "{render_output_folder}/<RenderLayer>/{version_sig_name}_<RenderLayer>"
             )
         else:
             output_filename_template = (
@@ -1763,8 +1764,7 @@ class Maya(DCCBase):
         # use a progress window for that
         pdm = ProgressManagerFactory.get_progress_manager()
         caller = pdm.register(
-            len(references_list),
-            "Maya.update_reference_versions_to_latest()"
+            len(references_list), "Maya.update_reference_versions_to_latest()"
         )
 
         # while len(references_list):

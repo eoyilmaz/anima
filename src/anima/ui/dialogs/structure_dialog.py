@@ -50,7 +50,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         # Dialog Label
         dialog_label = QtWidgets.QLabel(self)
         dialog_label.setText(f"{self.mode} Structure")
-        dialog_label.setStyleSheet("color: rgb(71, 143, 202);\n" "font: 18pt;")
+        dialog_label.setStyleSheet("color: rgb(71, 143, 202);\nfont: 18pt;")
         main_layout.addWidget(dialog_label)
 
         line = QtWidgets.QFrame(self)

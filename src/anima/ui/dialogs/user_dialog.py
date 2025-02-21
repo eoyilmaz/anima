@@ -128,8 +128,9 @@ class UserDialog(QtWidgets.QDialog):
             QtWidgets.QMessageBox.warning(
                 self,
                 "Warning",
-                "The user '{0}' already exists, Please enter new "
-                "username!".format(self.user_login),
+                "The user '{0}' already exists, Please enter new username!".format(
+                    self.user_login
+                ),
             )
         else:
             try:

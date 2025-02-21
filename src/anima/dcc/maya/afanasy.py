@@ -116,7 +116,6 @@ class UI(object):
         self.window = pm.window(self.windows_name, t="Afanasy Job Submission")
 
         with pm.columnLayout(adj=True):
-
             pm.text(l="<h1><b>Job Parameters<b><h1>", h=section_label_height)
             with pm.rowLayout(
                 nc=4,

@@ -471,7 +471,6 @@ class TaskDataContextMenuHandler(ContextMenuHandlerBase):
                         QtWidgets.QMessageBox.Ok,
                     )
                 elif selected_action is copy_id_to_clipboard:
-
                     clipboard = QtWidgets.QApplication.clipboard()
                     selected_entity_ids = ", ".join(
                         list(map(str, self.parent.get_selected_task_ids()))

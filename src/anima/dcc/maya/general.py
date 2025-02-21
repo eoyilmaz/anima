@@ -132,7 +132,6 @@ class General(object):
         """exports the transformation data in to a temp file"""
         data = []
         for node in pm.ls(sl=1, type="transform"):
-
             if use_global_pos:
                 # print('using global position')
                 tra = pm.xform(node, q=1, ws=1, t=1)  # node.t.get()

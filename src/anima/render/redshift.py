@@ -46,7 +46,6 @@ class RedShiftTextureProcessor(object):
         r=None,
         log=None,
     ):
-
         self.input_file_full_path = os.path.normpath(
             os.path.expandvars(input_file_full_path)
         ).replace("\\", "/")

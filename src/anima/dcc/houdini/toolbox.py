@@ -9,6 +9,7 @@ def onCreateInterface():
     from anima.dcc.houdini import toolbox
     return toolbox.ui()
 """
+
 import traceback
 
 from anima.ui.lib import QtCore, QtWidgets

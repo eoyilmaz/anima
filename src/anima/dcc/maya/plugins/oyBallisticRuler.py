@@ -111,7 +111,6 @@ class oyBallisticRuler(OpenMayaMPx.MPxNode):
         OpenMayaMPx.MPxNode.__init__(self)
 
     def compute(self, plug, data):
-
         if plug == oyBallisticRuler.aTPos:
             # Compute different things for different inputs
 
@@ -174,7 +173,6 @@ class oyBallisticRuler(OpenMayaMPx.MPxNode):
             return OpenMaya.kUnknownParameter
 
     def setPositions(self, data):
-
         # MDataHandle inputValueDataHandle = data.inputValue( aParticlePositions, &stat );
         inputValueDataHandle = data.inputValue(oyBallisticRuler.aTPos)
 
@@ -193,7 +191,6 @@ def nodeCreator():
 
 # initializer
 def nodeInitializer():
-
     # create attributes
     nAttr = OpenMaya.MFnNumericAttribute()
     tAttr = OpenMaya.MFnTypedAttribute()

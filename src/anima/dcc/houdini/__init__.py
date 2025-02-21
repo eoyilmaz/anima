@@ -621,7 +621,6 @@ class FileHistory(object):
 
                 # starting from the next line
                 for j in range(i + 1, len_buffer):
-
                     # add all the lines to the path_list until you find a '}'
                     current_element = buffer_list[j]
                     if current_element != "}":

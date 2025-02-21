@@ -9,6 +9,7 @@ SET_PYSIDE2()
 from anima.ui import project_manager
 project_manager.ui_caller(None, None, project_manager.MainWindow)
 """
+
 import os
 
 from anima import ui

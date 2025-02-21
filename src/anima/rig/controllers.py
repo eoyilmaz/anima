@@ -48,5 +48,4 @@ class FkControllers(Controllers):
 
 class Test(object):
     def attributes(self):
-
         pass

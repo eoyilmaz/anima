@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Sets up a vertigo setup in the camera
-"""
+"""Sets up a vertigo setup in the camera"""
 
 import pymel.core as pm
 

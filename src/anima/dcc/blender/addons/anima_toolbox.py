@@ -7,7 +7,7 @@ bl_info = {
     "version": (1, 0, 0),
     "blender": (2, 80, 0),
     "description": "Anima Toolbox for Blender",
-    "doc_url": "{BLENDER_MANUAL_URL}/addons" "/3d_view/anima_toolbox.html",
+    "doc_url": "{BLENDER_MANUAL_URL}/addons/3d_view/anima_toolbox.html",
     "category": "3D View",
 }
 

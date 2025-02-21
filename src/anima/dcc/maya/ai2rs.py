@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Converts the scene from Arnold to RedShift
-"""
+"""Converts the scene from Arnold to RedShift"""
+
 import pymel.core as pm
 from anima.render.mat_converter import ConversionManagerBase, NodeCreatorBase
 
@@ -74,8 +74,7 @@ CONVERSION_SPEC_SHEET = {
             "sssRadius": {
                 # set to the mean value of the sssRadius which is a color in
                 # Arnold
-                "ms_radius0": lambda x: (x[0] + x[1] + x[2])
-                / 3.0
+                "ms_radius0": lambda x: (x[0] + x[1] + x[2]) / 3.0
             },
             # skip sssProfile
             "emissionColor": "emission_color",
@@ -163,8 +162,7 @@ CONVERSION_SPEC_SHEET = {
             "subsurfaceRadius": {
                 # set to the mean value of the sssRadius which is a color in
                 # Arnold
-                "ms_radius0": lambda x: (x[0] + x[1] + x[2])
-                / 3.0
+                "ms_radius0": lambda x: (x[0] + x[1] + x[2]) / 3.0
             },
             # skip sssProfile
             "emissionColor": "emission_color",

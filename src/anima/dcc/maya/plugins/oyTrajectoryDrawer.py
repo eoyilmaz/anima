@@ -67,13 +67,11 @@ class oyTrajectoryDrawer(OpenMayaMPx.MPxLocatorNode):
         numOfTPos = tPosition.length()
 
         if numOfTPos != 0:
-
             view.beginGL()
             glFT.glBegin(OpenMayaRender.MGL_LINES)
 
             # draw circles
             for i in range(1, numOfTPos - 1):
-
                 direction = tPosition[i + 1] - tPosition[i]
 
                 upVector = self.getTangent(direction)
@@ -106,7 +104,6 @@ class oyTrajectoryDrawer(OpenMayaMPx.MPxLocatorNode):
         return True
 
     def boundingBox(self):
-
         # get the tPositions
         tPositions = self.getTPositions()
 
@@ -122,7 +119,6 @@ class oyTrajectoryDrawer(OpenMayaMPx.MPxLocatorNode):
         # print("numOfTPos in bbox : {} ".format(numOfTPos))
 
         for i in range(numOfTPos):
-
             # add the positive one
             bbox.expand(
                 OpenMaya.MPoint(tPositions[i] + OpenMaya.MVector(size, size, size))

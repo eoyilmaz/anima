@@ -6,10 +6,9 @@ from pymel.all import mel
 
 
 class UtilityFuncs:
-
-    # selects the hiearachy
     @staticmethod
     def selHierarchy(root):
+        """Select the hierarchy."""
         pm.select(root, hi=1)
         return pm.ls(sl=1)
 

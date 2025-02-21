@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Merges sliced renders in to one big plate
-"""
+"""Merges sliced renders in to one big plate"""
+
 from anima.dcc.fusion.toolbox import GenericTools
 
 try:

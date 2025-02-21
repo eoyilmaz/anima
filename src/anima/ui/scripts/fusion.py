@@ -13,9 +13,8 @@ if TYPE_CHECKING:
 
 
 def show_version_dialog(
-    lib : str = "PySide",
-    logging_level : int = logging.WARNING,
-    parent : "QWidget" = None):
+    lib: str = "PySide", logging_level: int = logging.WARNING, parent: "QWidget" = None
+):
     """Show version_dialog UI for Fusion.
 
     It uses with PySide by default you can opt to use PyQt4 instead by setting

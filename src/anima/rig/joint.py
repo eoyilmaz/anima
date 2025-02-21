@@ -9,7 +9,6 @@ from curve import Curve
 # JOINT CLASS
 class Joint(object):
     def __init__(self, jointName_in, position):
-
         self._jointPos = self._getPosition(position)
         pm.select(cl=1)
         self._jointName = pm.joint(n=(jointName_in + "#"), p=self._jointPos)
@@ -125,7 +124,6 @@ class JointChain(object):
         worldUpType="vector",
         worldUpVector=[0, 1, 0],
     ):
-
         # joint should be pm.nt.Joint type
         if not isinstance(joint, pm.nt.Joint):
             raise TypeError(f"{joint} should be an instance of pm.nt.Joint Class")
@@ -292,7 +290,6 @@ class SpineJoints(JointChain):
 
     # BASE SETUP METHODS
     def set_zero_joint(self):
-
         # Removes Zero Joint from Joint Chain
         pm.joint(self.jointChain[0], e=True, zso=True, oj="xyz", sao="xup")
         self.zeroJoint = self.jointChain[0]

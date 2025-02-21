@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Module that contains Representation (LOD) related functions."""
 
-
 import os
 import re
 import shutil
@@ -681,7 +680,6 @@ class RepresentationGenerator(object):
         start_frame = end_frame = int(pm.currentTime(q=1))
 
         if not self.is_scene_assembly_task(self.version.task):
-
             if self.is_vegetation_task(self.version.task):
                 # in vegetation files, we export the GPU files directly from
                 # the Base version, also we use the geometry under
@@ -906,7 +904,6 @@ class RepresentationGenerator(object):
                     for root_node in root_nodes:
                         # export each child of each root as separate nodes
                         for child_node in root_node.getChildren():
-
                             # check if it is a transform node
                             if not isinstance(child_node, pm.nt.Transform):
                                 continue

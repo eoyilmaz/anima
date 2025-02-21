@@ -116,7 +116,6 @@ class Blender(DCCBase):
         reference_depth=0,
         skip_update_check=False,
     ):
-
         # leave it simple for now
         bpy.ops.wm.open_mainfile(filepath=version.absolute_full_path)
 
@@ -464,9 +463,7 @@ class Blender(DCCBase):
                     bpy.context.scene.frame_start,
                     bpy.context.scene.frame_end,
                 ),
-            )[
-                2:
-            ]  # removes the '//' at the beginning of the file path
+            )[2:]  # removes the '//' at the beginning of the file path
             playblast_full_path = os.path.join(
                 os.path.dirname(bpy.data.filepath), movie_file_rel_path
             )

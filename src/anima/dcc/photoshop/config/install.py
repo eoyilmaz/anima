@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Installs photoshop scripts
-"""
+"""Installs photoshop scripts"""
 
 from _winreg import OpenKey, EnumKey, HKEY_LOCAL_MACHINE, QueryValue
 import os

@@ -409,9 +409,7 @@ class Animation(object):
                 parents.reverse()
                 for p in parents:
                     if isinstance(p, Shot):
-                        pm.warning(
-                            "No shot node in the scene, " "using the Shot task!!!"
-                        )
+                        pm.warning("No shot node in the scene, using the Shot task!!!")
                         min_frame = p.cut_in
                         max_frame = p.cut_out
                         break

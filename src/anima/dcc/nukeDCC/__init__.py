@@ -386,7 +386,6 @@ class Nuke(DCCBase):
 
     @project_directory.setter
     def project_directory(self, project_directory_in):
-
         project_directory_in = project_directory_in.replace("\\", "/")
 
         root = self.get_root_node()

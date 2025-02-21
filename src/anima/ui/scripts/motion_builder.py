@@ -7,7 +7,7 @@ from anima.log import logger
 from anima.utils import do_db_setup
 
 
-def show_version_dialog(logging_level : int = logging.WARNING) -> None:
+def show_version_dialog(logging_level: int = logging.WARNING) -> None:
     """Show version_dialog UI for MotionBuilder."""
     # connect to db
     do_db_setup()

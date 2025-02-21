@@ -89,7 +89,6 @@ def do_fix(joints, freeze=True, apply_to_children=False):
         new_selection_list = pm.ls(sl=1, type="joint")
 
     for joint in new_selection_list:
-
         connections = joint.worldMatrix.outputs(c=1, p=1, t="skinCluster", et=True)
 
         if freeze:

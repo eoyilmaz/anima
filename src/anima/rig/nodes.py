@@ -7,7 +7,6 @@ from network import Network
 
 class Nodes(object):
     def __init__(self, nodesName_in):
-
         self.nodesName = nodesName_in
         self._controllers = []
         self._utilities = []

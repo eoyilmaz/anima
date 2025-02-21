@@ -203,7 +203,7 @@ def UI():
                 "removeColonFromNames_button",
                 l="remove colon(:) from node names",
                 c=repeated_callback(General.remove_colon_from_names),
-                ann="removes the colon (:) character from all " "selected object names",
+                ann="removes the colon (:) character from all selected object names",
                 bgc=color.color,
             )
 
@@ -211,7 +211,7 @@ def UI():
                 "removePastedFromNames_button",
                 l='remove "pasted_" from node names',
                 c=repeated_callback(General.remove_pasted),
-                ann='removes the "passed__" from all selected ' "object names",
+                ann='removes the "passed__" from all selected object names',
                 bgc=color.color,
             )
 
@@ -220,7 +220,7 @@ def UI():
                 "togglePolyMeshes_button",
                 l="toggle polymesh visibility",
                 c=repeated_callback(General.toggle_poly_meshes),
-                ann="toggles the polymesh display in the active model " "panel",
+                ann="toggles the polymesh display in the active model panel",
                 bgc=color.color,
             )
 
@@ -229,7 +229,7 @@ def UI():
                 "selectSetMembers_button",
                 l="select set members",
                 c=repeated_callback(General.select_set_members),
-                ann="selects the selected set members in correct " "order",
+                ann="selects the selected set members in correct order",
                 bgc=color.color,
             )
 
@@ -389,7 +389,7 @@ def UI():
                 "open_selected_reference_button",
                 l="Open Selected Reference in New Maya",
                 c=repeated_callback(Reference.open_reference_in_new_maya),
-                ann="Opens the selected reference in new Maya " "instance",
+                ann="Opens the selected reference in new Maya instance",
                 bgc=color.color,
             )
 
@@ -419,7 +419,7 @@ def UI():
                 "fix_reference_paths_button",
                 l="Fix Reference Paths",
                 c=repeated_callback(Reference.fix_reference_paths),
-                ann="Fixes reference paths deeply, so they will use" "$REPO env var.",
+                ann="Fixes reference paths deeply, so they will use$REPO env var.",
                 bgc=color.color,
             )
 
@@ -460,8 +460,7 @@ def UI():
                 "bind_to_original_button",
                 l="Bind To Original",
                 c=repeated_callback(Reference.bind_to_original),
-                ann="Binds the current local references to the ones on the "
-                "repository",
+                ann="Binds the current local references to the ones on the repository",
                 bgc=color.color,
             )
 
@@ -921,8 +920,7 @@ def UI():
                 "setupStretchySplineIKCurve_button",
                 l="setup stretchy splineIK curve",
                 c=repeated_callback(Rigging.setup_stretchy_spline_ik_curve),
-                ann="connects necessary nodes to calculate arcLength "
-                "change in percent",
+                ann="connects necessary nodes to calculate arcLength change in percent",
                 bgc=color.color,
             )
             pm.button(
@@ -1043,8 +1041,7 @@ def UI():
                 "rivet_per_face_button",
                 l="rivet per face (Follicle)",
                 c=repeated_callback(auxiliary.rivet_per_face),
-                ann="creates a rivet setup per selected face by using hair "
-                "follicles",
+                ann="creates a rivet setup per selected face by using hair follicles",
                 bgc=color.color,
             )
             pm.button(
@@ -1331,8 +1328,7 @@ def UI():
                 "convert_nodes_to_redshift_button",
                 l="Convert Selected To RedShift (BETA)",
                 c=repeated_callback(Render.convert_nodes_to_redshift),
-                ann="Automatically converts the selected node from "
-                "Arnold to Redshift",
+                ann="Automatically converts the selected node from Arnold to Redshift",
                 bgc=color.color,
             )
 
@@ -1626,8 +1622,7 @@ def UI():
                     "enable_subdiv_on_selected_objects_button",
                     l="Enable Subdiv (Adaptive)",
                     c=repeated_callback(enable_subdiv_callback),
-                    ann="Enables Arnold/RedShift Subdiv (catclark) on "
-                    "selected objects",
+                    ann="Enables Arnold/RedShift Subdiv (catclark) on selected objects",
                     bgc=color.color,
                 )
 
@@ -2458,21 +2453,21 @@ def UI():
                 "deActivateSmooth_button",
                 l="deActivate smooth",
                 c=repeated_callback(Modeling.activate_deActivate_smooth, 1),
-                ann="deActivates all polySmoothFace nodes in the " "scene",
+                ann="deActivates all polySmoothFace nodes in the scene",
                 bgc=color.color,
             )
             pm.button(
                 "activateSmooth_button",
                 l="activate smooth",
                 c=repeated_callback(Modeling.activate_deActivate_smooth, 0),
-                ann="activates all deActivated polySmoothFace nodes " "in the scene",
+                ann="activates all deActivated polySmoothFace nodes in the scene",
                 bgc=color.color,
             )
             pm.button(
                 "deleteSmooth_button",
                 l="delete smooth",
                 c=repeated_callback(Modeling.delete_smooth),
-                ann="deletes all the polySmoothFace nodes from the " "scene",
+                ann="deletes all the polySmoothFace nodes from the scene",
                 bgc=color.color,
             )
             pm.button(
@@ -2654,7 +2649,7 @@ def UI():
                 "barn_door_simulator_setup_button",
                 l="Setup",
                 c=repeated_callback(Render.barndoor_simulator_setup),
-                ann="Creates a arnold barn door simulator to the selected " "light",
+                ann="Creates a arnold barn door simulator to the selected light",
                 bgc=color.color,
             )
 
@@ -2662,7 +2657,7 @@ def UI():
                 "barn_door_simulator_unsetup_button",
                 l="Un-Setup",
                 c=repeated_callback(Render.barndoor_simulator_delete),
-                ann="Removes the barn door simulator nodes from the selected " "light",
+                ann="Removes the barn door simulator nodes from the selected light",
                 bgc=color.color,
             )
 

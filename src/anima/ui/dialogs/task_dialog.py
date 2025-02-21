@@ -35,6 +35,7 @@ from anima.utils import get_task_hierarchy_name, local_to_utc
 
 MULTI_VALUE_ENUM = "---Multiple_Values---"
 
+
 def UI(app_in=None, executor=None, **kwargs):
     """
     :param app_in: A Qt Application instance, which you can pass to let the UI
@@ -887,7 +888,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
         # schedule info
         if self.tasks:
-
             schedule_timings = self.get_merged_items(self.tasks, "schedule_timing")
             if len(schedule_timings) == 1:
                 self.schedule_timing_spin_box.setValue(schedule_timings[0])
@@ -1706,7 +1706,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         priority = self.priority_spin_box.value()
 
         created_by = self.get_logged_in_user()
-
 
         utc_now = local_to_utc(datetime.datetime.now())
         # inject timezone info
