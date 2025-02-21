@@ -189,7 +189,7 @@ def test_get_versions_from_path_with_multiple_repositories(create_test_db):
         code="TR0",
         linux_path="/mnt/T/with_a_very_long_path_which_will_cause_errors/",
         windows_path="T:/with_a_very_long_path_which_will_cause_errors/",
-        osx_path="/Volumes/T/" "with_a_very_long_path_which_will_cause_errors/",
+        osx_path="/Volumes/T/with_a_very_long_path_which_will_cause_errors/",
     )
     DBSession.add(repo0)
 
@@ -333,7 +333,7 @@ def test_trim_repo_path_with_multiple_repositories(create_test_db):
         code="TR0",
         linux_path="/mnt/T/with_a_very_long_path_which_will_cause_errors/",
         windows_path="T:/with_a_very_long_path_which_will_cause_errors/",
-        osx_path="/Volumes/T/" "with_a_very_long_path_which_will_cause_errors/",
+        osx_path="/Volumes/T/with_a_very_long_path_which_will_cause_errors/",
     )
     DBSession.add(repo0)
 

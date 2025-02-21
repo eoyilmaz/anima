@@ -1,5 +1,4 @@
-"""Tests for anima.dcc.maya.toolbox representation tools
-"""
+"""Tests for anima.dcc.maya.toolbox representation tools"""
 
 import os
 
@@ -540,11 +539,10 @@ def test_generate_ass_repr_for_building_yapi_look_dev_without_creating_model_fir
     with pytest.raises(RuntimeError) as cm:
         gen.generate_ass()
 
-    assert (
-        str(cm.value) == "Please generate the ASS Representation of the references "
-        "first!!!\n{}".format(
+    assert str(cm.value) == (
+        "Please generate the ASS Representation of the references first!!!\n{}".format(
             data["building1_yapi_model_main_v003"].absolute_full_path
-        ),
+        )
     )
 
 
@@ -563,11 +561,10 @@ def test_generate_ass_repr_for_building_layout_without_creating_building_look_de
     with pytest.raises(RuntimeError) as cm:
         gen.generate_ass()
 
-    assert (
-        str(cm.value) == "Please generate the ASS Representation of the references "
-        "first!!!\n{}".format(
+    assert str(cm.value) == (
+        "Please generate the ASS Representation of the references first!!!\n{}".format(
             data["building1_yapi_look_dev_main_v003"].absolute_full_path
-        ),
+        )
     )
 
 
@@ -869,8 +866,9 @@ def test_generate_all_scene_with_references_before_generating_all_of_references_
 
     # BBOX will complain first
     assert str(cm.value) == (
-        "Please generate the GPU Representation of the references "
-        "first!!!\n{}".format(data["building1_yapi_model_main_v003"].absolute_full_path)
+        "Please generate the GPU Representation of the references first!!!\n{}".format(
+            data["building1_yapi_model_main_v003"].absolute_full_path
+        )
     )
 
 

@@ -138,7 +138,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_dcc):
         "{%- for parent_task in parent_tasks -%}"
         "{{parent_task.nice_name}}/"
         "{%- endfor -%}",
-        filename="{{version.nice_name}}" '_v{{"%03d"|format(version.version_number)}}',
+        filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
     )
     logger.debug("creating filename template done")
 
@@ -150,7 +150,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_dcc):
         "{%- for parent_task in parent_tasks -%}"
         "{{parent_task.nice_name}}/"
         "{%- endfor -%}",
-        filename="{{version.nice_name}}" '_v{{"%03d"|format(version.version_number)}}',
+        filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
     )
     logger.debug("creating asset template done")
 
@@ -162,7 +162,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_dcc):
         "{%- for parent_task in parent_tasks -%}"
         "{{parent_task.nice_name}}/"
         "{%- endfor -%}",
-        filename="{{version.nice_name}}" '_v{{"%03d"|format(version.version_number)}}',
+        filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
     )
     logger.debug("creating shot template done")
 
@@ -173,7 +173,7 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_dcc):
         "{%- for parent_task in parent_tasks -%}"
         "{{parent_task.nice_name}}/"
         "{%- endfor -%}",
-        filename="{{version.nice_name}}" '_v{{"%03d"|format(version.version_number)}}',
+        filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
     )
 
     data["structure"] = Structure(

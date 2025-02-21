@@ -6,7 +6,6 @@ import unittest
 
 
 class LimbTest(unittest.TestCase):
-
     def test_name_argument_is_None(self):
         """a TypeError will be raised when the name argument isNone."""
         self.assertRaises(TypeError, Limb("xxxxxx", Character()))

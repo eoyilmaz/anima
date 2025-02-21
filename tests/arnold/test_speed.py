@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Tests the speed of the base85 encode operation
-"""
+"""Tests the speed of the base85 encode operation."""
+
 import time
 import re
 from struct import pack, unpack

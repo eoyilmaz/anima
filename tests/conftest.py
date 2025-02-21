@@ -762,7 +762,7 @@ def repr_test_setup():
         "{%- for parent_task in parent_tasks -%}"
         "{{parent_task.nice_name}}/"
         "{%- endfor -%}",
-        filename="{{version.nice_name}}" '_v{{"%03d"|format(version.version_number)}}',
+        filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
     )
 
     data["structure"] = Structure(

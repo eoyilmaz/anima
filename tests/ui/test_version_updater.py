@@ -96,8 +96,7 @@ class VersionUpdaterTester(unittest.TestCase):
             "{%- for parent_task in parent_tasks -%}"
             "{{parent_task.nice_name}}/"
             "{%- endfor -%}",
-            filename="{{version.nice_name}}"
-            '_v{{"%03d"|format(version.version_number)}}',
+            filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
         )
 
         self.asset_template = FilenameTemplate(
@@ -107,8 +106,7 @@ class VersionUpdaterTester(unittest.TestCase):
             "{%- for parent_task in parent_tasks -%}"
             "{{parent_task.nice_name}}/"
             "{%- endfor -%}",
-            filename="{{version.nice_name}}"
-            '_v{{"%03d"|format(version.version_number)}}',
+            filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
         )
 
         self.shot_template = FilenameTemplate(
@@ -118,8 +116,7 @@ class VersionUpdaterTester(unittest.TestCase):
             "{%- for parent_task in parent_tasks -%}"
             "{{parent_task.nice_name}}/"
             "{%- endfor -%}",
-            filename="{{version.nice_name}}"
-            '_v{{"%03d"|format(version.version_number)}}',
+            filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
         )
 
         self.sequence_template = FilenameTemplate(
@@ -129,8 +126,7 @@ class VersionUpdaterTester(unittest.TestCase):
             "{%- for parent_task in parent_tasks -%}"
             "{{parent_task.nice_name}}/"
             "{%- endfor -%}",
-            filename="{{version.nice_name}}"
-            '_v{{"%03d"|format(version.version_number)}}',
+            filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
         )
 
         self.structure = Structure(

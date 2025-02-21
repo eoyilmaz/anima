@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Test MayaColorManagementConfigurator."""
+
 import json
 import os
 import shutil

@@ -38,7 +38,7 @@ class SequenceManagerTestCase(unittest.TestCase):
 
         self.assertEqual(
             cm.exception.message,
-            "path argument in SequenceManager.from_xml should be a string, " "not int",
+            "path argument in SequenceManager.from_xml should be a string, not int",
         )
 
     def test_from_xml_path_argument_is_not_a_valid_path(self):

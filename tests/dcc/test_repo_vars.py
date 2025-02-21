@@ -70,15 +70,18 @@ def test_environment_var_values_are_correct(create_test_repo):
     data = create_test_repo
     from anima import defaults
 
-    for repo in data["all_repos"]:
-        assert (
+    assert all(
+        repo.path
+        == (
             os.environ[
                 defaults.repo_env_template.format(
                     id=repo.id,
                     code=repo.code,
                 )
             ]
-        ) == repo.path
+        )
+        for repo in data["all_repos"]
+    )
 
 
 def test_to_os_independent_path_is_working_properly(create_test_repo):

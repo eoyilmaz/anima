@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tests for maya DCC with publishers."""
+
 import pytest
 from stalker import Type, Version
 from stalker.db.session import DBSession

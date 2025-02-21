@@ -11,7 +11,6 @@ logger = logging.getLogger("anima.ui.reference_editor")
 
 
 class ReferenceEditorTestCase(unittest.TestCase):
-
     def setUp(self):
         """Set up the test environment."""
         if not QtGui.QApplication.instance():

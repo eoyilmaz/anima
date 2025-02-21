@@ -69,7 +69,7 @@ class FileTestCase(unittest.TestCase):
         f.duration = 34
         f.name = "shot2"
         f.pathurl = (
-            "file://localhost/home/eoyilmaz/maya/projects/default/data/" "shot2.mov"
+            "file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov"
         )
 
         expected_xml = """<file id="shot2.mov">
@@ -86,7 +86,7 @@ class FileTestCase(unittest.TestCase):
         f.duration = 34
         f.name = "shot2"
         f.pathurl = (
-            "file://localhost/home/eoyilmaz/maya/projects/default/" "data/shot2.mov"
+            "file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov"
         )
 
         expected_xml = """  <file id="shot2.mov">
@@ -110,9 +110,7 @@ class FileTestCase(unittest.TestCase):
         name_node.text = "shot"
         pathurl_node = ElementTree.SubElement(file_node, "pathurl")
 
-        pathurl = (
-            "file://localhost/" "home/eoyilmaz/maya/projects/default/data/shot.mov"
-        )
+        pathurl = "file://localhost/home/eoyilmaz/maya/projects/default/data/shot.mov"
         pathurl_node.text = pathurl
 
         f = File()
@@ -136,7 +134,7 @@ class FileTestCase(unittest.TestCase):
             "KKS_Seq001_001A_TNGE_0010_Comp_Main_v001.%5B000-379%5D"
             ".exr"
         )
-        expected_result = "KKS_Seq001_001A_TNGE_0010_Comp_Main_v001." "[000-379].exr"
+        expected_result = "KKS_Seq001_001A_TNGE_0010_Comp_Main_v001.[000-379].exr"
         self.assertEqual(expected_result, f.id)
 
     def test_id_after_a_second_call_to_to_xml_will_change_id_id(self):

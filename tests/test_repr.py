@@ -66,7 +66,7 @@ def test_get_representation_repr_name_is_skipped(repr_test_setup):
         v.get_representation()
 
     assert str(cm.value) == (
-        "get_representation() missing 1 required positional argument: " "'repr_name'"
+        "get_representation() missing 1 required positional argument: 'repr_name'"
     )
 
 
@@ -136,7 +136,7 @@ def test_has_representation_repr_name_is_skipped(repr_test_setup):
         v.has_representation()
 
     assert str(cm.value) == (
-        "has_representation() missing 1 required positional argument: " "'repr_name'"
+        "has_representation() missing 1 required positional argument: 'repr_name'"
     )
 
 

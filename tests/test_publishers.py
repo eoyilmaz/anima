@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Test the anima.publish module."""
+
 import pytest
 
 from anima.publish import (

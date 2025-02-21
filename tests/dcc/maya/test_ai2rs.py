@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tests for anima.dcc.maya.ai2rs classes."""
+
 import glob
 import os
 
