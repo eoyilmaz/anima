@@ -9,6 +9,6 @@ pyside6;sys_platform == 'darwin'
 pytz
 qtawesome
 qtpy
-stalker>=1.1.0
+stalker>=1.1.2
 timecode
 tzlocal
