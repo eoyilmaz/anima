@@ -574,18 +574,30 @@ def create_test_data(create_maya_test_db, create_pymel, create_maya_dcc):
     data["asset2_model_main_v002"] = create_version(data["asset2_model"], "Main")
     data["asset2_model_main_v003"] = create_version(data["asset2_model"], "Main")
 
-    data["asset2_model_variant1_v001"] = create_version(data["asset2_model"], "Variant1")
-    data["asset2_model_variant1_v002"] = create_version(data["asset2_model"], "Variant1")
-    data["asset2_model_variant1_v003"] = create_version(data["asset2_model"], "Variant1")
+    data["asset2_model_variant1_v001"] = create_version(
+        data["asset2_model"], "Variant1"
+    )
+    data["asset2_model_variant1_v002"] = create_version(
+        data["asset2_model"], "Variant1"
+    )
+    data["asset2_model_variant1_v003"] = create_version(
+        data["asset2_model"], "Variant1"
+    )
 
     # asset2 lookdev
     data["asset2_lookdev_main_v001"] = create_version(data["asset2_lookdev"], "Main")
     data["asset2_lookdev_main_v002"] = create_version(data["asset2_lookdev"], "Main")
     data["asset2_lookdev_main_v003"] = create_version(data["asset2_lookdev"], "Main")
 
-    data["asset2_lookdev_variant1_v001"] = create_version(data["asset2_lookdev"], "Variant1")
-    data["asset2_lookdev_variant1_v002"] = create_version(data["asset2_lookdev"], "Variant1")
-    data["asset2_lookdev_variant1_v003"] = create_version(data["asset2_lookdev"], "Variant1")
+    data["asset2_lookdev_variant1_v001"] = create_version(
+        data["asset2_lookdev"], "Variant1"
+    )
+    data["asset2_lookdev_variant1_v002"] = create_version(
+        data["asset2_lookdev"], "Variant1"
+    )
+    data["asset2_lookdev_variant1_v003"] = create_version(
+        data["asset2_lookdev"], "Variant1"
+    )
 
     # task5
     data["version7"] = create_version(data["task5"], "Main")

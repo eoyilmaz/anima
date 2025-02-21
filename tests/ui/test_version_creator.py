@@ -25,7 +25,7 @@ from stalker import (
     Type,
     User,
     Variant,
-    Version
+    Version,
 )
 from stalker.db.session import DBSession
 from stalker.models.auth import LocalSession
@@ -33,36 +33,32 @@ from stalker.models.auth import LocalSession
 from anima.ui.dialogs import version_dialog
 from anima.ui.lib import QtCore, QtGui
 
-logger = logging.getLogger('anima.ui.version_dialog')
+logger = logging.getLogger("anima.ui.version_dialog")
 logger.setLevel(logging.DEBUG)
 
 
 class VersionCreatorTester(unittest.TestCase):
-    """Tests the Version Dialog instance
-    """
+    """Tests the Version Dialog instance"""
 
-    repo_path = ''
+    repo_path = ""
 
     @classmethod
     def setUpClass(cls):
-        """setup once
-        """
+        """setup once"""
         # remove the transaction manager
         DBSession.remove()
 
         cls.repo_path = tempfile.mkdtemp()
 
         from anima import defaults
+
         defaults.local_storage_path = tempfile.mktemp()
 
-        db.setup({
-            'sqlalchemy.url': 'sqlite:///:memory:',
-            'sqlalchemy.echo': 'false'
-        })
+        db.setup({"sqlalchemy.url": "sqlite:///:memory:", "sqlalchemy.echo": "false"})
         db.init()
 
         # create Power Users Group
-        cls.power_users_group = Group(name='Power Users')
+        cls.power_users_group = Group(name="Power Users")
         DBSession.add(cls.power_users_group)
         DBSession.commit()
 
@@ -74,62 +70,57 @@ class VersionCreatorTester(unittest.TestCase):
 
         # create a repository
         cls.test_repo1 = Repository(
-            name='Test Repository',
-            windows_path='T:/TestRepo/',
-            linux_path='/mnt/T/TestRepo/',
-            osx_path='/Volumes/T/TestRepo/'
+            name="Test Repository",
+            windows_path="T:/TestRepo/",
+            linux_path="/mnt/T/TestRepo/",
+            osx_path="/Volumes/T/TestRepo/",
         )
 
         cls.test_structure1 = Structure(
-            name='Test Project Structure',
-            templates=[],
-            custom_template=''
+            name="Test Project Structure", templates=[], custom_template=""
         )
 
-        cls.status_new = Status.query.filter_by(code='NEW').first()
-        cls.status_wip = Status.query.filter_by(code='WIP').first()
-        cls.status_cmpl = Status.query.filter_by(code='CMPL').first()
+        cls.status_new = Status.query.filter_by(code="NEW").first()
+        cls.status_wip = Status.query.filter_by(code="WIP").first()
+        cls.status_cmpl = Status.query.filter_by(code="CMPL").first()
 
-        cls.project_status_list = \
-            StatusList.query.filter_by(target_entity_type=Project).first()
+        cls.project_status_list = StatusList.query.filter_by(
+            target_entity_type=Project
+        ).first()
 
         # create a couple of projects
         cls.test_project1 = Project(
-            name='Project 1',
-            code='P1',
+            name="Project 1",
+            code="P1",
             repository=cls.test_repo1,
             structure=cls.test_structure1,
-            status_list=cls.project_status_list
+            status_list=cls.project_status_list,
         )
 
         cls.test_project2 = Project(
-            name='Project 2',
-            code='P2',
+            name="Project 2",
+            code="P2",
             repository=cls.test_repo1,
             structure=cls.test_structure1,
-            status_list=cls.project_status_list
+            status_list=cls.project_status_list,
         )
 
         cls.test_project3 = Project(
-            name='Project 3',
-            code='P3',
+            name="Project 3",
+            code="P3",
             repository=cls.test_repo1,
             structure=cls.test_structure1,
-            status_list=cls.project_status_list
+            status_list=cls.project_status_list,
         )
 
-        cls.projects = [
-            cls.test_project1,
-            cls.test_project2,
-            cls.test_project3
-        ]
+        cls.projects = [cls.test_project1, cls.test_project2, cls.test_project3]
 
         cls.test_user1 = User(
-            name='Test User',
+            name="Test User",
             # groups=[self.power_users_group],
-            login='tuser',
-            email='tuser@tusers.com',
-            password='secret'
+            login="tuser",
+            email="tuser@tusers.com",
+            password="secret",
         )
         DBSession.add(cls.test_user1)
         DBSession.commit()
@@ -143,56 +134,56 @@ class VersionCreatorTester(unittest.TestCase):
 
         # project 1
         cls.test_task1 = Task(
-            name='Test Task 1',
+            name="Test Task 1",
             project=cls.test_project1,
             resources=[cls.admin],
         )
 
         cls.test_task2 = Task(
-            name='Test Task 2',
+            name="Test Task 2",
             project=cls.test_project1,
             resources=[cls.admin],
         )
 
         cls.test_task3 = Task(
-            name='Test Task 2',
+            name="Test Task 2",
             project=cls.test_project1,
             resources=[cls.admin],
         )
 
         # project 2
         cls.test_task4 = Task(
-            name='Test Task 4',
+            name="Test Task 4",
             project=cls.test_project2,
             resources=[cls.admin],
         )
 
         cls.test_task5 = Task(
-            name='Test Task 5',
+            name="Test Task 5",
             project=cls.test_project2,
             resources=[cls.admin],
         )
 
         cls.test_task6 = Task(
-            name='Test Task 6',
+            name="Test Task 6",
             parent=cls.test_task5,
             resources=[cls.admin],
         )
 
         cls.test_task7 = Task(
-            name='Test Task 7',
+            name="Test Task 7",
             parent=cls.test_task5,
             resources=[],
         )
 
         cls.test_task8 = Task(
-            name='Test Task 8',
+            name="Test Task 8",
             parent=cls.test_task5,
             resources=[],
         )
 
         cls.test_task9 = Task(
-            name='Test Task 9',
+            name="Test Task 9",
             parent=cls.test_task5,
             resources=[],
         )
@@ -222,26 +213,43 @@ class VersionCreatorTester(unittest.TestCase):
         # +-> Project 3
 
         # record them all to the db
-        DBSession.add_all([
-            cls.admin, cls.test_project1, cls.test_project2, cls.test_project3,
-            cls.test_task1, cls.test_task2, cls.test_task3, cls.test_task4,
-            cls.test_task5, cls.test_task6, cls.test_task7, cls.test_task8,
-            cls.test_task9
-        ])
+        DBSession.add_all(
+            [
+                cls.admin,
+                cls.test_project1,
+                cls.test_project2,
+                cls.test_project3,
+                cls.test_task1,
+                cls.test_task2,
+                cls.test_task3,
+                cls.test_task4,
+                cls.test_task5,
+                cls.test_task6,
+                cls.test_task7,
+                cls.test_task8,
+                cls.test_task9,
+            ]
+        )
         DBSession.commit()
 
         cls.all_tasks = [
-            cls.test_task1, cls.test_task2, cls.test_task3, cls.test_task4,
-            cls.test_task5, cls.test_task6, cls.test_task7, cls.test_task8,
-            cls.test_task9
+            cls.test_task1,
+            cls.test_task2,
+            cls.test_task3,
+            cls.test_task4,
+            cls.test_task5,
+            cls.test_task6,
+            cls.test_task7,
+            cls.test_task8,
+            cls.test_task9,
         ]
 
         # create versions
         cls.test_version1 = Version(
             cls.test_task1,
             created_by=cls.admin,
-            created_with='Test',
-            description='Test Description'
+            created_with="Test",
+            description="Test Description",
         )
         DBSession.add(cls.test_version1)
         DBSession.commit()
@@ -249,8 +257,8 @@ class VersionCreatorTester(unittest.TestCase):
         cls.test_version2 = Version(
             cls.test_task1,
             created_by=cls.admin,
-            created_with='Test',
-            description='Test Description'
+            created_with="Test",
+            description="Test Description",
         )
         DBSession.add(cls.test_version2)
         DBSession.commit()
@@ -258,40 +266,33 @@ class VersionCreatorTester(unittest.TestCase):
         cls.test_version3 = Version(
             cls.test_task1,
             created_by=cls.admin,
-            created_with='Test',
-            description='Test Description'
+            created_with="Test",
+            description="Test Description",
         )
         cls.test_version3.is_published = True
         DBSession.add(cls.test_version3)
         DBSession.commit()
 
-
         test_task1_main_variant = Variant(
             parent=cls.test_task1,
-            name='Main',
+            name="Main",
         )
 
         cls.test_version4 = Version(
             cls.test_task1,
             created_by=cls.admin,
-            created_with='Test',
-            description='Test Description'
+            created_with="Test",
+            description="Test Description",
         )
         cls.test_version4.is_published = True
         DBSession.add(cls.test_version4)
         DBSession.commit()
 
-        repr_file_type = Type(
-            name="Representation",
-            target_entity_type=File
-        )
+        repr_file_type = Type(name="Representation", target_entity_type=File)
         DBSession.add(repr_file_type)
         DBSession.commit()
 
-        gpu_representation = File(
-            name="GPU",
-            type=repr_file_type
-        )
+        gpu_representation = File(name="GPU", type=repr_file_type)
         DBSession.add(gpu_representation)
         DBSession.commit()
 
@@ -299,23 +300,20 @@ class VersionCreatorTester(unittest.TestCase):
         DBSession.commit()
 
         if not QtGui.QApplication.instance():
-            logger.debug('creating a new QApplication')
+            logger.debug("creating a new QApplication")
             cls.app = QtGui.QApplication(sys.argv)
         else:
-            logger.debug('using the present QApplication: {}'.format(QtGui.qApp))
+            logger.debug("using the present QApplication: {}".format(QtGui.qApp))
             cls.app = QtGui.QApplication.instance()
 
         cls.dialog = version_dialog.MainDialog()
 
     @classmethod
     def tearDownClass(cls):
-        """teardown once
-        """
+        """teardown once"""
         from anima import defaults
-        shutil.rmtree(
-            defaults.local_storage_path,
-            True
-        )
+
+        shutil.rmtree(defaults.local_storage_path, True)
 
         shutil.rmtree(cls.repo_path)
 
@@ -323,20 +321,18 @@ class VersionCreatorTester(unittest.TestCase):
         DBSession.remove()
 
     def show_dialog(self, dialog):
-        """show the given dialog
-        """
+        """show the given dialog"""
         dialog.show()
         self.app.exec_()
         self.app.connect(
             self.app,
             QtCore.SIGNAL("lastWindowClosed()"),
             self.app,
-            QtCore.SLOT("quit()")
+            QtCore.SLOT("quit()"),
         )
 
     def test_close_button_closes_ui(self):
-        """close button is closing the ui
-        """
+        """close button is closing the ui"""
         self.dialog.show()
 
         self.assertEqual(self.dialog.isVisible(), True)
@@ -346,23 +342,17 @@ class VersionCreatorTester(unittest.TestCase):
         self.assertEqual(self.dialog.isVisible(), False)
 
     def test_login_dialog_is_shown_if_there_are_no_logged_in_user(self):
-        """login dialog is shown if there is no logged in user
-        """
+        """login dialog is shown if there is no logged in user"""
         self.fail("Test is not implemented yet")
 
     def test_logged_in_user_field_is_updated_correctly(self):
-        """logged_in_user field is updated correctly
-        """
+        """logged_in_user field is updated correctly"""
         # now expect to see the admin.name on the dialog.logged_in_user_label
-        self.assertEqual(
-            self.dialog.logged_in_user_label.text(),
-            self.admin.name
-        )
+        self.assertEqual(self.dialog.logged_in_user_label.text(), self.admin.name)
 
     def test_logout_button_shows_the_login_dialog(self):
-        """logout dialog shows the login_dialog
-        """
-        self.fail('test is not implemented yet')
+        """logout dialog shows the login_dialog"""
+        self.fail("test is not implemented yet")
 
     def test_tasks_tree_view_is_filled_with_projects(self):
         """tasks_treeView is filled with projects as root
@@ -371,10 +361,7 @@ class VersionCreatorTester(unittest.TestCase):
         # now call the dialog and expect to see all these projects as root
         # level items in tasks_treeView
 
-        self.assertEqual(
-            len(self.admin.tasks),
-            5
-        )
+        self.assertEqual(len(self.admin.tasks), 5)
 
         task_tree_model = self.dialog.tasks_treeView.model()
         row_count = task_tree_model.rowCount()
@@ -395,8 +382,7 @@ class VersionCreatorTester(unittest.TestCase):
         # self.show_dialog(dialog)
 
     def test_tasks_tree_view_lists_all_tasks_properly(self):
-        """tasks_treeView lists all the tasks properly
-        """
+        """tasks_treeView lists all the tasks properly"""
         task_tree_model = self.dialog.tasks_treeView.model()
         row_count = task_tree_model.rowCount()
         self.assertEqual(3, row_count)
@@ -444,8 +430,7 @@ class VersionCreatorTester(unittest.TestCase):
 
         for task in my_tasks:
             self.dialog.tasks_treeView.find_and_select_entity_item(
-                task,
-                self.dialog.tasks_treeView
+                task, self.dialog.tasks_treeView
             )
             # get the current selection
             task_ids = self.dialog.tasks_treeView.get_selected_task_ids()
@@ -457,25 +442,21 @@ class VersionCreatorTester(unittest.TestCase):
         for task in self.all_tasks:
             if task not in my_tasks and task not in all_my_parent_tasks:
                 self.dialog.tasks_treeView.find_and_select_entity_item(
-                    task,
-                    self.dialog.tasks_treeView
+                    task, self.dialog.tasks_treeView
                 )
                 # get the current selection
                 task_id = None
                 task_ids = self.dialog.tasks_treeView.get_selected_task_ids()
                 if task_ids:
                     task_id = task_ids[0]
-                self.assertTrue(
-                    task_id is None
-                )
+                self.assertTrue(task_id is None)
 
         # now un check it and check if all tasks are shown
         self.dialog.my_tasks_only_check_box.setChecked(False)
         # check if all the tasks are present in the tree
         for task in self.all_tasks:
             self.dialog.tasks_treeView.find_and_select_entity_item(
-                task,
-                self.dialog.tasks_treeView
+                task, self.dialog.tasks_treeView
             )
             # get the current selection
             task_id = None
@@ -502,8 +483,7 @@ class VersionCreatorTester(unittest.TestCase):
         self.assertEqual(task2_item.text(), self.test_task2.name)
 
     def test_tasks_treeView_do_not_cause_a_segfault(self):
-        """there was a bug causing a segfault
-        """
+        """there was a bug causing a segfault"""
         dialog = version_dialog.MainDialog()
         dialog = version_dialog.MainDialog()
         dialog = version_dialog.MainDialog()
@@ -525,36 +505,32 @@ class VersionCreatorTester(unittest.TestCase):
         task1_item = project1_item.child(0, 0)
 
         # select task1
-        selection_model.select(
-            task1_item.index(),
-            QtGui.QItemSelectionModel.Select
-        )
+        selection_model.select(task1_item.index(), QtGui.QItemSelectionModel.Select)
 
         # the row count should be 2
-        self.assertEqual(
-            self.dialog.previous_versions_table_widget.rowCount(),
-            3
-        )
+        self.assertEqual(self.dialog.previous_versions_table_widget.rowCount(), 3)
 
         # now check if the previous versions tableWidget has the info
         versions = [self.test_version1, self.test_version2, self.test_version3]
         for i in range(len(versions)):
             self.assertEqual(
                 int(self.dialog.previous_versions_table_widget.item(i, 0).text()),
-                versions[i].version_number
+                versions[i].version_number,
             )
 
             self.assertEqual(
                 self.dialog.previous_versions_table_widget.item(i, 2).text(),
-                versions[i].created_by.name
+                versions[i].created_by.name,
             )
 
             self.assertEqual(
                 self.dialog.previous_versions_table_widget.item(i, 6).text(),
-                versions[i].description
+                versions[i].description,
             )
 
-    def test_get_new_version_with_publish_check_box_is_checked_creates_published_version(self):
+    def test_get_new_version_with_publish_check_box_is_checked_creates_published_version(
+        self,
+    ):
         """checking publish_checkbox will create a published Version
         instance
         """
@@ -571,10 +547,7 @@ class VersionCreatorTester(unittest.TestCase):
         task1_item = project1_item.child(0, 0)
 
         # select task1
-        selection_model.select(
-            task1_item.index(),
-            QtGui.QItemSelectionModel.Select
-        )
+        selection_model.select(task1_item.index(), QtGui.QItemSelectionModel.Select)
 
         # first check if unpublished
         new_version = self.dialog.get_new_version()
@@ -613,17 +586,14 @@ class VersionCreatorTester(unittest.TestCase):
         task1_item = project1_item.child(0, 0)
 
         # select task1
-        selection_model.select(
-            task1_item.index(),
-            QtGui.QItemSelectionModel.Select
-        )
+        selection_model.select(task1_item.index(), QtGui.QItemSelectionModel.Select)
 
         # check if the menu item has a publish method for v8
-        self.fail('test is not completed yet')
+        self.fail("test is not completed yet")
 
     def test_thumbnails_are_displayed_correctly(self):
         """thumbnails are displayed correctly."""
-        self.fail('test is not implemented yet')
+        self.fail("test is not implemented yet")
 
     def test_representations_combo_box_lists_all_representations_of_current_dcc(self):
         """representations_comboBox lists all the possible representations in current DCC."""

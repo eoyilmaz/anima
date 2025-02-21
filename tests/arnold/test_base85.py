@@ -13,7 +13,7 @@ import pytest
     ],
 )
 def test_arnold_b85_encode_is_working_properly(raw_data, encoded_data):
-    """testing if arnold_b85_encode is working properly"""
+    """arnold_b85_encode is working properly"""
     assert encoded_data == base85.arnold_b85_encode(raw_data)
 
 
@@ -25,7 +25,7 @@ def test_arnold_b85_encode_is_working_properly(raw_data, encoded_data):
     ],
 )
 def test_arnold_b85_encode_packs_zeros_properly(raw_data, encoded_data):
-    """testing if arnold_b85_encode is packing zeros properly"""
+    """arnold_b85_encode is packing zeros properly"""
     assert encoded_data == base85.arnold_b85_encode(raw_data)
 
 
@@ -37,7 +37,7 @@ def test_arnold_b85_encode_packs_zeros_properly(raw_data, encoded_data):
     ],
 )
 def test_arnold_b85_encode_packs_ones_properly(raw_data, encoded_data):
-    """testing if arnold_b85_encode is packing ones properly"""
+    """arnold_b85_encode is packing ones properly"""
     assert encoded_data == base85.arnold_b85_encode(raw_data)
 
 
@@ -49,7 +49,7 @@ def test_arnold_b85_encode_packs_ones_properly(raw_data, encoded_data):
     ],
 )
 def test_arnold_b85_decode_is_working_properly(raw_data, encoded_data):
-    """testing if arnold_b85_decode is working properly"""
+    """arnold_b85_decode is working properly"""
     assert raw_data == base85.arnold_b85_decode(encoded_data)
 
 
@@ -61,7 +61,7 @@ def test_arnold_b85_decode_is_working_properly(raw_data, encoded_data):
     ],
 )
 def test_arnold_b85_decode_unpacks_zeros_properly(raw_data, encoded_data):
-    """testing if arnold_b85_decode is unpacking zeros properly"""
+    """arnold_b85_decode is unpacking zeros properly"""
     assert raw_data == base85.arnold_b85_decode(encoded_data)
 
 
@@ -73,7 +73,7 @@ def test_arnold_b85_decode_unpacks_zeros_properly(raw_data, encoded_data):
     ],
 )
 def test_arnold_b85_decode_unpacks_ones_properly(raw_data, encoded_data):
-    """testing if arnold_b85_decode is unpacking zeros properly"""
+    """arnold_b85_decode is unpacking zeros properly"""
     assert raw_data == base85.arnold_b85_decode(encoded_data)
 
 

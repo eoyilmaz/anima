@@ -18,7 +18,7 @@ from tests.dcc.maya.utils import create_version
 def test_save_as_creates_a_maya_file_at_version_absolute_full_path(
     create_test_data, create_maya_dcc
 ):
-    """testing if the save_as creates a maya file at the Version.full_path"""
+    """save_as creates a maya file at the Version.full_path"""
     data = create_test_data
     maya_dcc = create_maya_dcc
     version1 = Version(task=data["task6"])
@@ -36,7 +36,7 @@ def test_save_as_creates_a_maya_file_at_version_absolute_full_path(
 
 
 def test_save_as_sets_the_version_extension_to_ma(create_test_data, create_maya_dcc):
-    """testing if the save_as method sets the version extension to ma"""
+    """save_as method sets the version extension to ma"""
     data = create_test_data
     maya_dcc = create_maya_dcc
     version1 = Version(task=data["task6"])
@@ -49,7 +49,7 @@ def test_save_as_sets_the_version_extension_to_ma(create_test_data, create_maya_
 
 
 def test_save_as_sets_the_render_version_string(create_test_data, create_maya_dcc):
-    """testing if the save_as method sets the version string in the render
+    """save_as method sets the version string in the render
     settings
     """
     data = create_test_data
@@ -72,7 +72,7 @@ def test_save_as_sets_the_render_version_string(create_test_data, create_maya_dc
 # def test_save_as_sets_the_render_format_to_exr_for_arnold(
 #     create_test_data, create_maya_dcc
 # ):
-#     """testing if the save_as method sets the render format to exr when the
+#     """save_as method sets the render format to exr when the
 #     renderer is arnold
 #     """
 #     pytest.skip("Creates segfault!")
@@ -116,7 +116,7 @@ def test_save_as_sets_the_render_version_string(create_test_data, create_maya_dc
 def test_save_as_sets_the_render_file_name_for_assets(
     create_test_data, create_maya_dcc
 ):
-    """testing if the save_as sets the render file name correctly"""
+    """save_as sets the render file name correctly"""
     data = create_test_data
     maya_dcc = create_maya_dcc
     version1 = Version(task=data["task6"])
@@ -142,7 +142,7 @@ def test_save_as_sets_the_render_file_name_for_assets(
 
 
 def test_save_as_sets_the_render_file_name_for_shots(create_test_data, create_maya_dcc):
-    """testing if the save_as sets the render file name correctly"""
+    """save_as sets the render file name correctly"""
     data = create_test_data
     maya_dcc = create_maya_dcc
 
@@ -169,7 +169,7 @@ def test_save_as_sets_the_render_file_name_for_shots(create_test_data, create_ma
 
 
 # def test_save_as_replaces_file_image_paths(create_test_data):
-#     """testing if save_as method replaces image paths with REPO relative
+#     """save_as method replaces image paths with REPO relative
 #     path
 #     """
 #     maya_dcc.save_as(data["asset2_model_main_v001"])
@@ -198,7 +198,7 @@ def test_save_as_sets_the_render_file_name_for_shots(create_test_data, create_ma
 
 
 def test_save_as_sets_the_resolution(create_test_data, create_maya_dcc):
-    """testing if save_as sets the render resolution for the current scene"""
+    """save_as sets the render resolution for the current scene"""
     data = create_test_data
     maya_dcc = create_maya_dcc
 
@@ -225,7 +225,7 @@ def test_save_as_sets_the_resolution(create_test_data, create_maya_dcc):
 def test_save_as_sets_the_resolution_for_every_version(
     create_test_data, create_maya_dcc
 ):
-    """testing if save_as sets the render resolution for the current scene
+    """save_as sets the render resolution for the current scene
     but only for the first version of the asset
     """
     data = create_test_data
@@ -273,7 +273,7 @@ def test_save_as_sets_the_resolution_for_every_version(
 
 
 def test_save_as_fills_the_referenced_versions_list(create_test_data, create_maya_dcc):
-    """testing if the save_as method updates the Version.inputs list with
+    """save_as method updates the Version.inputs list with
     the current references list from the Maya
     """
     # create a couple of versions and reference them to each other
@@ -329,7 +329,7 @@ def test_save_as_fills_the_referenced_versions_list(create_test_data, create_may
 def test_save_as_of_a_scene_with_two_references_to_the_same_version(
     create_test_data, create_maya_dcc
 ):
-    """testing if the case where the current maya scene has two references
+    """case where the current maya scene has two references
     to the same file is gracefully handled by assigning the version only
     once
     """
@@ -367,7 +367,7 @@ def test_save_as_of_a_scene_with_two_references_to_the_same_version(
 def test_save_as_move_external_files_to_project_folder(
     create_test_data, create_maya_dcc, trash_bin
 ):
-    """testing if save_as will move all the external files to project
+    """save_as will move all the external files to project
     folder under the "external_files" folder
     """
     data = create_test_data
@@ -401,7 +401,7 @@ def test_save_as_move_external_files_to_project_folder(
 
 
 def test_open_updates_the_referenced_versions_list(create_test_data, create_maya_dcc):
-    """testing if the open method updates the Version.inputs list with the
+    """open method updates the Version.inputs list with the
     current references list from the Maya
     """
     # create a couple of versions and reference them to each other
@@ -472,7 +472,7 @@ def test_open_updates_the_referenced_versions_list(create_test_data, create_maya
 
 
 def test_open_does_not_load_unloaded_references(create_test_data, create_maya_dcc):
-    """testing if the open method doesn't load unloaded references"""
+    """open method doesn't load unloaded references"""
     # create a couple of versions and reference them to each other
     # and reference them to the scene and check if maya updates the
     # Version.references list
@@ -535,7 +535,7 @@ def test_open_does_not_load_unloaded_references(create_test_data, create_maya_dc
 def test_open_with_reference_depth_parameter_is_skipped(
     create_test_data, create_maya_dcc
 ):
-    """testing if the open method doesn't load unloaded references when
+    """open method doesn't load unloaded references when
     the reference_depth parameter is skipped
     """
     # create a couple of versions and reference them to each other
@@ -598,7 +598,7 @@ def test_open_with_reference_depth_parameter_is_skipped(
 
 
 def test_open_with_reference_depth_parameter_is_0(create_test_data, create_maya_dcc):
-    """testing if the open method doesn't load unloaded references when
+    """open method doesn't load unloaded references when
     the reference_depth parameter is 0
     """
     # create a couple of versions and reference them to each other
@@ -661,7 +661,7 @@ def test_open_with_reference_depth_parameter_is_0(create_test_data, create_maya_
 
 
 def test_open_with_reference_depth_parameter_is_1(create_test_data, create_maya_dcc):
-    """testing if the open method will load all unloaded references when
+    """open method will load all unloaded references when
     the reference_depth parameter is 1
     """
     # create a couple of versions and reference them to each other
@@ -724,7 +724,7 @@ def test_open_with_reference_depth_parameter_is_1(create_test_data, create_maya_
 
 
 def test_open_with_reference_depth_parameter_is_2(create_test_data, create_maya_dcc):
-    """testing if the open method will load top only references when the
+    """open method will load top only references when the
     reference_depth parameter is 2
     """
     # create a couple of versions and reference them to each other
@@ -798,7 +798,7 @@ def test_open_with_reference_depth_parameter_is_2(create_test_data, create_maya_
 
 
 def test_open_with_reference_depth_parameter_is_3(create_test_data, create_maya_dcc):
-    """testing if the open method will load none of the references when the
+    """open method will load none of the references when the
     reference_depth parameter is 3
     """
     # create a couple of versions and reference them to each other
@@ -873,7 +873,7 @@ def test_open_with_reference_depth_parameter_is_3(create_test_data, create_maya_
 def test_open_replaces_first_level_reference_paths_with_os_independent_path(
     create_test_data, create_maya_dcc
 ):
-    """testing if Maya.open() will replace first level reference paths with
+    """Maya.open() will replace first level reference paths with
     os independent path
     """
     data = create_test_data
@@ -950,7 +950,7 @@ def test_open_replaces_first_level_reference_paths_with_os_independent_path(
 def test_open_will_open_the_requested_representations_of_the_first_level_references(
     create_test_data, create_maya_dcc
 ):
-    """testing if Maya.open() will open with the requested representations
+    """Maya.open() will open with the requested representations
     of the first level references
     """
     # create three different versions
@@ -1048,7 +1048,7 @@ def test_open_will_open_the_requested_representations_of_the_first_level_referen
 def test_save_as_in_another_project_updates_paths_correctly(
     create_test_data, create_maya_dcc
 ):
-    """testing if the external paths are updated correctly if the document
+    """external paths are updated correctly if the document
     is created in one maya project, but it is saved under another one.
     """
     # create a new scene
@@ -1066,11 +1066,13 @@ def test_save_as_in_another_project_updates_paths_correctly(
     asset1_references1_variant = Variant(name="References1", task=asset1)
     asset1_references2_variant = Variant(name="References2", task=asset1)
 
-    DBSession.add_all([
-        asset1_main_variant,
-        asset1_references1_variant,
-        asset1_references2_variant,
-    ])
+    DBSession.add_all(
+        [
+            asset1_main_variant,
+            asset1_references1_variant,
+            asset1_references2_variant,
+        ]
+    )
     DBSession.commit()
 
     version1 = Version(task=asset1_main_variant)
@@ -1138,7 +1140,7 @@ def test_save_as_in_another_project_updates_paths_correctly(
 
 
 def test_save_as_sets_the_fps(create_test_data, create_maya_dcc):
-    """testing if the save_as method sets the fps value correctly"""
+    """save_as method sets the fps value correctly"""
     # create two projects with different fps values
     # first create a new scene and save it under the first project
     # and then save it under the other project
@@ -1205,7 +1207,7 @@ def test_save_as_sets_the_fps(create_test_data, create_maya_dcc):
 def test_reference_creates_references_with_absolute_paths_containing_env_var(
     create_test_data, create_maya_dcc
 ):
-    """testing if reference method creates references with unresolved paths
+    """reference method creates references with unresolved paths
     are absolute paths containing repo env var
     """
     data = create_test_data
@@ -1246,7 +1248,7 @@ def test_reference_creates_references_with_absolute_paths_containing_env_var(
 def test_reference_creates_references_of_representations_with_correct_namespace(
     create_test_data, create_maya_dcc
 ):
-    """testing if references of representations will be referenced with
+    """references of representations will be referenced with
     correct namespace
     """
     data = create_test_data
@@ -1266,7 +1268,7 @@ def test_reference_creates_references_of_representations_with_correct_namespace(
 def test_save_as_replaces_image_plane_filename_with_env_variable(
     create_test_data, create_maya_dcc
 ):
-    """testing if save_as replaces the imagePlane filename with repository
+    """save_as replaces the imagePlane filename with repository
     environment variable
     """
     data = create_test_data
@@ -1296,7 +1298,7 @@ def test_save_as_replaces_image_plane_filename_with_env_variable(
 def test_save_as_will_even_replace_paths_if_they_are_referenced(
     create_test_data, create_maya_dcc
 ):
-    """testing if save_as will even replace external paths of referenced
+    """save_as will even replace external paths of referenced
     nodes
     """
     data = create_test_data
@@ -1352,7 +1354,7 @@ def test_save_as_will_even_replace_paths_if_they_are_referenced(
 def test_save_as_creates_the_workspace_mel_file_in_the_given_path(
     create_test_data, create_maya_dcc
 ):
-    """testing if save_as creates the workspace.mel file in the Asset or
+    """save_as creates the workspace.mel file in the Asset or
     Shot root
     """
     data = create_test_data
@@ -1376,7 +1378,7 @@ def test_save_as_creates_the_workspace_mel_file_in_the_given_path(
 def test_save_as_creates_the_workspace_file_rule_folders(
     create_test_data, create_maya_dcc
 ):
-    """testing if save_as creates the fileRule folders"""
+    """save_as creates the fileRule folders"""
     data = create_test_data
     maya_dcc = create_maya_dcc
 
@@ -1412,7 +1414,7 @@ def test_save_as_creates_the_workspace_file_rule_folders(
 
 
 def test_is_in_repo_working_properly(create_test_data, create_maya_dcc):
-    """testing if Maya.is_in_repo() is working properly"""
+    """Maya.is_in_repo() is working properly"""
     data = create_test_data
     maya_dcc = create_maya_dcc
     repo_path = data["repo1"].path
@@ -1427,7 +1429,7 @@ def test_is_in_repo_working_properly(create_test_data, create_maya_dcc):
 def test_move_to_local_is_working_properly(
     create_test_data, create_maya_dcc, trash_bin
 ):
-    """testing if Maya.move_to_local is working properly"""
+    """Maya.move_to_local is working properly"""
     data = create_test_data
     maya_dcc = create_maya_dcc
 
@@ -1460,7 +1462,7 @@ def test_move_to_local_is_working_properly(
 def test_update_first_level_versions_does_not_update_namespaces(
     create_test_data, create_maya_dcc
 ):
-    """testing if update_first_level_versions method does not updates
+    """update_first_level_versions method does not updates
     namespaces
     """
     data = create_test_data

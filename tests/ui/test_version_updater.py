@@ -33,7 +33,7 @@ from anima.dcc.testing import TestDCC
 from anima.ui.dialogs import version_updater
 from anima.ui.lib import QtCore, QtGui
 
-logger = logging.getLogger('anima.ui.version_updater')
+logger = logging.getLogger("anima.ui.version_updater")
 logger.setLevel(logging.WARNING)
 
 
@@ -43,24 +43,21 @@ class ExportAs(Exception):
 
 
 class VersionUpdaterTester(unittest.TestCase):
-    """Tests the Version Updater UI instance
-    """
+    """Tests the Version Updater UI instance"""
 
     def show_dialog(self, dialog):
-        """show the given dialog
-        """
+        """show the given dialog"""
         dialog.show()
         self.app.exec_()
         self.app.connect(
             self.app,
             QtCore.SIGNAL("lastWindowClosed()"),
             self.app,
-            QtCore.SLOT("quit()")
+            QtCore.SLOT("quit()"),
         )
 
     def setUp(self):
-        """setup the tests
-        """
+        """setup the tests"""
         # -----------------------------------------------------------------
         # start of the setUp
         # create the environment variable and point it to a temp directory
@@ -70,10 +67,7 @@ class VersionUpdaterTester(unittest.TestCase):
         self.temp_repo_path = tempfile.mkdtemp()
 
         self.user1 = User(
-            name='User 1',
-            login='user1',
-            email='user1@users.com',
-            password='12345'
+            name="User 1", login="user1", email="user1@users.com", password="12345"
         )
         DBSession.add(self.user1)
         DBSession.commit()
@@ -85,191 +79,175 @@ class VersionUpdaterTester(unittest.TestCase):
         # local_session.save()
 
         self.repo1 = Repository(
-            name='Test Project Repository',
+            name="Test Project Repository",
             linux_path=self.temp_repo_path,
             windows_path=self.temp_repo_path,
-            osx_path=self.temp_repo_path
+            osx_path=self.temp_repo_path,
         )
 
-        self.status_new = Status.query.filter_by(code='NEW').first()
-        self.status_wip = Status.query.filter_by(code='WIP').first()
-        self.status_comp = Status.query.filter_by(code='CMPL').first()
+        self.status_new = Status.query.filter_by(code="NEW").first()
+        self.status_wip = Status.query.filter_by(code="WIP").first()
+        self.status_comp = Status.query.filter_by(code="CMPL").first()
 
         self.task_template = FilenameTemplate(
-            name='Task Template',
-            target_entity_type='Task',
-            path='{{project.code}}/'
-                 '{%- for parent_task in parent_tasks -%}'
-                 '{{parent_task.nice_name}}/'
-                 '{%- endfor -%}',
-            filename='{{version.nice_name}}'
-                     '_v{{"%03d"|format(version.version_number)}}',
+            name="Task Template",
+            target_entity_type="Task",
+            path="{{project.code}}/"
+            "{%- for parent_task in parent_tasks -%}"
+            "{{parent_task.nice_name}}/"
+            "{%- endfor -%}",
+            filename="{{version.nice_name}}"
+            '_v{{"%03d"|format(version.version_number)}}',
         )
 
         self.asset_template = FilenameTemplate(
-            name='Asset Template',
-            target_entity_type='Asset',
-            path='{{project.code}}/'
-                 '{%- for parent_task in parent_tasks -%}'
-                 '{{parent_task.nice_name}}/'
-                 '{%- endfor -%}',
-            filename='{{version.nice_name}}'
-                     '_v{{"%03d"|format(version.version_number)}}',
+            name="Asset Template",
+            target_entity_type="Asset",
+            path="{{project.code}}/"
+            "{%- for parent_task in parent_tasks -%}"
+            "{{parent_task.nice_name}}/"
+            "{%- endfor -%}",
+            filename="{{version.nice_name}}"
+            '_v{{"%03d"|format(version.version_number)}}',
         )
 
         self.shot_template = FilenameTemplate(
-            name='Shot Template',
-            target_entity_type='Shot',
-            path='{{project.code}}/'
-                 '{%- for parent_task in parent_tasks -%}'
-                 '{{parent_task.nice_name}}/'
-                 '{%- endfor -%}',
-            filename='{{version.nice_name}}'
-                     '_v{{"%03d"|format(version.version_number)}}',
+            name="Shot Template",
+            target_entity_type="Shot",
+            path="{{project.code}}/"
+            "{%- for parent_task in parent_tasks -%}"
+            "{{parent_task.nice_name}}/"
+            "{%- endfor -%}",
+            filename="{{version.nice_name}}"
+            '_v{{"%03d"|format(version.version_number)}}',
         )
 
         self.sequence_template = FilenameTemplate(
-            name='Sequence Template',
-            target_entity_type='Sequence',
-            path='{{project.code}}/'
-                 '{%- for parent_task in parent_tasks -%}'
-                 '{{parent_task.nice_name}}/'
-                 '{%- endfor -%}',
-            filename='{{version.nice_name}}'
-                     '_v{{"%03d"|format(version.version_number)}}',
+            name="Sequence Template",
+            target_entity_type="Sequence",
+            path="{{project.code}}/"
+            "{%- for parent_task in parent_tasks -%}"
+            "{{parent_task.nice_name}}/"
+            "{%- endfor -%}",
+            filename="{{version.nice_name}}"
+            '_v{{"%03d"|format(version.version_number)}}',
         )
 
         self.structure = Structure(
-            name='Project Struture',
-            templates=[self.task_template, self.asset_template,
-                       self.shot_template, self.sequence_template]
+            name="Project Struture",
+            templates=[
+                self.task_template,
+                self.asset_template,
+                self.shot_template,
+                self.sequence_template,
+            ],
         )
 
-        self.project_status_list = \
-            StatusList.query.filter_by(target_entity_type='Project').first()
+        self.project_status_list = StatusList.query.filter_by(
+            target_entity_type="Project"
+        ).first()
 
         self.image_format = ImageFormat(
-            name='HD 1080',
-            width=1920,
-            height=1080,
-            pixel_aspect=1.0
+            name="HD 1080", width=1920, height=1080, pixel_aspect=1.0
         )
 
         # create a test project
         self.project = Project(
-            name='Test Project',
-            code='TP',
+            name="Test Project",
+            code="TP",
             repository=self.repo1,
             status_list=self.project_status_list,
             structure=self.structure,
-            image_format=self.image_format
+            image_format=self.image_format,
         )
 
-        self.task_status_list =\
-            StatusList.query.filter_by(target_entity_type='Task').first()
-        self.asset_status_list =\
-            StatusList.query.filter_by(target_entity_type='Asset').first()
-        self.shot_status_list =\
-            StatusList.query.filter_by(target_entity_type='Shot').first()
-        self.sequence_status_list =\
-            StatusList.query.filter_by(target_entity_type='Sequence').first()
+        self.task_status_list = StatusList.query.filter_by(
+            target_entity_type="Task"
+        ).first()
+        self.asset_status_list = StatusList.query.filter_by(
+            target_entity_type="Asset"
+        ).first()
+        self.shot_status_list = StatusList.query.filter_by(
+            target_entity_type="Shot"
+        ).first()
+        self.sequence_status_list = StatusList.query.filter_by(
+            target_entity_type="Sequence"
+        ).first()
 
         self.character_type = Type(
-            name='Character',
-            code='CHAR',
-            target_entity_type='Asset'
+            name="Character", code="CHAR", target_entity_type="Asset"
         )
 
         # create a test series of root task
-        self.task1 = Task(
-            name='Test Task 1',
-            project=self.project
-        )
-        self.task2 = Task(
-            name='Test Task 2',
-            project=self.project
-        )
-        self.task3 = Task(
-            name='Test Task 3',
-            project=self.project
-        )
+        self.task1 = Task(name="Test Task 1", project=self.project)
+        self.task2 = Task(name="Test Task 2", project=self.project)
+        self.task3 = Task(name="Test Task 3", project=self.project)
 
         # then a couple of child tasks
-        self.task4 = Task(
-            name='Test Task 4',
-            parent=self.task1
-        )
-        self.task5 = Task(
-            name='Test Task 5',
-            parent=self.task1
-        )
-        self.task6 = Task(
-            name='Test Task 6',
-            parent=self.task1
-        )
+        self.task4 = Task(name="Test Task 4", parent=self.task1)
+        self.task5 = Task(name="Test Task 5", parent=self.task1)
+        self.task6 = Task(name="Test Task 6", parent=self.task1)
 
         # create a root asset
         self.asset1 = Asset(
-            name='Asset 1',
-            code='asset1',
+            name="Asset 1",
+            code="asset1",
             type=self.character_type,
-            project=self.project
+            project=self.project,
         )
 
         # create a child asset
         self.asset2 = Asset(
-            name='Asset 2',
-            code='asset2',
-            type=self.character_type,
-            parent=self.task4
+            name="Asset 2", code="asset2", type=self.character_type, parent=self.task4
         )
 
         # create a root Sequence
-        self.sequence1 = Sequence(
-            name='Sequence1',
-            code='SEQ1',
-            project=self.project
-        )
+        self.sequence1 = Sequence(name="Sequence1", code="SEQ1", project=self.project)
 
         # create a child Sequence
-        self.sequence2 = Sequence(
-            name='Sequence2',
-            code='SEQ2',
-            parent=self.task2
-        )
+        self.sequence2 = Sequence(name="Sequence2", code="SEQ2", parent=self.task2)
 
         # create a root Shot
-        self.shot1 = Shot(
-            name='SH001',
-            code='SH001',
-            project=self.project
-        )
+        self.shot1 = Shot(name="SH001", code="SH001", project=self.project)
 
         # create a child Shot (child of a Sequence)
-        self.shot2 = Shot(
-            name='SH002',
-            code='SH002',
-            parent=self.sequence1
-        )
+        self.shot2 = Shot(name="SH002", code="SH002", parent=self.sequence1)
 
         # create a child Shot (child of a child Sequence)
-        self.shot3 = Shot(
-            name='SH003',
-            code='SH003',
-            parent=self.sequence2
-        )
+        self.shot3 = Shot(name="SH003", code="SH003", parent=self.sequence2)
 
         # commit everything
-        DBSession.add_all([
-            self.repo1, self.status_new, self.status_wip, self.status_comp,
-            self.project_status_list, self.project, self.task_status_list,
-            self.asset_status_list, self.shot_status_list,
-            self.sequence_status_list, self.task1, self.task2, self.task3,
-            self.task4, self.task5, self.task6, self.asset1, self.asset2,
-            self.shot1, self.shot2, self.shot3, self.sequence1, self.sequence2,
-            self.task_template, self.asset_template, self.shot_template,
-            self.sequence_template
-        ])
+        DBSession.add_all(
+            [
+                self.repo1,
+                self.status_new,
+                self.status_wip,
+                self.status_comp,
+                self.project_status_list,
+                self.project,
+                self.task_status_list,
+                self.asset_status_list,
+                self.shot_status_list,
+                self.sequence_status_list,
+                self.task1,
+                self.task2,
+                self.task3,
+                self.task4,
+                self.task5,
+                self.task6,
+                self.asset1,
+                self.asset2,
+                self.shot1,
+                self.shot2,
+                self.shot3,
+                self.sequence1,
+                self.sequence2,
+                self.task_template,
+                self.asset_template,
+                self.shot_template,
+                self.sequence_template,
+            ]
+        )
         DBSession.commit()
 
         # now create versions
@@ -294,87 +272,87 @@ class VersionUpdaterTester(unittest.TestCase):
                 DBSession.commit()
 
             # just renew the scene
-            #pymel.core.newFile(force=True)
+            # pymel.core.newFile(force=True)
 
             v = Version(task=variant)
             v.update_paths()
             DBSession.add(v)
             DBSession.commit()
-            #self.maya_dcc.save_as(v)
+            # self.maya_dcc.save_as(v)
             return v
 
         # asset2
-        self.version1 = create_version(self.asset2, 'Main')
-        self.version2 = create_version(self.asset2, 'Main')
-        self.version3 = create_version(self.asset2, 'Main')
-        self.version3.description = 'Test Description'
+        self.version1 = create_version(self.asset2, "Main")
+        self.version2 = create_version(self.asset2, "Main")
+        self.version3 = create_version(self.asset2, "Main")
+        self.version3.description = "Test Description"
 
-        self.version4 = create_version(self.asset2, 'Variant1')
-        self.version5 = create_version(self.asset2, 'Variant1')
-        self.version6 = create_version(self.asset2, 'Variant1')
+        self.version4 = create_version(self.asset2, "Variant1")
+        self.version5 = create_version(self.asset2, "Variant1")
+        self.version6 = create_version(self.asset2, "Variant1")
 
         # task5
-        self.version7 = create_version(self.task5, 'Main')
-        self.version8 = create_version(self.task5, 'Main')
-        self.version9 = create_version(self.task5, 'Main')
+        self.version7 = create_version(self.task5, "Main")
+        self.version8 = create_version(self.task5, "Main")
+        self.version9 = create_version(self.task5, "Main")
 
-        self.version10 = create_version(self.task5, 'Variant1')
-        self.version11 = create_version(self.task5, 'Variant1')
-        self.version12 = create_version(self.task5, 'Variant1')
+        self.version10 = create_version(self.task5, "Variant1")
+        self.version11 = create_version(self.task5, "Variant1")
+        self.version12 = create_version(self.task5, "Variant1")
 
         # task6
-        self.version13 = create_version(self.task6, 'Main')
-        self.version14 = create_version(self.task6, 'Main')
-        self.version15 = create_version(self.task6, 'Main')
+        self.version13 = create_version(self.task6, "Main")
+        self.version14 = create_version(self.task6, "Main")
+        self.version15 = create_version(self.task6, "Main")
 
-        self.version16 = create_version(self.task6, 'Variant1')
-        self.version17 = create_version(self.task6, 'Variant1')
-        self.version18 = create_version(self.task6, 'Variant1')
+        self.version16 = create_version(self.task6, "Variant1")
+        self.version17 = create_version(self.task6, "Variant1")
+        self.version18 = create_version(self.task6, "Variant1")
 
         # shot3
-        self.version19 = create_version(self.shot3, 'Main')
-        self.version20 = create_version(self.shot3, 'Main')
-        self.version21 = create_version(self.shot3, 'Main')
+        self.version19 = create_version(self.shot3, "Main")
+        self.version20 = create_version(self.shot3, "Main")
+        self.version21 = create_version(self.shot3, "Main")
 
-        self.version22 = create_version(self.shot3, 'Variant1')
-        self.version23 = create_version(self.shot3, 'Variant1')
-        self.version24 = create_version(self.shot3, 'Variant1')
+        self.version22 = create_version(self.shot3, "Variant1")
+        self.version23 = create_version(self.shot3, "Variant1")
+        self.version24 = create_version(self.shot3, "Variant1")
 
         # task3
-        self.version25 = create_version(self.task3, 'Main')
-        self.version26 = create_version(self.task3, 'Main')
-        self.version27 = create_version(self.task3, 'Main')
+        self.version25 = create_version(self.task3, "Main")
+        self.version26 = create_version(self.task3, "Main")
+        self.version27 = create_version(self.task3, "Main")
 
-        self.version28 = create_version(self.task3, 'Variant1')
-        self.version29 = create_version(self.task3, 'Variant1')
-        self.version30 = create_version(self.task3, 'Variant1')
+        self.version28 = create_version(self.task3, "Variant1")
+        self.version29 = create_version(self.task3, "Variant1")
+        self.version30 = create_version(self.task3, "Variant1")
 
         # asset1
-        self.version31 = create_version(self.asset1, 'Main')
-        self.version32 = create_version(self.asset1, 'Main')
-        self.version33 = create_version(self.asset1, 'Main')
+        self.version31 = create_version(self.asset1, "Main")
+        self.version32 = create_version(self.asset1, "Main")
+        self.version33 = create_version(self.asset1, "Main")
 
-        self.version34 = create_version(self.asset1, 'Variant1')
-        self.version35 = create_version(self.asset1, 'Variant1')
-        self.version36 = create_version(self.asset1, 'Variant1')
+        self.version34 = create_version(self.asset1, "Variant1")
+        self.version35 = create_version(self.asset1, "Variant1")
+        self.version36 = create_version(self.asset1, "Variant1")
 
         # shot2
-        self.version37 = create_version(self.shot2, 'Main')
-        self.version38 = create_version(self.shot2, 'Main')
-        self.version39 = create_version(self.shot2, 'Main')
+        self.version37 = create_version(self.shot2, "Main")
+        self.version38 = create_version(self.shot2, "Main")
+        self.version39 = create_version(self.shot2, "Main")
 
-        self.version40 = create_version(self.shot2, 'Variant1')
-        self.version41 = create_version(self.shot2, 'Variant1')
-        self.version42 = create_version(self.shot2, 'Variant1')
+        self.version40 = create_version(self.shot2, "Variant1")
+        self.version41 = create_version(self.shot2, "Variant1")
+        self.version42 = create_version(self.shot2, "Variant1")
 
         # shot1
-        self.version43 = create_version(self.shot1, 'Main')
-        self.version44 = create_version(self.shot1, 'Main')
-        self.version45 = create_version(self.shot1, 'Main')
+        self.version43 = create_version(self.shot1, "Main")
+        self.version44 = create_version(self.shot1, "Main")
+        self.version45 = create_version(self.shot1, "Main")
 
-        self.version46 = create_version(self.shot1, 'Variant1')
-        self.version47 = create_version(self.shot1, 'Variant1')
-        self.version48 = create_version(self.shot1, 'Variant1')
+        self.version46 = create_version(self.shot1, "Variant1")
+        self.version47 = create_version(self.shot1, "Variant1")
+        self.version48 = create_version(self.shot1, "Variant1")
 
         # +- task1
         # |  |
@@ -521,34 +499,32 @@ class VersionUpdaterTester(unittest.TestCase):
 
         # reference_resolution
         self.reference_resolution = {
-            'root': [self.version12, self.version45],
-            'leave': [self.version48, self.version45],
-            'update': [self.version2],
-            'create': [self.version5, self.version12]
+            "root": [self.version12, self.version45],
+            "leave": [self.version48, self.version45],
+            "update": [self.version2],
+            "create": [self.version5, self.version12],
         }
 
         # create a buffer for extra created files, which are to be removed
         self.remove_these_files_buffer = []
 
-        self.test_dcc = TestDCC(name='Test DCC')
+        self.test_dcc = TestDCC(name="Test DCC")
         self.test_dcc._version = self.version15
 
         if not QtGui.QApplication.instance():
-            logger.debug('creating a new QApplication')
+            logger.debug("creating a new QApplication")
             self.app = QtGui.QApplication(sys.argv)
         else:
-            logger.debug('using the present QApplication: {}'.format(QtGui.qApp))
+            logger.debug("using the present QApplication: {}".format(QtGui.qApp))
             # self.app = QtGui.qApp
             self.app = QtGui.QApplication.instance()
 
         self.dialog = version_updater.MainDialog(
-            dcc=self.test_dcc,
-            reference_resolution=self.reference_resolution
+            dcc=self.test_dcc, reference_resolution=self.reference_resolution
         )
 
     def tearDown(self):
-        """cleanup the test
-        """
+        """cleanup the test"""
         # set the db.session to None
         DBSession.remove()
 
@@ -562,23 +538,25 @@ class VersionUpdaterTester(unittest.TestCase):
                 shutil.rmtree(f, True)
 
     def test_test_setup(self):
-        """the test setup is correct."""
+        """test setup is correct."""
 
         # check the setup
         visited_versions = []
         for v in self.version15.walk_hierarchy():
             visited_versions.append(v)
-        expected_visited_versions = \
-            [self.version15, self.version12, self.version5, self.version2,
-             self.version45, self.version48]
+        expected_visited_versions = [
+            self.version15,
+            self.version12,
+            self.version5,
+            self.version2,
+            self.version45,
+            self.version48,
+        ]
 
         # print(expected_visited_versions)
         # print(visited_versions)
 
-        self.assertEqual(
-            expected_visited_versions,
-            visited_versions
-        )
+        self.assertEqual(expected_visited_versions, visited_versions)
 
     def test_versions_treeView_displays_the_root_versions_correctly(self):
         """versions_treeView is displaying the root versions
@@ -701,21 +679,31 @@ class VersionUpdaterTester(unittest.TestCase):
         version48_item = version45_item.child(0, 0)
 
         # version12 columns
-        nice_name_item = version_tree_model.itemFromIndex(version_tree_model.index(0, 2))
-        variant_column_item = version_tree_model.itemFromIndex(version_tree_model.index(0, 3))
-        current_version_column_item = version_tree_model.itemFromIndex(version_tree_model.index(0, 4))
-        latest_version_column_item = version_tree_model.itemFromIndex(version_tree_model.index(0, 5))
-        action_column_item = version_tree_model.itemFromIndex(version_tree_model.index(0, 6))
-        description_column_item = version_tree_model.itemFromIndex(version_tree_model.index(0, 7))
+        nice_name_item = version_tree_model.itemFromIndex(
+            version_tree_model.index(0, 2)
+        )
+        variant_column_item = version_tree_model.itemFromIndex(
+            version_tree_model.index(0, 3)
+        )
+        current_version_column_item = version_tree_model.itemFromIndex(
+            version_tree_model.index(0, 4)
+        )
+        latest_version_column_item = version_tree_model.itemFromIndex(
+            version_tree_model.index(0, 5)
+        )
+        action_column_item = version_tree_model.itemFromIndex(
+            version_tree_model.index(0, 6)
+        )
+        description_column_item = version_tree_model.itemFromIndex(
+            version_tree_model.index(0, 7)
+        )
 
-        self.assertEqual(
-            nice_name_item.text(),
-            'Test_Task_1_Test_Task_5_Variant1_v003')
-        self.assertEqual(variant_column_item.text(), 'Variant1')
-        self.assertEqual(current_version_column_item.text(), '3')
-        self.assertEqual(latest_version_column_item.text(), '3')
-        self.assertEqual(action_column_item.text(), 'create')
-        self.assertEqual(description_column_item.text(), '')
+        self.assertEqual(nice_name_item.text(), "Test_Task_1_Test_Task_5_Variant1_v003")
+        self.assertEqual(variant_column_item.text(), "Variant1")
+        self.assertEqual(current_version_column_item.text(), "3")
+        self.assertEqual(latest_version_column_item.text(), "3")
+        self.assertEqual(action_column_item.text(), "create")
+        self.assertEqual(description_column_item.text(), "")
 
         # version5 columns
         nice_name_item = version12_item.child(0, 2)
@@ -725,12 +713,12 @@ class VersionUpdaterTester(unittest.TestCase):
         action_column_item = version12_item.child(0, 6)
         description_column_item = version12_item.child(0, 7)
 
-        self.assertEqual(nice_name_item.text(), 'Asset_2_Variant1_v002')
-        self.assertEqual(variant_column_item.text(), 'Variant1')
-        self.assertEqual(current_version_column_item.text(), '2')
-        self.assertEqual(latest_version_column_item.text(), '2')
-        self.assertEqual(action_column_item.text(), 'create')
-        self.assertEqual(description_column_item.text(), '')
+        self.assertEqual(nice_name_item.text(), "Asset_2_Variant1_v002")
+        self.assertEqual(variant_column_item.text(), "Variant1")
+        self.assertEqual(current_version_column_item.text(), "2")
+        self.assertEqual(latest_version_column_item.text(), "2")
+        self.assertEqual(action_column_item.text(), "create")
+        self.assertEqual(description_column_item.text(), "")
 
         # version2 columns
         nice_name_item = version5_item.child(0, 2)
@@ -740,33 +728,39 @@ class VersionUpdaterTester(unittest.TestCase):
         action_column_item = version5_item.child(0, 6)
         description_column_item = version5_item.child(0, 7)
 
-        self.assertEqual(nice_name_item.text(), 'Asset_2_Main_v002')
-        self.assertEqual(variant_column_item.text(), 'Main')
-        self.assertEqual(current_version_column_item.text(), '2')
-        self.assertEqual(latest_version_column_item.text(), '3')
-        self.assertEqual(action_column_item.text(), 'update')
-        self.assertEqual(description_column_item.text(), 'Test Description')
+        self.assertEqual(nice_name_item.text(), "Asset_2_Main_v002")
+        self.assertEqual(variant_column_item.text(), "Main")
+        self.assertEqual(current_version_column_item.text(), "2")
+        self.assertEqual(latest_version_column_item.text(), "3")
+        self.assertEqual(action_column_item.text(), "update")
+        self.assertEqual(description_column_item.text(), "Test Description")
 
         # version45 columns
-        nice_name_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(1, 2))
-        variant_column_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(1, 3))
-        current_version_column_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(1, 4))
-        latest_version_column_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(1, 5))
-        action_column_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(1, 6))
-        description_column_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(1, 7))
+        nice_name_item = version_tree_model.itemFromIndex(
+            version_tree_model.index(1, 2)
+        )
+        variant_column_item = version_tree_model.itemFromIndex(
+            version_tree_model.index(1, 3)
+        )
+        current_version_column_item = version_tree_model.itemFromIndex(
+            version_tree_model.index(1, 4)
+        )
+        latest_version_column_item = version_tree_model.itemFromIndex(
+            version_tree_model.index(1, 5)
+        )
+        action_column_item = version_tree_model.itemFromIndex(
+            version_tree_model.index(1, 6)
+        )
+        description_column_item = version_tree_model.itemFromIndex(
+            version_tree_model.index(1, 7)
+        )
 
-        self.assertEqual(nice_name_item.text(), 'SH001_Main_v003')
-        self.assertEqual(variant_column_item.text(), 'Main')
-        self.assertEqual(current_version_column_item.text(), '3')
-        self.assertEqual(latest_version_column_item.text(), '3')
-        self.assertEqual(action_column_item.text(), '')
-        self.assertEqual(description_column_item.text(), '')
+        self.assertEqual(nice_name_item.text(), "SH001_Main_v003")
+        self.assertEqual(variant_column_item.text(), "Main")
+        self.assertEqual(current_version_column_item.text(), "3")
+        self.assertEqual(latest_version_column_item.text(), "3")
+        self.assertEqual(action_column_item.text(), "")
+        self.assertEqual(description_column_item.text(), "")
 
         # version48
         nice_name_item = version45_item.child(0, 2)
@@ -776,12 +770,12 @@ class VersionUpdaterTester(unittest.TestCase):
         action_column_item = version45_item.child(0, 6)
         description_column_item = version45_item.child(0, 7)
 
-        self.assertEqual(nice_name_item.text(), 'SH001_Variant1_v003')
-        self.assertEqual(variant_column_item.text(), 'Variant1')
-        self.assertEqual(current_version_column_item.text(), '3')
-        self.assertEqual(latest_version_column_item.text(), '3')
-        self.assertEqual(action_column_item.text(), '')
-        self.assertEqual(description_column_item.text(), '')
+        self.assertEqual(nice_name_item.text(), "SH001_Variant1_v003")
+        self.assertEqual(variant_column_item.text(), "Variant1")
+        self.assertEqual(current_version_column_item.text(), "3")
+        self.assertEqual(latest_version_column_item.text(), "3")
+        self.assertEqual(action_column_item.text(), "")
+        self.assertEqual(description_column_item.text(), "")
 
     def test_not_all_of_the_root_version_items_check_state_is_True_by_default(self):
         """not all of the check boxes for all the root items are
@@ -798,18 +792,11 @@ class VersionUpdaterTester(unittest.TestCase):
         index = version_tree_model.index(1, 0)
         version45_item = version_tree_model.itemFromIndex(index)
 
-        self.assertEqual(
-            QtCore.Qt.CheckState.Checked,
-            version12_item.checkState()
-        )
-        self.assertEqual(
-            QtCore.Qt.CheckState.Unchecked,
-            version45_item.checkState()
-        )
+        self.assertEqual(QtCore.Qt.CheckState.Checked, version12_item.checkState())
+        self.assertEqual(QtCore.Qt.CheckState.Unchecked, version45_item.checkState())
 
     def test_only_update_items_have_check_boxes(self):
-        """there are checkboxes only on the update items
-        """
+        """there are checkboxes only on the update items"""
         # check root rows
         version_tree_model = self.dialog.versions_treeView.model()
 
@@ -824,8 +811,7 @@ class VersionUpdaterTester(unittest.TestCase):
         self.assertFalse(version45_item.isCheckable())
 
     def test_only_root_items_have_check_boxes(self):
-        """there are checkboxes only on the root items
-        """
+        """there are checkboxes only on the root items"""
         # self.show_dialog(self.dialog)
         # check root rows
         version_tree_model = self.dialog.versions_treeView.model()
@@ -853,8 +839,7 @@ class VersionUpdaterTester(unittest.TestCase):
         self.assertFalse(version48_item.isCheckable())
 
     def test_there_is_an_open_button_on_deeper_update_items(self):
-        """there are Open buttons on deeper update items
-        """
+        """there are Open buttons on deeper update items"""
         # self.show_dialog(self.dialog)
 
         # self.show_dialog(self.dialog)
@@ -883,20 +868,17 @@ class VersionUpdaterTester(unittest.TestCase):
         version48_item = version45_item.child(0, 0)
         self.assertFalse(version48_item.isCheckable())
 
-    def test_generate_reference_resolution_generate_a_new_reference_resolution_correctly(self):
+    def test_generate_reference_resolution_generate_a_new_reference_resolution_correctly(
+        self,
+    ):
         """version_updater.generate_reference_resolution() method
         will return a new reference_resolution according to the checked
         versions
         """
         reference_resolution = self.dialog.generate_reference_resolution()
         self.assertEqual(
-            {
-                'root': [],
-                'leave': [],
-                'update': [self.version12],
-                'create': []
-            },
-            reference_resolution
+            {"root": [], "leave": [], "update": [self.version12], "create": []},
+            reference_resolution,
         )
 
         # now disable first version12_item
@@ -910,21 +892,13 @@ class VersionUpdaterTester(unittest.TestCase):
         version12_item.setCheckState(QtCore.Qt.CheckState.Unchecked)
         reference_resolution = self.dialog.generate_reference_resolution()
         self.assertEqual(
-            {
-                'root': [],
-                'leave': [],
-                'update': [],
-                'create': []
-            },
-            reference_resolution
+            {"root": [], "leave": [], "update": [], "create": []}, reference_resolution
         )
 
     def test_update_pushButton_will_call_dcc_update_reference_versions_method(self):
-        """update_pushButton calls Test_DCC.update_reference_versions method
-        """
+        """update_pushButton calls Test_DCC.update_reference_versions method"""
         self.assertRaises(
-            KeyError,
-            self.test_dcc.test_data.__getitem__, 'update_reference_versions'
+            KeyError, self.test_dcc.test_data.__getitem__, "update_reference_versions"
         )
         # self.show_dialog(self.dialog)
 
@@ -932,8 +906,7 @@ class VersionUpdaterTester(unittest.TestCase):
         # print(self.test_dcc.test_data)
 
         self.assertEqual(
-            1,
-            self.test_dcc.test_data['update_reference_versions']['call_count']
+            1, self.test_dcc.test_data["update_reference_versions"]["call_count"]
         )
 
     def test_select_none_pushButton_will_deselect_all_check_boxes_when_clicked(self):
@@ -988,12 +961,9 @@ class VersionUpdaterTester(unittest.TestCase):
 
         self.test_dcc._version = self.version1
 
-        new_dialog = version_updater.MainDialog(
-            dcc=self.test_dcc
-        )
+        new_dialog = version_updater.MainDialog(dcc=self.test_dcc)
         self.assertEqual(
-            new_dialog.reference_resolution,
-            self.test_dcc.check_references()
+            new_dialog.reference_resolution, self.test_dcc.check_references()
         )
 
     def test_init_will_raise_a_RuntimeError_if_the_current_version_is_None(self):
@@ -1007,11 +977,7 @@ class VersionUpdaterTester(unittest.TestCase):
         original = QtGui.QMessageBox.critical
         QtGui.QMessageBox.critical = patched
 
-        self.assertRaises(
-            RuntimeError,
-            version_updater.MainDialog,
-            dcc=self.test_dcc
-        )
+        self.assertRaises(RuntimeError, version_updater.MainDialog, dcc=self.test_dcc)
 
         # restore QMessageBox.critical
         QtGui.QMessageBox.critical = original

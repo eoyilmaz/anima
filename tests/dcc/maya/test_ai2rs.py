@@ -334,7 +334,7 @@ def test_conversion_of_ai_standard_to_red_shift_material_bump_properties(
 
 
 def test_node_type_is_not_on_the_spec_sheet(create_pymel, setup_scene):
-    """testing if no error will be raised when the given node type is not
+    """no error will be raised when the given node type is not
     on the conversion spec sheet
     """
     pm = create_pymel
@@ -346,7 +346,7 @@ def test_node_type_is_not_on_the_spec_sheet(create_pymel, setup_scene):
 
 
 # def test_texture_files_converted_to_rsmap(create_pymel, setup_scene):
-#     """testing if texture files are converted to rstexbin files"""
+#     """texture files are converted to rstexbin files"""
 #     pm = create_pymel
 #     file_texture_node = pm.shadingNode("file", asTexture=1)
 #     texture_full_path = os.path.join(HERE, "test_data", "texture.png")
@@ -362,7 +362,7 @@ def test_node_type_is_not_on_the_spec_sheet(create_pymel, setup_scene):
 
 
 def test_mesh_subdiv_attributes(create_pymel, setup_scene):
-    """testing if mesh attributes are transferred correctly"""
+    """mesh attributes are transferred correctly"""
     pm = create_pymel
     mesh_node = pm.createNode("mesh")
 
@@ -394,7 +394,7 @@ def test_mesh_subdiv_attributes(create_pymel, setup_scene):
 
 
 def test_convert_is_working_properly(setup_scene_2):
-    """testing if convert is working properly"""
+    """convert is working properly"""
     from anima.render.redshift import RedShiftTextureProcessor
 
     texture_full_path = os.path.join(HERE, "test_data", "texture.png")

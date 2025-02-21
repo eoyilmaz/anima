@@ -174,6 +174,7 @@ def test_get_intermediate_tasks(migration_test_data):
     """Test get_intermediate_tasks() function."""
     data = migration_test_data
     from anima.ui.dialogs import asset_migration_tool_dialog
+
     result = asset_migration_tool_dialog.get_intermediate_tasks(
         data["environments"], data["building1_yapi_look_dev"]
     )
@@ -183,7 +184,7 @@ def test_get_intermediate_tasks(migration_test_data):
         data["building1"],
         data["building1_props"],
         data["building1_yapi"],
-        data["building1_yapi_look_dev"]
+        data["building1_yapi_look_dev"],
     ]
     assert result == expected
 
@@ -637,40 +638,68 @@ def test_migrating_complex_env_asset_1(
         data["building1"].id: {},
         data["building1_layout"].id: {
             "variants": {
-                "Main": {"versions": [data["building1_layout_main_v003"].version_number]},
+                "Main": {
+                    "versions": [data["building1_layout_main_v003"].version_number]
+                },
             },
         },
         data["building1_look_dev"].id: {
             "variants": {
-                "Main": {"versions": [data["building1_look_dev_main_v003"].version_number]},
+                "Main": {
+                    "versions": [data["building1_look_dev_main_v003"].version_number]
+                },
             },
         },
         data["building1_props"].id: {},
         data["building1_yapi"].id: {},
         data["building1_yapi_model"].id: {
-            "variants": {"Main": {"versions": [data["building1_yapi_model_main_v003"].version_number]}}
+            "variants": {
+                "Main": {
+                    "versions": [data["building1_yapi_model_main_v003"].version_number]
+                }
+            }
         },
         data["building1_yapi_look_dev"].id: {
-            "variants": {"Main": {"versions": [data["building1_yapi_look_dev_main_v003"].version_number]}}
+            "variants": {
+                "Main": {
+                    "versions": [
+                        data["building1_yapi_look_dev_main_v003"].version_number
+                    ]
+                }
+            }
         },
         data["building2"].id: {},
         data["building2_layout"].id: {
             "variants": {
-                "Main": {"versions": [data["building2_layout_main_v003"].version_number]},
+                "Main": {
+                    "versions": [data["building2_layout_main_v003"].version_number]
+                },
             },
         },
         data["building2_look_dev"].id: {
             "variants": {
-                "Main": {"versions": [data["building2_look_dev_main_v003"].version_number]},
+                "Main": {
+                    "versions": [data["building2_look_dev_main_v003"].version_number]
+                },
             },
         },
         data["building2_props"].id: {},
         data["building2_yapi"].id: {},
         data["building2_yapi_model"].id: {
-            "variants": {"Main": {"versions": [data["building2_yapi_model_main_v003"].version_number]}}
+            "variants": {
+                "Main": {
+                    "versions": [data["building2_yapi_model_main_v003"].version_number]
+                }
+            }
         },
         data["building2_yapi_look_dev"].id: {
-            "variants": {"Main": {"versions": [data["building2_yapi_look_dev_main_v003"].version_number]}}
+            "variants": {
+                "Main": {
+                    "versions": [
+                        data["building2_yapi_look_dev_main_v003"].version_number
+                    ]
+                }
+            }
         },
         data["ext1_props"].id: {},
         data["prop1"].id: {},
@@ -687,7 +716,9 @@ def test_migrating_complex_env_asset_1(
             }
         },
         data["ext1_vegetation"].id: {
-            "variants": {"Main": {"versions": [data["ext1_vegetation_main_v003"].version_number]}}
+            "variants": {
+                "Main": {"versions": [data["ext1_vegetation_main_v003"].version_number]}
+            }
         },
     }
 
@@ -1137,40 +1168,68 @@ def test_migrating_complex_env_asset_2(
         data["building1"].id: {},
         data["building1_layout"].id: {
             "variants": {
-                "Main": {"versions": [data["building1_layout_main_v003"].version_number]},
+                "Main": {
+                    "versions": [data["building1_layout_main_v003"].version_number]
+                },
             },
         },
         data["building1_look_dev"].id: {
             "variants": {
-                "Main": {"versions": [data["building1_look_dev_main_v003"].version_number]},
+                "Main": {
+                    "versions": [data["building1_look_dev_main_v003"].version_number]
+                },
             },
         },
         data["building1_props"].id: {},
         data["building1_yapi"].id: {},
         data["building1_yapi_model"].id: {
-            "variants": {"Main": {"versions": [data["building1_yapi_model_main_v003"].version_number]}}
+            "variants": {
+                "Main": {
+                    "versions": [data["building1_yapi_model_main_v003"].version_number]
+                }
+            }
         },
         data["building1_yapi_look_dev"].id: {
-            "variants": {"Main": {"versions": [data["building1_yapi_look_dev_main_v003"].version_number]}}
+            "variants": {
+                "Main": {
+                    "versions": [
+                        data["building1_yapi_look_dev_main_v003"].version_number
+                    ]
+                }
+            }
         },
         data["building2"].id: {},
         data["building2_layout"].id: {
             "variants": {
-                "Main": {"versions": [data["building2_layout_main_v003"].version_number]},
+                "Main": {
+                    "versions": [data["building2_layout_main_v003"].version_number]
+                },
             },
         },
         data["building2_look_dev"].id: {
             "variants": {
-                "Main": {"versions": [data["building2_look_dev_main_v003"].version_number]},
+                "Main": {
+                    "versions": [data["building2_look_dev_main_v003"].version_number]
+                },
             },
         },
         data["building2_props"].id: {},
         data["building2_yapi"].id: {},
         data["building2_yapi_model"].id: {
-            "variants": {"Main": {"versions": [data["building2_yapi_model_main_v003"].version_number]}}
+            "variants": {
+                "Main": {
+                    "versions": [data["building2_yapi_model_main_v003"].version_number]
+                }
+            }
         },
         data["building2_yapi_look_dev"].id: {
-            "variants": {"Main": {"versions": [data["building2_yapi_look_dev_main_v003"].version_number]}}
+            "variants": {
+                "Main": {
+                    "versions": [
+                        data["building2_yapi_look_dev_main_v003"].version_number
+                    ]
+                }
+            }
         },
         data["ext1_props"].id: {},
         data["prop1"].id: {},
@@ -1187,7 +1246,9 @@ def test_migrating_complex_env_asset_2(
             }
         },
         data["ext1_vegetation"].id: {
-            "variants": {"Main": {"versions": [data["ext1_vegetation_main_v003"].version_number]}}
+            "variants": {
+                "Main": {"versions": [data["ext1_vegetation_main_v003"].version_number]}
+            }
         },
     }
 
@@ -1806,7 +1867,9 @@ def test_migrating_with_alternative_versions_data_1(
 #     raise NotImplementedError("Test is not implemented yet")
 
 
-def test_post_publishers_are_run_1(migration_test_data, create_pymel, create_maya_dcc, mock_publishers):
+def test_post_publishers_are_run_1(
+    migration_test_data, create_pymel, create_maya_dcc, mock_publishers
+):
     """Test AssetMigrationTool run post publishers."""
     # EnvAsset
     #   Model (don't move)

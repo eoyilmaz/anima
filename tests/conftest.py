@@ -169,7 +169,7 @@ def create_project():
         path="$REPO{{project.repository.code}}/{{project.code}}/"
         "{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}"
         "/{%- endfor -%}",
-        filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
+        filename='{{version.nice_name}}_r{{"%02d"|format(version.revision_number)}}_v{{"%03d"|format(version.version_number)}}',
         target_entity_type="Task",
     )
     asset_filename_template = FilenameTemplate(
@@ -177,7 +177,7 @@ def create_project():
         path="$REPO{{project.repository.code}}/{{project.code}}/"
         "{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}"
         "/{%- endfor -%}",
-        filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
+        filename='{{version.nice_name}}_r{{"%02d"|format(version.revision_number)}}_v{{"%03d"|format(version.version_number)}}',
         target_entity_type="Asset",
     )
     shot_filename_template = FilenameTemplate(
@@ -185,7 +185,7 @@ def create_project():
         path="$REPO{{project.repository.code}}/{{project.code}}/"
         "{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}"
         "/{%- endfor -%}",
-        filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
+        filename='{{version.nice_name}}_r{{"%02d"|format(version.revision_number)}}_v{{"%03d"|format(version.version_number)}}',
         target_entity_type="Shot",
     )
     sequence_filename_template = FilenameTemplate(
@@ -193,8 +193,16 @@ def create_project():
         path="$REPO{{project.repository.code}}/{{project.code}}/"
         "{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}"
         "/{%- endfor -%}",
-        filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
+        filename='{{version.nice_name}}_r{{"%02d"|format(version.revision_number)}}_v{{"%03d"|format(version.version_number)}}',
         target_entity_type="Sequence",
+    )
+    variant_filename_template = FilenameTemplate(
+        name="Variant Filename Template",
+        path="$REPO{{project.repository.code}}/{{project.code}}/"
+        "{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}"
+        "/{%- endfor -%}",
+        filename='{{version.nice_name}}_r{{"%02d"|format(version.revision_number)}}_v{{"%03d"|format(version.version_number)}}',
+        target_entity_type="Variant",
     )
 
     structure = Structure(
@@ -204,6 +212,7 @@ def create_project():
             asset_filename_template,
             shot_filename_template,
             sequence_filename_template,
+            variant_filename_template,
         ],
     )
 
@@ -301,17 +310,17 @@ def create_project():
     DBSession.commit()
 
     # model Main variant
-    model_main_variant = Variant(task=model, name="Main")
+    model_main_variant = Variant(parent=model, name="Main")
     DBSession.add(model_main_variant)
     DBSession.commit()
 
     # look_dev Main variant
-    look_dev_main_variant = Variant(task=look_dev_task, name="Main")
+    look_dev_main_variant = Variant(parent=look_dev_task, name="Main")
     DBSession.add(look_dev_main_variant)
     DBSession.commit()
 
     # rig Main variant
-    rig_main_variant = Variant(task=rig, name="Main")
+    rig_main_variant = Variant(parent=rig, name="Main")
     DBSession.add(rig_main_variant)
     DBSession.commit()
 
@@ -323,20 +332,20 @@ def create_project():
     DBSession.commit()
 
     look_dev_v1 = Version(task=look_dev_main_variant, version_number=1)
-    look_dev_v1.inputs.append(model_v1)
+    # look_dev_v1.inputs.append(model_v1)
     look_dev_v2 = Version(task=look_dev_main_variant, version_number=2)
-    look_dev_v2.inputs.append(model_v2)
+    # look_dev_v2.inputs.append(model_v2)
     look_dev_v3 = Version(task=look_dev_main_variant, version_number=3)
-    look_dev_v3.inputs.append(model_v3)
+    # look_dev_v3.inputs.append(model_v3)
     DBSession.add_all([look_dev_v1, look_dev_v2, look_dev_v3])
     DBSession.commit()
 
     rig_v1 = Version(task=rig_main_variant, version_number=1)
-    rig_v1.inputs.append(model_v1)
+    # rig_v1.inputs.append(model_v1)
     rig_v2 = Version(task=rig_main_variant, version_number=2)
-    rig_v2.inputs.append(model_v2)
+    # rig_v2.inputs.append(model_v2)
     rig_v3 = Version(task=rig_main_variant, version_number=3)
-    rig_v3.inputs.append(model_v3)
+    # rig_v3.inputs.append(model_v3)
     DBSession.add_all([rig_v1, rig_v2, rig_v3])
     DBSession.commit()
 
@@ -532,7 +541,7 @@ def create_project():
     )
     DBSession.commit()
 
-    yield project
+    yield locals()
 
 
 @pytest.fixture(scope="function")

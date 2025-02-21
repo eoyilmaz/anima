@@ -11,7 +11,7 @@ logger.setLevel(logging.WARNING)
 
 
 def test_create_default_project_will_create_a_folder(trash_bin):
-    """testing if the create_default_project will create a default maya project
+    """create_default_project will create a default maya project
     structure and return the path.
     """
     arch = Archiver()
@@ -26,7 +26,7 @@ def test_create_default_project_will_create_a_folder(trash_bin):
 def test_create_default_project_will_create_a_workspace_mel_file(
     create_test_data, trash_bin
 ):
-    """testing if the create_default_project will create a default maya project
+    """create_default_project will create a default maya project
     structure with a proper workspace.mel
     """
     arch = Archiver()
@@ -43,7 +43,7 @@ def test_create_default_project_will_create_a_workspace_mel_file(
 def test_create_default_project_workspace_mel_content_is_correct(
     create_test_data, trash_bin
 ):
-    """testing if the content of the workspace.mel file is correct when the
+    """content of the workspace.mel file is correct when the
     create_default_project method is used.
     """
     arch = Archiver()
@@ -109,7 +109,7 @@ workspace -fr "shaders" "renderData/shaders";
 def test_create_default_project_workspace_mel_already_exists(
     create_test_data, trash_bin
 ):
-    """testing if no error will be raised when the workspace.mel file is
+    """no error will be raised when the workspace.mel file is
     already there
     """
     data = create_test_data
@@ -125,7 +125,7 @@ def test_create_default_project_workspace_mel_already_exists(
 
 
 def test_flatten_is_working_properly_with_no_references(create_test_data, trash_bin):
-    """testing if the Archiver.flatten() is working properly for a scene
+    """Archiver.flatten() is working properly for a scene
     with no references.
     """
     data = create_test_data
@@ -149,7 +149,7 @@ def test_flatten_is_working_properly_with_no_references(create_test_data, trash_
 def test_flatten_is_working_properly_with_only_one_level_of_references(
     create_test_data, trash_bin, create_pymel, create_maya_dcc
 ):
-    """testing if the Archiver.flatten() is working properly for a scene
+    """Archiver.flatten() is working properly for a scene
     with only one level of references.
     """
     data = create_test_data
@@ -206,7 +206,7 @@ def test_flatten_is_working_properly_with_only_one_level_of_references(
 def test_flatten_is_working_properly_with_only_one_level_of_multiple_references_to_the_same_file(
     create_test_data, trash_bin, create_pymel, create_maya_dcc
 ):
-    """testing if the Archiver.flatten() is working properly for a scene
+    """Archiver.flatten() is working properly for a scene
     with only one level of multiple references to the same file.
     """
     data = create_test_data
@@ -273,7 +273,7 @@ def test_flatten_is_working_properly_with_only_one_level_of_multiple_references_
 def test_flatten_is_working_properly_with_multiple_level_of_references(
     create_test_data, trash_bin, create_pymel, create_maya_dcc
 ):
-    """testing if the Archiver.flatten() is working properly for a scene
+    """Archiver.flatten() is working properly for a scene
     with multiple levels of references.
     """
     data = create_test_data
@@ -353,7 +353,7 @@ def test_flatten_is_working_properly_with_multiple_level_of_references(
 def test_flatten_is_working_properly_with_the_external_files_of_the_references(
     create_test_data, trash_bin, create_pymel, create_maya_dcc
 ):
-    """testing if the Archiver.flatten() is working properly for a scene
+    """Archiver.flatten() is working properly for a scene
     with references that has external files like textures, sound etc.
     """
     data = create_test_data
@@ -476,7 +476,7 @@ def test_flatten_is_working_properly_with_the_external_files_of_the_references(
 def test_flatten_is_working_properly_with_exclude_mask(
     create_test_data, trash_bin, create_pymel, create_maya_dcc
 ):
-    """testing if the Archiver.flatten() is working properly for a scene
+    """Archiver.flatten() is working properly for a scene
     with references that has external files like textures, sound etc. and
     there is also an exclude_mask
     """
@@ -603,7 +603,7 @@ def test_flatten_is_working_properly_with_exclude_mask(
 def test_flatten_is_working_properly_with_multiple_reference_to_the_same_file_with_multiple_level_of_references(
     create_test_data, trash_bin, create_pymel, create_maya_dcc
 ):
-    """testing if the Archiver.flatten() is working properly for a scene
+    """Archiver.flatten() is working properly for a scene
     with multiple levels of references.
     """
     data = create_test_data
@@ -721,7 +721,7 @@ def test_flatten_is_working_properly_with_multiple_reference_to_the_same_file_wi
 def test_flatten_is_working_properly_for_external_files(
     create_test_data, trash_bin, create_pymel, create_maya_dcc
 ):
-    """testing if the Archiver.flatten() is working properly for a scene
+    """Archiver.flatten() is working properly for a scene
     with textures, audio etc. external files
     """
     data = create_test_data
@@ -791,7 +791,7 @@ def test_flatten_is_working_properly_for_external_files(
 def test_flatten_will_restore_the_current_workspace(
     create_test_data, trash_bin, create_pymel, create_maya_dcc
 ):
-    """testing if the Archiver.flatten() will restore the current workspace
+    """Archiver.flatten() will restore the current workspace
     path after it has finished flattening
     """
     data = create_test_data
@@ -813,7 +813,7 @@ def test_flatten_will_restore_the_current_workspace(
 def test_archive_will_create_a_zip_file_from_the_given_directory(
     create_test_data, trash_bin
 ):
-    """testing if the Archiver.archive() will create a zip file and return
+    """Archiver.archive() will create a zip file and return
     the path of it
     """
     data = create_test_data
@@ -828,14 +828,14 @@ def test_archive_will_create_a_zip_file_from_the_given_directory(
     for current_dir_path, dir_names, file_names in os.walk(project_path):
         for dir_name in dir_names:
             original_files.append(
-                os.path.join(current_dir_path, dir_name)[len(parent_path):].replace(
+                os.path.join(current_dir_path, dir_name)[len(parent_path) :].replace(
                     "\\", "/"
                 )
                 + "/"
             )
         for file_name in file_names:
             original_files.append(
-                os.path.join(current_dir_path, file_name)[len(parent_path):].replace(
+                os.path.join(current_dir_path, file_name)[len(parent_path) :].replace(
                     "\\", "/"
                 )
             )
@@ -858,7 +858,7 @@ def test_archive_will_create_a_zip_file_from_the_given_directory(
 def test_bind_to_original_will_bind_the_references_to_their_original_counter_part_in_the_repository(
     create_test_data, trash_bin, create_pymel, create_maya_dcc
 ):
-    """testing if bind_to_original will be able to switch first level
+    """bind_to_original will be able to switch first level
     references with their original counterpart in the repository
     """
     data = create_test_data

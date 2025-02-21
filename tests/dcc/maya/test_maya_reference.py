@@ -835,6 +835,7 @@ def test_update_version_inputs_method_updates_the_inputs_of_the_open_version(
     data = create_test_data
     pm = create_pymel
     maya_dcc = create_maya_dcc
+
     # do not use maya_dcc to open and reference files
     # create references to various versions
     def open_(version):
@@ -905,13 +906,18 @@ def test_reference_method_updates_the_inputs_of_the_referenced_version(
     maya_dcc.open(data["asset2_model_variant1_v003"])
 
     # check prior to referencing
-    assert data["asset2_model_variant1_v002"] not in data["asset2_model_variant1_v003"].inputs
+    assert (
+        data["asset2_model_variant1_v002"]
+        not in data["asset2_model_variant1_v003"].inputs
+    )
 
     # reference something and let Maya update the inputs
     maya_dcc.reference(data["asset2_model_variant1_v002"])
 
     # check if version5 is in version6.inputs
-    assert data["asset2_model_variant1_v002"] in data["asset2_model_variant1_v003"].inputs
+    assert (
+        data["asset2_model_variant1_v002"] in data["asset2_model_variant1_v003"].inputs
+    )
 
     # remove the reference and save the file (do not saveAs)
     pm.listReferences()[0].remove()
@@ -920,7 +926,9 @@ def test_reference_method_updates_the_inputs_of_the_referenced_version(
     pm.saveFile()
 
     # check if version5 still in version6.inputs
-    assert data["asset2_model_variant1_v002"] in data["asset2_model_variant1_v003"].inputs
+    assert (
+        data["asset2_model_variant1_v002"] in data["asset2_model_variant1_v003"].inputs
+    )
 
     # create a new scene and reference the previous version and check if
     pm.newFile(f=True)
@@ -928,7 +936,10 @@ def test_reference_method_updates_the_inputs_of_the_referenced_version(
     maya_dcc.reference(data["asset2_model_variant1_v003"])
 
     # the Version.inputs is updated correctly
-    assert data["asset2_model_variant1_v002"] not in data["asset2_model_variant1_v003"].inputs
+    assert (
+        data["asset2_model_variant1_v002"]
+        not in data["asset2_model_variant1_v003"].inputs
+    )
 
 
 def test_check_references_is_working_properly(

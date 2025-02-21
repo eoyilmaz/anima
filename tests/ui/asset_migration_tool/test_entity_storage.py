@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from stalker import Variant
+from stalker import Task, Variant, Version
+
 from anima.ui.dialogs.asset_migration_tool_dialog import EntityStorage
 
 
@@ -13,14 +14,8 @@ def test_entity_storage_add_entity_asset(
     create_test_db, create_project, prepare_entity_storage
 ):
     """Test EntityStorage.add_entity() with an Asset."""
-    from stalker import Asset
-
-    project = create_project
-    char1 = (
-        Asset.query.filter(Asset.project == project)
-        .filter(Asset.name == "Char1")
-        .first()
-    )
+    data = create_project
+    char1 = data["char1"]
 
     assert char1 is not None
 
@@ -34,14 +29,8 @@ def test_entity_storage_add_entity_task(
     create_test_db, create_project, prepare_entity_storage
 ):
     """Test EntityStorage.add_entity() with a Task."""
-    from stalker import Asset, Task
-
-    project = create_project
-    char1 = (
-        Asset.query.filter(Asset.project == project)
-        .filter(Asset.name == "Char1")
-        .first()
-    )
+    data = create_project
+    char1 = data["char1"]
     model = Task.query.filter(Task.parent == char1).filter(Task.name == "Model").first()
 
     assert model is not None
@@ -57,18 +46,16 @@ def test_entity_storage_add_entity_version(
     create_test_db, create_project, prepare_entity_storage
 ):
     """Test EntityStorage.add_entity() with a Version."""
-    from stalker import Asset, Task, Version
-
-    project = create_project
-    char1 = (
-        Asset.query.filter(Asset.project == project)
-        .filter(Asset.name == "Char1")
-        .first()
-    )
+    data = create_project
+    char1 = data["char1"]
     model = Task.query.filter(Task.parent == char1).filter(Task.name == "Model").first()
     assert model is not None
 
-    model_main_variant = Variant.query.filter(Variant.parent == model).filter(Variant.name == "Main").first()
+    model_main_variant = (
+        Variant.query.filter(Variant.parent == model)
+        .filter(Variant.name == "Main")
+        .first()
+    )
     assert model_main_variant is not None
 
     v1 = model_main_variant.versions[0]
@@ -81,26 +68,16 @@ def test_entity_storage_add_entity_version(
     assert char1 in storage.storage
     assert model in storage.storage[char1]
     assert model_main_variant in storage.storage[char1][model]
-    assert v1 == storage.storage[char1][model][model_main_variantå]
+    assert v1 == storage.storage[char1][model][model_main_variant]
 
 
 def test_entity_storage_add_entities_assets(
     create_test_db, create_project, prepare_entity_storage
 ):
     """Test EntityStorage.add_entity() with a assets."""
-    from stalker import Asset, Task, Version
-
-    project = create_project
-    char1 = (
-        Asset.query.filter(Asset.project == project)
-        .filter(Asset.name == "Char1")
-        .first()
-    )
-    char2 = (
-        Asset.query.filter(Asset.project == project)
-        .filter(Asset.name == "Char2")
-        .first()
-    )
+    data = create_project
+    char1 = data["char1"]
+    char2 = data["char2"]
     assert char1 is not None
     assert char2 is not None
 
@@ -115,14 +92,8 @@ def test_entity_storage_remove_entity_asset(
     create_test_db, create_project, prepare_entity_storage
 ):
     """Test EntityStorage.remove_entity() with a Asset."""
-    from stalker import Asset, Task, Version
-
-    project = create_project
-    char1 = (
-        Asset.query.filter(Asset.project == project)
-        .filter(Asset.name == "Char1")
-        .first()
-    )
+    data = create_project
+    char1 = data["char1"]
     model = Task.query.filter(Task.parent == char1).filter(Task.name == "Model").first()
     assert model is not None
     v1 = model.versions[0]
@@ -142,14 +113,9 @@ def test_entity_storage_remove_entity_task(
     create_test_db, create_project, prepare_entity_storage
 ):
     """Test EntityStorage.remove_entity() with a Task."""
-    from stalker import Asset, Task, Version
+    data = create_project
+    char1 = data["char1"]
 
-    project = create_project
-    char1 = (
-        Asset.query.filter(Asset.project == project)
-        .filter(Asset.name == "Char1")
-        .first()
-    )
     model = Task.query.filter(Task.parent == char1).filter(Task.name == "Model").first()
     assert model is not None
     v1 = model.versions[0]
@@ -171,18 +137,16 @@ def test_entity_storage_remove_entity_version(
     create_test_db, create_project, prepare_entity_storage
 ):
     """Test EntityStorage.remove_entity() with a Version."""
-    from stalker import Asset, Task, Version
-
-    project = create_project
-    char1 = (
-        Asset.query.filter(Asset.project == project)
-        .filter(Asset.name == "Char1")
-        .first()
-    )
+    data = create_project
+    char1 = data["char1"]
     model = Task.query.filter(Task.parent == char1).filter(Task.name == "Model").first()
     assert model is not None
 
-    model_main_variant = Variant.query.filter(Variant.parent == model).filter(Variant.name == "Main").first()
+    model_main_variant = (
+        Variant.query.filter(Variant.parent == model)
+        .filter(Variant.name == "Main")
+        .first()
+    )
     assert model_main_variant is not None
 
     v1 = model_main_variant.versions[0]
@@ -206,14 +170,8 @@ def test_entity_storage_is_in_storage_asset(
     create_test_db, create_project, prepare_entity_storage
 ):
     """Test EntityStorage.is_in_storage() with an Asset."""
-    from stalker import Asset, Task, Version
-
-    project = create_project
-    char1 = (
-        Asset.query.filter(Asset.project == project)
-        .filter(Asset.name == "Char1")
-        .first()
-    )
+    data = create_project
+    char1 = data["char1"]
     model = Task.query.filter(Task.parent == char1).filter(Task.name == "Model").first()
     assert model is not None
     v1 = model.versions[0]

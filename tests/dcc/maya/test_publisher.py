@@ -22,7 +22,7 @@ def setup_publishers():
 def test_save_as_calls_publishers_for_published_versions(
     setup_publishers, create_test_data, create_pymel, create_maya_dcc
 ):
-    """testing if Maya.save_as() runs the registered publishers for
+    """Maya.save_as() runs the registered publishers for
     published versions before really saving the file.
     """
     data = create_test_data
@@ -57,7 +57,7 @@ def test_save_as_calls_publishers_for_published_versions(
 def test_save_as_does_not_call_publishers_for_published_versions(
     setup_publishers, create_test_data, create_pymel, create_maya_dcc
 ):
-    """testing if Maya.save_as() runs the registered publishers for
+    """Maya.save_as() runs the registered publishers for
     published versions before really saving the file.
     """
     data = create_test_data

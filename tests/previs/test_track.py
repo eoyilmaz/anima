@@ -5,12 +5,10 @@ from anima.edit import Track, Clip, File
 
 
 class TrackTestCase(unittest.TestCase):
-    """tests the anima.previs.Track class
-    """
+    """tests the anima.previs.Track class"""
 
     def test_to_xml_method_is_working_properly(self):
-        """testing if the to xml method is working properly
-        """
+        """to xml method is working properly"""
         t = Track()
         t.enabled = True
         t.locked = False
@@ -18,14 +16,16 @@ class TrackTestCase(unittest.TestCase):
         # clip 1
         f = File()
         f.duration = 34
-        f.name = 'shot2'
-        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov'
+        f.name = "shot2"
+        f.pathurl = (
+            "file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov"
+        )
 
         c = Clip()
-        c.id = 'shot2'
+        c.id = "shot2"
         c.start = 1
         c.end = 35
-        c.name = 'shot2'
+        c.name = "shot2"
         c.enabled = True
         c.duration = 34
         c.in_ = 0
@@ -37,14 +37,14 @@ class TrackTestCase(unittest.TestCase):
         # clip 2
         f = File()
         f.duration = 30
-        f.name = 'shot'
-        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot.mov'
+        f.name = "shot"
+        f.pathurl = "file://localhost/home/eoyilmaz/maya/projects/default/data/shot.mov"
 
         c = Clip()
-        c.id = 'shot'
+        c.id = "shot"
         c.start = 35
         c.end = 65
-        c.name = 'shot'
+        c.name = "shot"
         c.enabled = True
         c.duration = 30
         c.in_ = 0
@@ -56,14 +56,16 @@ class TrackTestCase(unittest.TestCase):
         # clip 3
         f = File()
         f.duration = 45
-        f.name = 'shot1'
-        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov'
+        f.name = "shot1"
+        f.pathurl = (
+            "file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov"
+        )
 
         c = Clip()
-        c.id = 'shot1'
+        c.id = "shot1"
         c.start = 65
         c.end = 110
-        c.name = 'shot1'
+        c.name = "shot1"
         c.enabled = True
         c.duration = 45
         c.in_ = 0
@@ -72,8 +74,7 @@ class TrackTestCase(unittest.TestCase):
 
         t.clips.append(c)
 
-        expected_xml = \
-            """<track>
+        expected_xml = """<track>
   <locked>FALSE</locked>
   <enabled>TRUE</enabled>
   <clipitem id="shot2">
@@ -120,104 +121,105 @@ class TrackTestCase(unittest.TestCase):
   </clipitem>
 </track>"""
 
-        self.assertEqual(
-            expected_xml,
-            t.to_xml()
-        )
+        self.assertEqual(expected_xml, t.to_xml())
 
     def test_from_xml_method_is_working_properly(self):
-        """testing if the from_xml method will fill object attributes from the
+        """from_xml method will fill object attributes from the
         given xml node
         """
         from xml.etree import ElementTree
-        track_node = ElementTree.Element('track')
-        locked_node = ElementTree.SubElement(track_node, 'locked')
-        locked_node.text = 'FALSE'
-        enabled_node = ElementTree.SubElement(track_node, 'enabled')
-        enabled_node.text = 'TRUE'
+
+        track_node = ElementTree.Element("track")
+        locked_node = ElementTree.SubElement(track_node, "locked")
+        locked_node.text = "FALSE"
+        enabled_node = ElementTree.SubElement(track_node, "enabled")
+        enabled_node.text = "TRUE"
 
         # clip1
-        clip_node = ElementTree.SubElement(track_node, 'clipitem',
-                                           attrib={'id': 'shot2'})
-        end_node = ElementTree.SubElement(clip_node, 'end')
-        end_node.text = '35'
-        name_node = ElementTree.SubElement(clip_node, 'name')
-        name_node.text = 'shot2'
-        enabled_node = ElementTree.SubElement(clip_node, 'enabled')
-        enabled_node.text = 'True'
-        start_node = ElementTree.SubElement(clip_node, 'start')
-        start_node.text = '1'
-        in_node = ElementTree.SubElement(clip_node, 'in')
-        in_node.text = '0'
-        duration_node = ElementTree.SubElement(clip_node, 'duration')
-        duration_node.text = '34'
-        out_node = ElementTree.SubElement(clip_node, 'out')
-        out_node.text = '34'
+        clip_node = ElementTree.SubElement(
+            track_node, "clipitem", attrib={"id": "shot2"}
+        )
+        end_node = ElementTree.SubElement(clip_node, "end")
+        end_node.text = "35"
+        name_node = ElementTree.SubElement(clip_node, "name")
+        name_node.text = "shot2"
+        enabled_node = ElementTree.SubElement(clip_node, "enabled")
+        enabled_node.text = "True"
+        start_node = ElementTree.SubElement(clip_node, "start")
+        start_node.text = "1"
+        in_node = ElementTree.SubElement(clip_node, "in")
+        in_node.text = "0"
+        duration_node = ElementTree.SubElement(clip_node, "duration")
+        duration_node.text = "34"
+        out_node = ElementTree.SubElement(clip_node, "out")
+        out_node.text = "34"
 
-        file_node = ElementTree.SubElement(clip_node, 'file')
-        duration_node = ElementTree.SubElement(file_node, 'duration')
-        duration_node.text = '34'
-        name_node = ElementTree.SubElement(file_node, 'name')
-        name_node.text = 'shot2'
-        pathurl_node = ElementTree.SubElement(file_node, 'pathurl')
+        file_node = ElementTree.SubElement(clip_node, "file")
+        duration_node = ElementTree.SubElement(file_node, "duration")
+        duration_node.text = "34"
+        name_node = ElementTree.SubElement(file_node, "name")
+        name_node.text = "shot2"
+        pathurl_node = ElementTree.SubElement(file_node, "pathurl")
 
-        pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov'
+        pathurl = "file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov"
         pathurl_node.text = pathurl
 
         # clip2
-        clip_node = ElementTree.SubElement(track_node, 'clipitem',
-                                           attrib={'id': 'shot'})
-        end_node = ElementTree.SubElement(clip_node, 'end')
-        end_node.text = '65'
-        name_node = ElementTree.SubElement(clip_node, 'name')
-        name_node.text = 'shot'
-        enabled_node = ElementTree.SubElement(clip_node, 'enabled')
-        enabled_node.text = 'True'
-        start_node = ElementTree.SubElement(clip_node, 'start')
-        start_node.text = '35'
-        in_node = ElementTree.SubElement(clip_node, 'in')
-        in_node.text = '0'
-        duration_node = ElementTree.SubElement(clip_node, 'duration')
-        duration_node.text = '30'
-        out_node = ElementTree.SubElement(clip_node, 'out')
-        out_node.text = '30'
+        clip_node = ElementTree.SubElement(
+            track_node, "clipitem", attrib={"id": "shot"}
+        )
+        end_node = ElementTree.SubElement(clip_node, "end")
+        end_node.text = "65"
+        name_node = ElementTree.SubElement(clip_node, "name")
+        name_node.text = "shot"
+        enabled_node = ElementTree.SubElement(clip_node, "enabled")
+        enabled_node.text = "True"
+        start_node = ElementTree.SubElement(clip_node, "start")
+        start_node.text = "35"
+        in_node = ElementTree.SubElement(clip_node, "in")
+        in_node.text = "0"
+        duration_node = ElementTree.SubElement(clip_node, "duration")
+        duration_node.text = "30"
+        out_node = ElementTree.SubElement(clip_node, "out")
+        out_node.text = "30"
 
-        file_node = ElementTree.SubElement(clip_node, 'file')
-        duration_node = ElementTree.SubElement(file_node, 'duration')
-        duration_node.text = '30'
-        name_node = ElementTree.SubElement(file_node, 'name')
-        name_node.text = 'shot'
-        pathurl_node = ElementTree.SubElement(file_node, 'pathurl')
+        file_node = ElementTree.SubElement(clip_node, "file")
+        duration_node = ElementTree.SubElement(file_node, "duration")
+        duration_node.text = "30"
+        name_node = ElementTree.SubElement(file_node, "name")
+        name_node.text = "shot"
+        pathurl_node = ElementTree.SubElement(file_node, "pathurl")
 
-        pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot.mov'
+        pathurl = "file://localhost/home/eoyilmaz/maya/projects/default/data/shot.mov"
         pathurl_node.text = pathurl
 
         # clip3
-        clip_node = ElementTree.SubElement(track_node, 'clipitem',
-                                           attrib={'id': 'shot1'})
-        end_node = ElementTree.SubElement(clip_node, 'end')
-        end_node.text = '110'
-        name_node = ElementTree.SubElement(clip_node, 'name')
-        name_node.text = 'shot1'
-        enabled_node = ElementTree.SubElement(clip_node, 'enabled')
-        enabled_node.text = 'True'
-        start_node = ElementTree.SubElement(clip_node, 'start')
-        start_node.text = '65'
-        in_node = ElementTree.SubElement(clip_node, 'in')
-        in_node.text = '0'
-        duration_node = ElementTree.SubElement(clip_node, 'duration')
-        duration_node.text = '45'
-        out_node = ElementTree.SubElement(clip_node, 'out')
-        out_node.text = '45'
+        clip_node = ElementTree.SubElement(
+            track_node, "clipitem", attrib={"id": "shot1"}
+        )
+        end_node = ElementTree.SubElement(clip_node, "end")
+        end_node.text = "110"
+        name_node = ElementTree.SubElement(clip_node, "name")
+        name_node.text = "shot1"
+        enabled_node = ElementTree.SubElement(clip_node, "enabled")
+        enabled_node.text = "True"
+        start_node = ElementTree.SubElement(clip_node, "start")
+        start_node.text = "65"
+        in_node = ElementTree.SubElement(clip_node, "in")
+        in_node.text = "0"
+        duration_node = ElementTree.SubElement(clip_node, "duration")
+        duration_node.text = "45"
+        out_node = ElementTree.SubElement(clip_node, "out")
+        out_node.text = "45"
 
-        file_node = ElementTree.SubElement(clip_node, 'file')
-        duration_node = ElementTree.SubElement(file_node, 'duration')
-        duration_node.text = '45'
-        name_node = ElementTree.SubElement(file_node, 'name')
-        name_node.text = 'shot1'
-        pathurl_node = ElementTree.SubElement(file_node, 'pathurl')
+        file_node = ElementTree.SubElement(clip_node, "file")
+        duration_node = ElementTree.SubElement(file_node, "duration")
+        duration_node.text = "45"
+        name_node = ElementTree.SubElement(file_node, "name")
+        name_node.text = "shot1"
+        pathurl_node = ElementTree.SubElement(file_node, "pathurl")
 
-        pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov'
+        pathurl = "file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov"
         pathurl_node.text = pathurl
 
         t = Track()
@@ -229,7 +231,7 @@ class TrackTestCase(unittest.TestCase):
         # clip1
         c = t.clips[0]
         self.assertEqual(35, c.end)
-        self.assertEqual('shot2', c.name)
+        self.assertEqual("shot2", c.name)
         self.assertEqual(True, c.enabled)
         self.assertEqual(1, c.start)
         self.assertEqual(0, c.in_)
@@ -238,16 +240,16 @@ class TrackTestCase(unittest.TestCase):
 
         f = c.file
         self.assertEqual(34, f.duration)
-        self.assertEqual('shot2', f.name)
+        self.assertEqual("shot2", f.name)
         self.assertEqual(
-            'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov',
-            f.pathurl
+            "file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov",
+            f.pathurl,
         )
 
         # clip2
         c = t.clips[1]
         self.assertEqual(65, c.end)
-        self.assertEqual('shot', c.name)
+        self.assertEqual("shot", c.name)
         self.assertEqual(True, c.enabled)
         self.assertEqual(35, c.start)
         self.assertEqual(0, c.in_)
@@ -256,16 +258,16 @@ class TrackTestCase(unittest.TestCase):
 
         f = c.file
         self.assertEqual(30, f.duration)
-        self.assertEqual('shot', f.name)
+        self.assertEqual("shot", f.name)
         self.assertEqual(
-            'file://localhost/home/eoyilmaz/maya/projects/default/data/shot.mov',
-            f.pathurl
+            "file://localhost/home/eoyilmaz/maya/projects/default/data/shot.mov",
+            f.pathurl,
         )
 
         # clip3
         c = t.clips[2]
         self.assertEqual(110, c.end)
-        self.assertEqual('shot1', c.name)
+        self.assertEqual("shot1", c.name)
         self.assertEqual(True, c.enabled)
         self.assertEqual(65, c.start)
         self.assertEqual(0, c.in_)
@@ -274,14 +276,14 @@ class TrackTestCase(unittest.TestCase):
 
         f = c.file
         self.assertEqual(45, f.duration)
-        self.assertEqual('shot1', f.name)
+        self.assertEqual("shot1", f.name)
         self.assertEqual(
-            'file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov',
-            f.pathurl
+            "file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov",
+            f.pathurl,
         )
 
     def test_optimize_clips_is_working_properly(self):
-        """testing if the optimize_clips method will optimize the clips to use
+        """optimize_clips method will optimize the clips to use
         the same file node if the file pathurls are same
         """
         t = Track()
@@ -291,14 +293,16 @@ class TrackTestCase(unittest.TestCase):
         # clip 1
         f = File()
         f.duration = 34
-        f.name = 'shot2'
-        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov'
+        f.name = "shot2"
+        f.pathurl = (
+            "file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov"
+        )
 
         c = Clip()
-        c.id = 'shot2'
+        c.id = "shot2"
         c.start = 1
         c.end = 35
-        c.name = 'shot2'
+        c.name = "shot2"
         c.enabled = True
         c.duration = 34
         c.in_ = 0
@@ -310,14 +314,16 @@ class TrackTestCase(unittest.TestCase):
         # clip 2
         f = File()
         f.duration = 30
-        f.name = 'shot'
-        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov'
+        f.name = "shot"
+        f.pathurl = (
+            "file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov"
+        )
 
         c = Clip()
-        c.id = 'shot'
+        c.id = "shot"
         c.start = 35
         c.end = 65
-        c.name = 'shot'
+        c.name = "shot"
         c.enabled = True
         c.duration = 30
         c.in_ = 0
@@ -329,14 +335,16 @@ class TrackTestCase(unittest.TestCase):
         # clip 3
         f = File()
         f.duration = 45
-        f.name = 'shot1'
-        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov'
+        f.name = "shot1"
+        f.pathurl = (
+            "file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov"
+        )
 
         c = Clip()
-        c.id = 'shot1'
+        c.id = "shot1"
         c.start = 65
         c.end = 110
-        c.name = 'shot1'
+        c.name = "shot1"
         c.enabled = True
         c.duration = 45
         c.in_ = 0
@@ -360,7 +368,7 @@ class TrackTestCase(unittest.TestCase):
         self.assertNotEqual(t.clips[1].file, t.clips[2].file)
 
     def test_to_xml_method_with_optimized_clips_is_working_properly(self):
-        """testing if the to xml method is working properly with the clips are
+        """to xml method is working properly with the clips are
         optimized
         """
         t = Track()
@@ -370,14 +378,16 @@ class TrackTestCase(unittest.TestCase):
         # clip 1
         f = File()
         f.duration = 34
-        f.name = 'shot2'
-        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov'
+        f.name = "shot2"
+        f.pathurl = (
+            "file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov"
+        )
 
         c = Clip()
-        c.id = 'shot2'
+        c.id = "shot2"
         c.start = 1
         c.end = 35
-        c.name = 'shot2'
+        c.name = "shot2"
         c.enabled = True
         c.duration = 34
         c.in_ = 0
@@ -389,14 +399,16 @@ class TrackTestCase(unittest.TestCase):
         # clip 2
         f = File()
         f.duration = 30
-        f.name = 'shot'
-        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov'
+        f.name = "shot"
+        f.pathurl = (
+            "file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov"
+        )
 
         c = Clip()
-        c.id = 'shot2'
+        c.id = "shot2"
         c.start = 35
         c.end = 65
-        c.name = 'shot2'
+        c.name = "shot2"
         c.enabled = True
         c.duration = 30
         c.in_ = 0
@@ -408,14 +420,16 @@ class TrackTestCase(unittest.TestCase):
         # clip 3
         f = File()
         f.duration = 45
-        f.name = 'shot1'
-        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov'
+        f.name = "shot1"
+        f.pathurl = (
+            "file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov"
+        )
 
         c = Clip()
-        c.id = 'shot1'
+        c.id = "shot1"
         c.start = 65
         c.end = 110
-        c.name = 'shot1'
+        c.name = "shot1"
         c.enabled = True
         c.duration = 45
         c.in_ = 0
@@ -424,8 +438,7 @@ class TrackTestCase(unittest.TestCase):
 
         t.clips.append(c)
 
-        expected_xml = \
-            """<track>
+        expected_xml = """<track>
   <locked>FALSE</locked>
   <enabled>TRUE</enabled>
   <clipitem id="shot2">
@@ -470,7 +483,4 @@ class TrackTestCase(unittest.TestCase):
 
         t.optimize_clips()
 
-        self.assertEqual(
-            expected_xml,
-            t.to_xml()
-        )
+        self.assertEqual(expected_xml, t.to_xml())

@@ -6,7 +6,7 @@ from stalker.db.session import DBSession
 def test_fix_reference_namespace_is_working_properly(
     create_test_data, create_pymel, create_maya_dcc
 ):
-    """testing if the fix_reference_namespace method is working properly
+    """fix_reference_namespace method is working properly
 
     version15 -> has no new version
       version11 -> has no new version
@@ -79,9 +79,9 @@ def test_fix_reference_namespace_is_working_properly(
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
-        ".", "_"
-    )
+    assert all_refs[1].namespace == data[
+        "asset2_lookdev_variant1_v001"
+    ].filename.replace(".", "_")
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -122,7 +122,7 @@ def test_fix_reference_namespace_is_working_properly(
 def test_fix_reference_namespace_is_working_properly_with_duplicate_refs(
     create_test_data, create_pymel, create_maya_dcc
 ):
-    """testing if the fix_reference_namespace method is working properly
+    """fix_reference_namespace method is working properly
     with duplicate references
 
     version15 -> has no new version
@@ -201,18 +201,20 @@ def test_fix_reference_namespace_is_working_properly_with_duplicate_refs(
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
-        ".", "_"
-    )
+    assert all_refs[1].namespace == data[
+        "asset2_lookdev_variant1_v001"
+    ].filename.replace(".", "_")
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
 
     # the second copy
-    assert all_refs[3].namespace == "{}1".format(data["version11"].filename.replace(".", "_"))
-    assert all_refs[4].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
-        ".", "_"
+    assert all_refs[3].namespace == "{}1".format(
+        data["version11"].filename.replace(".", "_")
     )
+    assert all_refs[4].namespace == data[
+        "asset2_lookdev_variant1_v001"
+    ].filename.replace(".", "_")
     assert all_refs[5].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -277,7 +279,7 @@ def test_fix_reference_namespace_is_working_properly_with_duplicate_refs(
 def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_refs(
     create_test_data, create_pymel, create_maya_dcc
 ):
-    """testing if the fix_reference_namespace method is working properly
+    """fix_reference_namespace method is working properly
     with duplicate references
 
       version11 -> has no new version ->Layout
@@ -362,9 +364,9 @@ def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_re
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
-        ".", "_"
-    )
+    assert all_refs[0].namespace == data[
+        "asset2_lookdev_variant1_v001"
+    ].filename.replace(".", "_")
     assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -480,7 +482,7 @@ def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_re
 def test_fix_reference_namespace_is_working_properly_with_refs_with_new_versions(
     create_test_data, create_pymel, create_maya_dcc
 ):
-    """testing if the fix_reference_namespace method is working properly
+    """fix_reference_namespace method is working properly
     with references which has new versions
 
       version11 -> has no new version ->Layout
@@ -549,9 +551,9 @@ def test_fix_reference_namespace_is_working_properly_with_refs_with_new_versions
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
-        ".", "_"
-    )
+    assert all_refs[0].namespace == data[
+        "asset2_lookdev_variant1_v001"
+    ].filename.replace(".", "_")
     assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -603,7 +605,7 @@ def test_fix_reference_namespace_is_working_properly_with_refs_with_new_versions
 def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_previous_scene(
     create_test_data, create_pymel, create_maya_dcc
 ):
-    """testing if the fix_reference_namespace method is working properly
+    """fix_reference_namespace method is working properly
     with references which are updated in another scene
 
       version11 -> has no new version ->Layout
@@ -685,9 +687,9 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
-        ".", "_"
-    )
+    assert all_refs[0].namespace == data[
+        "asset2_lookdev_variant1_v001"
+    ].filename.replace(".", "_")
     assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -732,9 +734,9 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
-        ".", "_"
-    )
+    assert all_refs[0].namespace == data[
+        "asset2_lookdev_variant1_v001"
+    ].filename.replace(".", "_")
     assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -784,7 +786,7 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
 def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_previous_scene_deeper(
     create_test_data, create_pymel, create_maya_dcc
 ):
-    """testing if the fix_reference_namespace method is working properly
+    """fix_reference_namespace method is working properly
     with references which are updated in another scene
 
     version15 -> Bigger Layout
@@ -863,9 +865,9 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
-        ".", "_"
-    )
+    assert all_refs[1].namespace == data[
+        "asset2_lookdev_variant1_v001"
+    ].filename.replace(".", "_")
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -906,9 +908,9 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version18"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
-        ".", "_"
-    )
+    assert all_refs[1].namespace == data[
+        "asset2_lookdev_variant1_v001"
+    ].filename.replace(".", "_")
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -967,9 +969,9 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
-        ".", "_"
-    )
+    assert all_refs[1].namespace == data[
+        "asset2_lookdev_variant1_v001"
+    ].filename.replace(".", "_")
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -1022,7 +1024,7 @@ def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_prev
 def test_fix_reference_namespace_returns_a_list_of_newly_created_versions(
     create_test_data, create_pymel, create_maya_dcc
 ):
-    """testing if the fix_reference_namespace method will return newly
+    """fix_reference_namespace method will return newly
     created version instances in a list.
 
       version11 -> has no new version ->Layout
@@ -1086,9 +1088,9 @@ def test_fix_reference_namespace_returns_a_list_of_newly_created_versions(
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
-        ".", "_"
-    )
+    assert all_refs[0].namespace == data[
+        "asset2_lookdev_variant1_v001"
+    ].filename.replace(".", "_")
     assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -1104,7 +1106,7 @@ def test_fix_reference_namespace_returns_a_list_of_newly_created_versions(
 def test_fix_reference_namespace_returned_versions_have_correct_description(
     create_test_data, create_pymel, create_maya_dcc
 ):
-    """testing if the fix_reference_namespace method will return newly
+    """fix_reference_namespace method will return newly
     created version instances in a list.
 
       version11 -> has no new version ->Layout
@@ -1168,9 +1170,9 @@ def test_fix_reference_namespace_returned_versions_have_correct_description(
 
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
-    assert all_refs[0].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
-        ".", "_"
-    )
+    assert all_refs[0].namespace == data[
+        "asset2_lookdev_variant1_v001"
+    ].filename.replace(".", "_")
     assert all_refs[1].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -1191,7 +1193,7 @@ def test_fix_reference_namespace_returned_versions_have_correct_description(
 def test_fix_reference_namespace_is_working_properly_with_complex_edits(
     create_test_data, create_pymel, create_maya_dcc
 ):
-    """testing if the fix_reference_namespace method is working properly
+    """fix_reference_namespace method is working properly
     with references which are updated in another scene
 
     version15 -> Bigger Layout -> Move the parent
@@ -1270,9 +1272,9 @@ def test_fix_reference_namespace_is_working_properly_with_complex_edits(
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
-        ".", "_"
-    )
+    assert all_refs[1].namespace == data[
+        "asset2_lookdev_variant1_v001"
+    ].filename.replace(".", "_")
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -1280,9 +1282,9 @@ def test_fix_reference_namespace_is_working_properly_with_complex_edits(
     # check namespaces
     all_refs = pm.listReferences(recursive=1)
     assert all_refs[0].namespace == data["version11"].filename.replace(".", "_")
-    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
-        ".", "_"
-    )
+    assert all_refs[1].namespace == data[
+        "asset2_lookdev_variant1_v001"
+    ].filename.replace(".", "_")
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -1325,7 +1327,7 @@ def test_fix_reference_namespace_is_working_properly_with_complex_edits(
 def test_fix_reference_namespace_is_working_properly_with_references_with_no_namespaces(
     create_test_data, create_pymel, create_maya_dcc
 ):
-    """testing if the fix_reference_namespace method is working properly
+    """fix_reference_namespace method is working properly
     with references which are not using namespaces
 
     version15 -> Bigger Layout -> Move the parent / Uses no namespaces
@@ -1406,9 +1408,9 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_no_nam
     #                                                    |
     #                                                    V
     assert all_refs[0].namespace == data["version11"].filename.split(".")[0]
-    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
-        ".", "_"
-    )
+    assert all_refs[1].namespace == data[
+        "asset2_lookdev_variant1_v001"
+    ].filename.replace(".", "_")
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -1420,9 +1422,9 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_no_nam
     #                                                     V
     assert all_refs[0].namespace == data["version11"].filename.split(".")[0]
 
-    assert all_refs[1].namespace == data["asset2_lookdev_variant1_v001"].filename.replace(
-        ".", "_"
-    )
+    assert all_refs[1].namespace == data[
+        "asset2_lookdev_variant1_v001"
+    ].filename.replace(".", "_")
     assert all_refs[2].namespace == data["asset2_model_main_v002"].filename.replace(
         ".", "_"
     )
@@ -1464,7 +1466,7 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_no_nam
 def test_fix_reference_namespace_is_working_properly_with_references_with_same_namespaces_with_its_children_ref(
     create_test_data, create_pymel, create_maya_dcc
 ):
-    """testing if the fix_reference_namespace method is working properly
+    """fix_reference_namespace method is working properly
     with references that has the same namespace with its children
 
     version15 -> Bigger Layout -> Move the parent
@@ -1597,7 +1599,7 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
 def test_fix_reference_namespace_is_working_properly_with_references_with_same_namespaces_with_its_children_ref_in_a_shallower_setup(
     create_test_data, create_pymel, create_maya_dcc
 ):
-    """testing if the fix_reference_namespace method is working properly
+    """fix_reference_namespace method is working properly
     with references that has the same namespace with its children in a
     shallower setup
 
@@ -1704,7 +1706,7 @@ def test_fix_reference_namespace_is_working_properly_with_references_with_same_n
 def test_fix_reference_namespace_is_working_properly_with_references_with_correct_namespaces_but_has_wrong_namespace_children(
     create_test_data, create_pymel, create_maya_dcc
 ):
-    """testing if the fix_reference_namespace method is working properly
+    """fix_reference_namespace method is working properly
     with references that has the same namespace with its children
 
     version15 -> Bigger Layout

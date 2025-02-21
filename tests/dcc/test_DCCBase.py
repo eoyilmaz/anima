@@ -3,9 +3,19 @@
 
 import logging
 
-import unittest
-from stalker import (db, Repository, Project, Structure, FilenameTemplate,
-                     Status, StatusList, Task, Version)
+import pytest
+
+from stalker import (
+    File,
+    FilenameTemplate,
+    Project,
+    Repository,
+    Status,
+    StatusList,
+    Structure,
+    Task,
+    Version,
+)
 from stalker.db.session import DBSession
 
 from anima.dcc.base import DCCBase
@@ -16,111 +26,92 @@ logger.setLevel(logging.WARNING)
 
 
 def test_get_version_from_full_path_with_multiple_repositories(create_test_db):
-    """testing if the get version from full path is working fine with
-    multiple repositories and with same version names
-    """
+    """get_version_from_full_path() is working fine with multiple repositories and with same version names."""
     repo1 = Repository(
-        name='Test Repo 1',
+        name="Test Repo 1",
         code="TR1",
-        linux_path='/mnt/T/',
-        windows_path='T:/',
-        osx_path='/Volumes/T/'
+        linux_path="/mnt/T/",
+        windows_path="T:/",
+        osx_path="/Volumes/T/",
     )
     DBSession.add(repo1)
 
     repo2 = Repository(
-        name='Test Repo 2',
+        name="Test Repo 2",
         code="TR2",
-        linux_path='/mnt/S/',
-        windows_path='S:/',
-        osx_path='/Volumes/S/'
+        linux_path="/mnt/S/",
+        windows_path="S:/",
+        osx_path="/Volumes/S/",
     )
     DBSession.add(repo2)
 
     task_ft = FilenameTemplate(
-        name='Task Filename Template',
-        target_entity_type='Task',
-        path='$REPO{{project.repository.code}}/{{project.code}}/'
-             '{%- for parent_task in parent_tasks -%}'
-             '{{parent_task.nice_name}}/{%- endfor -%}',
+        name="Task Filename Template",
+        target_entity_type="Task",
+        path="$REPO{{project.repository.code}}/{{project.code}}/"
+        "{%- for parent_task in parent_tasks -%}"
+        "{{parent_task.nice_name}}/{%- endfor -%}",
         filename='{{task.nice_name}}_r{{"%02d"|format(version.revision_number)}}'
-                 '_v{{"%03d"|format(version.version_number)}}',
+        '_v{{"%03d"|format(version.version_number)}}',
     )
     DBSession.add(task_ft)
 
-    structure1 = Structure(
-        name='Commercial Project Structure',
-        templates=[task_ft]
-    )
+    structure1 = Structure(name="Commercial Project Structure", templates=[task_ft])
     DBSession.add(structure1)
 
-    status1 = Status(name='Status 1', code='STS1')
-    status2 = Status(name='Status 2', code='STS2')
-    status3 = Status(name='Status 3', code='STS3')
+    status1 = Status(name="Status 1", code="STS1")
+    status2 = Status(name="Status 2", code="STS2")
+    status3 = Status(name="Status 3", code="STS3")
     DBSession.add_all([status1, status2, status3])
 
-    proj_status_list = \
-        StatusList.query.filter_by(target_entity_type='Project').first()
+    proj_status_list = StatusList.query.filter_by(target_entity_type="Project").first()
 
-    task_status_list = \
-        StatusList.query.filter_by(target_entity_type='Task').first()
+    task_status_list = StatusList.query.filter_by(target_entity_type="Task").first()
 
     version_status_list = StatusList(
-        name='Version Statuses',
-        target_entity_type='Version',
-        statuses=[status1, status2, status3]
+        name="Version Statuses",
+        target_entity_type="Version",
+        statuses=[status1, status2, status3],
     )
     DBSession.add(version_status_list)
 
     project1 = Project(
-        name='Test Project 1',
-        code='TP1',
+        name="Test Project 1",
+        code="TP1",
         repositories=[repo1],
         structure=structure1,
-        status_list=proj_status_list
+        status_list=proj_status_list,
     )
     DBSession.add(project1)
 
     project2 = Project(
-        name='Test Project 2',
-        code='TP2',
+        name="Test Project 2",
+        code="TP2",
         repositories=[repo2],
         structure=structure1,
-        status_list=proj_status_list
+        status_list=proj_status_list,
     )
     DBSession.add(project2)
 
     task1 = Task(
-        name='Test Task 1',
-        code='TT1',
-        project=project1,
-        status_list=task_status_list
+        name="Test Task 1", code="TT1", project=project1, status_list=task_status_list
     )
     DBSession.add(task1)
 
     task2 = Task(
-        name='Test Task 1',
-        code='TT1',
-        project=project2,
-        status_list=task_status_list
+        name="Test Task 1", code="TT1", project=project2, status_list=task_status_list
     )
     DBSession.add(task2)
 
     DBSession.commit()
 
     # now create versions
-    version1 = Version(
-        task=task1,
-        status_list=version_status_list
-    )
+    version1 = Version(task=task1, status_list=version_status_list)
     DBSession.add(version1)
     DBSession.commit()
     version1.update_paths()
 
-    version2 = Version(
-        task=task2,
-        status_list=version_status_list
-    )
+    version2 = Version(task=task2, status_list=version_status_list)
     DBSession.add(version2)
     DBSession.commit()
     version2.update_paths()
@@ -134,59 +125,57 @@ def test_get_version_from_full_path_with_multiple_repositories(create_test_db):
 
     # version1
     version1_found = dcc.get_version_from_full_path(
-        '/mnt/T/TP1/Test_Task_1/Test_Task_1_Main_v001'
+        "/mnt/T/TP1/Test_Task_1/Test_Task_1_Main_v001"
     )
     assert version1_found == version1
 
     # version2
     version2_found = dcc.get_version_from_full_path(
-        '/mnt/S/TP2/Test_Task_1/Test_Task_1_Main_v001'
+        "/mnt/S/TP2/Test_Task_1/Test_Task_1_Main_v001"
     )
     assert version2_found == version2
 
     # version1 in windows
     version1_found = dcc.get_version_from_full_path(
-        'T:/TP1/Test_Task_1/Test_Task_1_Main_v001'
+        "T:/TP1/Test_Task_1/Test_Task_1_Main_v001"
     )
     assert version1_found == version1
 
     # version2 in windows
     version2_found = dcc.get_version_from_full_path(
-        'S:/TP2/Test_Task_1/Test_Task_1_Main_v001'
+        "S:/TP2/Test_Task_1/Test_Task_1_Main_v001"
     )
     assert version2_found == version2
 
     # version1 in linux
     version1_found = dcc.get_version_from_full_path(
-        '/mnt/T/TP1/Test_Task_1/Test_Task_1_Main_v001'
+        "/mnt/T/TP1/Test_Task_1/Test_Task_1_Main_v001"
     )
     assert version1_found == version1
 
     # version2 in linux
     version2_found = dcc.get_version_from_full_path(
-        '/mnt/S/TP2/Test_Task_1/Test_Task_1_Main_v001'
+        "/mnt/S/TP2/Test_Task_1/Test_Task_1_Main_v001"
     )
     assert version2_found == version2
 
     # version1 in osx
     version1_found = dcc.get_version_from_full_path(
-        '/Volumes/T/TP1/Test_Task_1/Test_Task_1_Main_v001'
+        "/Volumes/T/TP1/Test_Task_1/Test_Task_1_Main_v001"
     )
     assert version1_found == version1
 
     # version2 in osx
     version2_found = dcc.get_version_from_full_path(
-        '/Volumes/S/TP2/Test_Task_1/Test_Task_1_Main_v001'
+        "/Volumes/S/TP2/Test_Task_1/Test_Task_1_Main_v001"
     )
     assert version2_found == version2
 
 
 def test_get_versions_from_path_handles_empty_and_None_path(create_test_db):
-    """testing if no errors will be raised for a path which is None or an
-    empty string
-    """
+    """no errors will be raised for a path which is None or an empty string."""
     dcc = DCCBase()
-    versions = dcc.get_versions_from_path('')
+    versions = dcc.get_versions_from_path("")
     assert versions == []
 
     versions = dcc.get_versions_from_path(None)
@@ -194,125 +183,103 @@ def test_get_versions_from_path_handles_empty_and_None_path(create_test_db):
 
 
 def test_get_versions_from_path_with_multiple_repositories(create_test_db):
-    """testing if the get versions_from_path is working fine with multiple
-    repositories and with same version names
-    """
+    """get_versions_from_path() is working fine with multiple repositories and with same version names."""
     repo0 = Repository(
-        name='Test Repo 0',
+        name="Test Repo 0",
         code="TR0",
-        linux_path='/mnt/T/with_a_very_long_path_which_will_cause_errors/',
-        windows_path='T:/with_a_very_long_path_which_will_cause_errors/',
-        osx_path='/Volumes/T/'
-                 'with_a_very_long_path_which_will_cause_errors/'
+        linux_path="/mnt/T/with_a_very_long_path_which_will_cause_errors/",
+        windows_path="T:/with_a_very_long_path_which_will_cause_errors/",
+        osx_path="/Volumes/T/" "with_a_very_long_path_which_will_cause_errors/",
     )
     DBSession.add(repo0)
 
     repo1 = Repository(
-        name='Test Repo 1',
+        name="Test Repo 1",
         code="TR1",
-        linux_path='/mnt/T/',
-        windows_path='T:/',
-        osx_path='/Volumes/T/'
+        linux_path="/mnt/T/",
+        windows_path="T:/",
+        osx_path="/Volumes/T/",
     )
     DBSession.add(repo1)
 
     repo2 = Repository(
-        name='Test Repo 2',
+        name="Test Repo 2",
         code="TR2",
-        linux_path='/mnt/S/',
-        windows_path='S:/',
-        osx_path='/Volumes/S/'
+        linux_path="/mnt/S/",
+        windows_path="S:/",
+        osx_path="/Volumes/S/",
     )
     DBSession.add(repo2)
 
     task_ft = FilenameTemplate(
-        name='Task Filename Template',
-        target_entity_type='Task',
-        path='$REPO{{project.repository.code}}/'
-             '{{project.code}}/{%- for parent_task in parent_tasks -%}'
-             '{{parent_task.nice_name}}/{%- endfor -%}',
+        name="Task Filename Template",
+        target_entity_type="Task",
+        path="$REPO{{project.repository.code}}/"
+        "{{project.code}}/{%- for parent_task in parent_tasks -%}"
+        "{{parent_task.nice_name}}/{%- endfor -%}",
         filename='{{task.nice_name}}_r{{"%02d"|format(version.revision_number)}}'
-                 '_v{{"%03d"|format(version.version_number)}}',
+        '_v{{"%03d"|format(version.version_number)}}',
     )
     DBSession.add(task_ft)
 
-    structure1 = Structure(
-        name='Commercial Project Structure',
-        templates=[task_ft]
-    )
+    structure1 = Structure(name="Commercial Project Structure", templates=[task_ft])
     DBSession.add(structure1)
 
-    status1 = Status(name='Status 1', code='STS1')
-    status2 = Status(name='Status 2', code='STS2')
-    status3 = Status(name='Status 3', code='STS3')
+    status1 = Status(name="Status 1", code="STS1")
+    status2 = Status(name="Status 2", code="STS2")
+    status3 = Status(name="Status 3", code="STS3")
     DBSession.add_all([status1, status2, status3])
 
-    proj_status_list = \
-        StatusList.query.filter_by(target_entity_type='Project').first()
+    proj_status_list = StatusList.query.filter_by(target_entity_type="Project").first()
 
-    task_status_list = \
-        StatusList.query.filter_by(target_entity_type='Task').first()
+    task_status_list = StatusList.query.filter_by(target_entity_type="Task").first()
 
     project1 = Project(
-        name='Test Project 1',
-        code='TP1',
+        name="Test Project 1",
+        code="TP1",
         repositories=[repo1],
         structure=structure1,
-        status_list=proj_status_list
+        status_list=proj_status_list,
     )
     DBSession.add(project1)
 
     project2 = Project(
-        name='Test Project 2',
-        code='TP2',
+        name="Test Project 2",
+        code="TP2",
         repositories=[repo2],
         structure=structure1,
-        status_list=proj_status_list
+        status_list=proj_status_list,
     )
     DBSession.add(project2)
 
     task1 = Task(
-        name='Test Task 1',
-        code='TT1',
-        project=project1,
-        status_list=task_status_list
+        name="Test Task 1", code="TT1", project=project1, status_list=task_status_list
     )
     DBSession.add(task1)
 
     task2 = Task(
-        name='Test Task 1',
-        code='TT1',
-        project=project2,
-        status_list=task_status_list
+        name="Test Task 1", code="TT1", project=project2, status_list=task_status_list
     )
     DBSession.add(task2)
     DBSession.commit()
 
     # now create versions
-    version1 = Version(
-        task=task1
-    )
+    version1 = Version(task=task1)
     DBSession.add(version1)
     DBSession.commit()
     version1.update_paths()
 
-    version2 = Version(
-        task=task1
-    )
+    version2 = Version(task=task1)
     DBSession.add(version2)
     DBSession.commit()
     version2.update_paths()
 
-    version3 = Version(
-        task=task2
-    )
+    version3 = Version(task=task2)
     DBSession.add(version3)
     DBSession.commit()
     version3.update_paths()
 
-    version4 = Version(
-        task=task2
-    )
+    version4 = Version(task=task2)
     DBSession.add(version4)
     DBSession.commit()
     version4.update_paths()
@@ -327,145 +294,115 @@ def test_get_versions_from_path_with_multiple_repositories(create_test_db):
     dcc = DCCBase()
 
     # version1, version2
-    versions_found = dcc.get_versions_from_path(
-        '/mnt/T/TP1/Test_Task_1'
-    )
+    versions_found = dcc.get_versions_from_path("/mnt/T/TP1/Test_Task_1")
     assert versions_found == [version1, version2]
 
     # version3, version4
-    versions_found = dcc.get_versions_from_path(
-        '/mnt/S/TP2/Test_Task_1'
-    )
+    versions_found = dcc.get_versions_from_path("/mnt/S/TP2/Test_Task_1")
     assert versions_found == [version3, version4]
 
     # version1, version2 in windows
-    versions_found = dcc.get_versions_from_path(
-        'T:/TP1/Test_Task_1'
-    )
+    versions_found = dcc.get_versions_from_path("T:/TP1/Test_Task_1")
     assert versions_found == [version1, version2]
 
     # version3, version4 in windows
-    versions_found = dcc.get_versions_from_path(
-        'S:/TP2/Test_Task_1'
-    )
+    versions_found = dcc.get_versions_from_path("S:/TP2/Test_Task_1")
     assert versions_found == [version3, version4]
 
     # version1, version2 in linux
-    versions_found = dcc.get_versions_from_path(
-        '/mnt/T/TP1/Test_Task_1'
-    )
+    versions_found = dcc.get_versions_from_path("/mnt/T/TP1/Test_Task_1")
     assert versions_found == [version1, version2]
 
     # version3, version4 in linux
-    versions_found = dcc.get_versions_from_path(
-        '/mnt/S/TP2/Test_Task_1'
-    )
+    versions_found = dcc.get_versions_from_path("/mnt/S/TP2/Test_Task_1")
     assert versions_found == [version3, version4]
 
     # version1, version2 in osx
-    versions_found = dcc.get_versions_from_path(
-        '/Volumes/T/TP1/Test_Task_1'
-    )
+    versions_found = dcc.get_versions_from_path("/Volumes/T/TP1/Test_Task_1")
     assert versions_found == [version1, version2]
 
     # version3, version4 in linux
-    versions_found = dcc.get_versions_from_path(
-        '/Volumes/S/TP2/Test_Task_1'
-    )
+    versions_found = dcc.get_versions_from_path("/Volumes/S/TP2/Test_Task_1")
     assert versions_found == [version3, version4]
 
 
 def test_trim_repo_path_with_multiple_repositories(create_test_db):
-    """testing if the trim_repo_path is working fine with multiple
-    repositories and with same version names
-    """
+    """trim_repo_path() is working fine with multiple repositories and with same version names."""
     repo0 = Repository(
-        name='Test Repo 0',
+        name="Test Repo 0",
         code="TR0",
-        linux_path='/mnt/T/with_a_very_long_path_which_will_cause_errors/',
-        windows_path='T:/with_a_very_long_path_which_will_cause_errors/',
-        osx_path='/Volumes/T/'
-                 'with_a_very_long_path_which_will_cause_errors/'
+        linux_path="/mnt/T/with_a_very_long_path_which_will_cause_errors/",
+        windows_path="T:/with_a_very_long_path_which_will_cause_errors/",
+        osx_path="/Volumes/T/" "with_a_very_long_path_which_will_cause_errors/",
     )
     DBSession.add(repo0)
 
     repo1 = Repository(
-        name='Test Repo 1',
+        name="Test Repo 1",
         code="TR1",
-        linux_path='/mnt/T/',
-        windows_path='T:/',
-        osx_path='/Volumes/T/'
+        linux_path="/mnt/T/",
+        windows_path="T:/",
+        osx_path="/Volumes/T/",
     )
     DBSession.add(repo1)
 
     repo2 = Repository(
-        name='Test Repo 2',
+        name="Test Repo 2",
         code="TR2",
-        linux_path='/mnt/S/',
-        windows_path='S:/',
-        osx_path='/Volumes/S/'
+        linux_path="/mnt/S/",
+        windows_path="S:/",
+        osx_path="/Volumes/S/",
     )
     DBSession.add(repo2)
 
     task_ft = FilenameTemplate(
-        name='Task Filename Template',
-        target_entity_type='Task',
-        path='{{project.code}}/{%- for parent_task in parent_tasks -%}'
-             '{{parent_task.nice_name}}/{%- endfor -%}',
+        name="Task Filename Template",
+        target_entity_type="Task",
+        path="{{project.code}}/{%- for parent_task in parent_tasks -%}"
+        "{{parent_task.nice_name}}/{%- endfor -%}",
         filename='{{task.nice_name}}_r{{"%02d"|format(version.revision_number)}}'
-                 '_v{{"%03d"|format(version.version_number)}}',
+        '_v{{"%03d"|format(version.version_number)}}',
     )
     DBSession.add(task_ft)
 
-    structure1 = Structure(
-        name='Commercial Project Structure',
-        templates=[task_ft]
-    )
+    structure1 = Structure(name="Commercial Project Structure", templates=[task_ft])
     DBSession.add(structure1)
 
-    status1 = Status(name='Status 1', code='STS1')
-    status2 = Status(name='Status 2', code='STS2')
-    status3 = Status(name='Status 3', code='STS3')
+    status1 = Status(name="Status 1", code="STS1")
+    status2 = Status(name="Status 2", code="STS2")
+    status3 = Status(name="Status 3", code="STS3")
     DBSession.add_all([status1, status2, status3])
 
-    proj_status_list = \
-        StatusList.query.filter_by(target_entity_type='Project').first()
+    proj_status_list = StatusList.query.filter_by(target_entity_type="Project").first()
 
-    task_status_list = \
-        StatusList.query.filter_by(target_entity_type='Task').first()
+    task_status_list = StatusList.query.filter_by(target_entity_type="Task").first()
     DBSession.add(task_status_list)
 
     project1 = Project(
-        name='Test Project 1',
-        code='TP1',
+        name="Test Project 1",
+        code="TP1",
         repositories=[repo1],
         structure=structure1,
-        status_list=proj_status_list
+        status_list=proj_status_list,
     )
     DBSession.add(project1)
 
     project2 = Project(
-        name='Test Project 2',
-        code='TP2',
+        name="Test Project 2",
+        code="TP2",
         repositories=[repo2],
         structure=structure1,
-        status_list=proj_status_list
+        status_list=proj_status_list,
     )
     DBSession.add(project2)
 
     task1 = Task(
-        name='Test Task 1',
-        code='TT1',
-        project=project1,
-        status_list=task_status_list
+        name="Test Task 1", code="TT1", project=project1, status_list=task_status_list
     )
     DBSession.add(task1)
 
     task2 = Task(
-        name='Test Task 1',
-        code='TT1',
-        project=project2,
-        status_list=task_status_list
+        name="Test Task 1", code="TT1", project=project2, status_list=task_status_list
     )
     DBSession.add(task2)
 
@@ -501,53 +438,86 @@ def test_trim_repo_path_with_multiple_repositories(create_test_db):
     # now try to get the versions with an DCCBase instance
     dcc = DCCBase()
 
-    expected_value1 = 'TP1/Test_Task_1/Test_Task_1_Main_v001'
-    expected_value2 = 'TP2/Test_Task_1/Test_Task_1_Main_v001'
+    expected_value1 = "TP1/Test_Task_1/Test_Task_1_Main_v001"
+    expected_value2 = "TP2/Test_Task_1/Test_Task_1_Main_v001"
 
     # version1 native
-    trimmed_path = dcc.trim_repo_path(
-        '/mnt/T/TP1/Test_Task_1/Test_Task_1_Main_v001'
-    )
+    trimmed_path = dcc.trim_repo_path("/mnt/T/TP1/Test_Task_1/Test_Task_1_Main_v001")
     assert trimmed_path == expected_value1
 
     # version2 native
-    trimmed_path = dcc.trim_repo_path(
-        '/mnt/S/TP2/Test_Task_1/Test_Task_1_Main_v001'
-    )
+    trimmed_path = dcc.trim_repo_path("/mnt/S/TP2/Test_Task_1/Test_Task_1_Main_v001")
     assert trimmed_path == expected_value2
 
     # version1 windows
-    trimmed_path = dcc.trim_repo_path(
-        'T:/TP1/Test_Task_1/Test_Task_1_Main_v001'
-    )
+    trimmed_path = dcc.trim_repo_path("T:/TP1/Test_Task_1/Test_Task_1_Main_v001")
     assert trimmed_path == expected_value1
 
     # version2 windows
-    trimmed_path = dcc.trim_repo_path(
-        'S:/TP2/Test_Task_1/Test_Task_1_Main_v001'
-    )
+    trimmed_path = dcc.trim_repo_path("S:/TP2/Test_Task_1/Test_Task_1_Main_v001")
     assert trimmed_path == expected_value2
 
     # version1 linux
-    trimmed_path = dcc.trim_repo_path(
-        '/mnt/T/TP1/Test_Task_1/Test_Task_1_Main_v001'
-    )
+    trimmed_path = dcc.trim_repo_path("/mnt/T/TP1/Test_Task_1/Test_Task_1_Main_v001")
     assert trimmed_path == expected_value1
 
     # version2 linux
-    trimmed_path = dcc.trim_repo_path(
-        '/mnt/S/TP2/Test_Task_1/Test_Task_1_Main_v001'
-    )
+    trimmed_path = dcc.trim_repo_path("/mnt/S/TP2/Test_Task_1/Test_Task_1_Main_v001")
     assert trimmed_path == expected_value2
 
     # version1 osx
     trimmed_path = dcc.trim_repo_path(
-        '/Volumes/T/TP1/Test_Task_1/Test_Task_1_Main_v001'
+        "/Volumes/T/TP1/Test_Task_1/Test_Task_1_Main_v001"
     )
     assert trimmed_path == expected_value1
 
     # version2 osx
     trimmed_path = dcc.trim_repo_path(
-        '/Volumes/S/TP2/Test_Task_1/Test_Task_1_Main_v001'
+        "/Volumes/S/TP2/Test_Task_1/Test_Task_1_Main_v001"
     )
     assert trimmed_path == expected_value2
+
+
+def test_generate_file_for_version_version_is_not_a_version():
+    """generate_file_for_version() will raise a TypeError if the given version is not a Version instance."""
+    dcc = DCCBase()
+    with pytest.raises(TypeError) as cm:
+        dcc.generate_file_for_version("Not a version")
+
+    assert str(cm.value) == (
+        "version should be an instance of stalker.Version, not str: 'Not a version'"
+    )
+
+
+def test_generate_file_for_version_returns_a_file(create_test_db, create_project):
+    """generate_file_for_version() returns a File instance."""
+    data = create_project
+    version = data["look_dev_v3"]
+    assert isinstance(version, Version)
+    dcc = DCCBase()
+    file = dcc.generate_file_for_version(version)
+    assert isinstance(file, File)
+
+
+def test_generate_file_for_version_returned_file_is_in_version_file_list(
+    create_test_db,
+    create_project,
+):
+    """generate_file_for_version() returned File is in Version.file list."""
+    data = create_project
+    version = data["look_dev_v3"]
+    dcc = DCCBase()
+    file = dcc.generate_file_for_version(version)
+    assert file in version.files
+
+
+def test_generate_file_for_version_file_path_is_correct(
+    create_test_db,
+    create_project,
+):
+    """generate_file_for_version() returned File path is correct."""
+    data = create_project
+    version = data["look_dev_v3"]
+    dcc = DCCBase()
+    file = dcc.generate_file_for_version(version)
+    assert file.full_path == str(version.full_path)

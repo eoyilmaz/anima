@@ -1,5 +1,6 @@
 """Tests for anima.dcc.maya.toolbox representation tools
 """
+
 import os
 
 import pytest
@@ -32,7 +33,7 @@ def setup_toolbox_representation_tools_tests(create_pymel, store_local_session):
 def test_generating_all_representations_through_environment_layout_scene(
     create_test_data, setup_toolbox_representation_tools_tests, create_maya_dcc
 ):
-    """testing if generating all representations of all references from the
+    """generating all representations of all references from the
     environment layout scene is working properly
     """
     data = create_test_data
@@ -131,7 +132,7 @@ def test_generate_gpu_will_end_up_with_an_empty_scene(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_gpu will end up with an empty scene"""
+    """generate_gpu will end up with an empty scene"""
     data = create_test_data
     pm = create_pymel
     gen = RepresentationGenerator(version=data["building1_yapi_model_main_v003"])
@@ -147,7 +148,7 @@ def test_generate_gpu_will_overwrite_previous_gpu_version(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_gpu will overwrite to the previous GPU version"""
+    """generate_gpu will overwrite to the previous GPU version"""
     data = create_test_data
     gen = RepresentationGenerator()
 
@@ -173,7 +174,7 @@ def test_generate_gpu_scene_with_references_before_generating_gpu_of_references_
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if a RuntimeError will be raised when trying to generate
+    """a RuntimeError will be raised when trying to generate
     the GPU Repr of a scene before generating the GPU of all the
     references
     """
@@ -196,7 +197,7 @@ def test_generate_gpu_of_a_simple_model(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_gpu will generate bounding boxes for each
+    """generate_gpu will generate bounding boxes for each
     object with the same name in a model scene
     """
     data = create_test_data
@@ -224,7 +225,7 @@ def test_generate_gpu_of_a_simple_look_dev(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_gpu will just replace the references for a
+    """generate_gpu will just replace the references for a
     simple look dev scene
     """
     data = create_test_data
@@ -253,7 +254,7 @@ def test_generate_gpu_of_a_layout_of_a_building(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_gpu of the layout scene of a building is
+    """generate_gpu of the layout scene of a building is
     working properly
     """
     data = create_test_data
@@ -286,7 +287,7 @@ def test_generate_gpu_of_a_look_dev_of_a_building(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_gpu of the look dev scene of a building is
+    """generate_gpu of the look dev scene of a building is
     working properly
     """
     data = create_test_data
@@ -323,7 +324,7 @@ def test_generate_gpu_of_a_layout_of_an_environment(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_gpu of the layout scene of an environment is
+    """generate_gpu of the layout scene of an environment is
     working properly
     """
     data = create_test_data
@@ -386,7 +387,7 @@ def test_generate_gpu_of_a_look_dev_of_an_environment(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_gpu of the look dev scene of an environment is
+    """generate_gpu of the look dev scene of an environment is
     working properly
     """
     data = create_test_data
@@ -445,7 +446,7 @@ def test_generate_gpu_of_a_vegetation_scene(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_gpu of the vegetation scene is working properly"""
+    """generate_gpu of the vegetation scene is working properly"""
     data = create_test_data
     pm = create_pymel
     maya_dcc = create_maya_dcc
@@ -488,7 +489,7 @@ def test_generate_ass_will_end_up_with_an_empty_scene(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_ass will end up with a new empty scene"""
+    """generate_ass will end up with a new empty scene"""
     data = create_test_data
     pm = create_pymel
     gen = RepresentationGenerator(version=data["building1_yapi_model_main_v003"])
@@ -504,7 +505,7 @@ def test_generate_ass_will_overwrite_previous_ass_version(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_ass will overwrite to the previous ASS version"""
+    """generate_ass will overwrite to the previous ASS version"""
     data = create_test_data
     gen = RepresentationGenerator()
 
@@ -530,7 +531,7 @@ def test_generate_ass_repr_for_building_yapi_look_dev_without_creating_model_fir
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if a RuntimeError will be raised when trying to generate the ASS Repr for
+    """a RuntimeError will be raised when trying to generate the ASS Repr for
     a Look Dev task before generating ASS for the model first
     """
     data = create_test_data
@@ -541,7 +542,9 @@ def test_generate_ass_repr_for_building_yapi_look_dev_without_creating_model_fir
 
     assert (
         str(cm.value) == "Please generate the ASS Representation of the references "
-        "first!!!\n{}".format(data["building1_yapi_model_main_v003"].absolute_full_path),
+        "first!!!\n{}".format(
+            data["building1_yapi_model_main_v003"].absolute_full_path
+        ),
     )
 
 
@@ -551,7 +554,7 @@ def test_generate_ass_repr_for_building_layout_without_creating_building_look_de
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if a RuntimeError will be raised when trying to generate the ASS Repr for
+    """a RuntimeError will be raised when trying to generate the ASS Repr for
     a Layout task before generating ASS for the Look Dev first
     """
     data = create_test_data
@@ -562,7 +565,9 @@ def test_generate_ass_repr_for_building_layout_without_creating_building_look_de
 
     assert (
         str(cm.value) == "Please generate the ASS Representation of the references "
-        "first!!!\n{}".format(data["building1_yapi_look_dev_main_v003"].absolute_full_path),
+        "first!!!\n{}".format(
+            data["building1_yapi_look_dev_main_v003"].absolute_full_path
+        ),
     )
 
 
@@ -572,7 +577,7 @@ def test_generate_ass_repr_for_building_yapi_model(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if creating ASS repr for a model is working properly"""
+    """creating ASS repr for a model is working properly"""
     data = create_test_data
     pm = create_pymel
     maya_dcc = create_maya_dcc
@@ -607,7 +612,7 @@ def test_generate_ass_repr_for_building_yapi_look_dev_is_working_properly(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if ASS repr generation is working properly for a look dev
+    """ASS repr generation is working properly for a look dev
     version
     """
     data = create_test_data
@@ -655,7 +660,7 @@ def test_generate_ass_repr_for_building_layout_is_working_properly(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if a generating the ASS Repr for a Layout task is working
+    """a generating the ASS Repr for a Layout task is working
     properly
     """
     data = create_test_data
@@ -691,7 +696,7 @@ def test_generate_ass_repr_for_building_look_dev_is_working_properly(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_ass() will properly generate an ASS repr for the
+    """generate_ass() will properly generate an ASS repr for the
     look dev of a building
     """
     data = create_test_data
@@ -730,7 +735,7 @@ def test_generate_ass_repr_for_vegetation_scene(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generating ass of a vegetation scene is working properly"""
+    """generating ass of a vegetation scene is working properly"""
     data = create_test_data
     pm = create_pymel
     maya_dcc = create_maya_dcc
@@ -768,7 +773,7 @@ def test_generate_ass_of_a_layout_of_an_environment(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_ass() will properly generate an ASS repr for the
+    """generate_ass() will properly generate an ASS repr for the
     environment layout
     """
     data = create_test_data
@@ -836,7 +841,7 @@ def test_generate_all_will_end_up_with_an_empty_scene(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_all will end up with an empty scene"""
+    """generate_all will end up with an empty scene"""
     data = create_test_data
     pm = create_pymel
     gen = RepresentationGenerator(version=data["building1_yapi_model_main_v003"])
@@ -852,7 +857,7 @@ def test_generate_all_scene_with_references_before_generating_all_of_references_
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if a RuntimeError will be raised when trying to generate
+    """a RuntimeError will be raised when trying to generate
     the all representations of a scene before generating all the
     representations of all the references
     """
@@ -875,7 +880,7 @@ def test_generate_all_of_a_simple_model(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_all will generate all representations of a model
+    """generate_all will generate all representations of a model
     scene
     """
     data = create_test_data
@@ -898,7 +903,7 @@ def test_generate_all_of_a_simple_look_dev(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_all generate all the representations of a
+    """generate_all generate all the representations of a
     simple look dev scene
     """
     data = create_test_data
@@ -926,7 +931,7 @@ def test_generate_all_of_a_layout_of_a_building(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_all the layout scene of a building is working
+    """generate_all the layout scene of a building is working
     properly
     """
     data = create_test_data
@@ -958,7 +963,7 @@ def test_generate_all_of_a_look_dev_of_a_building(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_all the look dev scene of a building is
+    """generate_all the look dev scene of a building is
     working properly
     """
     data = create_test_data
@@ -994,7 +999,7 @@ def test_generate_all_of_a_layout_of_an_environment(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_all the layout scene of an environment is
+    """generate_all the layout scene of an environment is
     working properly
     """
     data = create_test_data
@@ -1057,7 +1062,7 @@ def test_generate_all_of_a_look_dev_of_an_environment(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_all the look dev scene of an environment is
+    """generate_all the look dev scene of an environment is
     working properly
     """
     data = create_test_data
@@ -1115,7 +1120,7 @@ def test_generate_all_of_a_vegetation_scene(
     create_pymel,
     create_maya_dcc,
 ):
-    """testing if generate_all the vegetation scene is working properly"""
+    """generate_all the vegetation scene is working properly"""
     data = create_test_data
     gen = RepresentationGenerator(version=data["ext1_vegetation_main_v003"])
     gen.generate_all()

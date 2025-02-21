@@ -232,14 +232,26 @@ class VersionMoverTestCase(unittest.TestCase):
         self.test_version12 = self.create_version(self.test_task5, variant_name="Main")
 
         # Variant1
-        self.test_version13 = self.create_version(self.test_task5, variant_name="Variant1")
-        self.test_version14 = self.create_version(self.test_task5, variant_name="Variant1")
-        self.test_version15 = self.create_version(self.test_task5, variant_name="Variant1")
+        self.test_version13 = self.create_version(
+            self.test_task5, variant_name="Variant1"
+        )
+        self.test_version14 = self.create_version(
+            self.test_task5, variant_name="Variant1"
+        )
+        self.test_version15 = self.create_version(
+            self.test_task5, variant_name="Variant1"
+        )
 
         # Variant2
-        self.test_version16 = self.create_version(self.test_task5, variant_name="Variant2")
-        self.test_version17 = self.create_version(self.test_task5, variant_name="Variant2")
-        self.test_version18 = self.create_version(self.test_task5, variant_name="Variant2")
+        self.test_version16 = self.create_version(
+            self.test_task5, variant_name="Variant2"
+        )
+        self.test_version17 = self.create_version(
+            self.test_task5, variant_name="Variant2"
+        )
+        self.test_version18 = self.create_version(
+            self.test_task5, variant_name="Variant2"
+        )
 
         # Task6
         # Main
@@ -248,14 +260,26 @@ class VersionMoverTestCase(unittest.TestCase):
         self.test_version21 = self.create_version(self.test_task6, variant_name="Main")
 
         # Variant1
-        self.test_version22 = self.create_version(self.test_task6, variant_name="Variant1")
-        self.test_version23 = self.create_version(self.test_task6, variant_name="Variant1")
-        self.test_version24 = self.create_version(self.test_task6, variant_name="Variant1")
+        self.test_version22 = self.create_version(
+            self.test_task6, variant_name="Variant1"
+        )
+        self.test_version23 = self.create_version(
+            self.test_task6, variant_name="Variant1"
+        )
+        self.test_version24 = self.create_version(
+            self.test_task6, variant_name="Variant1"
+        )
 
         # Variant2
-        self.test_version25 = self.create_version(self.test_task6, variant_name="Variant2")
-        self.test_version26 = self.create_version(self.test_task6, variant_name="Variant2")
-        self.test_version27 = self.create_version(self.test_task6, variant_name="Variant2")
+        self.test_version25 = self.create_version(
+            self.test_task6, variant_name="Variant2"
+        )
+        self.test_version26 = self.create_version(
+            self.test_task6, variant_name="Variant2"
+        )
+        self.test_version27 = self.create_version(
+            self.test_task6, variant_name="Variant2"
+        )
 
         # Task7
         # Main
@@ -264,14 +288,26 @@ class VersionMoverTestCase(unittest.TestCase):
         self.test_version30 = self.create_version(self.test_task7, variant_name="Main")
 
         # Variant1
-        self.test_version31 = self.create_version(self.test_task7, variant_name="Variant1")
-        self.test_version32 = self.create_version(self.test_task7, variant_name="Variant1")
-        self.test_version33 = self.create_version(self.test_task7, variant_name="Variant1")
+        self.test_version31 = self.create_version(
+            self.test_task7, variant_name="Variant1"
+        )
+        self.test_version32 = self.create_version(
+            self.test_task7, variant_name="Variant1"
+        )
+        self.test_version33 = self.create_version(
+            self.test_task7, variant_name="Variant1"
+        )
 
         # Variant2
-        self.test_version34 = self.create_version(self.test_task7, variant_name="Variant2")
-        self.test_version35 = self.create_version(self.test_task7, variant_name="Variant2")
-        self.test_version36 = self.create_version(self.test_task7, variant_name="Variant2")
+        self.test_version34 = self.create_version(
+            self.test_task7, variant_name="Variant2"
+        )
+        self.test_version35 = self.create_version(
+            self.test_task7, variant_name="Variant2"
+        )
+        self.test_version36 = self.create_version(
+            self.test_task7, variant_name="Variant2"
+        )
 
         # Task8 - will have no versions
 
@@ -282,14 +318,26 @@ class VersionMoverTestCase(unittest.TestCase):
         self.test_version39 = self.create_version(self.test_task9, variant_name="Main")
 
         # Variant1 - an existing variant
-        self.test_version40 = self.create_version(self.test_task9, variant_name="Variant1")
-        self.test_version41 = self.create_version(self.test_task9, variant_name="Variant1")
-        self.test_version42 = self.create_version(self.test_task9, variant_name="Variant1")
+        self.test_version40 = self.create_version(
+            self.test_task9, variant_name="Variant1"
+        )
+        self.test_version41 = self.create_version(
+            self.test_task9, variant_name="Variant1"
+        )
+        self.test_version42 = self.create_version(
+            self.test_task9, variant_name="Variant1"
+        )
 
         # Variant3 - a non existing variant
-        self.test_version43 = self.create_version(self.test_task9, variant_name="Variant1")
-        self.test_version44 = self.create_version(self.test_task9, variant_name="Variant1")
-        self.test_version45 = self.create_version(self.test_task9, variant_name="Variant1")
+        self.test_version43 = self.create_version(
+            self.test_task9, variant_name="Variant1"
+        )
+        self.test_version44 = self.create_version(
+            self.test_task9, variant_name="Variant1"
+        )
+        self.test_version45 = self.create_version(
+            self.test_task9, variant_name="Variant1"
+        )
 
         if not QtGui.QApplication.instance():
             self.app = QtGui.QApplication(sys.argv)
@@ -346,7 +394,7 @@ class VersionMoverTestCase(unittest.TestCase):
         )
 
     def test_copy_button_clicked_with_same_task_is_selected_in_both_sides(self):
-        """testing if a QMessageDialog will warn the user about he/she selected
+        """a QMessageDialog will warn the user about he/she selected
         the same task in both tree views
         """
         # select one task in from_task_tree_view
@@ -389,7 +437,7 @@ class VersionMoverTestCase(unittest.TestCase):
         self.assertEqual(PatchedMessageBox.message, "Please select two different tasks")
 
     def test_copy_button_is_working_properly(self):
-        """testing if the copy button is working properly"""
+        """copy button is working properly"""
         # Select Task4 in from_task_tree_view
         selection_model = self.dialog.from_task_tree_view.selectionModel()
         model = self.dialog.from_task_tree_view.model()
@@ -436,30 +484,30 @@ class VersionMoverTestCase(unittest.TestCase):
             self.assertTrue(os.path.exists(version.absolute_full_path))
 
     # def test_destination_task_has_versions_already(self):
-    #     """testing if the there will be no problem when the destination task
+    #     """there will be no problem when the destination task
     #     already has versions
     #     """
     #     self.fail('test is not implemented yet')
 
     # def test_move_button_clicked_with_no_selection_on_from_task_tree_view(self):
-    #     """testing if a QMessageDialog will be displayed when the move button
+    #     """a QMessageDialog will be displayed when the move button
     #     selected and no selection is made in from_task_tree_view
     #     """
     #     self.fail('test is not implemented yet')
     #
     # def test_move_button_clicked_with_no_selection_on_to_task_tree_view(self):
-    #     """testing if a QMessageDialog will be displayed when the move button
+    #     """a QMessageDialog will be displayed when the move button
     #     selected and no selection is made in to_task_tree_vie
     #     """
     #     self.fail('test is not implemented yet')
     #
     # def test_move_button_clicked_with_same_task_is_selected_in_both_sides(self):
-    #     """testing if a QMessageDialog will warn the user about he/she selected
+    #     """a QMessageDialog will warn the user about he/she selected
     #     the same task in both tree views
     #     """
     #     self.fail('test is not implemented yet')
     #
     # def test_move_button_is_working_properly(self):
-    #     """testing if the move button is working properly
+    #     """move button is working properly
     #     """
     #     self.fail('test is not implemented yet')

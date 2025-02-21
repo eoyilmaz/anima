@@ -253,7 +253,11 @@ def test_structure_attribute_is_not_a_list(test_data):
     is not a set to None or a list
     """
     pytest.raises(
-        TypeError, ExternalDCC, test_data["external_dcc"], "structure", "this is not a list"
+        TypeError,
+        ExternalDCC,
+        test_data["external_dcc"],
+        "structure",
+        "this is not a list",
     )
 
 
@@ -473,13 +477,17 @@ def test_get_dcc_method_will_return_desired_dcc_even_with_complex_formats(
     """
     ext_dcc_factory = ExternalDCCFactory()
 
-    zbrush = ext_dcc_factory.get_dcc("ZBrush (.ztl)", name_format="{name} ({extension})")
+    zbrush = ext_dcc_factory.get_dcc(
+        "ZBrush (.ztl)", name_format="{name} ({extension})"
+    )
     assert isinstance(zbrush, ExternalDCC)
     assert zbrush.name == "ZBrush"
     assert zbrush.extensions == [".ztl"]
     assert zbrush.structure == ["Outputs"]
 
-    mudbox = ext_dcc_factory.get_dcc("MudBox (.mud)", name_format="{name} ({extension})")
+    mudbox = ext_dcc_factory.get_dcc(
+        "MudBox (.mud)", name_format="{name} ({extension})"
+    )
     assert isinstance(mudbox, ExternalDCC)
     assert mudbox.name == "MudBox"
     assert mudbox.extensions == [".mud"]

@@ -13,7 +13,8 @@ from stalker.db.session import DBSession
 @pytest.fixture(scope="function")
 def temp_project(create_project):
     """Fixture for color management tests."""
-    project = create_project
+    data = create_project
+    project = data["project"]
     # update repository path to be a temp path
     tempdir = tempfile.mkdtemp()
     repo = project.repository
@@ -36,9 +37,7 @@ def color_managed_project(temp_project, create_pymel):
     cm_config_file_name = "COLOR_MANAGEMENT_CONFIG"
     cm_config_file_full_path = os.path.join(ref_folder_path, cm_config_file_name)
     os.makedirs(ref_folder_path, exist_ok=True)
-    config_data = {
-        pm.about(v=1): "scene-linear Rec.709-sRGB"
-    }
+    config_data = {pm.about(v=1): "scene-linear Rec.709-sRGB"}
     with open(cm_config_file_full_path, "w") as f:
         json.dump(config_data, f)
 
@@ -156,9 +155,7 @@ def test_configure_raise_value_error_if_config_name_is_not_valid(
     from anima.dcc.maya.render import MayaColorManagementConfigurator
 
     with pytest.raises(ValueError) as cm:
-        MayaColorManagementConfigurator.configure(
-            config_name="not a valid config name"
-        )
+        MayaColorManagementConfigurator.configure(config_name="not a valid config name")
 
     assert str(cm.value) == (
         '"not a valid config name" is not a valid value for ``config_name`` '
@@ -282,7 +279,7 @@ def test_configure_project_should_configure_a_project_persistently(
 
 
 def test_configure_project_project_is_none(
-        create_test_db, create_pymel, create_maya_dcc, create_test_data, temp_project
+    create_test_db, create_pymel, create_maya_dcc, create_test_data, temp_project
 ):
     """test configure project with project argument is None."""
     from anima.dcc.maya.render import MayaColorManagementConfigurator
@@ -300,7 +297,7 @@ def test_configure_project_project_is_none(
 
 
 def test_configure_project_project_is_not_a_project_instance(
-        create_test_db, create_pymel, create_maya_dcc, create_test_data, temp_project
+    create_test_db, create_pymel, create_maya_dcc, create_test_data, temp_project
 ):
     """test configure project with project argument is not a project instance."""
     from anima.dcc.maya.render import MayaColorManagementConfigurator
@@ -325,9 +322,7 @@ def test_configure_project_config_name_is_not_valid(
     from anima.dcc.maya.render import MayaColorManagementConfigurator
 
     with pytest.raises(ValueError) as cm:
-        MayaColorManagementConfigurator.configure_project(
-            project, "linear-sRGB"
-        )
+        MayaColorManagementConfigurator.configure_project(project, "linear-sRGB")
 
     assert str(cm.value) == (
         "In MayaColorManagementConfigurator.configure_project() the config_name "

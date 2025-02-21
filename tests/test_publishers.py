@@ -13,7 +13,7 @@ from anima.publish import (
 
 
 def test_registering_a_publisher(prepare_publishers):
-    """testing if registering a publisher is working properly."""
+    """registering a publisher is working properly."""
     assert publishers == {PRE_PUBLISHER_TYPE: {}, POST_PUBLISHER_TYPE: {}}
 
     def some_callable():
@@ -27,7 +27,7 @@ def test_registering_a_publisher(prepare_publishers):
 
 
 def test_registering_a_post_publisher(prepare_publishers):
-    """testing if registering a post publisher is working properly."""
+    """registering a post publisher is working properly."""
     assert publishers == {PRE_PUBLISHER_TYPE: {}, POST_PUBLISHER_TYPE: {}}
 
     def some_callable():
@@ -41,7 +41,7 @@ def test_registering_a_post_publisher(prepare_publishers):
 
 
 def test_registering_with_the_decorator_is_working_properly(prepare_publishers):
-    """testing if registering with decorator is working properly."""
+    """registering with decorator is working properly."""
 
     @publisher("Test")
     def some_callable():
@@ -53,7 +53,7 @@ def test_registering_with_the_decorator_is_working_properly(prepare_publishers):
 
 
 def test_run_publishers_is_working_properly(prepare_publishers):
-    """testing if the run_publishers() function calls all the publishers under
+    """run_publishers() function calls all the publishers under
     the given name."""
     called = []
 
@@ -86,7 +86,7 @@ def test_run_publishers_is_working_properly(prepare_publishers):
 def test_run_publishers_is_working_properly_with_pre_publishers_specified(
     prepare_publishers,
 ):
-    """testing if the run_publishers() function calls all the pre publishers
+    """run_publishers() function calls all the pre publishers
     under the given name."""
     called = []
 
@@ -119,7 +119,7 @@ def test_run_publishers_is_working_properly_with_pre_publishers_specified(
 def test_run_publishers_is_working_properly_with_post_publishers_specified(
     prepare_publishers,
 ):
-    """testing if the run_publishers() function calls all the post publishers
+    """run_publishers() function calls all the post publishers
     under the given name."""
     called = []
 
@@ -170,7 +170,7 @@ def test_run_publishers_is_working_properly_with_post_publishers_specified(
 
 
 def test_registering_a_callable_multiple_times(prepare_publishers):
-    """testing if registering a callable multiple times will not call the
+    """registering a callable multiple times will not call the
     function more than 1 time
     """
     called = []
@@ -208,7 +208,7 @@ def test_registering_a_callable_multiple_times(prepare_publishers):
 
 
 def test_calling_base_callable_multiple_times(prepare_publishers):
-    """testing if calling the base publishers will not call the functions
+    """calling the base publishers will not call the functions
     more than 1 time
     """
     called = []
@@ -240,7 +240,7 @@ def test_calling_base_callable_multiple_times(prepare_publishers):
 
 
 def test_callable_is_not_callable(prepare_publishers):
-    """testing if the callable is not a callable will raise a TypeError"""
+    """callable is not a callable will raise a TypeError"""
     with pytest.raises(TypeError) as cm:
         not_a_callable = "this is not callable"
         register_publisher(not_a_callable, "Test")
@@ -249,7 +249,7 @@ def test_callable_is_not_callable(prepare_publishers):
 
 
 def test_registering_to_multiple_types_with_lists(prepare_publishers):
-    """testing if it is possible to register one publisher for multiple
+    """it is possible to register one publisher for multiple
     types
     """
     called = []

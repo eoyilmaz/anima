@@ -5,43 +5,42 @@ from anima.edit import DurationMixin
 
 
 class DurationAttrMixinTestCase(unittest.TestCase):
-    """tests the anima.previs.DurationMixin class
-    """
+    """tests the anima.previs.DurationMixin class"""
 
     def test_duration_argument_skipped(self):
-        """testing if the default value will be used when the duration argument
+        """default value will be used when the duration argument
         is skipped
         """
-        d =  DurationMixin()
+        d = DurationMixin()
         self.assertEqual(d.duration, 0)
 
     def test_duration_argument_is_not_an_integer(self):
-        """testing if a TypeError will be raised when the duration argument is
+        """a TypeError will be raised when the duration argument is
         not an integer
         """
         with self.assertRaises(TypeError) as cm:
-            DurationMixin(duration='not an integer')
+            DurationMixin(duration="not an integer")
 
         self.assertEqual(
             cm.exception.message,
-            'DurationMixin.duration should be an non-negative float, not str'
+            "DurationMixin.duration should be an non-negative float, not str",
         )
 
     def test_duration_attribute_is_not_an_integer(self):
-        """testing if a TypeError will be raised when the duration attribute is
+        """a TypeError will be raised when the duration attribute is
         not set to a integer value
         """
-        d =  DurationMixin(duration=10)
+        d = DurationMixin(duration=10)
         with self.assertRaises(TypeError) as cm:
-            d.duration = 'not an integer'
+            d.duration = "not an integer"
 
         self.assertEqual(
             cm.exception.message,
-            'DurationMixin.duration should be an non-negative float, not str'
+            "DurationMixin.duration should be an non-negative float, not str",
         )
 
     def test_duration_argument_is_negative(self):
-        """testing if a ValueError will be raised when the duration argument is
+        """a ValueError will be raised when the duration argument is
         negative
         """
         with self.assertRaises(ValueError) as cm:
@@ -49,35 +48,32 @@ class DurationAttrMixinTestCase(unittest.TestCase):
 
         self.assertEqual(
             cm.exception.message,
-            'DurationMixin.duration should be an non-negative float'
+            "DurationMixin.duration should be an non-negative float",
         )
 
     def test_duration_attribute_is_negative(self):
-        """testing if a ValueError will be raised when the duration attribute
+        """a ValueError will be raised when the duration attribute
         is set to a negative value
         """
-        d =  DurationMixin(duration=10)
+        d = DurationMixin(duration=10)
 
         with self.assertRaises(ValueError) as cm:
             d.duration = -10
 
         self.assertEqual(
             cm.exception.message,
-            'DurationMixin.duration should be an non-negative float'
+            "DurationMixin.duration should be an non-negative float",
         )
 
     def test_duration_argument_is_working_properly(self):
-        """testing if the duration argument value is correctly passed to the
+        """duration argument value is correctly passed to the
         duration attribute
         """
-        d =  DurationMixin(duration=10)
+        d = DurationMixin(duration=10)
         self.assertEqual(10, d.duration)
 
     def test_duration_attribute_is_working_properly(self):
-        """testing if the duration attribute is working properly
-        """
-        d =  DurationMixin(duration=10)
+        """duration attribute is working properly"""
+        d = DurationMixin(duration=10)
         d.duration = 15
         self.assertEqual(15, d.duration)
-
-

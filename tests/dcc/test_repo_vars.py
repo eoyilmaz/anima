@@ -66,7 +66,7 @@ def create_test_repo(create_test_db):
 
 
 def test_environment_var_values_are_correct(create_test_repo):
-    """testing if all environment var values are correct"""
+    """all environment var values are correct"""
     data = create_test_repo
     from anima import defaults
 
@@ -78,11 +78,11 @@ def test_environment_var_values_are_correct(create_test_repo):
                     code=repo.code,
                 )
             ]
-         )== repo.path
+        ) == repo.path
 
 
 def test_to_os_independent_path_is_working_properly(create_test_repo):
-    """testing if stalker.Repository.to_os_independent_path() is working
+    """stalker.Repository.to_os_independent_path() is working
     as we are expecting it to work
     """
     data = create_test_repo
