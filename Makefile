@@ -94,5 +94,13 @@ maya-tests:
 docs:
 	cd docs && $(MAKE) html
 
+.PHONY: format
+format:
+	@printf "\n\033[36m--- $@: Formatting ---\033[0m\n"
+	source ./$(VIRTUALENV_DIR)/bin/activate; \
+	echo -e "\n\033[36m--- $@: Using python interpreter '`which python`' ---\033[0m\n"; \
+	ruff format src tests;
+
+
 # https://www.gnu.org/software/make/manual/html_node/Force-Targets.html
 FORCE:
