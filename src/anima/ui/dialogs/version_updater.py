@@ -1,15 +1,20 @@
 # -*- coding: utf-8 -*-
-from typing import Union
+import platform
+import subprocess
+from typing import Dict, Union
+
+from stalker import Version
 
 from anima.dcc.base import generate_empty_reference_resolution, DCCBase
 from anima.log import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui.models.version import VersionTreeModel
 from anima.ui.lib import QtCore, QtWidgets
+from anima.ui.models.version import VersionItemModel
 
 
 def UI(app_in=None, executor=None, **kwargs):
-    """
+    """Wrapper function for the Version Updater UI.
+
     Args:
         dcc (DCCBase): The :class:`~anima.dcc.base.DCCBase` can be None to let
             the UI to work in "DCC-less" mode in which it only creates data in
@@ -27,7 +32,7 @@ def UI(app_in=None, executor=None, **kwargs):
 
 
 class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
-    """The main dialog of the version updater system
+    """The main dialog of the version updater system.
 
     The version_tuple list consist of a Version instance and a reference
     object.
@@ -183,27 +188,26 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         return dcc
 
     def versions_tree_view_auto_fit_column(self):
-        """fits columns to content"""
-        self.versions_tree_view.resizeColumnToContents(0)
-        self.versions_tree_view.resizeColumnToContents(1)
-        self.versions_tree_view.resizeColumnToContents(2)
-        self.versions_tree_view.resizeColumnToContents(3)
-        self.versions_tree_view.resizeColumnToContents(4)
-        self.versions_tree_view.resizeColumnToContents(5)
-        self.versions_tree_view.resizeColumnToContents(6)
+        """Fit columns to content."""
+        model = self.versions_tree_view.model()
+        if not model:
+            return
+        column_count = model.columnCount()
+        for i in range(column_count):
+            self.versions_tree_view.resizeColumnToContents(i)
 
     def fill_versions_tree_view(self):
-        """sets up the versions_treeView"""
+        """Set up the versions tree view."""
         logger.debug("start filling versions_treeView")
         logger.debug("creating a new model")
 
-        version_tree_model = VersionTreeModel()
-        version_tree_model.reference_resolution = self.reference_resolution
+        version_item_model = VersionItemModel()
+        version_item_model.reference_resolution = self.reference_resolution
 
         # populate with all update items
-        version_tree_model.populateTree(self.reference_resolution["root"])
+        version_item_model.populateTree(self.reference_resolution["root"])
 
-        self.versions_tree_view.setModel(version_tree_model)
+        self.versions_tree_view.setModel(version_item_model)
 
         logger.debug("setting up signals for versions_treeView_changed")
         # versions_treeView
@@ -219,12 +223,12 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         logger.debug("finished filling versions_treeView")
 
     def fill_ui(self):
-        """fills the UI with the asset data"""
+        """Fill the UI with the asset data."""
         # set the row count
         self.fill_versions_tree_view()
 
     def select_all_versions(self):
-        """selects all the versions in the tableWidget"""
+        """Select all the versions in the view."""
         version_tree_model = self.versions_tree_view.model()
         for i in range(version_tree_model.rowCount()):
             index = version_tree_model.index(i, 0)
@@ -232,7 +236,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             version_item.setCheckState(QtCore.Qt.Checked)
 
     def select_no_version(self):
-        """deselects all versions in the tableWidget"""
+        """Deselect all versions in the view."""
         version_tree_model = self.versions_tree_view.model()
         for i in range(version_tree_model.rowCount()):
             index = version_tree_model.index(i, 0)
@@ -240,7 +244,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             version_item.setCheckState(QtCore.Qt.Unchecked)
 
     def show_versions_tree_view_context_menu(self, position):
-        """the custom context menu for the versions_treeView"""
+        """Shot the custom context menu."""
         # convert the position to global screen position
         global_position = self.versions_tree_view.mapToGlobal(position)
 
@@ -262,8 +266,6 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         latest_published_version = None
         if version:
             latest_published_version = version.latest_published_version
-
-        from stalker import Version
 
         if not isinstance(version, Version):
             return
@@ -288,14 +290,12 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             if choice == "Open...":
                 self.open_version(selected_action.version)
 
-    def open_version(self, version):
-        """opens the given version in a new DCC
+    def open_version(self, version : Version):
+        """Open the given version in a new DCC.
 
-        :param version: :class:`~stalker.model.version.Version` instance.
+        Args:
+            version (Version): :class:`~stalker.model.version.Version` instance.
         """
-        import subprocess
-        import platform
-
         platform_name = platform.system().lower()
 
         # store the latest published version
@@ -321,7 +321,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             self.fill_ui()
 
     def update_reference_versions_to_latest(self):
-        """Update the referenced Files to their latest versions if it is checked in the UI."""
+        """Update the selected referenced Files to their latest versions."""
         reference_resolution = self.generate_reference_resolution()
 
         # send them back to DCC
@@ -336,10 +336,11 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         # close the interface
         self.close()
 
-    def generate_reference_resolution(self):
-        """Generates a new reference_resolution dictionary from the UI
+    def generate_reference_resolution(self) -> Dict:
+        """Generate a new reference_resolution dictionary from the UI.
 
-        :return: dictionary
+        Returns:
+            Dict: A reference_resolution dictionary.
         """
         generated_reference_resolution = generate_empty_reference_resolution()
 
@@ -356,7 +357,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         return generated_reference_resolution
 
     def show(self):
-        """overridden show method"""
+        """Override the show method."""
         logger.debug("MainDialog.show is started")
         logged_in_user = self.get_logged_in_user()
         if not logged_in_user:

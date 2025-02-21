@@ -207,8 +207,8 @@ class VersionItem(QtGui.QStandardItem):
         return QtGui.QStandardItem.UserType + 2
 
 
-class VersionTreeModel(QtGui.QStandardItemModel):
-    """Implements the model view for the version hierarchy"""
+class VersionItemModel(QtGui.QStandardItemModel):
+    """Implements the model view for the version hierarchy."""
 
     def __init__(self, flat_view=False, *args, **kwargs):
         QtGui.QStandardItemModel.__init__(self, *args, **kwargs)

@@ -7,7 +7,7 @@ import tempfile
 from stalker import Version
 
 from anima.ui.lib import QtCore, QtGui, QtWidgets
-from anima.ui.dialogs.version_dialog import MainDialog, OPEN_MODE, VersionNT
+from anima.ui.dialogs.version_dialog import MainDialog, UIMode, VersionNT
 from anima.utils import get_task_hierarchy_name
 from anima.utils.archive import archive_versions
 
@@ -29,11 +29,11 @@ class MultiVersionSelectDialog(MainDialog):
         self.archive_button = None
         self.archiver = archiver
         super(MultiVersionSelectDialog, self).__init__(
-            dcc=dcc, parent=parent, mode=OPEN_MODE
+            dcc=dcc, parent=parent, mode=UIMode.OPEN_MODE
         )
 
-    def _setup_ui(self):
-        super(MultiVersionSelectDialog, self)._setup_ui()
+    def _setup(self):
+        super(MultiVersionSelectDialog, self)._setup()
         # disable buttons
         self.switch_mode_button.setVisible(False)
         self.switch_mode_button.setEnabled(False)
@@ -115,7 +115,7 @@ class MultiVersionSelectDialog(MainDialog):
 
     def set_mode(self, mode):
         # always use open mode
-        super(MultiVersionSelectDialog, self).set_mode(OPEN_MODE)
+        super(MultiVersionSelectDialog, self).set_mode(UIMode.OPEN_MODE)
 
     def update_window_title(self):
         super(MultiVersionSelectDialog, self).update_window_title()
