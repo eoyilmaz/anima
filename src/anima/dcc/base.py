@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 import os
+from pathlib import Path
 import shutil
 from typing import Dict, List, Optional, Union
 
@@ -121,6 +122,27 @@ class DCCBase(object):
     def __str__(self):
         """Return the string representation."""
         return self._name
+    
+    def generate_file_for_version(self, version: Version) -> File:
+        """Generate a File instance for the given Version instance.
+
+        Args:
+            version (Version): A stalker Version instance.
+
+        Returns:
+            File: A stalker File instance.
+        """
+        if not isinstance(version, Version):
+            raise TypeError(
+                "version should be an instance of stalker.Version, "
+                f"not {version.__class__.__name__}: '{version}'"
+            )
+
+        file = File()
+        full_path : Path = version.generate_path(extension=self.extensions[0] if self.extensions else "")
+        file.full_path = str(full_path)
+        version.files.append(file)
+        return file
 
     @property
     def version(self):
