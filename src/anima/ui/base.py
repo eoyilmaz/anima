@@ -35,18 +35,21 @@ class AnimaDialogBase(object):
 
         self.move(left, top)
 
-    def center_window_to_screen(self):
+    def center_window_to_screen(self) -> None:
         """Center the window to the screen that the mouse pointer is in."""
-        desktop = QtWidgets.QApplication.desktop()
         cursor_pos = QtGui.QCursor.pos()
-        desktop_number = desktop.screenNumber(cursor_pos)
-        desktop_rect = desktop.screenGeometry(desktop_number)
-
-        size = self.geometry()
-
+        screen = QtWidgets.QApplication.screenAt(cursor_pos)
+        desktop_rect = screen.geometry()
+        geometry = self.geometry()
         self.move(
-            (desktop_rect.width() - size.width()) * 0.5 + desktop_rect.left(),
-            (desktop_rect.height() - size.height()) * 0.5 + desktop_rect.top(),
+            (desktop_rect.width() - geometry.width()) * 0.5 + desktop_rect.left(),
+            (desktop_rect.height() - geometry.height()) * 0.5 + desktop_rect.top(),
+        )
+        self.setGeometry(
+            (desktop_rect.width() - geometry.width()) * 0.5 + desktop_rect.left(),
+            (desktop_rect.height() - geometry.height()) * 0.5 + desktop_rect.top(),
+            geometry.width(),
+            geometry.height(),
         )
 
     def get_logged_in_user(self):
