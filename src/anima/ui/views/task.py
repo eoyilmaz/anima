@@ -203,7 +203,7 @@ class TaskTreeView(QtWidgets.QTreeView):
             allow_editing=self.allow_editing,
         )
 
-        task_tree_model.populateTree(self.tasks)
+        task_tree_model.populate(self.tasks)
         self.setModel(task_tree_model)
         self.is_updating = False
         self.auto_fit_column()

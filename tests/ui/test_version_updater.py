@@ -505,7 +505,7 @@ class VersionUpdaterTester(unittest.TestCase):
         self.remove_these_files_buffer = []
 
         self.test_dcc = TestDCC(name="Test DCC")
-        self.test_dcc._version = self.version15
+        self.test_dcc._file = self.version15
 
         if not QtGui.QApplication.instance():
             logger.debug("creating a new QApplication")
@@ -955,7 +955,7 @@ class VersionUpdaterTester(unittest.TestCase):
         self.version1.inputs.append(self.version3)
         DBSession.commit()
 
-        self.test_dcc._version = self.version1
+        self.test_dcc._file = self.version1
 
         new_dialog = version_updater.MainDialog(dcc=self.test_dcc)
         self.assertEqual(
@@ -964,7 +964,7 @@ class VersionUpdaterTester(unittest.TestCase):
 
     def test_init_will_raise_a_RuntimeError_if_the_current_version_is_None(self):
         """RuntimeError is raised if the current_version in the DCC is None."""
-        self.test_dcc._version = None
+        self.test_dcc._file = None
 
         def patched(*args, **kwargs):
             pass

@@ -197,17 +197,17 @@ class ShotExtensionTestCase(unittest.TestCase):
     def test_full_shot_name_property_is_working_properly(self):
         """full_shot_name property is working properly"""
         sm = pymel.core.PyNode("sequenceManager1")
-        sm.set_shot_name_template("<Sequence>_<Shot>_<Version>")
+        sm.set_shot_name_template("<Sequence>_<Shot>_<Revision>_<Version>")
         sm.set_version("v001")
 
         seq1 = sm.create_sequence("SEQ001_HSNI_003")
         shot1 = seq1.create_shot("0010")
         shot2 = seq1.create_shot("0020")
 
-        self.assertEqual(shot1.full_shot_name, "SEQ001_HSNI_003_0010_v001")
-        self.assertEqual(shot2.full_shot_name, "SEQ001_HSNI_003_0020_v001")
+        self.assertEqual(shot1.full_shot_name, "SEQ001_HSNI_003_0010_r01_v001")
+        self.assertEqual(shot2.full_shot_name, "SEQ001_HSNI_003_0020_r01_v001")
 
         # change template and test again
-        sm.set_shot_name_template("<Shot>_<Version>")
-        self.assertEqual(shot1.full_shot_name, "0010_v001")
-        self.assertEqual(shot2.full_shot_name, "0020_v001")
+        sm.set_shot_name_template("<Shot>_<Revision>_<Version>")
+        self.assertEqual(shot1.full_shot_name, "0010_r01_v001")
+        self.assertEqual(shot2.full_shot_name, "0020_r01_v001")

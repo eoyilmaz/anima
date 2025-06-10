@@ -11,7 +11,7 @@ import time
 import pymel.core as pm
 import maya.cmds as mc
 
-from stalker import File, Repository, Version
+from stalker import File, Repository, Task, Variant, Version
 from stalker.db.session import DBSession
 
 from anima import utils
@@ -306,7 +306,7 @@ class Maya(DCCBase):
         start = time.time()
 
         # get the related Version
-        version = Version.query.filter(Version.file.contains(file)).first()
+        version = Version.query.filter(Version.files.contains(file)).first()
         if not version:
             RuntimeError(
                 "The given file is not related to a Version instance, "
@@ -475,7 +475,7 @@ class Maya(DCCBase):
         # updates correctly, so do not disable this
         DBSession.add(version)
 
-        self.update_version_inputs()
+        self.update_file_inputs()
 
         # append it to the recent file list
         self.append_to_recent_files(str(full_path))
@@ -575,7 +575,7 @@ class Maya(DCCBase):
 
     def open(
         self,
-        version,
+        file,
         force=False,
         representation=None,
         reference_depth=0,
@@ -598,10 +598,8 @@ class Maya(DCCBase):
         for them.
 
         Args:
-            version (Union[Version, File]): The Stalker `Version` instance to
-                open. If a `Version` is given, the "Base" representation will
-                be opened. If a `File` is given, if it is a representation it
-                will be opened directly.
+            file (File): The Stalker `File` instance to open. If the given file
+                is a representation it will be opened directly.
             force (bool): Force open the file.
             representation (str): Open the given version with the given
                 representations.
@@ -629,22 +627,23 @@ class Maya(DCCBase):
 
         # set the project
         # new_workspace = os.path.dirname(version.absolute_path)
-        new_workspace = version.absolute_path
+        new_workspace = file.absolute_path
 
         pm.workspace.open(new_workspace)
 
         # check for unsaved changes
-        logger.info(f"opening file: {version.absolute_full_path}")
+        logger.info(f"opening file: {file.absolute_full_path}")
+        print(f"opening file: {file.absolute_full_path}")
 
         # set the playblast folder
-        self.set_playblast_file_name(version)
+        self.set_playblast_file_name(file)
         try:
             # switch representations
             if representation and representation != Representation.base_repr_name:
                 logger.info(f"requested representation: {representation}")
                 # so we have a representation request
                 pm.openFile(
-                    version.absolute_full_path,
+                    file.absolute_full_path,
                     f=force,
                     loadReferenceDepth="none",
                     prompt=prompt,
@@ -661,7 +660,7 @@ class Maya(DCCBase):
                     logger.info("not using loadReferenceDepth parameter")
                     # load in saved state
                     pm.openFile(
-                        version.absolute_full_path,
+                        file.absolute_full_path,
                         f=force,
                         prompt=prompt,
                         ignoreVersion=True,
@@ -673,7 +672,7 @@ class Maya(DCCBase):
                         )
                     )
                     pm.openFile(
-                        version.absolute_full_path,
+                        file.absolute_full_path,
                         f=force,
                         prompt=prompt,
                         loadReferenceDepth=reference_depth_res[reference_depth],
@@ -697,9 +696,9 @@ class Maya(DCCBase):
         render.MayaColorManagementConfigurator.configure()
 
         # set sequence manager related data
-        self.set_sequence_manager_data(version)
+        self.set_sequence_manager_data(file)
 
-        self.append_to_recent_files(version.absolute_full_path)
+        self.append_to_recent_files(file.absolute_full_path)
 
         # replace_external_paths
         self.replace_external_paths()
@@ -747,21 +746,25 @@ class Maya(DCCBase):
 
         return True
 
-    def reference(self, version, use_namespace=True):
-        """References the given Version instance to the current Maya scene.
+    def reference(
+        self, file: File, use_namespace: bool = True
+    ) -> pm.system.FileReference:
+        """References the given File instance to the current Maya scene.
 
-        :param version: The desired
-          :class:`~stalker.models.version.Version` instance to be
-          referenced.
-        :param bool use_namespace: Use namespaces for the referenced versions.
-        :return: :class:`~pm.system.FileReference`
+        Args:
+            file (File): The desired :class:`~stalker.models.file.File`
+                instance to be referenced.
+            use_namespace (bool): Use namespaces for the referenced versions.
+
+        Returns:
+            :class:`~pm.system.FileReference`: The created reference object.
         """
-
         # do not reference anything if this scene is not saved yet
         if pm.sceneName() == "":
             raise RuntimeError("Please save your scene first!!!")
 
         # use the file name without extension as the namespace
+        version = Version.query.filter(Version.files.contains(file)).first()
         namespace = os.path.basename(version.nice_name)
 
         # do not use representation part of the filename
@@ -769,11 +772,11 @@ class Maya(DCCBase):
 
         if use_namespace:
             ref = pm.createReference(
-                version.full_path, gl=True, namespace=namespace, options="v=0"
+                file.full_path, gl=True, namespace=namespace, options="v=0"
             )
         else:
             ref = pm.createReference(
-                version.full_path,
+                file.full_path,
                 gl=True,
                 defaultNamespace=True,  # this is not "no namespace", but safe
                 options="v=0",
@@ -788,16 +791,16 @@ class Maya(DCCBase):
 
         # append the referenced version to the current versions references
         # attribute
-        current_version = self.get_current_version()
-        if current_version:
-            current_version.inputs.append(version)
+        current_file = self.get_current_file()
+        if current_file:
+            current_file.references.append(file)
             DBSession.commit()
 
-        # also update version.inputs for the referenced input
-        self.update_version_inputs(ref)
+        # also update file.references for the referenced input
+        self.update_file_inputs(ref)
 
         # append it to reference path
-        self.append_to_recent_files(version.absolute_full_path)
+        self.append_to_recent_files(file.absolute_full_path)
 
         return ref
 
@@ -818,25 +821,26 @@ class Maya(DCCBase):
         logger.debug(f"version from workspace is: {version}")
         return version
 
-    def get_current_version(self):
-        """Finds the Version instance from the current Maya session.
+    def get_current_file(self):
+        """Finds the File instance from the current Maya session.
 
         If it can't find any then returns None.
 
-        :return: :class:`~stalker.models.version.Version`
+        Returns:
+            None | File: The File instance or None.
         """
-        version = None
+        file = None
 
         # pm.env.sceneName() always uses "/"
         full_path = pm.sceneName()
         logger.debug(f"current scene full_path: {full_path}")
         # try to get it from the current open scene
         if full_path != "":
-            logger.debug("trying to get the version from current file")
-            version = self.get_version_from_full_path(full_path)
-            logger.debug(f"version from current file: {version}")
+            logger.debug("trying to get the file from current file")
+            file = self.get_file_from_full_path(full_path)
+            logger.debug(f"file from current file: {file}")
 
-        return version
+        return file
 
     def get_last_version(self):
         """Returns the last opened or the current Version instance from the DCC.
@@ -868,15 +872,30 @@ class Maya(DCCBase):
         """Set sequenceManager1 node attributes including the version number.
 
         Args:
-            version (stalker.models.version.Version): The stalker Version
-                instance.
+            version (File | Version): A stalker File or Version instance.
         """
+        if isinstance(version, File):
+            # if the version is a File instance, get the Version instance
+            version = Version.query.filter(Version.files.contains(version)).first()
+        if version is None:
+            logger.info("No version provided, skipping sequence manager data setting.")
+            return
+        if version and not isinstance(version, Version):
+            raise TypeError(
+                "version should be a stalker.models.version.Version instance, "
+                f"not {version.__class__.__name__}: '{version}'"
+            )
         start = time.time()
         sm = pm.ls("sequenceManager1")[0]
         if sm is not None:
             sm.get_shot_name_template()
-            sm.set_task_name(version.task.name)
-            # sm.set_variant_name(version.variant_name)
+            if isinstance(version.task, Variant):
+                sm.set_task_name(version.task.parent.name)
+                sm.set_variant_name(version.task.name)
+            elif isinstance(version.task, Task):
+                sm.set_task_name(version.task.name)
+                sm.set_variant_name("Main")
+            sm.set_revision(f"r{version.revision_number:02d}")
             sm.set_version(f"v{version.version_number:03d}")
 
             for seq in sm.sequences.get():
@@ -1026,16 +1045,14 @@ class Maya(DCCBase):
                 pass
 
     @classmethod
-    def set_playblast_file_name(cls, version):
+    def set_playblast_file_name(cls, file):
         """sets the playblast file name"""
         start = time.time()
         playblast_path = os.path.join(
-            version.absolute_path, "Outputs", "playblast"
+            file.absolute_path, "Outputs", "playblast"
         ).replace("\\", "/")
 
-        playblast_filename = cls.get_significant_name(
-            version, include_project_code=False
-        )
+        playblast_filename = cls.get_significant_name(file, include_project_code=False)
 
         playblast_full_path = os.path.join(playblast_path, playblast_filename).replace(
             "\\", "/"
@@ -1570,39 +1587,41 @@ class Maya(DCCBase):
                     # convert to os independent absolute
                     new_path = Repository.to_os_independent_path(path)
 
-                    if new_path != orig_path:
-                        logger.info(f"with: {new_path}")
+                    if new_path == orig_path:
+                        continue
 
-                        # check if it has any incoming connections
+                    logger.info(f"with: {new_path}")
+
+                    # check if it has any incoming connections
+                    try:
+                        inputs = node.attr(attr_name).inputs(p=1)
+                    except TypeError as e:
+                        inputs = []
+                        print(f"ignoring this error: {e}")
+                        print(f"node     : {node.name()}")
+                        print(f"attr_name: {attr_name}")
+
+                    if len(inputs):
+                        # it has incoming connections
+                        # so set the other side
                         try:
-                            inputs = node.attr(attr_name).inputs(p=1)
-                        except TypeError as e:
-                            inputs = []
-                            print(f"ignoring this error: {e}")
-                            print(f"node     : {node.name()}")
-                            print(f"attr_name: {attr_name}")
-
-                        if len(inputs):
-                            # it has incoming connections
-                            # so set the other side
-                            try:
-                                inputs[0].set(new_path)
-                            except RuntimeError:
-                                pass
-                        else:
-                            try:
-                                # preserve colorSpace info
-                                color_space = None
-                                has_color_space = node.hasAttr("colorSpace")
-                                if has_color_space:
-                                    color_space = node.colorSpace.get()
-                                node.setAttr(attr_name, new_path)
-                                if has_color_space:
-                                    node.colorSpace.set(color_space)
-                            except RuntimeError:
-                                # it is probably locked
-                                # just skip it
-                                pass
+                            inputs[0].set(new_path)
+                        except RuntimeError:
+                            pass
+                    else:
+                        try:
+                            # preserve colorSpace info
+                            color_space = None
+                            has_color_space = node.hasAttr("colorSpace")
+                            if has_color_space:
+                                color_space = node.colorSpace.get()
+                            node.setAttr(attr_name, new_path)
+                            if has_color_space:
+                                node.colorSpace.set(color_space)
+                        except RuntimeError:
+                            # it is probably locked
+                            # just skip it
+                            pass
         end = time.time()
         logger.debug("replace_external_paths took {:0.3f} seconds".format(end - start))
 
@@ -1654,7 +1673,7 @@ class Maya(DCCBase):
     def deep_references_update(self):
         """updates the inputs of the references of the current scene"""
         # first update with data from first level references
-        self.update_version_inputs()
+        self.update_file_inputs()
 
         # then go to the references
         references_list = pm.listReferences()
@@ -1663,7 +1682,7 @@ class Maya(DCCBase):
         while len(references_list):
             current_ref = references_list.pop(0)
             logger.debug(f"current_ref: {current_ref.path}")
-            self.update_version_inputs(current_ref)
+            self.update_file_inputs(current_ref)
             # optimize it by only appending one instance of the same referenced
             # file
             # sort the references according to their paths so, all the
@@ -1707,7 +1726,7 @@ class Maya(DCCBase):
         pdm = ProgressManagerFactory.get_progress_manager()
         return super(Maya, self).check_references(pdm=pdm)
 
-    def update_reference_versions_to_latest(self, reference_resolution):
+    def update_reference_files_to_latest(self, reference_resolution):
         """Updates maya versions with the given reference_resolution.
 
         The reference_resolution should be a dictionary in the following

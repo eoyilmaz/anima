@@ -600,13 +600,13 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         """
         return QtCore.Qt.MoveAction
 
-    def populateTree(self, tasks):
-        """Populate tree with user projects.
+    def populate(self, tasks):
+        """Populate model with user projects.
 
         Args:
             tasks (list): A list of Stalker Tasks instances.
         """
-        logger.debug("TaskTreeModel.populateTree() is started")
+        logger.debug("TaskTreeModel.populate() is started")
         self.setColumnCount(4)
         self.setHorizontalHeaderLabels(self.horizontal_labels)
 
@@ -617,7 +617,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
 
             self.appendRow(task_item)
 
-        logger.debug("TaskTreeModel.populateTree() is finished")
+        logger.debug("TaskTreeModel.populate() is finished")
 
     def canFetchMore(self, index):
         """Check if the item can fetch more items.
@@ -708,8 +708,8 @@ class TaskTableModel(QtGui.QStandardItemModel):
             ["", "Thumbnail", "Start", "End", "Name", "Bid", "Sched."]
         )
 
-    def populate_table(self, tasks):
-        """Populate table with data.
+    def populate(self, tasks):
+        """Populate model with data.
 
         Args:
             tasks (list): A list of tasks or it can be a list out of the

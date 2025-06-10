@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 
 from functools import lru_cache
 import os
@@ -380,6 +381,10 @@ class DCCBase(object):
                 None.
         """
         current_file = self.get_current_file()
+        if not current_file:
+            logger.debug("no current file found!")
+            return None
+        logger.debug(f"current file: {current_file.absolute_full_path}")
         # query the version that contains this file
         return Version.query.filter(Version.files.contains(current_file)).first()
 
@@ -483,7 +488,7 @@ class DCCBase(object):
         """
         raise NotImplementedError("set_project is not implemented")
 
-    def update_version_inputs(self, parent_ref=None):
+    def update_file_inputs(self, parent_ref=None):
         """Update the references list of the current file.
 
         Args:
@@ -496,27 +501,30 @@ class DCCBase(object):
         logger.debug("get a file")
         if not parent_ref:
             logger.debug("got no parent_ref")
-            version = self.get_current_version()
+            file = self.get_current_file()
         else:
             logger.debug("have a parent_ref")
-            version = self.get_version_from_full_path(parent_ref.path)
+            file = self.get_file_from_full_path(parent_ref.path)
 
-        if version is None:
+        if file is None:
             return
 
-        logger.debug(f"got a version: {version.absolute_full_path}")
+        logger.debug(f"got a file: {file.absolute_full_path}")
+
         # use the base representation if it is not
+        if file.is_representation() and not file.is_base_representation():
+            version = file.representation_of
+            logger.debug(
+                "this is a representation switching to its parent:\n\t"
+                f"{version}\n\t{file}"
+            )
 
-        if version.variant_name and version.parent:
-            version = version.parent
-            logger.debug(f"this is a representation switching to its parent: {version}")
-
-        # update the reference list
-        referenced_versions = self.get_referenced_files(parent_ref)
-        version.inputs = referenced_versions
+        # update the references list
+        referenced_files = self.get_referenced_files(parent_ref)
+        file.references = referenced_files
 
         # commit data to the database
-        DBSession.add(version)
+        DBSession.add(file)
         DBSession.commit()
 
     def deep_references_update(self):
@@ -569,52 +577,60 @@ class DCCBase(object):
             caller.step()
 
         # reverse walk in DFS
-        dfs_version_references = []
+        dfs_file_references = []
 
+        file = self.get_current_file()
         version = self.get_current_version()
-        if not version:
+        if not file:
             return reference_resolution
 
-        for v in version.walk_inputs():
-            dfs_version_references.append(v)
+        for f in file.walk_references():
+            dfs_file_references.append(f)
 
         if caller:
             caller.step()
 
         # pop the first element which is the current scene
-        dfs_version_references.pop(0)
+        dfs_file_references.pop(0)
 
         caller.end_progress()
 
         # register a new caller
         caller = pdm.register(
-            len(dfs_version_references),
+            len(dfs_file_references),
             f"{self.__class__.__name__}.check_references()",
         )
 
         # iterate back in the list
-        for v in reversed(dfs_version_references):
+        for f in reversed(dfs_file_references):
+            v = Version.query.filter(Version.files.contains(f)).first()
             # check inputs first
             to_be_updated_list = []
-            for ref_v in v.inputs:
-                if not ref_v.is_latest_published_version():
-                    to_be_updated_list.append(ref_v)
+            for ref_f in f.references:
+                version = Version.query.filter(Version.files.contains(ref_f)).first()
+                if version and not version.is_latest_published_version():
+                    to_be_updated_list.append(ref_f)
 
             if to_be_updated_list:
                 action = "create"
                 # check if there is a new published version of this version
-                # that is using all the updated versions of the references
+                # that is using all the updated files of the references
                 latest_published_version = v.latest_published_version
                 if latest_published_version and not v.is_latest_published_version():
                     # so there is a new published version
                     # check if its children needs any update
                     # and the updated child versions are already
                     # referenced to the this published version
+                    latest_published_file = (
+                        latest_published_version.get_base_representation()
+                    )
                     if all(
                         [
-                            ref_v.latest_published_version
-                            in latest_published_version.inputs
-                            for ref_v in to_be_updated_list
+                            Version.query.filter(Version.files.contains(ref_f))
+                            .first()
+                            .latest_published_version
+                            in latest_published_file.references
+                            for ref_f in to_be_updated_list
                         ]
                     ):
                         # so all new versions are referenced to this published
@@ -641,16 +657,16 @@ class DCCBase(object):
                 # resolution_dictionary, if any of them are update, or create
                 # then set this one to 'create'
                 if any(
-                    rev_v in reference_resolution["update"]
-                    or rev_v in reference_resolution["create"]
-                    for rev_v in v.inputs
+                    rev_f in reference_resolution["update"]
+                    or rev_f in reference_resolution["create"]
+                    for rev_f in f.references
                 ):
                     action = "create"
 
             # so append this v to the related action list
-            reference_resolution[action].append(v)
+            reference_resolution[action].append(f)
 
-            caller.step(message=v.nice_name)
+            caller.step(message=f.nice_name)
 
         caller.end_progress()
 
@@ -669,7 +685,7 @@ class DCCBase(object):
             "get_referenced_files() is not implemented in this DCC!"
         )
 
-    def update_reference_versions_to_latest(self, reference_resolution: Dict):
+    def update_reference_files_to_latest(self, reference_resolution: Dict):
         """Update the File references to their latest versions.
 
         Args:
@@ -772,7 +788,7 @@ class DCCBase(object):
     @classmethod
     def get_significant_name(
         cls,
-        version,
+        version: File | Version,
         include_project_code: bool = True,
         include_version_number: bool = True,
     ) -> str:
@@ -782,13 +798,17 @@ class DCCBase(object):
         Shot or Sequence and includes the ``Project.code``.
 
         Args:
-            version : The Stalker Version instance.
+            version (File | Version): A Stalker File or Version instance.
             include_project_code (bool): Include project code.
             include_version_number (bool): Include version number.
 
         Returns:
             str: The significant name.
         """
+        if isinstance(version, File):
+            # if the version is a File instance, get the Version instance
+            version = Version.query.filter(Version.files.contains(version)).first()
+
         if include_project_code:
             sig_name = "{}_{}".format(version.task.project.code, version.nice_name)
         else:

@@ -8,7 +8,7 @@ import MaxPlus
 import pymxs
 from pymxs import runtime as rt
 
-from stalker import Shot
+from stalker import Shot, Version
 from stalker.db.session import DBSession
 
 from anima.dcc.base import DCCBase, generate_empty_reference_resolution
@@ -243,11 +243,11 @@ class Max(DCCBase):
         rt.mergeMAXFile(version.absolute_full_path)
         return True
 
-    def reference(self, version, use_namespace=True):
+    def reference(self, file, use_namespace=True):
         """Creates an XRef for the given version in the current scene.
 
         Args:
-            version (Version): The Stalker Version instance.
+            file (File): A Stalker File instance.
             use_namespace (bool): Use a namespace or not.
 
         Returns:
@@ -255,7 +255,8 @@ class Max(DCCBase):
         """
         rt = pymxs.runtime
 
-        file_full_path = version.absolute_full_path
+        version = Version.query.filter(Version.files.contains(file)).first()
+        file_full_path = file.absolute_full_path
         namespace = os.path.basename(version.nice_name)
 
         xref_objects = rt.getMAXFileObjectNames(file_full_path)
@@ -268,8 +269,9 @@ class Max(DCCBase):
         # append the referenced version to the current versions references
         # attribute
         current_version = self.get_current_version()
-        if current_version:
-            current_version.inputs.append(version)
+        current_file = self.get_current_file()
+        if current_file:
+            current_file.references.append(file)
             DBSession.commit()
 
         # append it to reference path
@@ -280,7 +282,7 @@ class Max(DCCBase):
     def deep_references_update(self):
         """updates the inputs of the references of the current scene"""
         # first update with data from first level references
-        self.update_version_inputs()
+        self.update_file_inputs()
 
     def get_referenced_files(self, parent_ref=None):
         """Returns a list of Version instances that are referenced to the
@@ -314,7 +316,7 @@ class Max(DCCBase):
 
         return versions
 
-    def update_reference_versions_to_latest(self, reference_resolution):
+    def update_reference_files_to_latest(self, reference_resolution):
         """Updates XRef versions with the given reference_resolution.
 
         The reference_resolution should be a dictionary in the following

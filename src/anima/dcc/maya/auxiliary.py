@@ -13,7 +13,17 @@ import maya.cmds as cmds
 import maya.mel as mel
 import pymel.core as pm
 
-from stalker import File, LocalSession, Project, Repository, Shot, Task, Type, Version
+from stalker import (
+    File,
+    LocalSession,
+    Project,
+    Repository,
+    Shot,
+    Task,
+    Type,
+    Variant,
+    Version,
+)
 from stalker.db.session import DBSession
 
 
@@ -971,21 +981,28 @@ def run_pre_publishers() -> None:
 
     m_env = Maya()
 
+    file = m_env.get_current_file()
     version = m_env.get_current_version()
 
     # check if we have a proper version
-    if not version:
+    if not file or not version:
         return
 
     # check if it is a Representation
-    if Representation.repr_separator in version.variant_name:
+    if file.is_representation():
         return
 
     if version.is_published:
         # before doing anything run all publishers
         type_name = ""
-        if version.task.type:
-            type_name = version.task.type.name
+        task = version.task
+        variant = None
+        if isinstance(task, Variant):
+            variant = task
+            task = variant.parent
+
+        if task.type:
+            type_name = task.type.name
 
         # before running use the staging area to store the current version
         staging["version"] = version

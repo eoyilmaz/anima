@@ -3198,8 +3198,8 @@ class LightingSceneBuilder(object):
             reference_depth=3,
         )
         # this version is maybe uploaded with Stalker Pyramid, so update referenced
-        # versions to get a proper version.inputs list
-        m.update_version_inputs()
+        # files to get a proper file.references list
+        m.update_file_inputs()
 
         # there is a new bug in some animation scene
         # that causes the initialShader to be locked

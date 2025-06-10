@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+from functools import cache
 from typing import List, Union
 
 from stalker import File, Type, Version
@@ -12,6 +11,7 @@ REPR_TYPE_NAME = "Representation"
 BASE_REPR_NAME = "Base"
 
 
+@cache
 def get_repr_type() -> Union[None, Type]:
     """Return the representation Type instance.
 
@@ -42,12 +42,13 @@ class RepresentationManager(object):
 class Representation(object):
     """A single representation related to a Version.
 
-    A representation is basically a File instance, created as an output to a
-    Version. The content of the file that the File instance is representing can
-    be a Maya scene that contains a hires polygonal model (LOD500, LOD300,
-    LOD100 etc), a delayed load archive suitable for the render engine(i.e
-    Arnold Scene Source (*.ass) or a Redshift Proxy (*.rs) file) or a geometry
-    with only one bounding box.
+    A representation is basically a :class:`stalker.models.file.File` instance,
+    created for a :class:`stalker.models.version.Version` as usual. The content
+    of the file that the `File` instance is representing can be a Maya scene
+    that contains a hires polygonal model (LOD500, LOD300, LOD100 etc), a
+    delayed load archive suitable for the render engine(i.e Arnold Scene Source
+    (*.ass) or a Redshift Proxy (*.rs) file) or a geometry with only one
+    bounding box.
 
     In Anima Pipeline, different representations are managed through File
     instances stored in `Version.files` attribute. Each `File` that is a
@@ -424,7 +425,7 @@ def is_base_representation(self) -> bool:
     Returns:
         bool: True if this is the base representation.
     """
-    return self.name == BASE_REPR_NAME and self.is_representation()
+    return self.is_representation() and self.name == BASE_REPR_NAME
 
 
 @extends(File)

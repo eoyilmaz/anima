@@ -92,7 +92,7 @@ class VersionMover(AnimaDialogBase, QtWidgets.QDialog):
 
         task_tree_model = TaskTreeModel()
         task_tree_model.user = logged_in_user
-        task_tree_model.populateTree(projects)
+        task_tree_model.populate(projects)
 
         # fit to elements
         self.from_tasks_tree_view_auto_fit_column()

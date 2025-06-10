@@ -267,31 +267,44 @@ class SequenceManagerExtension(object):
         attribute if missing
         """
         if not self.hasAttr("shot_name_template"):
-            default_template = "<Sequence>_<Shot>_<Task>_<Variant>_<Version>"
+            default_template = "<Sequence>_<Shot>_<Task>_<Variant>_<Revision>_<Version>"
             self.set_shot_name_template(default_template)
 
         return self.shot_name_template.get()
 
     @extends(pm.nodetypes.SequenceManager)
     def set_shot_name_template(self, template):
-        """sets the shot_name_template attribute value"""
+        """Set the shot_name_template attribute value."""
         if not self.hasAttr("shot_name_template"):
             self.addAttr("shot_name_template", dt="string")
 
         self.shot_name_template.set(template)
 
     @extends(pm.nodetypes.SequenceManager)
+    def get_revision(self):
+        """Return the revision attribute value, creates the attribute if it is missing."""
+        if not self.hasAttr("revision"):
+            self.set_revision("")
+        return self.revision.get()
+
+    @extends(pm.nodetypes.SequenceManager)
+    def set_revision(self, template):
+        """Set the revision attribute value."""
+        if not self.hasAttr("revision"):
+            self.addAttr("revision", dt="string")
+
+        self.revision.set(template)
+
+    @extends(pm.nodetypes.SequenceManager)
     def get_version(self):
-        """returns the version attribute value, creates the attribute if
-        missing
-        """
+        """Return the version attribute value, creates the attribute if it is missing."""
         if not self.hasAttr("version"):
             self.set_version("")
         return self.version.get()
 
     @extends(pm.nodetypes.SequenceManager)
     def set_version(self, template):
-        """sets the version attribute value"""
+        """Set the version attribute value."""
         if not self.hasAttr("version"):
             self.addAttr("version", dt="string")
 
@@ -972,6 +985,7 @@ class ShotExtension(object):
             seq = self.sequence
             sm = seq.manager
             camera = self.currentCamera.get()
+            revision = sm.get_revision()
             version = sm.get_version()
             task = sm.get_task_name()
             variant = sm.get_variant_name()
@@ -983,6 +997,7 @@ class ShotExtension(object):
                 .replace("<Shot>", "{shot}")
                 .replace("<Task>", "{task}")
                 .replace("<Variant>", "{variant}")
+                .replace("<Revision>", "{revision}")
                 .replace("<Version>", "{version}")
                 .replace("<Camera>", "{camera}")
             )
@@ -992,6 +1007,7 @@ class ShotExtension(object):
                 sequence=seq.sequence_name.get(),
                 task=task,
                 variant=variant,
+                revision=revision,
                 version=version,
                 camera=camera.name() if camera else None,
             )

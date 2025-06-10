@@ -642,5 +642,5 @@ class UserTasksByStatusWidget(
                     .filter(Task.status == status)
                     .all()
                 )
-                task_table_model.populate_table(tasks)
+                task_table_model.populate(tasks)
                 task_table.resizeColumnsToContents()

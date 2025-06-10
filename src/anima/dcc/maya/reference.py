@@ -223,7 +223,7 @@ class Reference(object):
             reference_resolution = m.open(
                 latest_look_dev_version, force=True, skip_update_check=True
             )
-            m.update_reference_versions_to_latest(reference_resolution)
+            m.update_reference_files_to_latest(reference_resolution)
 
             if reference_resolution["update"] or reference_resolution["create"]:
                 # create a new version

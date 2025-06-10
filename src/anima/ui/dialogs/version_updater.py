@@ -12,6 +12,19 @@ from anima.ui.lib import QtCore, QtWidgets
 from anima.ui.models.version import VersionItemModel
 
 
+COLUMN_LABELS = [
+    "Do Update?",
+    "Thumbnail",
+    "Task",
+    "Variant",
+    "Current",
+    "Latest",
+    "Action",
+    "Updated By",
+    "Notes",
+]
+
+
 def UI(app_in=None, executor=None, **kwargs):
     """Wrapper function for the Version Updater UI.
 
@@ -201,11 +214,11 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         logger.debug("start filling versions_treeView")
         logger.debug("creating a new model")
 
-        version_item_model = VersionItemModel()
+        version_item_model = VersionItemModel(labels=COLUMN_LABELS)
         version_item_model.reference_resolution = self.reference_resolution
 
         # populate with all update items
-        version_item_model.populateTree(self.reference_resolution["root"])
+        version_item_model.populate(self.reference_resolution["root"])
 
         self.versions_tree_view.setModel(version_item_model)
 
@@ -326,7 +339,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
         # send them back to DCC
         try:
-            self.dcc.update_reference_versions_to_latest(reference_resolution)
+            self.dcc.update_reference_files_to_latest(reference_resolution)
         except RuntimeError as e:
             # display as a Error message and return without doing anything
             message_box = QtWidgets.QMessageBox(self)

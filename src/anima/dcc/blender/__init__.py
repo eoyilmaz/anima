@@ -260,7 +260,7 @@ class Blender(DCCBase):
 
         return versions
 
-    def update_reference_versions_to_latest(self, reference_resolution):
+    def update_reference_files_to_latest(self, reference_resolution):
         """Updates the linked libraries according to the given reference_resolution.
 
         :param reference_resolution:
@@ -294,7 +294,7 @@ class Blender(DCCBase):
     def deep_references_update(self):
         """updates the inputs of the references of the current scene"""
         # just use the first level references for now
-        self.update_version_inputs()
+        self.update_file_inputs()
 
     def set_fps(self, fps=25.0):
         """

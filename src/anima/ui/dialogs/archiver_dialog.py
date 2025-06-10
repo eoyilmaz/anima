@@ -107,10 +107,10 @@ class MultiVersionSelectDialog(MainDialog):
         super(MultiVersionSelectDialog, self)._set_defaults()
         # re-arrange signals
         # disconnect old ones
-        self.previous_versions_table_widget.cellDoubleClicked.disconnect()
-        self.previous_versions_table_widget.customContextMenuRequested.disconnect()
+        self.previous_versions_tree_view.cellDoubleClicked.disconnect()
+        self.previous_versions_tree_view.customContextMenuRequested.disconnect()
         # do new connections.
-        self.previous_versions_table_widget.cellDoubleClicked.connect(
+        self.previous_versions_tree_view.cellDoubleClicked.connect(
             self.add_version_selected_version
         )
 
@@ -124,7 +124,7 @@ class MultiVersionSelectDialog(MainDialog):
 
     def add_version_selected_version(self, *args, **kwargs):
         """Add the selected version to the list."""
-        version = self.previous_versions_table_widget.current_version
+        version = self.previous_versions_tree_view.current_version
         self.selected_versions_list_view.add_version(version)
 
     def archive_selected_versions(self):

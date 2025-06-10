@@ -6,11 +6,8 @@ import sys
 import tempfile
 import unittest
 
-from anima.dcc.testing import TestDCC
-
 from qtpy.QtTest import QTest
 from qtpy.QtCore import Qt
-
 
 from stalker import (
     db,
@@ -30,6 +27,7 @@ from stalker import (
 from stalker.db.session import DBSession
 from stalker.models.auth import LocalSession
 
+from anima.dcc.testing import TestDCC
 from anima.ui.dialogs import version_dialog
 from anima.ui.lib import QtCore, QtGui
 
@@ -508,23 +506,23 @@ class VersionCreatorTester(unittest.TestCase):
         selection_model.select(task1_item.index(), QtGui.QItemSelectionModel.Select)
 
         # the row count should be 2
-        self.assertEqual(self.dialog.previous_versions_table_widget.rowCount(), 3)
+        self.assertEqual(self.dialog.previous_versions_tree_view.rowCount(), 3)
 
         # now check if the previous versions tableWidget has the info
         versions = [self.test_version1, self.test_version2, self.test_version3]
         for i in range(len(versions)):
             self.assertEqual(
-                int(self.dialog.previous_versions_table_widget.item(i, 0).text()),
+                int(self.dialog.previous_versions_tree_view.item(i, 0).text()),
                 versions[i].version_number,
             )
 
             self.assertEqual(
-                self.dialog.previous_versions_table_widget.item(i, 2).text(),
+                self.dialog.previous_versions_tree_view.item(i, 2).text(),
                 versions[i].created_by.name,
             )
 
             self.assertEqual(
-                self.dialog.previous_versions_table_widget.item(i, 6).text(),
+                self.dialog.previous_versions_tree_view.item(i, 6).text(),
                 versions[i].description,
             )
 

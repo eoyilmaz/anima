@@ -9,7 +9,9 @@ from typing import Optional, Union
 
 from sqlalchemy import alias
 
+from anima.ui.items.file import FileItemBase
 from stalker import File, LocalSession, Project, Status, SimpleEntity, Task, Version
+from stalker.models.version import Version_Files
 from stalker.db.session import DBSession
 
 import anima
@@ -25,6 +27,7 @@ from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.dialogs import publish_checker, version_updater
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.views.task import TaskTreeView
+from anima.ui.views.version import VersionTreeView
 from anima.ui.widgets.common import RecentFilesComboBox, VariantsListWidget
 from anima.ui.widgets.version import VersionsTableWidget
 from anima.utils import (
@@ -50,6 +53,7 @@ VersionNT = namedtuple(
         "created_by_id",
         "updated_by_id",
         "description",
+        "files",
     ],
 )
 
@@ -206,7 +210,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         """
 
         # TODO: This is a very dirty fix, do it properly
-        if self.dcc.name.lower().startswith("houdini"):
+        if self.dcc and self.dcc.name.lower().startswith("houdini"):
             style_sheet += """QGroupBox{
                 margin: 0px;
             }
@@ -409,7 +413,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         # Publish Push Button
         self.publish_push_button = QtWidgets.QPushButton(self)
         self.publish_push_button.setText("Publish")
-        if not self.dcc.has_publishers:
+        if self.dcc and not self.dcc.has_publishers:
             self.publish_push_button.setText("Publish")
         save_as_buttons_layout.addWidget(self.publish_push_button)
 
@@ -568,9 +572,8 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         versions_main_layout.addLayout(version_limit_buttons_layout)
 
         # previous_versions_table_widget
-        self.previous_versions_table_widget = VersionsTableWidget(self)
-
-        self.previous_versions_table_widget.setToolTip(
+        self.previous_versions_tree_view = VersionTreeView(parent=self)
+        self.previous_versions_tree_view.setToolTip(
             """
             <html>
             <head/>
@@ -612,40 +615,29 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             </html>
             """
         )
-        self.previous_versions_table_widget.horizontalHeaderItem(0).setText("Version")
-        self.previous_versions_table_widget.horizontalHeaderItem(1).setText("User")
-        self.previous_versions_table_widget.horizontalHeaderItem(2).setText("File Size")
-        self.previous_versions_table_widget.horizontalHeaderItem(3).setText("Date")
-        self.previous_versions_table_widget.horizontalHeaderItem(4).setText(
-            "Description"
-        )
+        # # self.previous_versions_table_widget.setAlternatingRowColors(True)
+        # self.previous_versions_tree_view.setSelectionMode(
+        #     QtWidgets.QAbstractItemView.SingleSelection
+        # )
+        # self.previous_versions_tree_view.setSelectionBehavior(
+        #     QtWidgets.QAbstractItemView.SelectRows
+        # )
+        # self.previous_versions_tree_view.setShowGrid(False)
+        # self.previous_versions_tree_view.setColumnCount(7)
+        # self.previous_versions_tree_view.setRowCount(0)
 
-        self.previous_versions_table_widget.setEditTriggers(
-            QtWidgets.QAbstractItemView.NoEditTriggers
-        )
-        # self.previous_versions_table_widget.setAlternatingRowColors(True)
-        self.previous_versions_table_widget.setSelectionMode(
-            QtWidgets.QAbstractItemView.SingleSelection
-        )
-        self.previous_versions_table_widget.setSelectionBehavior(
-            QtWidgets.QAbstractItemView.SelectRows
-        )
-        self.previous_versions_table_widget.setShowGrid(False)
-        self.previous_versions_table_widget.setColumnCount(7)
-        self.previous_versions_table_widget.setRowCount(0)
+        # for i in range(7):
+        #     item = QtWidgets.QTableWidgetItem()
+        #     self.previous_versions_tree_view.setHorizontalHeaderItem(i, item)
 
-        for i in range(7):
-            item = QtWidgets.QTableWidgetItem()
-            self.previous_versions_table_widget.setHorizontalHeaderItem(i, item)
+        # self.previous_versions_tree_view.horizontalHeader().setStretchLastSection(
+        #     True
+        # )
+        # self.previous_versions_tree_view.verticalHeader().setStretchLastSection(
+        #     False
+        # )
 
-        self.previous_versions_table_widget.horizontalHeader().setStretchLastSection(
-            True
-        )
-        self.previous_versions_table_widget.verticalHeader().setStretchLastSection(
-            False
-        )
-
-        versions_main_layout.addWidget(self.previous_versions_table_widget)
+        versions_main_layout.addWidget(self.previous_versions_tree_view)
 
         self.previous_version_secondary_controls_widget = QtWidgets.QWidget(self)
         previous_version_secondary_controls_layout = QtWidgets.QHBoxLayout(
@@ -683,7 +675,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             <html>
                 <head/>
                 <body>
-                    <p>Uncheck it if you are going to use 
+                    <p>Uncheck it if you are going to use
                         <span style="font-weight:600;">Alembic Cache</span>.
                     </p>
                 </body>
@@ -753,8 +745,8 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         QtCore.QMetaObject.connectSlotsByName(self)
         self.setTabOrder(self.description_text_edit, self.export_as_push_button)
         self.setTabOrder(self.export_as_push_button, self.save_as_push_button)
-        self.setTabOrder(self.save_as_push_button, self.previous_versions_table_widget)
-        self.setTabOrder(self.previous_versions_table_widget, self.open_push_button)
+        self.setTabOrder(self.save_as_push_button, self.previous_versions_tree_view)
+        self.setTabOrder(self.previous_versions_tree_view, self.open_push_button)
         self.setTabOrder(self.open_push_button, self.open_as_new_version_push_button)
         self.setTabOrder(
             self.open_as_new_version_push_button, self.reference_push_button
@@ -959,16 +951,16 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         local_session.delete()
         self.close()
 
-    def _show_previous_versions_tableWidget_context_menu(self, position) -> None:
+    def _show_previous_versions_tree_view_context_menu(self, position) -> None:
         """Custom context menu for the previous_versions_table_widget.
 
         Args:
             position (QtCore.QPoint): The position of the context menu.
         """
         # convert the position to global screen position
-        global_position = self.previous_versions_table_widget.mapToGlobal(position)
+        global_position = self.previous_versions_tree_view.mapToGlobal(position)
 
-        item = self.previous_versions_table_widget.itemAt(position)
+        item = self.previous_versions_tree_view.itemAt(position)
         # if not item:
         #     return
 
@@ -976,7 +968,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         version = None
         if item:
             index = item.row()
-            version = self.previous_versions_table_widget.versions[index]
+            version = self.previous_versions_tree_view.versions[index]
             version = Version.query.filter(Version.id == version.id).first()
 
         # create the menu
@@ -1411,18 +1403,18 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         # *********************************************************************
 
         # custom context menu for the previous_versions_table_widget
-        self.previous_versions_table_widget.setContextMenuPolicy(
-            QtCore.Qt.CustomContextMenu
-        )
+        # self.previous_versions_tree_view.setContextMenuPolicy(
+        #     QtCore.Qt.CustomContextMenu
+        # )
 
-        self.previous_versions_table_widget.customContextMenuRequested.connect(
-            self._show_previous_versions_tableWidget_context_menu
-        )
+        # self.previous_versions_tree_view.customContextMenuRequested.connect(
+        #     self._show_previous_versions_tableWidget_context_menu
+        # )
 
-        # Open the version
-        # add double-clicking to previous_versions_table_widget
-        self.previous_versions_table_widget.cellDoubleClicked.connect(
-            self.open_push_button_clicked,
+        # Open the file
+        # add double-clicking to previous_versions_tree_view
+        self.previous_versions_tree_view.doubleClicked.connect(
+            self.previous_versions_tree_double_clicked,
         )
 
         # *********************************************************************
@@ -1508,7 +1500,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         elif isinstance(entity, Task):
             task = entity
 
-        if not task.project.active:
+        if task and not task.project.status.code != "WIP":
             return
 
         found_task_item = self.tasks_tree_view.find_and_select_entity_item(task)
@@ -1524,7 +1516,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         # self.variants_list_widget.current_variant_name = variant_name
 
         # select the version in the previous version list
-        self.previous_versions_table_widget.select_version(version)
+        # self.previous_versions_tree_view.select_version(version)
 
         if self.dcc:
             return
@@ -1552,7 +1544,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     def update_previous_versions_table_widget(self) -> None:
         """Update the previous_versions_table_widget."""
         logger.debug("update_previous_versions_table_widget is started")
-        self.previous_versions_table_widget.clear()
+        # self.previous_versions_tree_view.clear()
 
         task_id = None
         task_ids = self.tasks_tree_view.get_selected_task_ids()
@@ -1568,7 +1560,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         )
         if children_count > 0:
             # clear the versions list
-            self.previous_versions_table_widget.clear()
+            # self.previous_versions_tree_view.clear()
             return
 
         # # variant name
@@ -1580,19 +1572,21 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         #     return
 
         # query the Versions of this type and variant
-        query = (
-            DBSession.query(
-                # use only the necessary fields
-                Version.id,
-                Version.revision_number,
-                Version.version_number,
-                Version.is_published,
-                Version.created_by_id,
-                Version.updated_by_id,
-                Version.description,
-            ).filter(Version.task_id == task_id)
-            # .filter(Version.variant_name == variant_name)
-        )
+        # query = (
+        #     DBSession.query(
+        #         # use only the necessary fields
+        #         Version.id,
+        #         Version.revision_number,
+        #         Version.version_number,
+        #         Version.is_published,
+        #         Version.created_by_id,
+        #         Version.updated_by_id,
+        #         Version.description,
+        #         Version.files,
+        #     ).join(Version_Files, Version.id == Version_Files.c.version_id)
+        #     .filter(Version.task_id == task_id)
+        # )
+        query = DBSession.query(Version).filter(Version.task_id == task_id)
 
         # get the published only
         if self.show_published_only_check_box.isChecked():
@@ -1603,13 +1597,16 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
         data_from_db = (
             query.order_by(Version.revision_number.desc())
+            .order_by(Version.revision_number.desc())
             .order_by(Version.version_number.desc())
             .all()
         )
-        versions = list(map(lambda x: VersionNT(*x), data_from_db))
-        versions.reverse()
+        # versions = list(map(lambda x: VersionNT(*x), data_from_db))
+        # versions.reverse()
+        versions = data_from_db
 
-        self.previous_versions_table_widget.update_content(versions)
+        # self.previous_versions_tree_view.update_content(versions)
+        self.previous_versions_tree_view.populate(versions)
         logger.debug("update_previous_versions_table_widget is finished")
 
     def get_new_version(self, publish: bool = False) -> Version:
@@ -1888,7 +1885,8 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
     def choose_version_push_button_clicked(self) -> None:
         """Set the chosen_version and close the dialog."""
-        version = self.previous_versions_table_widget.current_version
+        # version = self.previous_versions_tree_view.current_version
+        version = None
         if not version:
             return
 
@@ -1902,18 +1900,45 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             logger.debug(self.chosen_version.id)
             self.close()
 
+    def previous_versions_tree_double_clicked(self, index: QtCore.QModelIndex) -> None:
+        """Handle double-clicking on the previous versions tree view.
+
+        Args:
+            index (QtCore.QModelIndex): The index of the double-clicked item.
+        """
+        if not (model := self.previous_versions_tree_view.model()):
+            return
+        if not (item := model.itemFromIndex(index)):
+            return
+        if not isinstance(item, FileItemBase):
+            return
+        file = item.file
+        self.open_file(file)
+
     def open_push_button_clicked(self) -> None:
         """Open the selected Version in the current DCC."""
         if self.mode == UIMode.SAVE_AS_MODE:
             return
 
-        # get the new version
-        old_version = self.previous_versions_table_widget.current_version
+        # get the selected file from the previous_versions_tree_view
+        selected_files = self.previous_versions_tree_view.get_selected_files()
+        if not selected_files:
+            return
+
+        self.open_file(selected_files[0])
+
+    def open_file(self, file: File) -> None:
+        """Open the given File instance in the current DCC.
+
+        Args:
+            file (File): A Stalker File instance.
+        """
+        if not file:
+            return
+
         skip_update_check = not self.check_updates_check_box.isChecked()
 
-        old_version = Version.query.filter(Version.id == old_version.id).first()
-
-        if not self.check_version_file_exists(old_version):
+        if not self.check_file_exists(file):
             return
 
         # close the dialog
@@ -1938,7 +1963,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         # DCC can throw RuntimeError for unsaved changes
         try:
             reference_resolution = self.dcc.open(
-                old_version,
+                file,
                 representation=repr_name,
                 reference_depth=ref_depth,
                 skip_update_check=skip_update_check,
@@ -1958,7 +1983,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
 
             if answer == QtWidgets.QMessageBox.Yes:
                 reference_resolution = self.dcc.open(
-                    old_version,
+                    file,
                     True,
                     representation=repr_name,
                     reference_depth=ref_depth,
@@ -1989,22 +2014,22 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         logger.debug("opening the data as a new version")
         self.save_as_wrapper(new_version)
 
-    def check_version_file_exists(self, version) -> bool:
-        """Check if the version file exists in the file system.
+    def check_file_exists(self, file) -> bool:
+        """Check if the file exists in the file system.
 
         Args:
-            version (Version): A Stalker Version instance.
+            file (File): A Stalker File instance.
 
         Returns:
             bool: True if the file exists, False otherwise.
         """
-        if not os.path.exists(version.absolute_full_path):
+        if not os.path.exists(file.absolute_full_path):
             # the file doesn't exist
             # warn the user
             QtWidgets.QMessageBox.critical(
                 self,
                 "File Doesn't Exist!",
-                f"File doesn't exist!:<br><br>{version.absolute_full_path}",
+                f"File doesn't exist!:<br><br>{file.absolute_full_path}",
             )
             return False
         return True
@@ -2012,7 +2037,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     def reference_push_button_clicked(self) -> None:
         """Reference the selected Version in the current DCC."""
         # get the new version
-        previous_version = self.previous_versions_table_widget.current_version
+        previous_version = None  # self.previous_versions_tree_view.current_version
 
         # allow only published versions to be referenced
         if not previous_version.is_published:
@@ -2030,7 +2055,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
             Version.id == previous_version.id
         ).first()
 
-        if not self.check_version_file_exists(previous_version):
+        if not self.check_file_exists(previous_version):
             return
 
         logger.debug(f"referencing version with id: {previous_version.id}")
@@ -2109,12 +2134,14 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
     def import_push_button_clicked(self) -> None:
         """Import the selected Version in the current DCC."""
         # get the previous version
-        previous_version_id = self.previous_versions_table_widget.current_version.id
+        previous_version_id = (
+            None  # self.previous_versions_tree_view.current_version.id
+        )
         previous_version = Version.query.filter(
             Version.id == previous_version_id
         ).first()
 
-        if not self.check_version_file_exists(previous_version):
+        if not self.check_file_exists(previous_version):
             return
 
         # logger.debug("importing version {}".format(previous_version))
