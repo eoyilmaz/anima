@@ -803,19 +803,31 @@ class Maya(DCCBase):
 
         return ref
 
-    def get_version_from_workspace(self):
-        """Tries to find a version from the current workspace path"""
+    def get_file_from_workspace(self):
+        """Try to find a File from the current workspace path."""
         logger.debug("trying to get the version from workspace")
 
         # get the workspace path
         workspace_path = pm.workspace.path
         logger.debug(f"workspace_path: {workspace_path}")
 
-        versions = self.get_versions_from_path(workspace_path)
-        version = None
+        files = self.get_files_from_path(workspace_path)
+        file = None
 
-        if len(versions):
-            version = versions[0]
+        if len(files):
+            file = files[0]
+
+        logger.debug(f"file from workspace is: {file}")
+        return file
+
+    def get_version_from_workspace(self):
+        """Try to find a Version from the current workspace path."""
+        file = self.get_file_from_workspace()
+        logger.debug(f"file from workspace: {file}")
+        if not file:
+            return None
+
+        version = Version.query.filter(Version.files.contains(file)).first()
 
         logger.debug(f"version from workspace is: {version}")
         return version
@@ -841,6 +853,27 @@ class Maya(DCCBase):
 
         return file
 
+    def get_last_file(self):
+        """Return the last opened or the current File instance from the DCC.
+
+        * First look at the current open file full path and tries to match
+          it with a File instance.
+        * Then search for the recent files list.
+        * Still not able to find any File instances, return the File instance
+          with the highest id which has the current workspace path in its path.
+        * Still not able to find any File instances, return None.
+
+        Returns:
+            None | File: The File instance or None.
+        """
+        file = super().get_last_file()
+
+        # get the latest possible File instance by using the workspace path
+        if file is None:
+            file = self.get_file_from_workspace()
+
+        return file
+
     def get_last_version(self):
         """Returns the last opened or the current Version instance from the DCC.
 
@@ -855,11 +888,7 @@ class Maya(DCCBase):
         :returns: :class:`~stalker.models.version.Version` instance or
             None
         """
-        version = self.get_current_version()
-
-        # read the recent file list
-        if version is None:
-            version = self.get_version_from_recent_files()
+        version = super().get_last_version()
 
         # get the latest possible Version instance by using the workspace path
         if version is None:

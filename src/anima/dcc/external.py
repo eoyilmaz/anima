@@ -1,5 +1,8 @@
 """External DCCs module."""
 import os
+import re
+
+from stalker import File, Version
 
 from anima.dcc.base import DCCBase
 from anima.log import logger
@@ -163,8 +166,6 @@ class ExternalDCC(DCCBase):
     def conform(self, version):
         """Conform the version to this DCC by setting its extension."""
         logger.debug("conforming version")
-        from stalker import Version
-
         if not isinstance(version, Version):
             raise TypeError(
                 "version argument should be a stalker.version.Version instance, "
@@ -182,8 +183,6 @@ class ExternalDCC(DCCBase):
         :return:
         """
         # check version type
-        from stalker import Version
-
         if not isinstance(version, Version):
             raise TypeError(
                 '"version" argument in '
@@ -221,8 +220,11 @@ class ExternalDCC(DCCBase):
 
     @classmethod
     def get_settings_file_path(cls):
-        """returns the settings file path
-        :return:
+        """Return the settings file path.
+
+        Returns:
+            str: The path to the settings file where the last version
+                information is stored.
         """
         # append to .atrc file
         atrc_path = os.path.expanduser("~/.atrc/")
@@ -235,8 +237,6 @@ class ExternalDCC(DCCBase):
         :param version: A :class:`~stalker.models.version.Version` instance.
         :return:
         """
-        from stalker import Version
-
         if not isinstance(version, Version):
             raise TypeError(
                 '"version" argument in '
@@ -254,15 +254,36 @@ class ExternalDCC(DCCBase):
         with open(last_version_file_full_path, "w") as f:
             f.write(str(version.id))
 
-    def get_last_version(self):
-        """returns the current version"""
-        last_version_file_full_path = self.get_settings_file_path()
+    def get_last_file(self) -> None | File:
+        """Return the last opened File instance from the DCC.
+
+        * It first looks at the current open file full path and tries to match
+          it with a File instance.
+        * Then searches for the recent files list.
+        * Still not able to find any File instances, will return the File
+          instance with the highest id which has the current workspace path in
+          its path.
+        * Still not able to find any File instances returns None
+
+        Returns:
+            File: The File or None.
+        """
+        last_file_full_path = self.get_settings_file_path()
         try:
-            with open(last_version_file_full_path, "r") as f:
+            with open(last_file_full_path, "r") as f:
+                lines = f.readlines()
+                fid = lines[0]
+            return File.query.filter(File.id == fid).first()
+        except (IOError, IndexError):
+            return None
+
+    def get_last_version(self):
+        """Return the current version."""
+        last_file_full_path = self.get_settings_file_path()
+        try:
+            with open(last_file_full_path, "r") as f:
                 lines = f.readlines()
                 vid = lines[0]
-            from stalker import Version
-
             return Version.query.filter(Version.id == vid).first()
         except (IOError, IndexError):
             return None
@@ -318,8 +339,6 @@ class ExternalDCCFactory(object):
             )
 
         # filter the name
-        import re
-
         # replace anything that doesn't start with '{' with [\s\(\)\-]+
         pattern = re.sub(r"[^{\w}]+", r"[\\s\\(\\)\\-]+", name_format)
 

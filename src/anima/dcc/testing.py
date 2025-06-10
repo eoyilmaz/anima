@@ -50,8 +50,13 @@ class TestDCC(DCCBase):
         pass
 
     @count_calls
+    def get_last_file(self):
+        """mock version of the original this always returns None."""
+        return None
+
+    @count_calls
     def get_last_version(self):
-        """mock version of the original this returns None all the time"""
+        """mock version of the original this always returns None."""
         return None
 
     @count_calls

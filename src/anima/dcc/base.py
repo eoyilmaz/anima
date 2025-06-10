@@ -454,6 +454,28 @@ class DCCBase(object):
 
         return version
 
+    def get_last_file(self) -> Union[None, File]:
+        """Return the last opened File instance from the DCC.
+
+        * It first looks at the current open file full path and tries to match
+          it with a File instance.
+        * Then searches for the recent files list.
+        * Still not able to find any File instances, will return the File
+          instance with the highest id which has the current workspace path in
+          its path.
+        * Still not able to find any File instances returns None
+
+        Returns:
+            None | File: The File instance or None.
+        """
+        file = self.get_current_file()
+
+        # read the recent file list
+        if file is None:
+            file = self.get_file_from_recent_files()
+
+        return file
+
     def get_last_version(self) -> Union[None, Version]:
         """Return the last opened Version instance from the DCC.
 
