@@ -1452,10 +1452,10 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         logger.debug("restoring the ui with the version from DCC")
 
         # get the last version from the DCC
-        version_from_env = self.dcc.get_last_version()
+        file_from_env = self.dcc.get_last_file()
 
-        logger.debug(f"version_from_env: {version_from_env}")
-        self.restore_ui(version_from_env)
+        logger.debug(f"file_from_env: {file_from_env}")
+        self.restore_ui(file_from_env)
 
         if is_external_dcc:
             # hide some buttons
@@ -1499,7 +1499,7 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         elif isinstance(entity, Task):
             task = entity
 
-        if task and not task.project.status.code != "WIP":
+        if task and not task.project.status.code == "WIP":
             return
 
         found_task_item = self.tasks_tree_view.find_and_select_entity_item(task)
@@ -1510,12 +1510,11 @@ class MainDialog(AnimaDialogBase, QtWidgets.QDialog):
         if not version:
             return
 
-        # # variant_name
-        # variant_name = version.variant_name
-        # self.variants_list_widget.current_variant_name = variant_name
-
         # select the version in the previous version list
-        # self.previous_versions_tree_view.select_version(version)
+        if file:
+            self.previous_versions_tree_view.select_file(file)
+        elif version:
+            self.previous_versions_tree_view.select_version(version)
 
         if self.dcc:
             return
