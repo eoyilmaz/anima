@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from pymel.core import curve, spaceLocator, select
 from pymel.core.nodetypes import ClusterHandle, Cluster

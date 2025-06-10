@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from anima.dcc.maya.common import Maya
 import anima.dcc.maya.common
 from anima.utils import do_db_setup

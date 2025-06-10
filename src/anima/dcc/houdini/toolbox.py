@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Use the following code in the Python Panel
+"""Use the following code in the Python Panel.
 
 
 def onCreateInterface():

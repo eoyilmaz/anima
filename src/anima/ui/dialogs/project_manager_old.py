@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This is the old version of the Project Manager.
 
 Still useful.

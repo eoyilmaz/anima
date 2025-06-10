@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This module contains scripts those run when a new Version is published. It
 is a way of checking the quality of the published versions.
 """

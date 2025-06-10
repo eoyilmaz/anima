@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Module that contains Representation (LOD) related functions."""
 
 import os

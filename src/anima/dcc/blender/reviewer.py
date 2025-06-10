@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+"""This module provides functionality to review Stalker task version outputs in Blender."""
 import os
 import bpy
 

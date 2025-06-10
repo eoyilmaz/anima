@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import anima
 from anima.log import logger

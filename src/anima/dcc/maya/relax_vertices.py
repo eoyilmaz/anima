@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Relax Vertices by Erkan Ozgur Yilmaz
 
 Relaxes vertices without shrinking/expanding the geometry.

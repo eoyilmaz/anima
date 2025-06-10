@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """previs_to_shots
 
 This tool exports maya scenes from a Previs Task with multiple shots

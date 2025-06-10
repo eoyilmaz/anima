@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+"""Texture management module for Anima."""
 
 class ReferenceManager(object):
     """Manages references in the current maya scene.

@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+"""External DCCs module."""
 import os
 
 from anima.dcc.base import DCCBase

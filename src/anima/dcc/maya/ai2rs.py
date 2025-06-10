@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Converts the scene from Arnold to RedShift"""
+"""Converts the scene from Arnold to RedShift."""
 
 import pymel.core as pm
 from anima.render.mat_converter import ConversionManagerBase, NodeCreatorBase

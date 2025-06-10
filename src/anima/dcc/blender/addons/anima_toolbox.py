@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+"""Anima Toolbox for Blender."""
 
 bl_info = {
     "name": "Anima Toolbox",

@@ -1,4 +1,9 @@
-from functools import cache
+try:
+    from functools import cache
+except ImportError:
+    # has the limitation of maxsize=128
+    from functools import lru_cache as cache
+
 from typing import List, Union
 
 from stalker import File, Type, Version

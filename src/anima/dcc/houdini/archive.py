@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+"""Archive module for Houdini."""
 from anima.utils.archive import ArchiverBase
 
 

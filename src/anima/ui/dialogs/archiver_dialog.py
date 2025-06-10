@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Archiver related UI."""
 
 import os.path

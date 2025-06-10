@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Helper functions and classes for Houdini.
 
 The name of this module is inspired from the Maya module.

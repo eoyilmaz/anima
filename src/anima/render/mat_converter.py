@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Contains the base classes for material conversion for different renderers."""
 
 

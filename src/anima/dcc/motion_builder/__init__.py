@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import pyfbsdk
 from anima.dcc.base import DCCBase

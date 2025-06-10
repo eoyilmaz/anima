@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from stalker import Group, StatusList, User
 from stalker.config import Config as ConfigBase
 from stalker.db.session import DBSession

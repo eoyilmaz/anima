@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from anima.log import logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets

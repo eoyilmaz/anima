@@ -7,7 +7,7 @@
 
       <scriptItem>
         <label>Open</label>
-        <scriptCode><![CDATA[# -*- coding: utf-8 -*-
+        <scriptCode><![CDATA[
 import os
 import sys
 import functools
@@ -26,7 +26,7 @@ hdefereval.executeDeferred(func)
 
       <scriptItem>
         <label>Save As</label>
-        <scriptCode><![CDATA[# -*- coding: utf-8 -*-
+        <scriptCode><![CDATA[
 import os
 import sys
 import functools

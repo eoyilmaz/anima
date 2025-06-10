@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """UI for baking crowd simulations to individual RSProxies and creating
 necessary nodes to be able to render them
 

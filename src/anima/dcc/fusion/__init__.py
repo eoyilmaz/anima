@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+"""Fusion DCC module."""
 import os
 import sys
 

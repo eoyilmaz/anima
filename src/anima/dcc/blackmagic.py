@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+"""BlackMagic Design DaVinci Resolve and Fusion API wrapper."""
 
 import os
 import imp

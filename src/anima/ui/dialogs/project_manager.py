@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 import os
 os.environ['STALKER_PATH'] = '/mnt/NAS/Users/eoyilmaz/Stalker_Projects'

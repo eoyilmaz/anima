@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # export path for project manager
 import os
 import sys

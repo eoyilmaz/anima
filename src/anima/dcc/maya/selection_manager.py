@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Selection Manager
 
 v0.1.0

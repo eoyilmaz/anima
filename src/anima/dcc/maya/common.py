@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Maya related common functionality is situated here."""
 
 from functools import lru_cache

@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-hierarchy_instancer by
+"""hierarchy_instancer by
 
 v10.6.17
 

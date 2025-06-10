@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This module stores helper functions and classes which can be used through
 unit testing.
 """

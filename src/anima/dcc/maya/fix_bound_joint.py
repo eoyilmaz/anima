@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Fix Bound Joint
 
 v0.1.0

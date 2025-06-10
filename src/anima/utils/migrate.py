@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Migration related utility classes and functions."""
 
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Custom UI items and models are here."""
 
 from anima import defaults

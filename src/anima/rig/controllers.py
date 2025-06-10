@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from drawNode import DrawNode
 from shapes import Shape

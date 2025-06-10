@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+"""Avid EDL to Resolve Converter."""
 
 import re
 

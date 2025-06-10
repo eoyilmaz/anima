@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-oyPivotSwitcher.py by Erkan Ozgur Yilmaz (c) 2009
+"""oyPivotSwitcher.py by Erkan Ozgur Yilmaz (c) 2009-2025
 
 v10.5.17
 

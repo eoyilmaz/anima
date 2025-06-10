@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from anima.dcc.maya import auxiliary
 from anima.perf import measure_time
 from pymel import core as pm

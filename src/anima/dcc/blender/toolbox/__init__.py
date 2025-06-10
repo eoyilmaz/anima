@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+"""Anima Toolbox for Blender."""
 from bpy.types import Panel
 
 

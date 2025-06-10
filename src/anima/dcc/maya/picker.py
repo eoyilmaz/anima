@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """A tool for easy animating of picking and releasing of objects.
 
 Version History :

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 

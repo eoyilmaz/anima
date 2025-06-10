@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+"""Base DCC class for Anima Pipeline."""
 from __future__ import annotations
 
 from functools import lru_cache

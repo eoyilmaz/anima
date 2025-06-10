@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """User page related widgets are here."""
 
 from functools import partial

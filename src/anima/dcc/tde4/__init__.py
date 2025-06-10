@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 
 from anima.dcc.base import DCCBase

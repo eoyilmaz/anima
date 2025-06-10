@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Task related views."""
 
 from stalker import SimpleEntity, Task

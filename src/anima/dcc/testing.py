@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+"""Testing DCCBase class."""
 from stalker import File, Version
 from anima.dcc.base import generate_empty_reference_resolution
 from anima.dcc.base import DCCBase

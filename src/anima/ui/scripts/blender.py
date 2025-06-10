@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Initialize Python Environment with the following code (will be automated later on):
 

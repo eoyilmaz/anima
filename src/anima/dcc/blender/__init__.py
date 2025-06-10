@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+"""Blender DCC wrapper for Anima Pipeline."""
 import os
 
 import bpy

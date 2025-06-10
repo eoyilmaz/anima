@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Contains playblast related functions for Maya."""
 
 import copy

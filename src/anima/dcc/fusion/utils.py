@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+"""Fusion utilities."""
 
 class NodeUtils(object):
     """Node related utils for Fusion"""

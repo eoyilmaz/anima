@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import platform
 import subprocess
 from typing import Dict, Union

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import pymxs
 import MaxPlus
 from anima.render.mat_converter import ConversionManagerBase, NodeCreatorBase

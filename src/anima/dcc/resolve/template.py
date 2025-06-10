@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 #
 # RESOLVE_TEMPLATE_VARS should always be deep copied

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Autodesk Max related functionality is situated here."""
 
 import os

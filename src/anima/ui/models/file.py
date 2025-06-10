@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """File related item models are situated here."""
 
 from stalker import File

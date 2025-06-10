@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+"""Fusion Toolbox."""
 import os
 from anima.ui.base import AnimaDialogBase
 from anima.ui.lib import QtCore, QtGui, QtWidgets

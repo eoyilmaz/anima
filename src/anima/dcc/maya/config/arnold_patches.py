@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 
 def createArnoldTextureSettings():
     """The patched version of the original file."""

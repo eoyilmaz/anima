@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """File related items are situated here."""
 
 from typing import Any, Dict, List, Union

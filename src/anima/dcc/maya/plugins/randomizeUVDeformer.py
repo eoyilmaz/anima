@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """create deformer with::
 
 deformer -type "randomizeUVDeformer"

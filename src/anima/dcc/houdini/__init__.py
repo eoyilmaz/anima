@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+"""Houdini DCC module."""
 import os
 import re
 

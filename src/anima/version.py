@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Provides functionality to parse the version number from the VERSION file."""
 
 import os

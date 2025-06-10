@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from anima.dcc.maya import auxiliary
 from pymel import core as pm
 

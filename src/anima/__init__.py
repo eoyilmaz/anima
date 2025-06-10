@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Anima Pipeline Library
 
 Anima uses ``Stalker Configuration Framework``.

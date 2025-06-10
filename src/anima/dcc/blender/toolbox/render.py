@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+"""Render panel for the Anima Toolbox in Blender."""
 
 from bpy.types import Panel, Operator
 
