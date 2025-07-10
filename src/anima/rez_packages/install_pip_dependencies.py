@@ -16,7 +16,7 @@ PACKAGES = [
     "exifread",
     "ldap3",
     "pillow",
-    "pyside2",
+    # "pyside2",
     "pyside6",
     "qtawesome",
     "qtpy",
