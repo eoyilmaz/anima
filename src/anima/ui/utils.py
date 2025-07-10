@@ -17,80 +17,119 @@ def get_cached_icon(icon_name, *args, **kwargs):
         icon_name (str): The icon name.
     """
     # To make it all consistent use an icon lut
-    qtawesome_version_info = qtawesome._version.version_info
+    qta_version = qtawesome._version.version_info
 
     global ICONS_LUT
     if not ICONS_LUT:
         ICONS_LUT.update(
             {
-                "prev": qtawesome.icon("fa.pencil"),
-                "hrev": qtawesome.icon("fa.mail-reply-all"),
+                "prev": qtawesome.icon(
+                    "fa5s.pencil-alt" if qta_version >= (1, 4, 0) else "fa.pencil"
+                ),
+                "hrev": qtawesome.icon(
+                    "fa5s.reply-all" if qta_version >= (1, 4, 0) else "fa.mail-reply-all"
+                ),
                 "rts": qtawesome.icon("ei.check-empty"),
                 "cmpl": qtawesome.icon("ei.check"),
                 "wip": qtawesome.icon("fa5s.play"),
-                "wfd": qtawesome.icon("fa.circle-o"),
+                "wfd": qtawesome.icon("fa5.circle"),
                 "drev": qtawesome.icon("fa5s.step-backward"),
                 "oh": qtawesome.icon("ei.pause"),
                 "stop": qtawesome.icon("ei.stop"),
                 "asset": qtawesome.icon("fa5s.puzzle-piece"),
-                "authlog": qtawesome.icon("fa.calendar-check-o"),
+                "authlog": qtawesome.icon("fa5.calendar-check"),
                 "browse_folder": qtawesome.icon("fa5.folder-open"),
-                "budget": qtawesome.icon("fa.credit-card-alt"),
+                "budget": qtawesome.icon("fa5.credit-card"),
                 "create_project": qtawesome.icon("fa5s.sitemap"),
-                "cross": (
-                    qtawesome.icon("ph.x-bold")
-                    if qtawesome_version_info[0]
-                    else qtawesome.icon("fa.close")
+                "cross": qtawesome.icon(
+                    "ph.x-bold" if qta_version >= (1, 0, 0) else "fa.close"
                 ),
                 "copy": qtawesome.icon("fa5.copy"),
                 "daily": qtawesome.icon("ei.eye-open"),
-                "dashboard": qtawesome.icon("fa.dashboard"),
+                "dashboard": qtawesome.icon(
+                    "ei.dashboard" if qta_version >= (1, 4, 0) else "fa.dashboard"
+                ),
                 "default": qtawesome.icon("ei.ban-circle"),
                 "delete": qtawesome.icon("fa5.trash-alt"),
                 "dependent_of": (
                     qtawesome.icon("mdi6.tray-arrow-up", rotated=90)
-                    if qtawesome_version_info[0]
+                    if qta_version >= (1, 0, 0)
                     else qtawesome.icon("ei.arrow-left")
                 ),
                 "depends_on": (
                     qtawesome.icon("mdi6.tray-arrow-down", rotated=-90)
-                    if qtawesome_version_info[0]
+                    if qta_version >= (1, 0, 0)
                     else qtawesome.icon("ei.arrow-right")
                 ),
-                "department": qtawesome.icon("fa.group"),
-                "edit_entity": qtawesome.icon("fa.pencil-square-o"),
+                "department": qtawesome.icon(
+                    "ei.group" if qta_version >= (1, 4, 0) else "fa.group"
+                ),
+                "edit_entity": qtawesome.icon(
+                    "ph.note-pencil" if qta_version >= (1, 4, 0) else "fa.pencil-square-o"
+                ),
                 "export": qtawesome.icon("fa5s.file-export"),
                 "group": qtawesome.icon("fa5s.key"),
                 "image": qtawesome.icon("fa5.image"),
                 "import": qtawesome.icon("fa5s.file-import"),
                 "new_entity": qtawesome.icon("fa5s.plus"),
-                "open_external_link": qtawesome.icon("fa.external-link-square"),
+                "open_external_link": qtawesome.icon(
+                    "fa5s.external-link-square-alt"
+                    if qta_version >= (1, 4, 0) else "fa.external-link-square"
+                ),
                 "permission": qtawesome.icon("fa5s.key"),
-                "previs": qtawesome.icon("fa.coffee"),
+                "previs": qtawesome.icon(
+                    "fa5s.coffee" if qta_version >= (1, 4, 0) else "fa.coffee"
+                ),
                 "project": qtawesome.icon("ei.folder-close"),
                 "reference": qtawesome.icon("ei.book"),
                 "reload": qtawesome.icon("ei.refresh"),
-                "report": qtawesome.icon("fa.bar-chart"),
-                "resource": qtawesome.icon("fa.user"),
-                "result": (
-                    qtawesome.icon("msc.graph-line")
-                    if qtawesome_version_info[0]
-                    else qtawesome.icon("ei.graph")
+                "report": qtawesome.icon(
+                    "fa5.chart-bar" if qta_version >= (1, 4, 0) else "fa.bar-chart"
                 ),
-                "review": qtawesome.icon("fa.comments-o"),
-                "sequence": qtawesome.icon("fa.film"),
-                "shot": qtawesome.icon("fa.camera"),
-                "task": qtawesome.icon("fa.tasks"),
-                "ticket": qtawesome.icon("fa.ticket"),
-                "timelog": qtawesome.icon("fa.calendar"),
+                "resource": qtawesome.icon(
+                    "fa5s.user" if qta_version >= (1, 4, 0) else "fa.user"
+                ),
+                "result": qtawesome.icon(
+                    "msc.graph-line" if qta_version >= (1, 0, 0) else "ei.graph"
+                ),
+                "review": qtawesome.icon(
+                    "fa5s.comments" if qta_version >= (1, 4, 0) else  "fa.comments-o"
+                ),
+                "sequence": qtawesome.icon(
+                    "fa5s.film" if qta_version >= (1, 4, 0) else "fa.film"
+                ),
+                "shot": qtawesome.icon(
+                    "fa5s.camera" if qta_version >= (1, 4, 0) else "fa.camera"
+                ),
+                "task": qtawesome.icon(
+                    "ei.tasks" if qta_version >= (1, 4, 0) else "fa.tasks"
+                ),
+                "ticket": qtawesome.icon(
+                    "fa6s.ticket" if qta_version >= (1, 4, 0) else "fa.ticket"
+                ),
+                "timelog": qtawesome.icon(
+                    "fa5.calendar-alt" if qta_version >= (1, 4, 0) else "fa.calendar"
+                ),
                 "unknown": qtawesome.icon("ei.blind"),
-                "update_project": qtawesome.icon("fa.pencil-square-o"),
-                "user": qtawesome.icon("fa.user"),
-                "users": qtawesome.icon("fa.users"),
-                "vacation": qtawesome.icon("fa.sun-o"),
+                "update_project": qtawesome.icon(
+                    "ph.note-pencil" if qta_version >= (1, 4, 0) else "fa.pencil-square-o"
+                ),
+                "user": qtawesome.icon(
+                    "fa5s.user" if qta_version >= (1, 4, 0) else "fa.user"
+                ),
+                "users": qtawesome.icon(
+                    "fa5s.users" if qta_version >= (1, 4, 0) else "fa.users"
+                ),
+                "vacation": qtawesome.icon(
+                    "fa5s.sun" if qta_version >= (1, 4, 0) else "fa.sun-o"
+                ),
                 "variant": qtawesome.icon("ph.git-branch-fill"),
-                "version": qtawesome.icon("fa.sitemap"),
-                "version_output": qtawesome.icon("fa.picture-o"),
+                "version": qtawesome.icon(
+                    "fa5s.sitemap" if qta_version >= (1, 4, 0) else "fa.sitemap"
+                ),
+                "version_output": qtawesome.icon(
+                    "ei.picture" if qta_version >= (1, 4, 0) else "fa.picture-o"
+                ),
             }
         )
 
