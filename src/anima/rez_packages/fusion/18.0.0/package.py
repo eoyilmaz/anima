@@ -32,3 +32,6 @@ def commands():
         env.PYTHONPATH.append(
             f"/Applications/Blackmagic Fusion {major}/Fusion.app/Contents/MacOS/"
         )
+        env.PYTHONPATH.append(
+            f"/Applications/Blackmagic Fusion {major}/Fusion.app/Contents/Libraries"
+        )
