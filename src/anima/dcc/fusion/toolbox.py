@@ -260,8 +260,8 @@ class GenericTools(object):
         from anima.dcc import fusion
 
         fusion_env = fusion.Fusion()
-        v = fusion_env.get_current_version()
-        fusion_env.create_main_saver_node(version=v)
+        file = fusion_env.get_current_file()
+        fusion_env.create_main_saver_node(file=file)
 
     @classmethod
     def loader_report(cls):
@@ -424,7 +424,12 @@ class GenericTools(object):
         created to remedy the low performance bug under Fusion 9 and Windows.
         It is not clear for now what happens under the other OSes.
         """
-        import BlackmagicFusion as bmf
+        try:
+            # for Fusion inside Resolve
+            import BlackmagicFusion as bmf
+        except (ImportError, ModuleNotFoundError):
+            # for stand-alone Fusion
+            import fusionscript as bmf
 
         fusion = bmf.scriptapp("Fusion")
         print("Erasing RecentComps value!")
@@ -437,7 +442,12 @@ class GenericTools(object):
         :param count:
         :return:
         """
-        import BlackmagicFusion as bmf
+        try:
+            # for Fusion inside Resolve
+            import BlackmagicFusion as bmf
+        except (ImportError, ModuleNotFoundError):
+            # for stand-alone Fusion
+            import fusionscript as bmf
 
         fusion = bmf.scriptapp("Fusion")
         comp = fusion.GetCurrentComp()

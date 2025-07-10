@@ -1,17 +1,21 @@
 """Fusion DCC module."""
-import os
-import sys
+from __future__ import annotations
 
-exceptions = (ImportError, ModuleNotFoundError)
+import datetime
+import os
+import time
+import uuid
+from pathlib import Path
 
 try:
     # for Fusion inside Resolve
     import BlackmagicFusion as bmf
-except exceptions:
-    from anima.dcc import blackmagic as bmd
+except (ImportError, ModuleNotFoundError):
+    # for stand-alone Fusion
+    import fusionscript as bmf
 
-    bmf = bmd.get_bmd()
-
+from stalker import File, Shot, Studio, Version
+from stalker.db.session import DBSession
 
 from anima.dcc.base import generate_empty_reference_resolution
 from anima.dcc.base import DCCBase
@@ -27,12 +31,8 @@ class Fusion(DCCBase):
     extensions = [".comp"]
 
     def __init__(self, name="", version=None):
-        """fusion specific init"""
         super(Fusion, self).__init__(name=name, version=version)
         # and add you own modifications to __init__
-
-        # self.fusion = bmd.scriptapp("Fusion")
-        # self.fusion = bmd.get_fusion()
 
         self.fusion = bmf.scriptapp("Fusion")
         self.fusion_prefs = self.fusion.GetPrefs()["Global"]
@@ -47,30 +47,42 @@ class Fusion(DCCBase):
 
         self._main_output_node_name = "Main_Output"
 
-    def save_as(self, version, run_pre_publishers=True):
-        """the save action for fusion DCC
+    def save_as(self, file: File, run_pre_publishers: bool = True) -> bool:
+        """Save the current open scene as the given.
 
-        uses Fusions own python binding
+        Args:
+            file (stalker.File): A `stalker.File` instance.
+            run_pre_publishers (bool, optional): Run pre-publishers if True.
+                Default value is True. Currently unused.
         """
         # set the extension to '.comp'
         # refresh the current comp
         self.comp = self.fusion.GetCurrentComp()
-        from stalker import Version
 
-        assert isinstance(version, Version)
+        # get the related Version
+        version : Version = Version.query.filter(Version.files.contains(file)).first()
+
         # its a new version please update the paths
-        version.update_paths()
-        version.extension = self.extensions[0]
-        version.created_with = self.name
+        full_path: Path = version.generate_path(extension=self.extensions[0])
+        file.full_path = str(full_path)
+        file.created_with = self.name
 
         # set project_directory
-        self.project_directory = os.path.dirname(version.absolute_path)
+        if shot := self.get_shot(version):
+            # project directory should be set to the shot directory.
+            self.project_directory = shot.absolute_path
+        elif asset := self.get_asset(version):
+            # project directory should be set to the asset directory.
+            self.project_directory = asset.absolute_path
+        else:
+            # set project directory to the file absolute path.
+            self.project_directory = os.path.dirname(file.absolute_path)
 
         # set range from the shot
         self.set_range_from_shot(version)
 
         # create the main write node
-        self.create_main_saver_node(version)
+        self.create_main_saver_node(file)
 
         # replace read and write node paths
         # self.replace_external_paths()
@@ -82,27 +94,24 @@ class Fusion(DCCBase):
             # path already exists OSError
             pass
 
-        version_full_path = os.path.normpath(version.absolute_full_path)
-
         # instead of lock/unlock disable AutoClipBrowse temporarily
         auto_browse = NodeUtils.disable_auto_clip_browse()
-        self.comp.Save(version_full_path)
+        self.comp.Save(file.absolute_full_path)
         NodeUtils.set_auto_clip_browse(auto_browse)
 
         # create a local copy
-        self.create_local_copy(version)
+        self.create_local_copy(file)
 
         rfm = RecentFileManager()
-        rfm.add(self.name, version.absolute_full_path)
+        rfm.add(self.name, file.absolute_full_path)
 
         return True
 
-    def set_range_from_shot(self, version):
-        """sets the frame range from the Shot entity if this version is related
-        to one.
+    def set_range_from_shot(self, version: Version) -> None:
+        """Set the frame range from the Shot entity if this version is related to one.
 
-        :param version:
-        :return:
+        Args:
+            version (stalker.Version): The `stalker.Version` instance.
         """
         # check if this is a shot related task
         shot = self.get_shot(version)
@@ -139,17 +148,17 @@ class Fusion(DCCBase):
                 }
             )
 
-    def set_shot_from_range(self, version):
-        """sets the Shot.cut_in and Shot.cut_out attributes from the current frame range if the current task is related
-        to a Stalker Shot instance.
+    def set_shot_from_range(self, version: Version) -> None:
+        """Set the Shot.cut_in and Shot.cut_out attributes from the current frame range.
 
-        :param Stalker.Version version: A Stalker Version instance.
-        :return:
+        This only works if the current task is related to a Stalker Shot instance.
+
+        Args:
+            version (stalker.Version): A Stalker Version instance.
         """
         # check if this is a shot related task
         is_shot_related_task = False
         shot = None
-        from stalker import Shot
 
         for task in version.task.parents:
             if isinstance(task, Shot):
@@ -162,41 +171,53 @@ class Fusion(DCCBase):
             cut_in, cut_out = self.get_frame_range()
             shot.cut_in = int(cut_in)
             shot.cut_out = int(cut_out)
-            from stalker.db.session import DBSession
 
             DBSession.add(shot)
             DBSession.commit()
 
-    def export_as(self, version):
-        """the export action for nuke DCC"""
-        # its a new version please update the paths
-        version.update_paths()
-        # set the extension to '.comp'
-        version.extension = self.extensions[0]
-        version.created_with = self.name
+    def export_as(self, file):
+        """Export the current as the given file.
 
+        Args:
+            file (stalker.File): The `stalker.File` instance.
+        """
         raise NotImplementedError("export_as() is not implemented yet for Fusion")
-
-        # # create a local copy
-        # self.create_local_copy(version)
+        # its a new version please update the paths
+        version : Version = Version.query.filter(Version.files.contains(file)).first()
+        if not version:
+            return
+        # set the extension to '.comp'
+        full_path = version.generate_path(extension=self.extensions[0])
+        file.created_with = self.name
 
     def open(
         self,
-        version,
-        force=False,
-        representation=None,
-        reference_depth=0,
-        skip_update_check=False,
-    ):
-        """the open action for nuke DCC"""
-        version_full_path = os.path.normpath(version.absolute_full_path)
+        file: File,
+        force: bool = False,
+        representation: None | str = None,
+        reference_depth: int = 0,
+        skip_update_check: bool = False,
+    ) -> bool:
+        """Open the given File.
+
+        Args:
+            file (File): The Stalker `File` instance to open.
+            force (bool): Unused.
+            representation (str): Unused.
+            reference_depth (int): Unused.
+            skip_update_check (bool): Unused.
+
+        Returns:
+            bool: True if everything went well, False otherwise.
+        """
+        file_full_path = file.absolute_full_path
 
         # # delete all the comps and open new one
         # comps = self.fusion.GetCompList().values()
         # for comp_ in comps:
         #     comp_.Close()
 
-        self.fusion.LoadComp(version_full_path)
+        self.fusion.LoadComp(file_full_path)
 
         # instead of lock/unlock disable AutoClipBrowse temporarily
         auto_browse = NodeUtils.disable_auto_clip_browse()
@@ -204,10 +225,21 @@ class Fusion(DCCBase):
         # set the project_directory
         # get the current comp fist
         self.comp = self.fusion.GetCurrentComp()
-        self.project_directory = os.path.dirname(version.absolute_path)
+
+        # set project_directory
+        version = Version.query.filter(Version.files.contains(file)).first()
+        if shot := self.get_shot(version):
+            # project directory should be set to the shot directory.
+            self.project_directory = shot.absolute_path
+        elif asset := self.get_asset(version):
+            # project directory should be set to the asset directory.
+            self.project_directory = asset.absolute_path
+        else:
+            # set project directory to the file absolute path.
+            self.project_directory = os.path.dirname(file.absolute_path)
 
         # update the savers
-        self.create_main_saver_node(version)
+        self.create_main_saver_node(file)
 
         # file paths in different OS'es should be replaced with a path that is suitable
         # for the current one
@@ -217,21 +249,35 @@ class Fusion(DCCBase):
         NodeUtils.set_auto_clip_browse(auto_browse)
 
         rfm = RecentFileManager()
-        rfm.add(self.name, version.absolute_full_path)
+        rfm.add(self.name, file.absolute_full_path)
 
         # return True to specify everything was ok and an empty list
         # for the versions those needs to be updated
         return generate_empty_reference_resolution()
 
-    def import_(self, version):
-        """the import action for nuke DCC"""
+    def import_(self, file):
+        """Import the given file content to the current scene."""
         # nuke.nodePaste(version.absolute_full_path)
         return True
 
-    def get_current_version(self):
-        """Finds the Version instance from the current open file.
+    def get_current_file(self):
+        """Return the File instance from the current open file.
 
-        If it can't find any then returns None.
+        If it can't find any then return None.
+
+        Returns:
+            :class:`~stalker.models.file.File`: The currently opened file instance.
+        """
+        # full_path = self._root.knob('name').value()
+        full_path = os.path.normpath(self.comp.GetAttrs()["COMPS_FileName"]).replace(
+            "\\", "/"
+        )
+        return self.get_file_from_full_path(full_path)
+
+    def get_current_version(self):
+        """Find the Version instance from the current open file.
+
+        If it can't find any then return None.
 
         :return: :class:`~stalker.models.version.Version`
         """
@@ -241,72 +287,63 @@ class Fusion(DCCBase):
         )
         return self.get_version_from_full_path(full_path)
 
-    def get_version_from_recent_files(self):
-        """It will try to create a
-        :class:`~stalker.models.version.Version` instance by looking
-        at the recent files list.
+    def get_file_from_project_dir(self):
+        """Try to find a Version from the current project directory.
 
-        It will return None if it can not find one.
-
-        :return: :class:`~stalker.models.version.Version`
+        Returns:
+            :class:`~stalker.models.version.Version`
         """
-        # full_path = self.fusion_prefs["LastCompFile"]
-        # return self.get_version_from_full_path(full_path)
+        files = self.get_files_from_path(self.project_directory)
+        if files and len(files):
+            return files[0]
+        return None
 
-        version = None
-        rfm = RecentFileManager()
+    def get_last_file(self):
+        """Return the last opened File instance."""
+        file = super().get_last_file()
+        if file:
+            return file
 
-        try:
-            recent_files = rfm[self.name]
-        except KeyError:
-            logger.debug("no recent files")
-            recent_files = None
+        return self.get_file_from_project_dir()
 
-        if recent_files is not None:
-            for i in range(len(recent_files)):
-                version = self.get_version_from_full_path(recent_files[i])
-                if version is not None:
-                    break
+    def get_last_version(self) -> None | Version:
+        """Return the Version from fusion.
 
-            logger.debug(f"version from recent files is: {version}")
-
-        return version
-
-    def get_version_from_project_dir(self):
-        """Tries to find a Version from the current project directory
-
-        :return: :class:`~stalker.models.version.Version`
+        Returns:
+            None | Version: The Version instance if found, None otherwise.
         """
-        versions = self.get_versions_from_path(self.project_directory)
-        version = None
-
-        if versions and len(versions):
-            version = versions[0]
-
-        return version
-
-    def get_last_version(self):
-        """gets the file name from fusion"""
-        version = self.get_current_version()
-
-        # read the recent file list
-        if version is None:
-            version = self.get_version_from_recent_files()
+        version = super().get_last_version()
 
         # get the latest possible Version instance by using the workspace path
         if version is None:
-            version = self.get_version_from_project_dir()
+            if file := self.get_file_from_project_dir():
+                version = Version.query.filter(Version.files.contains(file)).first()
 
         return version
 
-    def get_frame_range(self):
-        """returns the current frame range"""
+    def get_frame_range(self) -> tuple[int, int]:
+        """Return the current frame range.
+
+        Returns:
+            tuple[int, int]: The current frame range.
+        """
         start_frame = self.comp.GetAttrs()["COMPN_RenderStart"]
         end_frame = self.comp.GetAttrs()["COMPN_RenderEnd"]
         return start_frame, end_frame
 
-    def set_frame_range(self, start_frame=1, end_frame=100, adjust_frame_range=False):
-        """sets the start and end frame range"""
+    def set_frame_range(
+        self,
+        start_frame: int = 1,
+        end_frame: int = 100,
+        adjust_frame_range: bool = False
+    ) -> None:
+        """Set the start and end frame range.
+
+        Args:
+            start_frame (int, optional): The start frame.
+            end_frame (int, optional): The end frame.
+            adjust_frame_range(bool, optional): Currently unused. False by default.
+        """
         self.comp.SetAttrs(
             {
                 "COMPN_GlobalStart": start_frame,
@@ -316,16 +353,25 @@ class Fusion(DCCBase):
             }
         )
 
-    def set_fps(self, fps=25):
-        """sets the current fps"""
-        pass
+    def set_fps(self, fps: int | float = 25) -> None:
+        """Set the current fps.
 
-    def get_fps(self):
-        """returns the current fps"""
+        Currently defunct.
+
+        Args:
+            fps (int | float): The frame rate.
+        """
+
+    def get_fps(self) -> None:
+        """Return the current fps.
+
+        Returns:
+            None: Currently not returning anything other than None.
+        """
         return None
 
-    def fix_loader_paths(self):
-        """fixes loader paths mainly from one OS to another"""
+    def fix_loader_paths(self) -> None:
+        """Fix loader paths mainly from one OS to another."""
         # get all loaders
         for loader in self.comp.GetToolList(False, "Loader").values():
             path = self.get_node_input_entry_value_by_name(loader, "Clip")
@@ -335,12 +381,16 @@ class Fusion(DCCBase):
                 # TODO: Also replace absolute paths with proper paths for the current OS
                 self.set_node_input_entry_by_name(loader, "Clip", path)
 
-    def get_node_input_entry_by_name(self, node, key):
-        """returns the Input List entry by input list entry name
+    def get_node_input_entry_by_name(self, node, key: str) -> None | dict:
+        """Return the Input List entry by input list entry name.
 
-        :param node: The node
-        :param string key: The entry name
-        :return:
+        Args:
+            node: The node.
+            key (key): The entry name
+
+        Returns:
+            None | dict: The Input List entry by input list entry name, if one
+                can be found. None otherwise.
         """
         node_input_list = node.GetInputList()
         for input_entry_key in node_input_list.keys():
@@ -348,31 +398,37 @@ class Fusion(DCCBase):
             input_id = input_entry.GetAttrs()["INPS_ID"]
             if input_id == key:
                 return input_entry
+        return None
 
-    def get_node_input_entry_value_by_name(self, node, key):
-        """returns the Input List entry by input list entry name
+    def get_node_input_entry_value_by_name(self, node, key: str):
+        """Return the Input List entry by input list entry name.
 
-        :param node: The node
-        :param string key: The entry name
-        :return:
+        Args:
+            node: The node.
+            key (str): The entry name.
+
+        Returns:
+            object: ???
         """
         input_entry = self.get_node_input_entry_by_name(node, key)
         return input_entry[0]
 
-    def set_node_input_entry_by_name(self, node, key, value):
-        """sets the Input List entry value by Input ID
+    def set_node_input_entry_by_name(self, node, key, value) -> None:
+        """Set the Input List entry value by Input ID.
 
-        :param node: The node
-        :param string key: The INS_ID of the key
-        :param value: The value
-        :return:
+        Args:
+            node: The node.
+            key (str): The INS_ID of the key.
+            value (str | float): The value.
         """
         input_entry = self.get_node_input_entry_by_name(node, key)
         input_entry[0] = value
 
-    def get_main_saver_node(self):
-        """Returns the main saver nodes in the scene or an empty list.
-        :return: list
+    def get_main_saver_node(self) -> list:
+        """Return the main saver nodes in the scene or an empty list.
+
+        Returns:
+            list: List of nodes.
         """
         # list all the saver nodes in the current file
         all_saver_nodes = self.comp.GetToolList(False, "Saver").values()
@@ -386,8 +442,8 @@ class Fusion(DCCBase):
 
         return saver_nodes
 
-    def create_node_tree(self, node_tree):
-        """Creates a node tree from the given node tree.
+    def create_node_tree(self, node_tree: list | dict):
+        """Create a node tree from the given node tree.
 
         The node_tree is a Python dictionary showing node types and attribute
         values. Also it can be a list of dictionaries to create more complex
@@ -409,10 +465,12 @@ class Fusion(DCCBase):
             },
         }
 
-        :param [dict, list] node_tree: A dictionary showing the node tree
-          attributes.
+        Args:
+            node_tree (list | dict): A dictionary showing the node tree
+                attributes.
 
-        :return:
+        Returns:
+            node: The created node.
         """
         # allow it to accept both a list or dict
         if isinstance(node_tree, list):
@@ -477,13 +535,16 @@ class Fusion(DCCBase):
 
         return node
 
-    def output_path_generator(self, version, file_format):
-        """helper function to generate the output path
+    def generate_output_path(self, version: Version, file_format: str) -> str:
+        """Generate the output path.
 
-        :param version: Stalker Version instance
-        :param str file_format: A string showing the file format. Ex: tga, exr
-          etc.
-        :return:
+        Args:
+            version (stalker.Version): Stalker Version instance.
+            file_format (str): A string showing the file format. Ex: tga, exr
+                etc.
+
+        Returns:
+            str: The generated output path.
         """
         # generate the data needed
         # the output path
@@ -507,8 +568,7 @@ class Fusion(DCCBase):
         output_file_path = os.path.join(
             version.absolute_path,
             "Outputs",
-            version.variant_name,
-            f"v{version.version_number:03d}",
+            f"r{version.revision_number:02d}_v{version.version_number:03d}",
             file_format,
         )
 
@@ -526,23 +586,41 @@ class Fusion(DCCBase):
         # make the path Project: relative
         output_file_full_path = "Project:{}".format(
             os.path.relpath(
-                output_file_full_path, os.path.dirname(version.absolute_path)
+                output_file_full_path,
+                self.project_directory
             )
         )
 
         # set the output path
         return os.path.normpath(output_file_full_path)
 
-    def output_node_name_generator(self, file_format):
+    def output_node_name_generator(self, file_format: str) -> str:
+        """Generate output node name.
+
+        Args:
+            file_format (str): The file format name.
+
+        Returns:
+            str: The output node name.
+        """
         return "{}_{}".format(self._main_output_node_name, file_format)
 
-    def create_slate_node(self, version, submitting_for="FINAL", submission_note=""):
-        """Creates the slate node
+    def create_slate_node(
+        self,
+        version: Version,
+        submitting_for: str = "FINAL",
+        submission_note: str = ""
+    ):
+        """Create the slate node.
 
-        :param version: A Stalker Version instance
-        :param str submitting_for: Submitting for "FINAL" or "WIP". Default is "FINAL".
-        :param str submission_note: Submission note.
-        :return:
+        Args:
+            version (Version): A Stalker Version instance.
+            submitting_for (str, optional): Submitting for "FINAL" or "WIP".
+                Default is "FINAL".
+            submission_note (str, optional): Submission note.
+
+        Return:
+            node: The created slate node.
         """
         # if the channels are animated, set new keyframes
         # first try to find the slate tool
@@ -619,22 +697,22 @@ class Fusion(DCCBase):
         slate_node.Input4 = version.task.project.name
 
         # Version Name
-        slate_node.Input5 = "{}_v{:03d}".format(
-            version.nice_name, version.version_number
+        slate_node.Input5 = (
+            f"{version.nice_name}"
+            f"_r{version.revision_number:02d}"
+            f"_v{version.version_number:03d}"
         )
 
         # Submitting For
         slate_node.Input6 = submitting_for
 
         # Date
-        import datetime
 
         today = datetime.datetime.today()
         date_time_format = "%Y-%m-%d"
         slate_node.Input7 = today.strftime(date_time_format)
 
         # Vendor
-        from stalker import Studio
 
         studio = Studio.query.first()
         if studio:
@@ -646,8 +724,6 @@ class Fusion(DCCBase):
         # connect the output to MediaOut
         media_out_node = None
         i = 0
-        import time
-
         while not media_out_node and i < 2:
             media_out_node = self.comp.FindTool("MediaOut1")
             if not media_out_node:
@@ -660,18 +736,21 @@ class Fusion(DCCBase):
 
         return slate_node
 
-    def create_main_saver_node(self, version):
-        """Creates the default saver node if there is no created before.
+    def create_main_saver_node(self, file: File) -> None:
+        """Create the default saver node if there is no created before.
 
-        Creates the default saver nodes if there isn't any existing outputs,
+        Create the default saver nodes if there isn't any existing outputs,
         and updates the ones that is already created
+
+        Args:
+            file (stalker.File): The `stalker.File` instance.
         """
         fps = 25
-        if version:
+        version = None
+        if file:
+            version = Version.query.filter(Version.files.contains(file)).first()
             project = version.task.project
             fps = project.fps
-
-        import uuid
 
         random_ref_id = uuid.uuid4().hex
 
@@ -684,7 +763,7 @@ class Fusion(DCCBase):
                         "TOOLS_Name": self.output_node_name_generator("jpg"),
                     },
                     "input_list": {
-                        "Clip": self.output_path_generator(version, "jpg"),
+                        "Clip": self.generate_output_path(version, "jpg"),
                         "CreateDir": 1,
                         "ProcessRed": 1,
                         "ProcessGreen": 1,
@@ -732,7 +811,7 @@ class Fusion(DCCBase):
                         "TOOLS_Name": self.output_node_name_generator("tga"),
                     },
                     "input_list": {
-                        "Clip": self.output_path_generator(version, "tga"),
+                        "Clip": self.generate_output_path(version, "tga"),
                         "CreateDir": 1,
                         "ProcessRed": 1,
                         "ProcessGreen": 1,
@@ -751,7 +830,7 @@ class Fusion(DCCBase):
                         "TOOLS_Name": self.output_node_name_generator("exr"),
                     },
                     "input_list": {
-                        "Clip": self.output_path_generator(version, "exr"),
+                        "Clip": self.generate_output_path(version, "exr"),
                         "CreateDir": 1,
                         "ProcessRed": 1,
                         "ProcessGreen": 1,
@@ -759,6 +838,7 @@ class Fusion(DCCBase):
                         "ProcessAlpha": 0,
                         "OutputFormat": "OpenEXRFormat",
                         "OpenEXRFormat.Depth": 1,  # 16-bit float
+                        "OpenEXRFormat.Compression": 8,  # DWA (32 lines)
                         "OpenEXRFormat.RedEnable": 1,
                         "OpenEXRFormat.GreenEnable": 1,
                         "OpenEXRFormat.BlueEnable": 1,
@@ -793,7 +873,7 @@ class Fusion(DCCBase):
                         "TOOLS_Name": self.output_node_name_generator("mp4"),
                     },
                     "input_list": {
-                        "Clip": self.output_path_generator(version, "mp4"),
+                        "Clip": self.generate_output_path(version, "mp4"),
                         "CreateDir": 1,
                         "ProcessRed": 1,
                         "ProcessGreen": 1,
@@ -820,7 +900,7 @@ class Fusion(DCCBase):
                         "TOOLS_Name": self.output_node_name_generator("mov"),
                     },
                     "input_list": {
-                        "Clip": self.output_path_generator(version, "mov"),
+                        "Clip": self.generate_output_path(version, "mov"),
                         "CreateDir": 1,
                         "ProcessRed": 1,
                         "ProcessGreen": 1,
@@ -861,7 +941,7 @@ class Fusion(DCCBase):
                             "TOOLS_Name": self.output_node_name_generator("jpg"),
                         },
                         "input_list": {
-                            "Clip": self.output_path_generator(version, "jpg"),
+                            "Clip": self.generate_output_path(version, "jpg"),
                             "CreateDir": 1,
                             "ProcessRed": 1,
                             "ProcessGreen": 1,
@@ -909,7 +989,7 @@ class Fusion(DCCBase):
                             "TOOLS_Name": self.output_node_name_generator("exr"),
                         },
                         "input_list": {
-                            "Clip": self.output_path_generator(version, "exr"),
+                            "Clip": self.generate_output_path(version, "exr"),
                             "CreateDir": 1,
                             "ProcessRed": 1,
                             "ProcessGreen": 1,
@@ -917,6 +997,7 @@ class Fusion(DCCBase):
                             "ProcessAlpha": 0,
                             "OutputFormat": "OpenEXRFormat",
                             "OpenEXRFormat.Depth": 1,  # 16-bit float
+                            "OpenEXRFormat.Compression": 8,  # DWA (32 line)
                             "OpenEXRFormat.RedEnable": 1,
                             "OpenEXRFormat.GreenEnable": 1,
                             "OpenEXRFormat.BlueEnable": 1,
@@ -967,7 +1048,7 @@ class Fusion(DCCBase):
                             "TOOLS_Name": self.output_node_name_generator("mov"),
                         },
                         "input_list": {
-                            "Clip": self.output_path_generator(version, "mov"),
+                            "Clip": self.generate_output_path(version, "mov"),
                             "CreateDir": 1,
                             "ProcessRed": 1,
                             "ProcessGreen": 1,
@@ -1013,7 +1094,7 @@ class Fusion(DCCBase):
                 },
             ]
 
-        if version.variant_name == "STMap":
+        if file.type and file.type.name == "STMap":
             output_format_data = [
                 {
                     "name": "exr",
@@ -1023,7 +1104,7 @@ class Fusion(DCCBase):
                             "TOOLS_Name": self.output_node_name_generator("exr"),
                         },
                         "input_list": {
-                            "Clip": self.output_path_generator(version, "exr"),
+                            "Clip": self.generate_output_path(version, "exr"),
                             "CreateDir": 1,
                             "ProcessRed": 1,
                             "ProcessGreen": 1,
@@ -1031,6 +1112,7 @@ class Fusion(DCCBase):
                             "ProcessAlpha": 0,
                             "OutputFormat": "OpenEXRFormat",
                             "OpenEXRFormat.Depth": 2,  # 32-bit float
+                            "OpenEXRFormat.Compression": 8,  # DWA (32 line)
                             "OpenEXRFormat.RedEnable": 1,
                             "OpenEXRFormat.GreenEnable": 1,
                             "OpenEXRFormat.BlueEnable": 1,
@@ -1101,20 +1183,22 @@ class Fusion(DCCBase):
 
             try:
                 os.makedirs(
-                    os.path.dirname(self.output_path_generator(version, format_name))
+                    os.path.dirname(self.generate_output_path(version, format_name))
                 )
             except OSError:
                 # path already exists
                 pass
 
     @property
-    def project_directory(self):
+    def project_directory(self) -> str:
         """The project directory.
 
         Set it to the project root, and set all your paths relative to this
         directory.
-        """
 
+        Returns:
+            str: The project directory.
+        """
         # try to figure it out from the maps
         # search for Project path
 
@@ -1132,11 +1216,11 @@ class Fusion(DCCBase):
         return project_dir
 
     @project_directory.setter
-    def project_directory(self, project_directory_in):
-        """Sets project directory
+    def project_directory(self, project_directory_in: str) -> None:
+        """Set project directory.
 
-        :param str project_directory_in: the project directory
-        :return:
+        Args:
+            project_directory_in (str): The project directory.
         """
         project_directory_in = os.path.normpath(project_directory_in)
         print(f"setting project directory to: {project_directory_in}")
