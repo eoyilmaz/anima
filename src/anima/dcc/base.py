@@ -7,7 +7,7 @@ from pathlib import Path
 import shutil
 from typing import Dict, List, Optional, Union
 
-from stalker import File, Project, Repository, Shot, Version
+from stalker import Asset, File, Project, Repository, Shot, Version
 from stalker.db.session import DBSession
 
 
@@ -267,6 +267,46 @@ class DCCBase(object):
         # first find the repository
         return Repository.find_repo(path)
 
+    def get_files_from_path(self, path: str) -> list[File]:
+        """Find File instances from the given path value.
+
+        Find and return the :class:`~stalker.models.file.File` instances from
+        the given path value.
+
+        Return an empty list if it can't find any matching.
+
+        This method is different than :meth:`~.get_file_from_full_path`
+        because it returns a list of :class:`~stalker.File` instances which
+        are residing in that path. The list is ordered by the ``id`` values of
+        the instances.
+
+        Args:
+            path (str): A path which has possible :class:`~stalker.File`
+                instances that are related to the Version that is being looked
+                for.
+
+        Returns:
+            List[Version]: A list of :class:`~stalker.models.version.Version`
+                instances.
+        """
+        if not path:
+            return []
+
+        # convert '\\' to '/'
+        path = os.path.normpath(path).replace("\\", "/")
+
+        os_independent_path = Repository.to_os_independent_path(path)
+        logger.debug("os_independent_path: {}".format(os_independent_path))
+
+        # try to get all versions with that info
+        files = []
+        with DBSession.no_autoflush:
+            files = File.query.filter(
+                File.full_path.startswith(os_independent_path)
+            ).all()
+
+        return files
+
     def get_versions_from_path(self, path: str) -> List[Version]:
         """Find Version instances from the given path value.
 
@@ -293,21 +333,10 @@ class DCCBase(object):
         if not path:
             return []
 
-        # convert '\\' to '/'
-        path = os.path.normpath(path).replace("\\", "/")
-
-        os_independent_path = Repository.to_os_independent_path(path)
-        logger.debug("os_independent_path: {}".format(os_independent_path))
-
         # try to get all versions with that info
         versions = []
-        with DBSession.no_autoflush:
-            files = File.query.filter(
-                File.full_path.startswith(os_independent_path)
-            ).all()
-            for file in files:
-                versions += Version.query.filter(Version.files.contains(file)).all()
-
+        for file in self.get_files_from_path(path):
+            versions += Version.query.filter(Version.files.contains(file)).all()
         return versions
 
     @classmethod
@@ -912,6 +941,22 @@ class DCCBase(object):
             pass
 
         logger.debug(f"created copy to: {output_full_path}")
+
+    @classmethod
+    @lru_cache(maxsize=None)
+    def get_asset(cls, version: Version) -> Union[None, Asset]:
+        """Find and return the related Asset.
+
+        Args:
+            version (Version): A stalker Version instance.
+
+        Returns:
+            Union[None, Asset]: The stalker Asset instance or None if this
+                version is not related to an Asset.
+        """
+        for task in version.task.parents:
+            if isinstance(task, Asset):
+                return task
 
     @classmethod
     @lru_cache(maxsize=None)
