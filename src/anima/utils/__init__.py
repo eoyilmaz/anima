@@ -255,7 +255,7 @@ def do_db_setup():
         settings = defaults.database_engine_settings
         settings["sqlalchemy.poolclass"] = NullPool
 
-        from stalker.db.setup import setup
+        from stalker.db import setup
 
         setup(settings)
 
@@ -1261,7 +1261,7 @@ class MediaManager(object):
         Returns:
             str: The formatted filename.
         """
-        if isinstance(filename, str):
+        if isinstance(filename, bytes):
             filename = filename.decode("utf-8")
 
         # replace Turkish characters
@@ -1346,7 +1346,7 @@ class MediaManager(object):
         except OSError:  # Path exist
             pass
 
-        with open(temp_file_full_path, "wb") as output_file:
+        with open(temp_file_full_path, "w") as output_file:
             file_object.seek(0)
             while True:
                 data = file_object.read(2 << 16)

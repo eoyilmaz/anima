@@ -1601,7 +1601,7 @@ class Playblaster(object):
         v = maya_env.get_current_version()
         if v:
             frame_rate = v.task.project.fps
-        tc = timecode.Timecode(frame_rate, frames=cf)
+        tc = timecode.Timecode(frame_rate, frames=int(cf))
 
         if current_shot:
             start_time = pm.shot(current_shot, q=1, st=1)

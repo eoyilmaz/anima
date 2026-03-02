@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import contextlib
 import sys
 import os
 import traceback
@@ -126,9 +127,10 @@ if not pm.general.about(batch=1):
         main_menu_name = "AnimaMenu"
         main_menu_label = "Anima"
         maya_main_window = pm.mel.globals["$gMainWindow"]
-        if pm.menu(main_menu_name, exists=1, p=maya_main_window):
-            pm.menu(main_menu_name, e=True, deleteAllItems=True)
-            pm.deleteUI(main_menu_name)
+        with contextlib.suppress(RuntimeError):
+            if pm.menu(main_menu_name, exists=1, p=maya_main_window):
+                pm.menu(main_menu_name, e=True, deleteAllItems=True)
+                pm.deleteUI(main_menu_name)
 
         pm.menu(main_menu_name, label=main_menu_label, tearOff=True, p=maya_main_window)
         pm.menuItem(label="Open Version",

@@ -290,16 +290,16 @@ class Sequence(EditBase, NameMixin, DurationMixin):
                     e.tr_code = "C"  # TODO: for now use C (Cut) later on
                     # expand it to add other transition codes
 
-                    src_start_tc = Timecode(self.rate.timebase, frames=clip.in_ + 1)
+                    src_start_tc = Timecode(self.rate.timebase, frames=int(clip.in_ + 1))
                     # 1 frame after last frame shown
-                    src_end_tc = Timecode(self.rate.timebase, frames=clip.out + 1)
+                    src_end_tc = Timecode(self.rate.timebase, frames=int(clip.out + 1))
 
                     e.src_start_tc = str(src_start_tc)
                     e.src_end_tc = str(src_end_tc)
 
-                    rec_start_tc = Timecode(self.rate.timebase, frames=clip.start + 1)
+                    rec_start_tc = Timecode(self.rate.timebase, frames=int(clip.start + 1))
                     # 1 frame after last frame shown
-                    rec_end_tc = Timecode(self.rate.timebase, frames=clip.end + 1)
+                    rec_end_tc = Timecode(self.rate.timebase, frames=int(clip.end + 1))
 
                     e.rec_start_tc = str(rec_start_tc)
                     e.rec_end_tc = str(rec_end_tc)
